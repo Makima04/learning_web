@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* 亮色：米白（#faf7f0 族） */
+  :root {
+    --background: 48 33% 96%;      /* #faf8ee */
+    --foreground: 30 10% 12%;      /* 近黑暖灰 */
+    --card: 45 30% 99%;
+    --card-foreground: 30 10% 12%;
+    --popover: 45 30% 99%;
+    --popover-foreground: 30 10% 12%;
+    --primary: 25 70% 45%;         /* 暖橙棕，配米白 */
+    --primary-foreground: 40 30% 98%;
+    --secondary: 40 20% 90%;
+    --secondary-foreground: 30 10% 18%;
+    --muted: 40 18% 90%;
+    --muted-foreground: 30 8% 38%;
+    --accent: 40 25% 88%;
+    --accent-foreground: 30 10% 18%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 40 30% 98%;
+    --border: 38 18% 82%;
+    --input: 38 18% 82%;
+    --ring: 25 70% 45%;
+    --radius: 0.9rem;
+  }
+
+  /* 暗色：沿用旧 #0f1320 族 */
+  .dark {
+    --background: 222 30% 10%;     /* #0f1320 */
+    --foreground: 220 25% 94%;
+    --card: 222 26% 16%;           /* #1c2238 */
+    --card-foreground: 220 25% 94%;
+    --popover: 222 26% 16%;
+    --popover-foreground: 220 25% 94%;
+    --primary: 215 100% 71%;       /* #6ea8ff */
+    --primary-foreground: 222 30% 10%;
+    --secondary: 225 24% 22%;
+    --secondary-foreground: 220 25% 94%;
+    --muted: 225 24% 20%;
+    --muted-foreground: 220 16% 65%;
+    --accent: 225 24% 24%;
+    --accent-foreground: 220 25% 94%;
+    --destructive: 0 72% 65%;
+    --destructive-foreground: 220 25% 94%;
+    --border: 225 26% 28%;         /* #2c344f */
+    --input: 225 26% 28%;
+    --ring: 215 100% 71%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "tnum" 1;
+  }
+  /* 数字等宽（进度/计数） */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* 翻面卡 3D */
+.flip-perspective {
+  perspective: 1600px;
+}
+.flip-inner {
+  position: relative;
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+}
+.flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+/* 阅读原文命中词高亮 */
+.r-hl {
+  color: hsl(var(--primary));
+  border-bottom: 1px dashed hsl(var(--primary) / 0.4);
+  cursor: pointer;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 99px;
+}

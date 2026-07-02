@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- 无 FOUC：先于 CSS 读主题，避免刷新闪一下 -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("ew.theme"); // 'dark'|'light'|'system'|null
+          var dark =
+            t === "dark" ||
+            (t !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
+    <!-- 8MB 数据走 classic script 全局（Vite serve public/，build 复制到 dist） -->
+    <script src="/data.js"></script>
+    <script src="/papers.js"></script>
+    <title>红宝书 · 背单词</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

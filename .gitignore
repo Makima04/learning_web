@@ -1,0 +1,36 @@
+# 本地数据库与配置（运行时由卷/环境变量提供，不入仓库）
+english_web.db
+english_web.db-*
+ew_llm.json
+
+# Python
+.venv/
+**/__pycache__/
+*.pyc
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# 原始 PDF 与中间生成产物（太大；web/data.js 与 web/papers.js 是已生成的前端数据，保留）
+2027考研英语红宝书（乱序版）A4默写版.pdf
+words.csv
+words.json
+report.txt
+papers/
+frontend/public/papers.js
+frontend/public/data.js
+frontend/dist/
+
+# 编辑器/系统
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# 构建缓存
+*.tsbuildinfo
+
+# Claude Code / Codegraph 工作目录
+.claude/
+.codegraph/
