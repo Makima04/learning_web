@@ -14,8 +14,9 @@
   <div class="header-left">📕 <span>红宝书</span><small>乱序·6550</small></div>
   <nav class="header-nav">
     <button data-tab="dashboard" class="active">首页面板</button>
-    <button data-tab="papers">真题记词</button>
+    <button data-tab="papers">真题</button>
     <button data-tab="transmgr">翻译管理</button>
+    <button data-tab="parsemgr">解析管理</button>
     <button data-tab="settings">设置</button>
   </nav>
   <div class="header-right">
@@ -83,7 +84,7 @@
             </div>
             <button class="primary big" id="btn-start">学习新词</button>
             <button class="ghost big" id="btn-review">🔁 复习 <small>旧词巩固</small></button>
-            <button class="ghost big" id="btn-papers">📚 真题记单词 <small>先背词再做题</small></button>
+            <button class="ghost big" id="btn-papers">📚 真题 <small>读原文 · 段落解析</small></button>
           </div>
 
           <div class="section-card">
@@ -110,8 +111,9 @@
           <div class="section-card">
             <div class="section-title">快捷操作</div>
             <div class="action-grid">
-              <button class="action-btn" data-tab="papers"><span class="action-icon">📚</span><span>真题记词</span></button>
+              <button class="action-btn" data-tab="papers"><span class="action-icon">📚</span><span>真题</span></button>
               <button class="action-btn" data-tab="transmgr"><span class="action-icon">🌐</span><span>翻译管理</span></button>
+              <button class="action-btn" data-tab="parsemgr"><span class="action-icon">📖</span><span>解析管理</span></button>
               <button class="action-btn" data-tab="settings"><span class="action-icon">⚙</span><span>设置</span></button>
               <button class="action-btn" id="btn-export-quick"><span class="action-icon">💾</span><span>导出进度</span></button>
             </div>
@@ -127,7 +129,7 @@
 
   <!-- ============ PAPERS LIST ============ -->
   <section id="screen-papers" class="screen">
-    <div class="hint">先记诵该篇真题出现的单词，留下浅层记忆；再读原文，在语境中加深记忆。例句即取自真题原文。</div>
+    <div class="hint">选择年份与篇章，阅读真题原文：左侧按句翻译、右侧段落分析、底部附阅读题。</div>
     <div id="papers-list" class="papers-list"></div>
   </section>
 
@@ -148,7 +150,18 @@
       <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
       <div class="progress-text" id="progress-text">0 / 0</div>
     </header>
-    <div class="card-area" id="card-area"></div>
+    <div class="study-layout">
+      <div class="card-area" id="card-area"></div>
+      <aside class="parse-side" id="parse-side" hidden>
+        <div class="parse-side-head">
+          <span class="parse-side-title">长难句解析</span>
+          <button class="icon-btn" id="parse-side-close" title="收起">✕</button>
+        </div>
+        <div class="parse-side-body" id="parse-side-body">
+          <div class="parse-side-empty">翻面后按空格，或点例句的「解析长难句」</div>
+        </div>
+      </aside>
+    </div>
     <div class="rating" id="rating-passage" hidden>
       <button data-q="again" class="rate rate-again">
         <span class="rate-k">1</span><span class="rate-l">重来</span><span class="rate-i" id="i-again">—</span>
@@ -167,14 +180,17 @@
     <button class="ghost big" id="btn-read" hidden>读真题原文 →</button>
   </section>
 
-  <!-- ============ READER (真题原文) ============ -->
+  <!-- ============ READER (真题原文 + 段落解析双栏) ============ -->
   <section id="screen-reader" class="screen">
     <header class="topbar">
       <button class="icon-btn" id="btn-reader-back" title="返回">‹</button>
       <div class="brand" id="reader-title">真题原文</div>
       <button class="icon-btn" id="btn-reader-done" title="返回背词">✓</button>
     </header>
-    <div class="reader" id="reader-body"></div>
+    <div class="reader-layout">
+      <div class="reader-col reader-body" id="reader-body"></div>
+      <aside class="reader-col reader-analysis" id="reader-analysis" hidden></aside>
+    </div>
   </section>
 
   <!-- ============ STUDY ============ -->
@@ -185,8 +201,19 @@
       <div class="progress-text" id="progress-text">0 / 0</div>
     </header>
 
-    <div class="card-area" id="card-area">
-      <!-- card injected here -->
+    <div class="study-layout">
+      <div class="card-area" id="card-area">
+        <!-- card injected here -->
+      </div>
+      <aside class="parse-side" id="parse-side" hidden>
+        <div class="parse-side-head">
+          <span class="parse-side-title">长难句解析</span>
+          <button class="icon-btn" id="parse-side-close" title="收起">✕</button>
+        </div>
+        <div class="parse-side-body" id="parse-side-body">
+          <div class="parse-side-empty">翻面后按空格，或点例句的「解析长难句」</div>
+        </div>
+      </aside>
     </div>
 
     <div class="rating" id="rating-study" hidden>
@@ -217,71 +244,99 @@
   </section>
 
   <!-- ============ SETTINGS ============ -->
-  <section id="screen-settings" class="screen">
-    <div class="panel" id="account-panel">
-      <div class="panel-title">账号 <small id="acc-state">未登录</small></div>
-      <div id="acc-form">
-        <label class="field"><span class="field-label">用户名</span><input type="text" id="acc-user" class="text-input" autocomplete="off"></label>
-        <label class="field"><span class="field-label">密码</span><input type="password" id="acc-pass" class="text-input" autocomplete="off"></label>
-        <div class="llm-actions"><button class="row-btn" id="btn-acc-login">登录</button><button class="row-btn" id="btn-acc-register">注册</button><button class="row-btn danger" id="btn-acc-logout" hidden>登出</button></div>
-      </div>
-    </div>
+  <section id="screen-settings" class="screen settings-layout">
+    <nav class="settings-nav" id="settings-nav">
+      <button data-s="study" class="active">学习</button>
+      <button data-s="speech">发音</button>
+      <button data-s="llm">翻译</button>
+      <button data-s="account">账号</button>
+      <button data-s="data">数据</button>
+    </nav>
+    <div class="settings-panels">
 
-    <div class="panel">
-      <label class="field">
-        <span class="field-label">每日新词数</span>
-        <span class="field-val"><b id="val-daily">20</b> 词/天</span>
-        <input type="range" id="set-daily" min="0" max="100" step="5" value="20">
-      </label>
+      <div class="settings-section" data-s="study">
+        <div class="panel">
+          <label class="field">
+            <span class="field-label">每日新词数</span>
+            <span class="field-val"><b id="val-daily">20</b> 词/天</span>
+            <input type="range" id="set-daily" min="0" max="100" step="5" value="20">
+          </label>
 
-      <div class="field">
-        <span class="field-label">记忆方向</span>
-        <div class="seg" id="set-direction">
-          <button data-v="en2cn" class="active">英→中</button>
-          <button data-v="cn2en">中→英</button>
-          <button data-v="random">随机</button>
+          <div class="field">
+            <span class="field-label">记忆方向</span>
+            <div class="seg" id="set-direction">
+              <button data-v="en2cn" class="active">英→中</button>
+              <button data-v="cn2en">中→英</button>
+              <button data-v="random">随机</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <label class="field">
-        <span class="field-label">自动发音</span>
-        <label class="switch"><input type="checkbox" id="set-autospeak"><span class="slider"></span></label>
-      </label>
+      <div class="settings-section" data-s="speech" hidden>
+        <div class="panel">
+          <label class="field">
+            <span class="field-label">自动发音</span>
+            <label class="switch"><input type="checkbox" id="set-autospeak"><span class="slider"></span></label>
+          </label>
 
-      <label class="field">
-        <span class="field-label">语速 <b id="val-rate">1.0</b>×</span>
-        <input type="range" id="set-rate" min="0.6" max="1.6" step="0.1" value="1.0">
-      </label>
-    </div>
+          <label class="field">
+            <span class="field-label">点词朗读 <small>· 例句/原文点词查义时是否自动读单词</small></span>
+            <label class="switch"><input type="checkbox" id="set-speak-word" checked><span class="slider"></span></label>
+          </label>
 
-    <div class="panel">
-      <div class="panel-title">翻译服务 <small>· 服务端代理，Key 不存浏览器</small></div>
-      <div class="llm-status" id="llm-status">未连接</div>
-      <label class="field">
-        <span class="field-label">模型</span>
-        <select id="set-llm-model" class="text-input"></select>
-      </label>
-      <label class="field">
-        <span class="field-label">并发请求数 <small>· 批量翻译同时发起的请求数</small></span>
-        <span class="field-val"><b id="val-llm-concurrency">4</b> 路</span>
-        <input type="range" id="set-llm-concurrency" min="1" max="16" step="1" value="4">
-      </label>
-      <div class="llm-actions">
-        <button class="row-btn" id="btn-llm-fetch">刷新模型列表</button>
-        <button class="row-btn" id="btn-llm-test">测试翻译</button>
-        <button class="row-btn" id="btn-transmgr">📚 翻译管理</button>
+          <label class="field">
+            <span class="field-label">语速 <b id="val-rate">1.0</b>×</span>
+            <input type="range" id="set-rate" min="0.6" max="1.6" step="0.1" value="1.0">
+          </label>
+        </div>
       </div>
-    </div>
 
-    <div class="panel">
-      <button class="row-btn" id="btn-export">导出进度 (JSON)</button>
-      <button class="row-btn" id="btn-import">导入进度</button>
-      <button class="row-btn danger" id="btn-reset">重置全部进度</button>
-    </div>
+      <div class="settings-section" data-s="llm" hidden>
+        <div class="panel">
+          <div class="panel-title">翻译服务 <small>· 服务端代理，Key 不存浏览器</small></div>
+          <div class="llm-status" id="llm-status">未连接</div>
+          <label class="field">
+            <span class="field-label">模型</span>
+            <select id="set-llm-model" class="text-input"></select>
+          </label>
+          <label class="field">
+            <span class="field-label">并发请求数 <small>· 批量翻译同时发起的请求数</small></span>
+            <span class="field-val"><b id="val-llm-concurrency">4</b> 路</span>
+            <input type="range" id="set-llm-concurrency" min="1" max="100" step="1" value="4">
+          </label>
+          <div class="llm-actions">
+            <button class="row-btn" id="btn-llm-fetch">刷新模型列表</button>
+            <button class="row-btn" id="btn-llm-test">测试翻译</button>
+            <button class="row-btn" id="btn-transmgr">📚 翻译管理</button>
+          </div>
+        </div>
+      </div>
 
-    <div class="about">数据本地存储，不会上传。词库来源：2027考研英语红宝书（乱序版）。</div>
-    <input type="file" id="import-file" accept="application/json" hidden>
+      <div class="settings-section" data-s="account" hidden>
+        <div class="panel" id="account-panel">
+          <div class="panel-title">账号 <small id="acc-state">未登录</small></div>
+          <div id="acc-form">
+            <label class="field"><span class="field-label">用户名</span><input type="text" id="acc-user" class="text-input" autocomplete="off"></label>
+            <label class="field"><span class="field-label">密码</span><input type="password" id="acc-pass" class="text-input" autocomplete="off"></label>
+            <div class="llm-actions"><button class="row-btn" id="btn-acc-login">登录</button><button class="row-btn" id="btn-acc-register">注册</button><button class="row-btn danger" id="btn-acc-logout" hidden>登出</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section" data-s="data" hidden>
+        <div class="panel">
+          <button class="row-btn" id="btn-export">导出进度 (JSON)</button>
+          <button class="row-btn" id="btn-import">导入进度</button>
+          <button class="row-btn danger" id="btn-reset">重置全部进度</button>
+        </div>
+        <div class="about">数据本地存储，不会上传。词库来源：2027考研英语红宝书（乱序版）。</div>
+        <input type="file" id="import-file" accept="application/json" hidden>
+      </div>
+
+    </div>
   </section>
+
 
   <!-- ============ TRANSLATION MANAGEMENT ============ -->
   <section id="screen-transmgr" class="screen">
@@ -303,23 +358,54 @@
     <div id="tm-list" class="tm-list"></div>
   </section>
 
+  <!-- ============ PARSE MANAGEMENT (长难句解析管理) ============ -->
+  <section id="screen-parsemgr" class="screen">
+    <div class="panel">
+      <div class="panel-title">解析进度 <small id="pm-stats">—</small></div>
+      <div class="seg" id="pm-filter">
+        <button data-v="unparsed" class="active">未解析</button>
+        <button data-v="parsed">已解析</button>
+        <button data-v="all">全部</button>
+      </div>
+      <label class="field" style="margin-top:10px"><span class="field-label">搜索</span><input type="text" id="pm-q" class="text-input" placeholder="按英文句子筛选"></label>
+      <div class="llm-actions">
+        <button class="row-btn" id="pm-parse-page">解析本页</button>
+        <button class="row-btn" id="pm-parse-all">解析全部</button>
+        <button class="row-btn" id="pm-prev">‹ 上一页</button>
+        <span id="pm-page" class="hint">1 / 1</span>
+        <button class="row-btn" id="pm-next">下一页 ›</button>
+      </div>
+    </div>
+    <div id="pm-list" class="tm-list"></div>
+  </section>
+
 </main>
+
+<!-- ============ 长难句解析：移动抽屉（全局，与侧栏共用 body 搬家） ============ -->
+<div class="parse-drawer-overlay" id="parse-drawer-overlay" hidden></div>
+<aside class="parse-drawer" id="parse-drawer" hidden>
+  <div class="parse-drawer-head">
+    <span>长难句解析</span>
+    <button class="icon-btn" id="parse-drawer-close" title="关闭">✕</button>
+  </div>
+  <div class="parse-drawer-body" id="parse-drawer-body"></div>
+</aside>
 
 <!-- ============ 全局底栏（移动） ============ -->
 <nav class="tab-bar">
   <button data-tab="dashboard" class="active">🏠<span>首页</span></button>
   <button data-tab="papers">📚<span>真题</span></button>
   <button data-tab="study" class="tab-center">▶<span>学习</span></button>
-  <button data-tab="transmgr">🌐<span>翻译</span></button>
+  <button data-tab="parsemgr">📖<span>解析</span></button>
   <button data-tab="settings">⚙<span>我的</span></button>
 </nav>
 
 <script src="data.js"></script>
 <script src="papers.js"></script>
-<script src="api.js"></script>
+<script src="api.js?v=3"></script>
 <script src="srs.js"></script>
-<script src="store.js"></script>
-<script src="llm.js"></script>
-<script src="app.js"></script>
+<script src="store.js?v=3"></script>
+<script src="llm.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

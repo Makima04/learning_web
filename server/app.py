@@ -6,9 +6,10 @@ SPA fallback：未命中的路径返 index.html，支持客户端路由深链（
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+import threading
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -20,6 +21,12 @@ from .llm import (
     active_model,
     fetch_models,
     is_configured,
+    parse_sentence_stream,
+    parse_paragraph_stream,
+    get_cached_parse,
+    save_parse,
+    get_cached_para_analysis,
+    save_para_analysis,
     translate_text,
 )
 
@@ -45,6 +52,21 @@ class AuthBody(BaseModel):
 
 class TranslateBody(BaseModel):
     text: str
+
+
+class ParseBody(BaseModel):
+    text: str
+
+
+class ParaAnalyzeBody(BaseModel):
+    """段落级解析（Reading Part A 双栏 reader 右栏）。无 auth，全局共享缓存。"""
+    year: Optional[int] = None
+    label: Optional[str] = None
+    para_idx: int
+    text: str
+    full_body: str = ""
+    # items: [{n, stem, options:{A,B,C,D}}, ...]——题干供 LLM 解指代/判考点
+    items: list = Field(default_factory=list)
 
 
 class TranslateBatchBody(BaseModel):
@@ -81,14 +103,22 @@ class MetaBody(BaseModel):
 
 # ---------- 辅助 ----------
 def _row_sentence(r):
-    """把 LEFT JOIN sentences/translations 的行拍平成 API 输出 dict。"""
+    """把 LEFT JOIN sentences/translations/parses 的行拍平成 API 输出 dict。"""
+    keys = r.keys()
+    parse = None
+    if "parse_content" in keys or "parse_status" in keys:
+        pc = r["parse_content"] if "parse_content" in keys else None
+        ps = r["parse_status"] if "parse_status" in keys else None
+        if pc is not None or ps is not None:
+            parse = {"content": pc, "status": ps}
     return {
         "id": r["id"],
         "text": r["text"],
-        "zh": r["zh"] if "zh" in r.keys() else None,
-        "status": r["status"] if "status" in r.keys() else None,
+        "zh": r["zh"] if "zh" in keys else None,
+        "status": r["status"] if "status" in keys else None,
         "year": r["year"],
         "label": r["label"],
+        "parse": parse,
     }
 
 
@@ -246,13 +276,18 @@ def sentences_list(
     page: int = Query(1, ge=1),
     size: int = Query(50, ge=1, le=200),
 ):
-    # 计算过滤条件
+    # 计算过滤条件。status 取值：all / translated / untranslated / parsed / unparsed
+    # （translated/untranslated 看 translations；parsed/unparsed 看 parses）
     where = []
     params = []
     if status == "translated":
         where.append("t.status IS NOT NULL AND t.status != 'error'")
     elif status == "untranslated":
         where.append("(t.status IS NULL OR t.status = 'error')")
+    elif status == "parsed":
+        where.append("p.status IS NOT NULL AND p.status != 'error'")
+    elif status == "unparsed":
+        where.append("(p.status IS NULL OR p.status = 'error')")
     if q:
         where.append("s.text LIKE ?")
         params.append(f"%{q}%")
@@ -261,17 +296,25 @@ def sentences_list(
     conn = get_db()
     try:
         total = conn.execute(
-            f"SELECT COUNT(*) c FROM sentences s LEFT JOIN translations t "
-            f"ON t.sentence_id=s.id {where_sql}",
+            f"SELECT COUNT(*) c FROM sentences s "
+            f"LEFT JOIN translations t ON t.sentence_id=s.id "
+            f"LEFT JOIN parses p ON p.sentence_id=s.id "
+            f"{where_sql}",
             params,
         ).fetchone()["c"]
         translated = conn.execute(
             "SELECT COUNT(*) c FROM translations WHERE status != 'error'"
         ).fetchone()["c"]
+        parsed = conn.execute(
+            "SELECT COUNT(*) c FROM parses WHERE status != 'error'"
+        ).fetchone()["c"]
         all_total = conn.execute("SELECT COUNT(*) c FROM sentences").fetchone()["c"]
         rows = conn.execute(
-            f"SELECT s.id, s.text, s.year, s.label, t.zh, t.status "
-            f"FROM sentences s LEFT JOIN translations t ON t.sentence_id=s.id "
+            f"SELECT s.id, s.text, s.year, s.label, t.zh, t.status, "
+            f"p.content as parse_content, p.status as parse_status "
+            f"FROM sentences s "
+            f"LEFT JOIN translations t ON t.sentence_id=s.id "
+            f"LEFT JOIN parses p ON p.sentence_id=s.id "
             f"{where_sql} ORDER BY s.id LIMIT ? OFFSET ?",
             params + [size, (page - 1) * size],
         ).fetchall()
@@ -281,6 +324,8 @@ def sentences_list(
             "total": total,
             "translated": translated,
             "untranslated": max(all_total - translated, 0),
+            "parsed": parsed,
+            "unparsed": max(all_total - parsed, 0),
         }
     finally:
         conn.close()
@@ -291,8 +336,11 @@ def sentence_detail(sid: int):
     conn = get_db()
     try:
         r = conn.execute(
-            "SELECT s.id, s.text, s.year, s.label, t.zh, t.status "
-            "FROM sentences s LEFT JOIN translations t ON t.sentence_id=s.id "
+            "SELECT s.id, s.text, s.year, s.label, t.zh, t.status, "
+            "p.content as parse_content, p.status as parse_status "
+            "FROM sentences s "
+            "LEFT JOIN translations t ON t.sentence_id=s.id "
+            "LEFT JOIN parses p ON p.sentence_id=s.id "
             "WHERE s.id=?",
             (sid,),
         ).fetchone()
@@ -334,6 +382,164 @@ def translate_text_endpoint(body: TranslateBody):
         return {"zh": zh or "", "status": st}
     finally:
         conn.close()
+
+
+# ====================================================================
+# 长难句解析（母语式 10 层走查，流式 SSE）
+# ====================================================================
+def _sse(obj):
+    """格式化一个 SSE 事件：data: <json>\n\n。ensure_ascii=False 保留中文/引号原样。"""
+    import json as _json
+    return f"data: {_json.dumps(obj, ensure_ascii=False)}\n\n"
+
+
+# /api/parse-sentence 必须在 /api/translate/{sid} 之前注册——但它路径不冲突（parse-sentence
+# vs {sid}），FastAPI 按声明顺序匹配，这里放在 /api/translate 与 /api/translate/batch 之间安全。
+@app.post("/api/parse-sentence")
+def parse_sentence_endpoint(body: ParseBody):
+    """长难句解析，无需 token，全局共享缓存 + 流式返回。
+
+    SSE 事件：
+      data: {"delta": "..."}          — 流式增量
+      data: {"event":"done","content":"..."}  — 完成（content 为全文，前端落本地缓存）
+      data: {"event":"unconfigured"}  — 后端未配置 LLM
+      data: {"event":"error","message":"..."} — 调用失败
+    """
+    text = (body.text or "").strip()
+    if not text:
+        raise HTTPException(400, "text required")
+
+    # 注意：conn 不能用 try/finally 在端点函数里 close——StreamingResponse 的生成器
+    # 在端点返回后才开跑，那时 finally 已执行、conn 已关。故 conn 生命周期交生成器管理。
+    conn = get_db()
+    try:
+        s = conn.execute("SELECT id FROM sentences WHERE text=?", (text,)).fetchone()
+        if s is None:
+            cur = conn.execute(
+                "INSERT INTO sentences(text, year, label, created_at) VALUES(?,?,?,?)",
+                (text, None, None, now_iso()),
+            )
+            conn.commit()
+            sid = cur.lastrowid
+        else:
+            sid = s["id"]
+
+        cached = get_cached_parse(conn, sid)
+        if cached and cached["status"] == "ok" and cached["content"]:
+            content = cached["content"]
+            # 缓存命中：单 delta 吐全文 + done
+            def gen_cached():
+                try:
+                    yield _sse({"delta": content})
+                    yield _sse({"event": "done", "content": content})
+                finally:
+                    conn.close()
+            return StreamingResponse(gen_cached(), media_type="text/event-stream")
+
+        try:
+            stream = parse_sentence_stream(text)
+        except LlmNotConfigured:
+            def gen_unc():
+                try:
+                    yield _sse({"event": "unconfigured"})
+                finally:
+                    conn.close()
+            return StreamingResponse(gen_unc(), media_type="text/event-stream")
+
+        model_now = active_model()
+        sid_ref = sid
+
+        def gen():
+            try:
+                for chunk in stream:
+                    if isinstance(chunk, dict) and chunk.get("_done"):
+                        full = chunk["content"]
+                        if full:
+                            save_parse(conn, sid_ref, full, model_now)
+                        yield _sse({"event": "done", "content": full})
+                    else:
+                        yield _sse({"delta": chunk})
+            except Exception as e:
+                yield _sse({"event": "error", "message": str(e)[:300]})
+            finally:
+                conn.close()
+
+        return StreamingResponse(gen(), media_type="text/event-stream")
+    except Exception:
+        # 端点函数自身出错（DB 异常等）——正常关闭 conn
+        conn.close()
+        raise
+
+
+@app.post("/api/analyze-paragraph")
+def analyze_paragraph_endpoint(body: ParaAnalyzeBody):
+    """段落级解析（Reading Part A 双栏 reader 右栏），无需 token，全局共享缓存 + 流式返回。
+
+    与 /api/parse-sentence 同样的 SSE 协议：
+      data: {"delta": "..."}          — 流式增量
+      data: {"event":"done","content":"..."}  — 完成（content 为全文）
+      data: {"event":"unconfigured"}  — 后端未配置 LLM
+      data: {"event":"error","message":"..."} — 调用失败
+    cache_key = "{year}|{label}|{para_idx}"，段落文本不进 sentences 表（独立 paragraph_analyses 表）。
+    """
+    text = (body.text or "").strip()
+    if not text:
+        raise HTTPException(400, "text required")
+    year = body.year if body.year is not None else "?"
+    label = body.label or ""
+    cache_key = f"{year}|{label}|{body.para_idx}"
+    context = {
+        "year": body.year,
+        "label": body.label,
+        "full_body": body.full_body or "",
+        "items": body.items or [],
+    }
+
+    conn = get_db()
+    try:
+        cached = get_cached_para_analysis(conn, cache_key)
+        if cached and cached["status"] == "ok" and cached["content"]:
+            content = cached["content"]
+
+            def gen_cached():
+                try:
+                    yield _sse({"delta": content})
+                    yield _sse({"event": "done", "content": content})
+                finally:
+                    conn.close()
+            return StreamingResponse(gen_cached(), media_type="text/event-stream")
+
+        try:
+            stream = parse_paragraph_stream(text, context)
+        except LlmNotConfigured:
+            def gen_unc():
+                try:
+                    yield _sse({"event": "unconfigured"})
+                finally:
+                    conn.close()
+            return StreamingResponse(gen_unc(), media_type="text/event-stream")
+
+        model_now = active_model()
+
+        def gen():
+            try:
+                for chunk in stream:
+                    if isinstance(chunk, dict) and chunk.get("_done"):
+                        full = chunk["content"]
+                        if full:
+                            save_para_analysis(conn, cache_key, full, model_now)
+                        yield _sse({"event": "done", "content": full})
+                    else:
+                        yield _sse({"delta": chunk})
+            except Exception as e:
+                yield _sse({"event": "error", "message": str(e)[:300]})
+            finally:
+                conn.close()
+
+        return StreamingResponse(gen(), media_type="text/event-stream")
+    except Exception:
+        conn.close()
+        raise
 
 
 # 注意：/batch 必须在 /{sid} 之前注册，否则 "batch" 会被当成 sid 匹配
@@ -411,6 +617,129 @@ def translate_batch(body: TranslateBatchBody, user: dict = Depends(get_user)):
             results.append(item)
 
     return {"translated": translated, "failed": failed, "results": results}
+
+
+# ====================================================================
+# 长难句解析（批量，需登录；流式单句走 /api/parse-sentence）
+# ====================================================================
+class ParseBatchBody(BaseModel):
+    ids: list[int]
+
+
+@app.post("/api/parse/batch")
+def parse_batch(body: ParseBatchBody, user: dict = Depends(get_user)):
+    """批量解析：对每个 sentence_id 取原文 → 流式调 LLM 读完 → save_parse。
+    遇错即中止：任一任务出错即取消尚未开始的任务，等待在途任务结束，提前返回。
+    （解析批量更大、单条更慢，LLM 网关故障时应快速失败，避免空跑几千条。）
+    复用 active_concurrency() 决定并发数；parse_sentence_stream 是生成器，
+    每个任务内部把流读完再落库。
+    """
+    ids = body.ids or []
+    if len(ids) > 10000:
+        raise HTTPException(400, "ids exceeds 10000")
+
+    conn = get_db()
+    todo = []
+    results = []
+    try:
+        for sid in ids:
+            s = conn.execute("SELECT id, text FROM sentences WHERE id=?", (sid,)).fetchone()
+            if s is None:
+                results.append({"id": sid, "status": "error", "error": "not found"})
+            else:
+                todo.append((sid, s["text"]))
+    finally:
+        conn.close()
+
+    parsed = 0
+    failed = 0
+    workers = max(1, active_concurrency())
+    model_now = active_model()
+
+    def _one(sid, text):
+        c = get_db()
+        try:
+            try:
+                stream = parse_sentence_stream(text)
+                full = ""
+                for chunk in stream:
+                    if isinstance(chunk, dict) and chunk.get("_done"):
+                        full = chunk["content"]
+                    # delta 片段丢弃（批量不需要流式回显）
+                if not full:
+                    return sid, ("", "error", "模型无输出")
+                save_parse(c, sid, full, model_now)
+                return sid, (full, "ok", None)
+            except LlmNotConfigured:
+                return sid, ("", "unconfigured", None)
+            except Exception as e:
+                return sid, ("", "error", str(e)[:300])
+        finally:
+            c.close()
+
+    # 遇错即中止：首个非 ok 结果出现时取消所有未开始的任务，等在途任务落定后提前返回。
+    abort_evt = threading.Event()
+
+    def _run(sid, text):
+        if abort_evt.is_set():
+            return sid, ("", "skipped", "aborted by earlier error")
+        res = _one(sid, text)
+        st = res[1][1]
+        if st not in ("ok",):
+            abort_evt.set()
+        return res
+
+    def _collect(res):
+        nonlocal parsed, failed
+        sid, (full, st, err) = res
+        if st == "ok":
+            parsed += 1
+        else:
+            failed += 1
+        item = {"id": sid, "status": st}
+        if err:
+            item["error"] = err
+        results.append(item)
+
+    if workers == 1 or len(todo) <= 1:
+        for i, (sid, text) in enumerate(todo):
+            _collect(_run(sid, text))
+            if abort_evt.is_set():
+                # 剩余全部标记 skipped
+                for sid2, _ in todo[i + 1:]:
+                    failed += 1
+                    results.append({"id": sid2, "status": "skipped", "error": "aborted by earlier error"})
+                break
+    else:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            futs = {ex.submit(_run, sid, text): sid for sid, text in todo}
+            res_by_sid = {}
+            for fut in as_completed(futs):
+                sid = futs[fut]
+                try:
+                    res = fut.result()
+                except Exception as e:
+                    res = (sid, ("", "error", str(e)[:300]))
+                    abort_evt.set()
+                res_by_sid[sid] = res
+                # 首个错误出现即取消未开始的任务；在途任务自然完成
+                if res[1][1] not in ("ok",):
+                    for f in futs:
+                        if not f.done():
+                            f.cancel()
+        for sid, _ in todo:
+            _, (full, st, err) = res_by_sid.get(sid, (sid, ("", "skipped", "aborted by earlier error")))
+            if st == "ok":
+                parsed += 1
+            else:
+                failed += 1
+            item = {"id": sid, "status": st}
+            if err:
+                item["error"] = err
+            results.append(item)
+
+    return {"parsed": parsed, "failed": failed, "results": results}
 
 
 @app.post("/api/translate/{sid}")

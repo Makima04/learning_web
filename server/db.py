@@ -43,6 +43,24 @@ CREATE TABLE IF NOT EXISTS translations(
     translated_at TEXT,
     updated_at TEXT
 );
+CREATE TABLE IF NOT EXISTS parses(
+    sentence_id INTEGER PRIMARY KEY REFERENCES sentences(id),
+    content TEXT,
+    status TEXT,
+    model TEXT,
+    parsed_at TEXT,
+    updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS paragraph_analyses(
+    -- 段落级解析缓存（Reading Part A 双栏 reader 右栏）。cache_key 形如 "{year}|{label}|{para_idx}"，
+    -- 段落文本跨篇章可能撞 sentences.text UNIQUE，故独立表、按复合键定位。
+    cache_key TEXT PRIMARY KEY,
+    content TEXT,
+    status TEXT,
+    model TEXT,
+    analyzed_at TEXT,
+    updated_at TEXT
+);
 CREATE TABLE IF NOT EXISTS cards(
     user_id INTEGER NOT NULL REFERENCES users(id),
     word_idx INTEGER NOT NULL,

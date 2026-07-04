@@ -13,10 +13,24 @@
     const low = String(surface == null ? "" : surface).toLowerCase();
     if (WORD_BY_EN[low]) return WORD_BY_EN[low];
     const tries = [
+      // 复数 / 动词变形
       low.replace(/s$/, ""), low.replace(/es$/, ""),
       low.replace(/ing$/, ""), low.replace(/ed$/, ""),
       low.replace(/ing$/, "e"), low.replace(/ed$/, "e"),
       low.replace(/ies$/, "y"), low.replace(/ied$/, "y"),
+      // -ly 副词 → 形容词原形（quickly→quick, bravely→brave, happily→happy）
+      low.replace(/ly$/, ""),
+      low.replace(/ely$/, "e"),   // bravely→brave（先于下一行）
+      low.replace(/ily$/, "y"),   // happily→happy
+      // -ness / -ment / -tion / -sion / -ity 等抽象名词 → 形容词原形
+      low.replace(/ness$/, ""),
+      low.replace(/ment$/, ""),
+      low.replace(/tion$/, "te"),  // creation→create
+      low.replace(/sion$/, "d"),   // decision→decide
+      low.replace(/ity$/, ""),
+      // -ful / -less → 名词原形（careful→care, careless→care）
+      low.replace(/ful$/, ""),
+      low.replace(/less$/, ""),
     ];
     for (const t of tries) if (WORD_BY_EN[t]) return WORD_BY_EN[t];
     return null;
@@ -311,23 +325,24 @@
     };
     p.sections.forEach((sec, si) => {
       sec.passages.forEach((psg, pi) => {
-        // 实时算「待背词数」：去掉已进入复习队列(已背熟)的
-        const pending = psg.words.filter((w) => {
+        // 该篇命中词里已进入复习队列(review)的 = 已背熟（在日常背词里毕业）
+        const learned = psg.words.filter((w) => {
           const c = Store.getCard(w.idx);
-          return !(c && c.state === "review");
+          return !!(c && c.state === "review");
         }).length;
-        const learned = psg.words.length - pending;
         const card = document.createElement("div");
         card.className = "psg-card";
-        const subHTML = learned > 0
-          ? `命中 <b>${psg.words.length}</b> 词 · 待背 <b>${pending}</b>（已背 ${learned}）`
-          : `命中 <b>${psg.words.length}</b> 词 · ${psg.itemCount || 0} 题 · ${psg.body.length} 字`;
+        const subHTML = `命中 <b>${psg.words.length}</b> 词 · 已背 <b>${learned}</b> · ${psg.itemCount || 0} 题 · ${psg.body.length} 字`;
         card.innerHTML = `<span class="ps-type">${TYPE_LABEL[sec.type] || sec.type}</span>
           <div class="ps-body">
             <div class="ps-title">${psg.label}</div>
             <div class="ps-sub">${subHTML}</div>
-          </div><div class="pc-arrow">›</div>`;
-        card.addEventListener("click", () => startPassageStudy(idx, si, pi));
+          </div>
+          <div class="pc-arrow">›</div>`;
+        card.addEventListener("click", () => {
+          setPassageReader(idx, si, pi);
+          openReader();
+        });
         wrap.appendChild(card);
       });
     });
@@ -336,53 +351,26 @@
 
   let currentPaperIdx = -1;
 
-  function startPassageStudy(paperIdx, secIdx, psgIdx) {
+  // 把 passageReader 装填好（标题/正文/词/items/年份），openReader 用。
+  function setPassageReader(paperIdx, secIdx, psgIdx) {
     const p = (window.PAPERS || [])[paperIdx];
     const psg = p.sections[secIdx].passages[psgIdx];
-    // 该篇命中的全部红宝书词
-    const allWords = psg.words.slice();
     passageReader = {
       title: (p.year ? p.year + " 年 " : "") + (psg.label || ""),
       body: psg.body,
       words: psg.words.map((w) => w.english),
+      year: p.year,
+      label: psg.label,
+      items: psg.items || [],
+      wordsFull: psg.words,
     };
-    if (allWords.length === 0) {
-      alert("该篇未匹配到红宝书词汇。");
-      return;
-    }
-    // 共用记忆曲线：按词 idx 取已有卡片。已毕业进复习队列(review)的词 = 已背下，跳过；
-    // 只保留 new(没见过) 和 learn(今天还在学、没背熟) 的词。
-    let skipped = 0;
-    const fresh = [];
-    for (const w of allWords) {
-      const c = Store.getCard(w.idx);
-      if (c && c.state === "review") { skipped++; continue; }
-      fresh.push(w);
-    }
-    passageWords = fresh;
-    passageSkipped = skipped;
-    if (fresh.length === 0) {
-      // 本篇词全背过了 —— 直接读原文加深
-      studyMode = "passage";
-      openReader();
-      return;
-    }
-    studyMode = "passage";
-    sessionStats = { again: 0, studied: 0, newDone: 0, reviewDone: 0 };
-    // 队列：每词一张卡，复用已有 card 或新建
-    queue = fresh.map((w) => {
-      const c = Store.getCard(w.idx) || SRS.newCard();
-      // 统一成与 window.WORDS 一致的数组形态，并附带真题例句，供 renderCard 用 entry[1]/[2]/.sentences
-      const entry = [w.idx, w.english, w.senses];
-      entry.sentences = w.sentences || [];
-      return { idx: w.idx, card: c, isNew: c.state === "new", entry };
-    });
-    qpos = 0;
-    show("passage");
-    nextCard();
   }
 
   function nextCard() {
+    clearHintTimer();
+    // 切词时清空解析侧栏/抽屉，避免上一词的解析残留
+    hideParseSide();
+    closeParseDrawer();
     if (qpos >= queue.length) { showDone(false); return; }
     const item = queue[qpos];
     // daily 模式用 WORD_BY_INDEX；passage 模式用 item.entry
@@ -422,11 +410,43 @@
   }
 
   // ---- UI 子状态（会话内，不持久化）----
-  // uiPhase: assess-front | assess-revealed | assess-full | quiz1 | quiz2-front | quiz2-back | quiz3-front | quiz3-back | review-front | review-back
+  // uiPhase: assess-front | assess-full | quiz1 | quiz2-front | quiz2-back | quiz3-front | quiz3-back | review-front | review-back
   let uiPhase = "front";
   let assessChoice = null;      // assess 阶段最后选的 q（good/hard/again）
   let quizChoices = [];         // quiz=1 的 4 个选项 [{cn, correct}]
   let quizLocked = false;       // quiz=1 答题后短暂锁，防止重复点
+
+  // ---- 3 秒未操作自动浮现例句（无翻译）作回忆提示 ----
+  // 仅 assess-front / review-front 启用：用户若 3s 内未点按钮/翻面/按键，
+  // 在卡片正面底部追加真题例句（不含翻译按钮），按钮依旧可点。
+  let hintTimer = null;
+  function clearHintTimer() {
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+  }
+  function armHintTimer(item) {
+    clearHintTimer();
+    const front = cardArea().querySelector(".flip-front");
+    if (!front) return;
+    if (front.querySelector(".c-example")) return; // 已有例句则不提示
+    hintTimer = setTimeout(() => {
+      hintTimer = null;
+      // 仍在正面评估/复习阶段、且屏未切走，才提示
+      if (uiPhase !== "assess-front" && uiPhase !== "review-front") return;
+      const inStudy = $("screen-study").classList.contains("active") ||
+                      $("screen-passage").classList.contains("active");
+      if (!inStudy) return;
+      const ex = getExampleFor(item);
+      if (!ex) return;
+      const entry = currentEntry || WORD_BY_INDEX[item.idx];
+      const block = document.createElement("div");
+      block.className = "c-example hint";
+      block.innerHTML = `<div class="c-example-label">真题例句 · 回忆提示</div>
+        <div class="c-example-text">${highlightTarget(ex, entry[1])}</div>`;
+      front.appendChild(block);
+      wireWordClicks(block);
+      rafFit();
+    }, 3000);
+  }
 
   function cardArea() {
     const targetScreen = studyMode === "passage" ? "passage" : "study";
@@ -483,9 +503,16 @@
     const low = String(english).toLowerCase();
     return String(text).replace(/[A-Za-z][A-Za-z\-']*/g, (m) => {
       const ml = m.toLowerCase();
-      const isTarget = (ml === low) ||
+      // 目标词及其变形都算命中（consciously→conscious 也高亮）
+      const isTarget = ml === low ||
         ml.replace(/s$/, "") === low || ml.replace(/es$/, "") === low ||
-        ml.replace(/ing$/, "") === low || ml.replace(/ed$/, "") === low;
+        ml.replace(/ing$/, "") === low || ml.replace(/ed$/, "") === low ||
+        ml.replace(/ly$/, "") === low || ml.replace(/ely$/, "e") === low ||
+        ml.replace(/ily$/, "y") === low ||
+        ml.replace(/ness$/, "") === low || ml.replace(/ment$/, "") === low ||
+        ml.replace(/tion$/, "te") === low || ml.replace(/sion$/, "d") === low ||
+        ml.replace(/ity$/, "") === low ||
+        ml.replace(/ful$/, "") === low || ml.replace(/less$/, "") === low;
       const e = esc(m);
       if (isTarget) return `<strong class="c-target c-word" data-w="${m}">${e}</strong>`;
       // 其它词：词库收录则可点查，否则保持纯文本
@@ -547,11 +574,11 @@
   }
   function exampleBlockHTML(entry, example, withTrans) {
     if (!example) return "";
-    const trans = withTrans
-      ? `<div class="c-trans"><button class="c-trans-btn" data-en="${esc(example)}">查看例句翻译</button></div>`
+    const buttons = withTrans
+      ? `<div class="c-trans"><button class="c-trans-btn" data-en="${esc(example)}">查看例句翻译</button><button class="c-parse-btn" data-en="${esc(example)}">解析长难句</button></div>`
       : "";
     return `<div class="c-example"><div class="c-example-label">真题例句</div>
-      <div class="c-example-text">${highlightTarget(example, entry[1])}</div>${trans}</div>`;
+      <div class="c-example-text">${highlightTarget(example, entry[1])}</div>${buttons}</div>`;
   }
 
   // ============ 渲染分发 ============
@@ -570,13 +597,15 @@
     const lbl = (qpos + 1) + " / " + queue.length;
     document.querySelectorAll("#progress-fill").forEach((el) => (el.style.width = pct));
     document.querySelectorAll("#progress-text").forEach((el) => (el.textContent = lbl));
-    if (studyMode === "passage") $("btn-read").hidden = true;
+    // passage 模式：显示「读原文 →」入口，让用户随时跳出背词、进 reader 双栏
+    if (studyMode === "passage") $("btn-read").hidden = false;
   }
 
   // ---- 阶段0 assess（新词 state=new）----
+  // 正面直接显示单词 + 3 按钮（认识/模糊/忘记），点按钮即提交评分、进全卡。
+  // 不再走「点卡/空格翻面再评分」的中间步。详见 docs/UI设计.md。
   function renderAssess(item) {
     const entry = currentEntry;
-    const example = getExampleFor(item);
     assessChoice = null;
     uiPhase = "assess-front";
     const frontHTML = `<div class="c-en">${esc(entry[1])}</div>`;
@@ -585,46 +614,24 @@
       <div class="c-type">新词 · 评估</div>
       <button class="c-speak" title="发音">🔊</button>
       ${frontHTML}
-      <div class="c-tap">点击卡片或按空格显示释义</div>
     </div></div></div>`;
-    setRatingButtons([]);
-    flipBtn().hidden = false;
-    wireFlip(area);
+    setRatingButtons([
+      { k: "1", l: "认识", q: "good" },
+      { k: "2", l: "模糊", q: "hard" },
+      { k: "3", l: "忘记", q: "again" },
+    ], "rating-3");
+    flipBtn().hidden = true;
     area.querySelectorAll(".c-speak").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); speakEntry(entry); })
     );
     if (settings.autoSpeak) speakEntry(entry);
     rafFit();
-  }
-
-  function flipAssess(item) {
-    const sensesHTML = sensesHTMLOf(entry);
-    const exampleHTML = exampleBlockHTML(entry, example, true);
-    const area = cardArea();
-    area.innerHTML = `<div class="flip-card"><div class="flip-inner flipped"><div class="flip-face flip-back">
-      <div class="c-type">新词 · 评估</div>
-      <button class="c-speak" title="发音">🔊</button>
-      <div class="c-en">${esc(entry[1])}</div>
-      <div class="c-senses">${sensesHTML}</div>
-      ${exampleHTML}
-    </div></div></div>`;
-    uiPhase = "assess-revealed";
-    setRatingButtons([
-      { k: "1", l: "认识", q: "good" },
-      { k: "2", l: "模糊", q: "hard" },
-      { k: "3", l: "不记得", q: "again" },
-    ], "rating-3");
-    flipBtn().hidden = true;
-    wireTransButtons();
-    area.querySelectorAll(".c-speak").forEach((b) =>
-      b.addEventListener("click", (e) => { e.stopPropagation(); speakEntry(entry, { example }); })
-    );
-    if (settings.autoSpeak) speakEntry(entry, { example });
-    rafFit();
+    armHintTimer(item);
   }
 
   // assess 按钮提交：answer→saveCard→bumpMeta→切全卡视图（不 nextCard）
   function assessSubmit(q) {
+    clearHintTimer();
     const item = queue[qpos];
     const wasNew = item.isNew;
     const res = SRS.answer(item.card, q, Date.now());
@@ -648,7 +655,7 @@
     const noteMap = {
       good: "已标记「认识」→ 进入复习队列",
       hard: "已标记「模糊」→ 进入 3 次练习",
-      again: "已标记「不记得」→ 进入 3 次练习",
+      again: "已标记「忘记」→ 进入 3 次练习",
     };
     const area = cardArea();
     area.innerHTML = `<div class="flip-card"><div class="flip-inner flipped"><div class="flip-face flip-back">
@@ -661,7 +668,7 @@
       </div>
     </div></div></div>`;
     uiPhase = "assess-full";
-    // good/hard → 下一词 + 记错了（2 按钮）；again（不记得）→ 仅下一词（1 按钮）
+    // good/hard → 下一词 + 记错了（2 按钮）；again（忘记）→ 仅下一词（1 按钮）
     if (q === "again") {
       setRatingButtons([
         { k: "1", l: "下一词", action: "next" },
@@ -674,6 +681,7 @@
     }
     flipBtn().hidden = true;
     wireTransButtons();
+    wireParseButtons();
     area.querySelectorAll(".c-speak").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); speakEntry(entry, { example }); })
     );
@@ -867,6 +875,7 @@
 
   // 练习 quiz=2/3 的 rate
   function learnRate(q) {
+    clearHintTimer();
     const item = queue[qpos];
     const res = SRS.answer(item.card, q, Date.now());
     item.card = res.card;
@@ -939,7 +948,9 @@
       b.addEventListener("click", (e) => { e.stopPropagation(); speakEntry(entry, { example }); })
     );
     wireTransButtons();
+    wireParseButtons();
     rafFit();
+    if (!flipped) armHintTimer(item); else clearHintTimer();
   }
 
   // ---- 统一 rate 分发 ----
@@ -948,7 +959,7 @@
     if (!item) return;
     const c = item.card;
     if (c.state === "new") {
-      // assess-revealed 的 3 按钮
+      // assess-front 的 3 按钮
       assessSubmit(q);
     } else if (c.state === "learn") {
       learnRate(q);
@@ -969,15 +980,28 @@
 
   function onFlipClick() {
     const inner = document.querySelector(".flip-inner");
-    if (!inner || inner.classList.contains("flipped")) return;
-    flipCurrent();
+    if (!inner) return;
+    if (!inner.classList.contains("flipped")) {
+      // 正面 → 翻面
+      flipCurrent();
+      return;
+    }
+    // 已翻面：
+    if (isMobile()) {
+      // 移动：点卡片空白 = 译文 + 解析抽屉（不再翻回正面；翻回正面走顶栏返回键）
+      if (triggerTransButton()) { triggerParseDrawer(); return; }
+      // 无译文按钮（如 assess 阶段）→ 直接开抽屉
+      triggerParseDrawer();
+      return;
+    }
+    // PC：保持原行为——已翻面再点不翻回（翻回走顶栏返回 / 评分）
   }
   function flipCurrent() {
     const item = queue[qpos];
     if (!item) return;
     const c = item.card;
     if (c.state === "new") {
-      if (uiPhase === "assess-front") flipAssess(item);
+      // assess 阶段不再有翻面中间步：assess-front 直接 3 按钮提交，assess-full 由按钮/键盘推进。
       return;
     }
     if (c.state === "learn") {
@@ -988,7 +1012,7 @@
       return;
     }
     // review：翻面即切到 back 视图
-    if (uiPhase === "review-front") renderReview(item, true);
+    if (uiPhase === "review-front") { clearHintTimer(); renderReview(item, true); }
   }
 
   function updateRatingPreviews(card) {
@@ -1000,6 +1024,7 @@
 
   // review 的 4 按钮评分（保持原逻辑：again 落回 learn 会重走练习）
   function rate(q) {
+    clearHintTimer();
     const item = queue[qpos];
     if (!item) return;
     const wasNew = item.isNew;
@@ -1040,6 +1065,36 @@
     if (wrap && wrap.querySelector(".c-trans-text")) return false; // 已有译文
     btn.click();
     return true;
+  }
+
+  // 触发解析进侧栏/抽屉：取当前卡例句，调 startParse 装载到对应容器。
+  // PC：右侧栏；移动：底部抽屉。空例句则不开。
+  function triggerParseSide() {
+    const en = getCurrentExample();
+    if (!en) return false;
+    if (isMobile()) {
+      showParseDrawer(en);
+    } else {
+      showParseSide();
+      startParse(parseSideBodyEl(), en, "解析中…");
+    }
+    return true;
+  }
+  function triggerParseDrawer() {
+    const en = getCurrentExample();
+    if (!en) { showParseDrawer(); return false; }
+    showParseDrawer(en);
+    return true;
+  }
+  // 当前卡的例句（study daily 用 getExample，passage 优先 entry.sentences[0]）
+  function getCurrentExample() {
+    const item = queue[qpos];
+    if (!item) return "";
+    const entry = studyMode === "passage" ? item.entry : WORD_BY_INDEX[item.idx];
+    if (!entry) return "";
+    if (studyMode === "passage" && entry.sentences && entry.sentences[0]) return entry.sentences[0];
+    const ex = getExample(item.idx);
+    return ex || "";
   }
 
   // ---- 例句中文翻译：点击展开，默认隐藏，避免依赖译文背词 ----
@@ -1094,6 +1149,195 @@
     wrap.appendChild(div);
   }
 
+  // ============ 长难句解析（reader + 背词卡例句，流式 SSE） ============
+  // 母语式 10 层走查：难点预判 → 动词计数 → spine → kernel → 修饰剥离 → 逐层加回 →
+  // 合成训练（第 7 层，closed「对照原文」让用户先自己组装）→ 标点路标 → 复述 → 译文+词表。
+  // 渲染：流式阶段直接 textContent 累加；done 后用 renderParseLayers 重渲染为 <details> 折叠结构。
+  // 缓存：Store.getParse 本地命中瞬返；否则走后端 /api/parse-sentence（其自身有 parses 表缓存）。
+
+  // 极简 markdown→<details> 渲染器（不引入依赖，符合 web/ vanilla 约定）。
+  // 输入是 PARSE_SYS_PROMPT 产出的 10 层文本。按 \n(?=\d+\. \*\*) 切层。
+  function renderParseLayers(markdownText, originalSentence) {
+    if (!markdownText) return "";
+    // 切层：每段以 "N. **Title" 开头
+    const layers = markdownText.split(/\n(?=\d+\.\s+\*\*)/);
+    let html = "";
+    for (const layer of layers) {
+      const m = layer.match(/^(\d+)\.\s+\*\*(.+?)\*\*\n?([\s\S]*)$/);
+      if (!m) {
+        // 不匹配的尾段/前言，原样转义
+        html += `<div class="r-parse-frag">${esc(layer.trim())}</div>`;
+        continue;
+      }
+      const num = m[1], title = m[2], body = m[3] || "";
+      // 第 7 层：默认 open，末尾注入 closed「对照原文」（用户先自己组装再展开对照）
+      const isSynthesis = num === "7";
+      const bodyHTML = renderParseBody(body, isSynthesis ? originalSentence : null);
+      html += `<details open>
+        <summary>${esc(num)}. ${esc(title)}</summary>
+        <div class="r-parse-body">${bodyHTML}</div>
+      </details>`;
+    }
+    return html;
+  }
+
+  // 层体内极简 markdown：**bold**、`code`、*em*、- 列表项、空行分段。其余 esc。
+  // 若 orig 非空（第 7 层），末尾追加 closed <details> 对照原文。
+  function renderParseBody(text, orig) {
+    let s = text;
+    // 先按行处理列表项
+    const lines = s.split(/\n/);
+    let out = "";
+    let inList = false;
+    let para = [];
+    function flushPara() {
+      if (para.length) {
+        out += `<p>${parseInline(para.join(" "))}</p>`;
+        para = [];
+      }
+    }
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) { flushPara(); if (inList) { out += "</ul>"; inList = false; } continue; }
+      if (/^[-•]\s+/.test(trimmed)) {
+        flushPara();
+        if (!inList) { out += "<ul>"; inList = true; }
+        out += `<li>${parseInline(trimmed.replace(/^[-•]\s+/, ""))}</li>`;
+      } else {
+        if (inList) { out += "</ul>"; inList = false; }
+        para.push(trimmed);
+      }
+    }
+    flushPara();
+    if (inList) out += "</ul>";
+    if (orig) {
+      out += `<details class="r-parse-orig-wrap"><summary>▶ 对照原文（先自己组装再展开）</summary><div class="r-parse-orig">${esc(orig)}</div></details>`;
+    }
+    return out;
+  }
+
+  // 行内 markdown：**bold** → <strong>，`code` → <code>，*em* → <em>。先 esc 再插标签。
+  function parseInline(s) {
+    // 用占位符避免 esc 把 < > 弄乱标签
+    s = esc(s);
+    s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    return s;
+  }
+
+  // 流式解析：targetEl 是解析内容要填入的容器（PC 侧栏 body / 移动抽屉 body / reader 句下 box）。
+  // 容器内统一套 .r-parse class 复用样式（侧栏/抽屉 CSS 已把 .r-parse 的背景/边框清零）。
+  function startParse(targetEl, en, loadingText) {
+    if (!targetEl) return;
+    targetEl.innerHTML = `<div class="r-parse"><div class="r-parse-streaming">${esc(loadingText || "解析中…")}</div></div>`;
+    const streamEl = targetEl.querySelector(".r-parse-streaming");
+    let raw = "";
+    LLM.parseSentence(
+      en,
+      (delta) => { raw += delta; streamEl.textContent = raw; rafFit(); },
+      (content) => {
+        targetEl.innerHTML = `<div class="r-parse">${renderParseLayers(content, en)}</div>`;
+        rafFit();
+      },
+      (err) => {
+        targetEl.innerHTML = `<div class="r-parse"><div class="r-parse-streaming err">解析失败：${esc(err && err.message || err)}</div></div>`;
+        rafFit();
+      }
+    );
+  }
+
+  // PC 侧栏显示/隐藏。study 与 passage 共用一套：用 cardArea() 同样的屏选择逻辑。
+  function parseSideEl() {
+    const targetScreen = studyMode === "passage" ? "passage" : "study";
+    return document.querySelector(`#screen-${targetScreen} .parse-side`) || $("parse-side");
+  }
+  function parseSideBodyEl() {
+    const side = parseSideEl();
+    return side ? side.querySelector(".parse-side-body") : null;
+  }
+  function showParseSideEmpty() {
+    const body = parseSideBodyEl();
+    if (body) body.innerHTML = `<div class="parse-side-empty">翻面后按空格，或点例句的「解析长难句」</div>`;
+  }
+  function showParseSide() {
+    const side = parseSideEl();
+    if (!side) return;
+    side.hidden = false;
+    if (!side.querySelector(".r-parse")) showParseSideEmpty();
+  }
+  function hideParseSide() {
+    const side = parseSideEl();
+    if (side) side.hidden = true;
+  }
+
+  // 移动抽屉
+  function showParseDrawer(en) {
+    const overlay = $("parse-drawer-overlay");
+    const drawer = $("parse-drawer");
+    if (!overlay || !drawer) return;
+    overlay.hidden = false;
+    drawer.hidden = false;
+    requestAnimationFrame(() => drawer.classList.add("open"));
+    if (en) {
+      startParse($("parse-drawer-body"), en, "解析中…");
+    } else {
+      const body = $("parse-drawer-body");
+      if (body && !body.querySelector(".r-parse")) {
+        body.innerHTML = `<div class="parse-side-empty">点例句的「解析长难句」开始</div>`;
+      }
+    }
+  }
+  function closeParseDrawer() {
+    const overlay = $("parse-drawer-overlay");
+    const drawer = $("parse-drawer");
+    if (!drawer) return;
+    drawer.classList.remove("open");
+    setTimeout(() => {
+      if (drawer) drawer.hidden = true;
+      if (overlay) overlay.hidden = true;
+    }, 250);
+  }
+  function isMobile() { return window.matchMedia("(max-width:880px)").matches; }
+
+  // 事件委托：.c-parse-btn（背词卡）与 .r-parse-btn（reader）共用
+  function wireParseButtons() {
+    document.querySelectorAll(".c-parse-btn, .r-parse-btn").forEach((btn) => {
+      if (btn.dataset.wired) return;
+      btn.dataset.wired = "1";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const en = btn.getAttribute("data-en");
+        if (!en) return;
+        // reader 的 .r-parse-btn：仍走句下内联（不改）
+        if (btn.classList.contains("r-parse-btn")) {
+          const wrap = btn.parentElement;
+          btn.style.display = "none";
+          startParseStream(wrap, en, "解析中…");
+          return;
+        }
+        // 背词卡 .c-parse-btn：PC 进侧栏，移动开抽屉
+        if (isMobile()) {
+          showParseDrawer(en);
+        } else {
+          showParseSide();
+          startParse(parseSideBodyEl(), en, "解析中…");
+        }
+      });
+    });
+  }
+
+  // 兼容旧调用名（reader 句下内联仍用 startParseStream，语义 = 往 host 兄弟节点塞 .r-parse）
+  function startParseStream(host, en, loadingText) {
+    let box = host.parentElement.querySelector(".r-parse, .c-parse");
+    if (!box || !host.parentElement.contains(box)) {
+      box = document.createElement("div");
+      box.className = "r-parse";
+      host.insertAdjacentElement("afterend", box);
+    }
+    startParse(box, en, loadingText);
+  }
+
   // ============ 例句/原文 点词查义 popover ============
   // 任何 .c-word（含 .c-target 目标词、reader 的 .r-hl）点击都弹小卡片显示释义。
   let wordPopover = null;
@@ -1128,7 +1372,9 @@
        </div>
        <div class="wp-senses">${sensesHTML}</div>`;
     pop.hidden = false;
-    // 发音
+    // 自动朗读（受「点词朗读」开关控制）；🔊 按钮始终可手动点读
+    if (settings.speakOnWordClick) speak(entry[1]);
+    // 发音按钮
     const sb = pop.querySelector(".wp-speak");
     if (sb) sb.addEventListener("click", (e) => { e.stopPropagation(); speak(entry[1]); });
     // 定位到锚点下方
@@ -1174,9 +1420,24 @@
     });
     // 滚动/切卡时收起
     document.addEventListener("scroll", hideWordPopover, true);
-    // Esc 收起
+    // Esc 收起 popover + 解析抽屉
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") hideWordPopover();
+      if (e.key === "Escape") { hideWordPopover(); closeParseDrawer(); }
+    });
+    // 解析侧栏/抽屉关闭按钮
+    const sideClose = $("parse-side-close");
+    if (sideClose) sideClose.addEventListener("click", hideParseSide);
+    const drawerClose = $("parse-drawer-close");
+    if (drawerClose) drawerClose.addEventListener("click", closeParseDrawer);
+    const drawerOverlay = $("parse-drawer-overlay");
+    if (drawerOverlay) drawerOverlay.addEventListener("click", closeParseDrawer);
+    // 段落分析卡折叠/展开：点 head 切换 collapsed
+    const ra = $("reader-analysis");
+    if (ra) ra.addEventListener("click", (e) => {
+      const head = e.target.closest(".pa-card-head");
+      if (!head) return;
+      const card = head.closest(".pa-card");
+      if (card) card.classList.toggle("collapsed");
     });
   }
 
@@ -1218,29 +1479,366 @@
   }
 
   // ---- 真题原文阅读器 ----
+  // 双栏：左 #reader-body 原文（词表命中词 .r-hl 绿 + 题干关键词 .r-hl-q 蓝），
+  //       右 #reader-analysis 段落分析卡（流式生成，落 paragraph_analyses 表 + Store 双层缓存）。
+  // 空格键逐句翻译（.r-sent）保留；段落分析后台串行生成，不打断阅读。
+  let readerActiveSent = null; // 当前激活句 .r-sent 元素
+  let readerParas = [];        // 段落原文数组（split 后）
+  let readerAnalysisState = []; // 每段 {el, done, failed} 供按需触发
+  let readerAnalysisStarted = false;
+
   function openReader() {
     if (!passageReader) { show("dashboard"); return; }
     $("reader-title").textContent = passageReader.title || "真题原文";
     const body = $("reader-body");
-    // 把正文按段落（已有换行）渲染；命中词高亮
+    const analysis = $("reader-analysis");
+    // 词表命中词集合（绿）
     const wordSet = new Set((passageReader.words || []).map((w) => w.toLowerCase()));
-    // 也加入屈折变形的高亮较难，这里只高亮词表原形出现的 token
-    const paras = passageReader.body.split(/\n+/).filter((p) => p.trim());
-    body.innerHTML = paras.map((p) => `<p>${highlightWords(p, wordSet)}</p>`).join("");
+    // 题干关键词集合（蓝）：从 items 提取且必须出现在原文里
+    const qKeywordSet = extractQuestionKeywords(passageReader.items || [], passageReader.body || "");
+    const paras = (passageReader.body || "").split(/\n+/).filter((p) => p.trim());
+    readerParas = paras;
+    readerAnalysisState = paras.map(() => ({ el: null, done: false, failed: false }));
+    readerAnalysisStarted = false;
+    // 左栏：按段渲染，句级 .r-sent 保留供空格定位
+    body.innerHTML = paras.map((p) => `<p>${highlightSentences(p, wordSet, qKeywordSet)}</p>`).join("");
+    // 底部追加阅读题（题干 + ABCD 选项）。用 insertAdjacentHTML 而非 innerHTML+=，
+    // 避免重建段落节点、使下方 readerActiveSent 引用失效。
+    const items = passageReader.items || [];
+    if (items.length) {
+      const optsHTML = (it) => Object.keys(it.options || {}).sort()
+        .map((k) => `<li><b>${esc(k)}.</b> ${esc(it.options[k] || "")}</li>`).join("");
+      const qHTML = `<div class="r-items">
+        <h3 class="r-items-title">阅读题</h3>
+        ${items.map((it) => `
+          <div class="r-item">
+            <div class="r-item-stem"><b>${esc(it.n ?? "")}.</b> ${esc(it.stem || "")}</div>
+            <ul class="r-item-opts">${optsHTML(it)}</ul>
+          </div>`).join("")}
+      </div>`;
+      body.insertAdjacentHTML("beforeend", qHTML);
+    }
+    readerActiveSent = body.querySelector(".r-sent");
+    if (readerActiveSent) readerActiveSent.classList.add("active");
+    // 右栏：先建 N 个空 card 占位，再后台串行填充
+    if (analysis) {
+      analysis.hidden = false;
+      analysis.innerHTML = paras.map((p, i) => (
+        `<div class="pa-card collapsed" data-pa-idx="${i}">
+           <div class="pa-card-head" data-pa-toggle="1">
+             <span class="pa-card-title">第 ${i + 1} 段</span>
+             <span class="pa-head-right">
+               <span class="pa-card-status">待生成</span>
+               <span class="pa-toggle">▾</span>
+             </span>
+           </div>
+           <div class="pa-streaming">分析中</div>
+         </div>`
+      )).join("");
+      // 把每个 card 的 body 容器存到 state，供流式填入
+      Array.prototype.forEach.call(analysis.querySelectorAll(".pa-card"), (card) => {
+        const i = parseInt(card.getAttribute("data-pa-idx"), 10);
+        readerAnalysisState[i].el = card;
+      });
+    }
     show("reader");
     wireWordClicks(body);
+    // 后台串行生成段落分析（首段立刻开始，其余排队；失败即停）
+    startReaderAnalysisChain();
   }
 
-  function highlightWords(text, wordSet) {
-    // 按词边界切，命中 wordSet 的加 .r-hl；词库收录的词都可点查
+  // 从题干（stem + options）抽关键词：分词→去停用词→与原文 token 集合取交。
+  // 粗略屈折还原（复现 highlightWords 里 lookupWord 的 -s/-ed/-ing 思路）。
+  const Q_STOPWORDS = new Set([
+    "the","a","an","of","to","in","on","at","by","for","with","from","as","is","are","was","were","be","been","being",
+    "it","its","this","that","these","those","they","them","their","we","you","he","she","his","her","our","your",
+    "and","or","but","not","no","nor","so","if","then","than","because","when","while","where","what","which","who","whom","whose","why","how",
+    "do","does","did","done","have","has","had","will","would","can","could","may","might","must","shall","should","may",
+    "paragraph","paragraphs","author","passage","text","line","lines","following","suggested","implies","indicates","according","mentioned","true","false","except","best","title","mainly","main","idea","topic","tone","purpose","infer","inferred","means","meaning","refer","refers","case","cases","example","instance","instances","above","below","first","second","third","last","final","one","two","three","four","five","most","more","less","least","such","both","each","all","any","some","other","another","same","different","new","old","part","parts","question","questions","answer","answers",
+    "would","about","into","over","under","out","up","down","than","then","there","here","also","only","very","just","such","too","quite","rather","almost","nearly","often","always","never","sometimes","usually","generally","typically","probably","perhaps","maybe","might","may","could","should","would","must","shall","will","do","does","did","done","doing","have","has","had","having","be","been","being","is","are","was","were","am","s","t","d","ll","ve","re","m",
+  ]);
+
+  function extractQuestionKeywords(items, passageBody) {
+    const set = new Set();
+    if (!items || !items.length) return set;
+    // 拼接所有 stem + options
+    let text = "";
+    for (const it of items) {
+      text += " " + (it.stem || "");
+      const opts = it.options || {};
+      for (const k of Object.keys(opts)) text += " " + (opts[k] || "");
+    }
+    // 原文 token 集合（小写）
+    const bodyTokens = new Set();
+    (passageBody.toLowerCase().match(/[a-z][a-z\-']*/g) || []).forEach((t) => bodyTokens.add(t));
+    // 题干 token 与原文取交，去停用词
+    const tokens = text.toLowerCase().match(/[a-z][a-z\-']*/g) || [];
+    for (const t of tokens) {
+      if (t.length < 3) continue;
+      if (Q_STOPWORDS.has(t)) continue;
+      // 原文（含屈折还原）出现才算
+      if (bodyTokens.has(t)) { set.add(t); continue; }
+      const restored = restoreInflection(t);
+      if (restored && bodyTokens.has(restored)) set.add(restored);
+      // 也存原形，便于原文 -s/-ed/-ing 命中
+      if (restored) set.add(restored);
+    }
+    return set;
+  }
+
+  // 粗略屈折还原：复现 lookupWord 的 -s/-ed/-ing 思路，但只返回字符串原形
+  function restoreInflection(low) {
+    if (!low) return null;
+    // -ing
+    if (low.length > 5 && low.endsWith("ing")) {
+      const stem = low.slice(0, -3);
+      if (stem.length >= 3) return stem;
+    }
+    // -ed
+    if (low.length > 4 && low.endsWith("ed")) {
+      let stem = low.slice(0, -2);
+      if (stem.length >= 3) return stem;
+      stem = low.slice(0, -3); // -ied → -y
+      if (stem.length >= 3) return stem;
+    }
+    // -s / -es
+    if (low.length > 3 && low.endsWith("es")) {
+      const stem = low.slice(0, -2);
+      if (stem.length >= 3) return stem;
+    }
+    if (low.length > 2 && low.endsWith("s") && !low.endsWith("ss")) {
+      const stem = low.slice(0, -1);
+      if (stem.length >= 3) return stem;
+    }
+    return null;
+  }
+  // alias 给 highlightWords 用（避免与上面 restoreInflection 命名冲突）
+  const restoreInflectionStr = restoreInflection;
+
+  // 后台串行生成所有段落分析。1 worker，避免 LLM 网关压力。
+  // 失败即停（沿用 fail-fast 教训），该 card 显示错误 + 重试，后续 card 保持「待生成」。
+  async function startReaderAnalysisChain() {
+    if (readerAnalysisStarted) return;
+    readerAnalysisStarted = true;
+    for (let i = 0; i < readerParas.length; i++) {
+      const st = readerAnalysisState[i];
+      if (!st || st.done) continue;
+      await generateParagraphAnalysis(i);
+      // 失败即停；用户可点重试继续
+      if (st.failed) break;
+    }
+  }
+
+  // 触发某段分析（若未生成）。advanceReaderSent 跨入新段时调。
+  async function ensureParagraphAnalysis(idx) {
+    if (idx < 0 || idx >= readerAnalysisState.length) return;
+    const st = readerAnalysisState[idx];
+    if (!st || st.done || st.failed) return;
+    await generateParagraphAnalysis(idx);
+  }
+
+  async function generateParagraphAnalysis(idx) {
+    const st = readerAnalysisState[idx];
+    if (!st || !st.el) return;
+    const card = st.el;
+    // 重置 card 内容（重试时也会进来）。保留 collapsed 态：仅当用户未手动展开过才默认收起。
+    const wasCollapsed = card.classList.contains("collapsed");
+    card.innerHTML = `<div class="pa-card-head" data-pa-toggle="1"><span class="pa-card-title">第 ${idx + 1} 段</span><span class="pa-head-right"><span class="pa-card-status">生成中</span><span class="pa-toggle">▾</span></span></div><div class="pa-streaming">分析中</div>`;
+    if (wasCollapsed) card.classList.add("collapsed"); else card.classList.remove("collapsed");
+    const bodyEl = card.querySelector(".pa-streaming");
+    let acc = "";
+    const fullBody = passageReader.body || "";
+    const payload = {
+      year: passageReader.year, label: passageReader.label,
+      para_idx: idx, text: readerParas[idx], full_body: fullBody,
+      items: passageReader.items || [],
+    };
+    // 同步标记 active 段（视觉对应当前阅读段）
+    Array.prototype.forEach.call($("reader-analysis").querySelectorAll(".pa-card"), (c) => c.classList.remove("active"));
+    card.classList.add("active");
+    // 仅在展开态滚动，避免收起的卡被自动撑开视野
+    if (!card.classList.contains("collapsed")) card.scrollIntoView({ behavior: "smooth", block: "start" });
+    await new Promise((resolve) => {
+      LLM.analyzeParagraph(payload,
+        (delta) => {
+          acc += delta;
+          bodyEl.className = "pa-body";
+          bodyEl.textContent = acc;
+        },
+        (content) => {
+          st.done = true;
+          const statusEl2 = card.querySelector(".pa-card-status");
+          if (statusEl2) statusEl2.textContent = "已生成";
+          renderParaAnalysisMarkdown(card, content || acc);
+          resolve();
+        },
+        (err) => {
+          st.failed = true;
+          const wasCollapsed = card.classList.contains("collapsed");
+          card.innerHTML = `<div class="pa-card-head" data-pa-toggle="1"><span class="pa-card-title">第 ${idx + 1} 段</span><span class="pa-head-right"><span class="pa-card-status">失败</span><span class="pa-toggle">▾</span></span></div><div class="pa-card-err">${esc(err && err.message || String(err))}</div><div class="pa-retry"><button class="row-btn" data-pa-retry="${idx}">重试</button></div>`;
+          if (wasCollapsed) card.classList.add("collapsed"); else card.classList.remove("collapsed");
+          const retryBtn = card.querySelector("[data-pa-retry]");
+          if (retryBtn) {
+            retryBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              st.failed = false; st.done = false;
+              generateParagraphAnalysis(idx);
+            });
+          }
+          resolve();
+        }
+      );
+    });
+  }
+
+  // 段落分析 markdown 渲染：把 6 段 ▍标记 转 h4 + 内容块
+  function renderParaAnalysisMarkdown(card, md) {
+    if (!md) return;
+    // 按 ▍ 切段（首段可能无前缀）
+    const lines = md.split(/\n/);
+    let html = "";
+    let curHead = null;
+    let curBuf = [];
+    const flush = () => {
+      if (curHead !== null) {
+        html += `<h4>${esc(curHead)}</h4><pre>${esc(curBuf.join("\n").trim())}</pre>`;
+      } else if (curBuf.length) {
+        html += `<pre>${esc(curBuf.join("\n").trim())}</pre>`;
+      }
+      curBuf = [];
+    };
+    for (const ln of lines) {
+      const m = ln.match(/^▍(.+)$/);
+      if (m) {
+        flush();
+        curHead = m[1].trim();
+      } else {
+        curBuf.push(ln);
+      }
+    }
+    flush();
+    // 替换 card 内容（保留 head）
+    const headEl = card.querySelector(".pa-card-head");
+    card.innerHTML = "";
+    if (headEl) card.appendChild(headEl);
+    const wrap = document.createElement("div");
+    wrap.className = "pa-body";
+    wrap.innerHTML = html;
+    card.appendChild(wrap);
+  }
+
+  // 段落 → 按句切（保留标点与空格），每句包 <span class="r-sent">，句内词高亮。
+  // 切分用 [^.!?]+ 合并，避免 lookbehind 在老 Safari 的兼容问题。
+  function highlightSentences(text, wordSet, qKeywordSet) {
+    const parts = text.split(/([.!?]+(?:["'”’)\]]+|\s+|$))/);
+    let out = "";
+    let buf = "";
+    for (let i = 0; i < parts.length; i++) {
+      buf += parts[i];
+      // 奇数位是「标点+收尾」，此时 buf 是一个完整句
+      if (i % 2 === 1 && buf.trim()) {
+        out += `<span class="r-sent" data-en="${escAttr(buf)}">${highlightWords(buf, wordSet, qKeywordSet)}</span>`;
+        buf = "";
+      }
+    }
+    if (buf.trim()) {
+      out += `<span class="r-sent" data-en="${escAttr(buf)}">${highlightWords(buf, wordSet, qKeywordSet)}</span>`;
+    }
+    return out || `<span class="r-sent" data-en="${escAttr(text)}">${highlightWords(text, wordSet, qKeywordSet)}</span>`;
+  }
+
+  function escAttr(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  async function showReaderTrans(sent) {
+    if (!sent) return;
+    const en = sent.getAttribute("data-en") || "";
+    if (!en) return;
+    // 已展开过 → 跳到下一句
+    let trans = sent.nextElementSibling;
+    if (trans && trans.classList.contains("r-trans")) {
+      advanceReaderSent(sent);
+      return;
+    }
+    trans = document.createElement("div");
+    trans.className = "r-trans";
+    trans.textContent = "翻译中…";
+    sent.insertAdjacentElement("afterend", trans);
+    // 解析按钮：接在译文后面，与 .r-trans 同容器逻辑
+    const parseBtn = document.createElement("div");
+    parseBtn.className = "r-trans-actions";
+    parseBtn.innerHTML = `<button class="r-parse-btn" data-en="${escAttr(en)}">解析长难句 →</button>`;
+    trans.insertAdjacentElement("afterend", parseBtn);
+    wireParseButtons();
+    rafFit();
+    try {
+      const zh = await LLM.translate(en);
+      trans.textContent = zh;
+    } catch (err) {
+      trans.textContent = "翻译失败：" + (err && err.message || err);
+      trans.classList.add("err");
+    }
+    advanceReaderSent(sent);
+    rafFit();
+  }
+
+  function advanceReaderSent(cur) {
+    cur.classList.remove("active");
+    let next = cur.nextElementSibling;
+    // 跨过 .r-trans 找下一个 .r-sent
+    while (next && !next.classList.contains("r-sent")) next = next.nextElementSibling;
+    if (next) {
+      readerActiveSent = next;
+      next.classList.add("active");
+      next.scrollIntoView({ behavior: "smooth", block: "center" });
+      // 跨入新段 → 触发该段分析（若尚未生成）
+      const paraIdx = findParagraphIndex(next);
+      if (paraIdx >= 0) ensureParagraphAnalysis(paraIdx);
+    } else {
+      // 段内无下一句 → 找下一段第一个 .r-sent
+      const all = document.querySelectorAll("#reader-body .r-sent");
+      const list = Array.prototype.slice.call(all);
+      const idx = list.indexOf(cur);
+      if (idx >= 0 && idx + 1 < list.length) {
+        readerActiveSent = list[idx + 1];
+        readerActiveSent.classList.add("active");
+        readerActiveSent.scrollIntoView({ behavior: "smooth", block: "center" });
+        const paraIdx = findParagraphIndex(readerActiveSent);
+        if (paraIdx >= 0) ensureParagraphAnalysis(paraIdx);
+      } else {
+        readerActiveSent = null; // 末句
+      }
+    }
+  }
+
+  // 找 .r-sent 所属段落在 readerParas 里的 idx（按 DOM 里 <p> 顺序）
+  function findParagraphIndex(sentEl) {
+    if (!sentEl) return -1;
+    let p = sentEl.parentElement;
+    while (p && p.tagName !== "P") p = p.parentElement;
+    if (!p) return -1;
+    const allP = Array.prototype.slice.call($("reader-body").querySelectorAll("p"));
+    return allP.indexOf(p);
+  }
+
+  function highlightWords(text, wordSet, qKeywordSet) {
+    // 按词边界切，命中 wordSet 的加 .r-hl（绿）；命中 qKeywordSet 的加 .r-hl-q（蓝）。
+    // 题干关键词色优先（同时命中两类时，蓝覆盖绿——「重点中的重点」）。
+    // 高亮命中判定复用 lookupWord 的变形还原（-ly/-ness/-tion 等），
+    // 这样 consciously→conscious 也能在原文里高亮。
+    const qset = qKeywordSet instanceof Set ? qKeywordSet : null;
     return text.replace(/[A-Za-z][A-Za-z\-']*/g, (m) => {
       const low = m.toLowerCase();
       const e = esc(m);
-      const inSet = wordSet.has(low) ||
-        wordSet.has(low.replace(/s$/, "")) || wordSet.has(low.replace(/es$/, "")) ||
-        wordSet.has(low.replace(/ing$/, "")) || wordSet.has(low.replace(/ed$/, ""));
       const lookup = lookupWord(low);
-      if (inSet) return `<span class="r-hl c-word" data-w="${m}">${e}</span>`;
+      const restored = lookup ? lookup[1].toLowerCase() : restoreInflectionStr(low);
+      const inVocab = wordSet.has(low) || (lookup && wordSet.has(restored));
+      const inQ = qset && (qset.has(low) || (restored && qset.has(restored)));
+      if (inQ) return `<span class="r-hl-q c-word" data-w="${m}">${e}</span>`;
+      if (inVocab) return `<span class="r-hl c-word" data-w="${m}">${e}</span>`;
       if (lookup) return `<span class="c-word" data-w="${m}">${e}</span>`;
       return e;
     });
@@ -1248,6 +1846,7 @@
 
   // ============ screens ============
   function show(name) {
+    clearHintTimer();
     document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
     $("screen-" + name).classList.add("active");
     // 同步顶栏/底栏 tab 高亮
@@ -1255,24 +1854,32 @@
       b.classList.toggle("active", b.dataset.tab === name);
     });
     // 子屏（非主 tab）隐藏全局 header/tab-bar
-    const isMain = ["dashboard", "papers", "transmgr", "settings"].includes(name);
+    const isMain = ["dashboard", "papers", "transmgr", "parsemgr", "settings"].includes(name);
     document.body.classList.toggle("sub-screen", !isMain);
     if (name === "dashboard") renderDashboard();
   }
 
   // ============ settings UI ============
+  function selectSettingsSection(s) {
+    document.querySelectorAll("#settings-nav button").forEach((b) =>
+      b.classList.toggle("active", b.dataset.s === s));
+    document.querySelectorAll(".settings-section").forEach((sec) =>
+      (sec.hidden = sec.dataset.s !== s));
+  }
   function openSettings() {
     $("set-daily").value = settings.dailyNew;
     $("val-daily").textContent = settings.dailyNew;
     $("set-rate").value = settings.rate;
     $("val-rate").textContent = settings.rate.toFixed(1);
     $("set-autospeak").checked = !!settings.autoSpeak;
+    $("set-speak-word").checked = !!settings.speakOnWordClick;
     document.querySelectorAll("#set-direction button").forEach((b) =>
       b.classList.toggle("active", b.dataset.v === settings.direction)
     );
     // LLM: 服务端代理，从 Api 拉配置/模型列表
     refreshAccountUI();
     refreshLlmUI();
+    selectSettingsSection("study");
     show("settings");
   }
 
@@ -1321,7 +1928,7 @@
       // 填充模型 select
       await fillLlmModelOptions(model);
       // 填充并发滑块
-      const c = Math.max(1, Math.min(16, parseInt(conc, 10) || 4));
+      const c = Math.max(1, Math.min(100, parseInt(conc, 10) || 4));
       const concEl = $("set-llm-concurrency");
       const concVal = $("val-llm-concurrency");
       if (concEl) { concEl.value = c; }
@@ -1450,6 +2057,94 @@
     });
   }
 
+  // ============ 解析管理页（仿 transmgr） ============
+  let pmState = { status: "unparsed", q: "", page: 1, size: 50 };
+  let pmTotal = 0;
+  let pmQTimer = null;
+
+  async function openParseMgr() {
+    pmState = { status: "unparsed", q: "", page: 1, size: 50 };
+    show("parsemgr");
+    await loadPmPage();
+  }
+
+  async function loadPmPage() {
+    const listEl = $("pm-list");
+    const pageEl = $("pm-page");
+    const statsEl = $("pm-stats");
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="hint">加载中…</div>';
+    try {
+      const res = await Api.listSentences(pmState);
+      const items = (res && res.items) || [];
+      pmTotal = (res && res.total) || items.length;
+      // stats：listSentences 返回 parsed/unparsed
+      const parsed = (res && res.parsed) || 0;
+      const total = (res && res.total) || 0;
+      statsEl.textContent = "已解析 " + parsed + " / 共 " + total;
+      renderPmList(items);
+      const pages = Math.max(1, Math.ceil(pmTotal / pmState.size));
+      if (pmState.page > pages) pmState.page = pages;
+      pageEl.textContent = pmState.page + " / " + pages;
+    } catch (err) {
+      listEl.innerHTML = '<div class="hint">加载失败：' + esc((err && err.message) || err) + "</div>";
+    }
+  }
+
+  function renderPmList(items) {
+    const wrap = $("pm-list");
+    wrap.innerHTML = "";
+    if (!items.length) {
+      wrap.innerHTML = '<div class="hint">无匹配句子。</div>';
+      return;
+    }
+    items.forEach((it) => {
+      const parse = it.parse || null;
+      const hasParse = !!(parse && parse.content && parse.status === "ok");
+      const div = document.createElement("div");
+      div.className = "tm-item";
+      const badge = hasParse
+        ? '<span class="tm-badge ok">已解析</span>'
+        : '<span class="tm-badge">未解析</span>';
+      const btnLabel = hasParse ? "重解析" : "解析";
+      const preview = hasParse
+        ? '<div class="tm-zh">' + esc((parse.content || "").slice(0, 120)) + '…</div>'
+        : '';
+      div.innerHTML =
+        '<div class="tm-main">' +
+          '<div class="tm-text">' + esc(it.text || "") + '</div>' +
+          preview +
+        '</div>' +
+        '<div class="tm-actions">' +
+          badge +
+          '<button class="row-btn" data-id="' + esc(it.id) + '">' + btnLabel + '</button>' +
+        '</div>';
+      wrap.appendChild(div);
+    });
+    // 绑定单条解析按钮
+    wrap.querySelectorAll("button[data-id]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        const old = btn.textContent;
+        btn.textContent = "解析中…";
+        btn.disabled = true;
+        try {
+          const r = await Api.parseById(id);
+          if (r && r.status === "unconfigured") {
+            alert("LLM 未配置（请在服务端配置 Key）");
+          } else if (r && r.status !== "ok") {
+            alert("解析失败：" + (r.error || r.status));
+          }
+          await loadPmPage();
+        } catch (err) {
+          btn.textContent = old;
+          btn.disabled = false;
+          alert("解析失败：" + ((err && err.message) || err));
+        }
+      });
+    });
+  }
+
   // ============ events ============
   function bind() {
     $("btn-start").addEventListener("click", startSession);
@@ -1472,8 +2167,15 @@
       else show("papers");
     });
     $("btn-read").addEventListener("click", openReader);
-    $("btn-reader-back").addEventListener("click", () => show("passage"));
-    $("btn-reader-done").addEventListener("click", () => show("passage"));
+    $("btn-reader-back").addEventListener("click", () => {
+      // 退出 reader：回当前年份篇章列表；无则回真题年份列表
+      if (currentPaperIdx >= 0) show("paper");
+      else show("papers");
+    });
+    $("btn-reader-done").addEventListener("click", () => {
+      if (currentPaperIdx >= 0) show("paper");
+      else show("papers");
+    });
 
     // rating buttons：初始化时绑一次，按钮文本/数量由 setRatingButtons 动态替换；
     // 这里只绑键盘同款的分发逻辑。点击走 data-q / data-action。
@@ -1501,6 +2203,12 @@
     $("set-autospeak").addEventListener("change", (e) => {
       settings.autoSpeak = e.target.checked; applySettings();
     });
+    $("set-speak-word").addEventListener("change", (e) => {
+      settings.speakOnWordClick = e.target.checked; applySettings();
+    });
+    document.querySelectorAll("#settings-nav button").forEach((b) =>
+      b.addEventListener("click", () => selectSettingsSection(b.dataset.s))
+    );
     document.querySelectorAll("#set-direction button").forEach((b) =>
       b.addEventListener("click", () => {
         settings.direction = b.dataset.v;
@@ -1601,6 +2309,94 @@
       }
     });
 
+    // ============ 解析管理页 events ============
+    document.querySelectorAll("#pm-filter button").forEach((b) =>
+      b.addEventListener("click", () => {
+        document.querySelectorAll("#pm-filter button").forEach((x) => x.classList.toggle("active", x === b));
+        pmState.status = b.dataset.v;
+        pmState.page = 1;
+        loadPmPage();
+      })
+    );
+    $("pm-q").addEventListener("input", (e) => {
+      clearTimeout(pmQTimer);
+      pmQTimer = setTimeout(() => {
+        pmState.q = e.target.value.trim();
+        pmState.page = 1;
+        loadPmPage();
+      }, 300);
+    });
+    $("pm-prev").addEventListener("click", () => {
+      if (pmState.page > 1) { pmState.page--; loadPmPage(); }
+    });
+    $("pm-next").addEventListener("click", () => {
+      const pages = Math.max(1, Math.ceil(pmTotal / pmState.size));
+      if (pmState.page < pages) { pmState.page++; loadPmPage(); }
+    });
+    $("pm-parse-page").addEventListener("click", async () => {
+      const items = document.querySelectorAll("#pm-list .tm-item button[data-id]");
+      const ids = [];
+      items.forEach((b) => ids.push(b.getAttribute("data-id")));
+      if (!ids.length) { alert("本页无待解析项"); return; }
+      if (!confirm("将解析本页 " + ids.length + " 条，耗时较长，确认？")) return;
+      const btn = $("pm-parse-page");
+      const old = btn.textContent;
+      btn.textContent = "解析中…（" + ids.length + " 条）";
+      btn.disabled = true;
+      try {
+        const r = await Api.parseBatch(ids);
+        await loadPmPage();
+        alert("解析完成：" + (r.parsed || 0) + " 成功 / " + (r.failed || 0) + " 失败");
+      } catch (err) {
+        alert("批量解析失败：" + ((err && err.message) || err));
+      } finally {
+        btn.textContent = old;
+        btn.disabled = false;
+      }
+    });
+    $("pm-parse-all").addEventListener("click", async () => {
+      // 取当前过滤条件下（含 status / q）的全部 id，分页拉完再批量提交。
+      // 后端遇错即中止，前端把已完成的落库、剩余标 skipped，提示用户解决网关后重试。
+      const btn = $("pm-parse-all");
+      if (!confirm("将解析当前筛选下的全部未解析项，遇错即中止。耗时很长，确认？")) return;
+      const old = btn.textContent;
+      btn.textContent = "拉取列表…";
+      btn.disabled = true;
+      try {
+        const ids = [];
+        let page = 1;
+        // 强制按 unparsed 取，避免重复解析已解析项；忽略 q（全量）
+        const saved = { ...pmState };
+        pmState.status = "unparsed"; pmState.q = ""; pmState.page = 1;
+        while (true) {
+          const res = await Api.listSentences({ ...pmState, page, size: 200 });
+          const items = (res && res.items) || [];
+          items.forEach((it) => ids.push(String(it.id)));
+          btn.textContent = "拉取列表…（已收 " + ids.length + " 条）";
+          const total = (res && res.total) || ids.length;
+          if (ids.length >= total || items.length === 0) break;
+          page++;
+        }
+        Object.assign(pmState, saved);
+        if (!ids.length) { alert("当前筛选下无待解析项"); return; }
+        if (!confirm("将解析 " + ids.length + " 条，遇错即中止。确认？")) return;
+        btn.textContent = "解析中…（" + ids.length + " 条）";
+        const r = await Api.parseBatch(ids);
+        await loadPmPage();
+        const skipped = (r.results || []).filter((x) => x.status === "skipped").length;
+        const firstErr = (r.results || []).find((x) => x.status === "error");
+        let msg = "解析完成：" + (r.parsed || 0) + " 成功 / " + (r.failed || 0) + " 失败";
+        if (skipped) msg += " / " + skipped + " 跳过";
+        if (firstErr) msg += "\n首个错误：" + (firstErr.error || "");
+        alert(msg);
+      } catch (err) {
+        alert("批量解析失败：" + ((err && err.message) || err));
+      } finally {
+        btn.textContent = old;
+        btn.disabled = false;
+      }
+    });
+
     // 账号 panel
     $("btn-account").addEventListener("click", openSettings);
     $("btn-acc-login").addEventListener("click", async () => {
@@ -1668,6 +2464,16 @@
 
     // keyboard shortcuts（study 或 passage 屏）：按当前卡阶段 + 翻面态分发
     document.addEventListener("keydown", (e) => {
+      // 真题原文阅读屏：空格/Enter 显示当前句翻译并推进到下一句
+      const inReader = $("screen-reader").classList.contains("active");
+      if (inReader) {
+        if (e.target.tagName === "INPUT") return;
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          if (readerActiveSent) showReaderTrans(readerActiveSent);
+        }
+        return;
+      }
       const inStudy = $("screen-study").classList.contains("active") || $("screen-passage").classList.contains("active");
       if (!inStudy) return;
       if (e.target.tagName === "INPUT") return;
@@ -1677,20 +2483,24 @@
       const c = item.card;
       const phase = uiPhase;
 
-      // 翻面键：assess-front / quiz2-front / quiz3-front / review-front
-      const flipPhase = (phase === "assess-front" || phase === "quiz2-front" ||
-                         phase === "quiz3-front" || phase === "review-front");
+      // 翻面键：quiz2-front / quiz3-front / review-front（assess-front 不再翻面，直接 1/2/3 评分）
+      const flipPhase = (phase === "quiz2-front" || phase === "quiz3-front" ||
+                         phase === "review-front");
       if ((k === " " || k === "Enter") && flipPhase) {
         e.preventDefault();
         flipCurrent();
         return;
       }
 
-      // 翻面后的阶段：空格/Enter 优先展开「查看例句翻译」（未展开时），再走原流程
-      const backWithTrans = (phase === "assess-full" || phase === "assess-revealed" ||
+      // 翻面后的阶段：空格/Enter 优先展开「查看例句翻译」（未展开时）+ 同步加载解析，再走原流程
+      const backWithTrans = (phase === "assess-full" ||
                              phase === "review-back" || phase === "quiz2-back" || phase === "quiz3-back");
       if ((k === " " || k === "Enter") && backWithTrans) {
-        if (triggerTransButton()) { e.preventDefault(); return; }
+        if (triggerTransButton()) {
+          e.preventDefault();
+          triggerParseSide(); // 译文展开的同时加载解析到侧栏/抽屉
+          return;
+        }
         // assess-full 译文已展开或无译文 → 空格 = 下一词
         if (phase === "assess-full") { e.preventDefault(); assessFullNext(); return; }
       }
@@ -1701,16 +2511,21 @@
         if (phase === "assess-full") { e.preventDefault(); assessFullNext(); return; }
       }
 
+      // assess-full 的数字键：不依赖 c.state，因为 SRS.answer 后 state 已从 new 变成
+      // review/learn，但 uiPhase 仍是 assess-full。必须放在 state 分发之前。
+      if (phase === "assess-full") {
+        // 1=下一词；2=记错了（仅认识/模糊路径有，「忘记」路径下禁用）
+        if (k === "1") { e.preventDefault(); assessFullNext(); }
+        else if (k === "2" && assessChoice !== "again") { e.preventDefault(); assessFullMistake(); }
+        return;
+      }
+
       if (c.state === "new") {
-        if (phase === "assess-revealed") {
-          // 1=认识 2=模糊 3=不记得
+        if (phase === "assess-front") {
+          // 1=认识 2=模糊 3=忘记
           if (k === "1") { e.preventDefault(); handleRate("good"); }
           else if (k === "2") { e.preventDefault(); handleRate("hard"); }
           else if (k === "3") { e.preventDefault(); handleRate("again"); }
-        } else if (phase === "assess-full") {
-          // 1=下一词；2=记错了（仅认识/模糊路径有，「不记得」路径下禁用）
-          if (k === "1") { e.preventDefault(); assessFullNext(); }
-          else if (k === "2" && assessChoice !== "again") { e.preventDefault(); assessFullMistake(); }
         }
         return;
       }
@@ -1748,6 +2563,7 @@
         if (tab === 'study') { startSession(); return; }
         if (tab === 'settings') { openSettings(); return; }
         if (tab === 'transmgr') { openTransMgr(); return; }
+        if (tab === 'parsemgr') { openParseMgr(); return; }
         if (tab === 'papers') { renderPapersList(); show('papers'); return; }
         show(tab);
       });

@@ -50,10 +50,52 @@
   // ---- translate ----
   // on-card:按文本翻译,无需 token(后端 status: 'ok'|'error'|'unconfigured')
   async function translateByText(text) { return req("/api/translate", { method: "POST", body: JSON.stringify({ text }) }); }
+  // 段落级解析(Reading Part A 双栏 reader 右栏):无 token,流式 SSE,全局共享缓存
+  async function analyzeParagraphByText(payload) {
+    return req("/api/analyze-paragraph", { method: "POST", body: JSON.stringify(payload) });
+  }
   // 管理:按 id(需登录)
   async function translateById(id) { return req("/api/translate/" + id, { method: "POST" }); }
   async function retranslateById(id) { return req("/api/translate/" + id + "/retranslate", { method: "POST" }); }
   async function batchTranslate(ids) { return req("/api/translate/batch", { method: "POST", body: JSON.stringify({ ids }) }); }
+
+  // ---- 长难句解析管理（需登录，非流式批量/单条）----
+  async function parseBatch(ids) {
+    return req("/api/parse/batch", { method: "POST", body: JSON.stringify({ ids }) });
+  }
+  // 单条按 id 解析：复用 /api/parse-sentence（无需 token、流式），管理页用 fetch 读流存库后刷新即可
+  // 这里给一个「触发即等完成」的便捷封装：POST 后等服务端落库（done 事件），不流式回显
+  async function parseById(id) {
+    // 取句子原文 → 调流式端点 → 等 done。管理页单条重解析走这个。
+    const s = await req("/api/sentences/" + id);
+    if (!s || !s.text) throw new Error("sentence not found");
+    const resp = await fetch("/api/parse-sentence", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: s.text }),
+    });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder("utf-8");
+    let buf = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const ev = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        for (const line of ev.split("\n")) {
+          if (!line.startsWith("data:")) continue;
+          let obj; try { obj = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
+          if (obj.event === "done") return { id, status: "ok", content: obj.content || "" };
+          if (obj.event === "unconfigured") return { id, status: "unconfigured" };
+          if (obj.event === "error") return { id, status: "error", error: obj.message || "" };
+        }
+      }
+    }
+    return { id, status: "error", error: "流提前结束" };
+  }
 
   // ---- llm config(服务端持有 key)----
   async function llmConfig() { return req("/api/llm/config"); }
@@ -77,6 +119,8 @@
     req, register, login, logout, me,
     stats, listSentences,
     translateByText, translateById, retranslateById, batchTranslate,
+    analyzeParagraphByText,
+    parseBatch, parseById,
     llmConfig, llmModels, setLlmModel, setLlmConcurrency,
     getCards, putCard, bulkCards, getMeta, putMeta,
   };

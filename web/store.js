@@ -11,6 +11,7 @@
     dailyNew: 20,          // new words per day
     direction: "en2cn",    // en2cn | cn2en | random
     autoSpeak: true,       // speak english when a card is shown
+    speakOnWordClick: true,// 点词查义 popover 弹出时是否自动朗读单词
     rate: 1.0,             // TTS rate
     orderSeed: 0x9e3779b9, // for stable per-word pseudo-random order
     llm: {
@@ -69,6 +70,42 @@
     const all = loadJSON(KEY_TRANS, {});
     all[text] = zh || "";
     saveJSON(KEY_TRANS, all);
+  }
+
+  // ---- 长难句解析缓存 ----
+  // 镜像 getTrans/setTrans：by text 缓存解析全文。key 独立 ew.parse.v1，
+  // 不与译文混。命中即瞬返（无网络），与 server.parses 表双层缓存。
+  const KEY_PARSE = "ew.parse.v1";
+  function getParse(text) {
+    text = String(text == null ? "" : text).trim();
+    if (!text) return undefined;
+    const all = loadJSON(KEY_PARSE, {});
+    return all[text] || undefined;
+  }
+  function setParse(text, content) {
+    text = String(text == null ? "" : text).trim();
+    const all = loadJSON(KEY_PARSE, {});
+    all[text] = content || "";
+    saveJSON(KEY_PARSE, all);
+  }
+
+  // 段落解析缓存（Reading Part A 双栏 reader 右栏）。独立命名空间 ew.para.v1，
+  // 按 {year|label|para_idx} 复合键定位，与 server.paragraph_analyses 表双层缓存。
+  const KEY_PARA = "ew.para.v1";
+  function getParaAnalysisKey(payload) {
+    const y = (payload && payload.year != null) ? payload.year : "?";
+    const l = (payload && payload.label) || "";
+    const i = (payload && payload.para_idx != null) ? payload.para_idx : 0;
+    return "para:" + y + "|" + l + "|" + i;
+  }
+  function getParaAnalysis(cacheKey) {
+    const all = loadJSON(KEY_PARA, {});
+    return all[cacheKey] || undefined;
+  }
+  function setParaAnalysis(cacheKey, content) {
+    const all = loadJSON(KEY_PARA, {});
+    all[cacheKey] = content || "";
+    saveJSON(KEY_PARA, all);
   }
 
   // ---- cards ----
@@ -187,6 +224,8 @@
     getAllCards, getCard, saveCard, clearAll,
     getMeta, bumpMeta, exportData, importData,
     getAllTrans, getTrans, setTrans,
+    getParse, setParse,
+    getParaAnalysisKey, getParaAnalysis, setParaAnalysis,
     sync,
   };
 })(window);
