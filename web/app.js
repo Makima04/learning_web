@@ -57,10 +57,18 @@
   let passageWords = []; // [{idx,...}] 当前篇章待背词
   let passageReader = null; // {title, body, words:[english...]}
   let passageSkipped = 0; // 该篇已背过、跳过的词数
+  // 真题记词来源：从「真题记词」进入 passage 背词时记录 {paperIdx, type}，
+  // 完成屏的「读原文」按钮据此进篇章选择层、返回按钮回题型层。null 表示非真题记词来源。
+  let reciteOrigin = null;
   // studyMode: "daily" | "passage" | "learn" | "review" —— 决定 nextCard 走哪条队列
   // daily: 复习+新词混排（标准 SRS）；passage: 真题篇章词；
   // learn: 仅新词（btn-start「学习新词」）；review: 仅复习+learn 在练卡（btn-review「复习」）
   let studyMode = "daily";
+
+  // ---- 真题英一/英二切换 ----
+  // variant: "en1" 英语一 / "en2" 英语二。真题列表 / 真题记词 年份层共用。
+  // 默认 en1（兼容旧数据：未标 variant 的 paper 视为 en1）。
+  let papersVariant = "en1";
 
   // ============ TTS ============
   // 不同浏览器对 en-US 的默认 voice 不同：Safari 用 Mac 自带 Samantha（清晰女声），
@@ -287,7 +295,7 @@
   function renderPapersList() {
     const wrap = $("papers-list");
     wrap.innerHTML = "";
-    const papers = window.PAPERS || [];
+    const papers = (window.PAPERS || []).filter((p) => (p.variant || "en1") === papersVariant);
     if (papers.length === 0) {
       wrap.innerHTML = '<div class="hint">暂无真题数据。请运行 scripts/parse_paper.py + match_vocab.py 生成。</div>';
       return;
@@ -305,7 +313,7 @@
       card.className = "paper-card";
       card.innerHTML = `<div class="pc-year">${p.year || "?"}</div>
         <div class="pc-body">
-          <div class="pc-title">${p.year ? p.year + " 年考研英语真题" : p.source}</div>
+          <div class="pc-title">${p.year ? p.year + " 年考研英语" + (papersVariant === "en2" ? "二" : "一") + "真题" : p.source}</div>
           <div class="pc-sub">${p.sections.length} 个题型 · 共 ${totalWords} 个红宝书词汇</div>
         </div><div class="pc-arrow">›</div>`;
       card.addEventListener("click", () => openPaper(seen[key]));
@@ -317,12 +325,10 @@
     const p = (window.PAPERS || [])[idx];
     if (!p) return;
     currentPaperIdx = idx;
-    $("paper-title").textContent = (p.year ? p.year + " 年" : "真题") + " 篇章";
+    const variantLabel = (p.variant || "en1") === "en2" ? "英语二" : "英语一";
+    $("paper-title").textContent = (p.year ? p.year + " 年" : "真题") + " · " + variantLabel + " · 篇章";
     const wrap = $("passages-list");
     wrap.innerHTML = "";
-    const TYPE_LABEL = {
-      use_of_english: "完形", reading_a: "阅读A", reading_b: "新题型", translation: "翻译", writing: "写作",
-    };
     p.sections.forEach((sec, si) => {
       sec.passages.forEach((psg, pi) => {
         // 该篇命中词里已进入复习队列(review)的 = 已背熟（在日常背词里毕业）
@@ -351,7 +357,186 @@
 
   let currentPaperIdx = -1;
 
-  // 把 passageReader 装填好（标题/正文/词/items/年份），openReader 用。
+  // 题型中文名（openPaper 与真题记词共用）
+  const TYPE_LABEL = {
+    use_of_english: "完形", reading_a: "阅读A", reading_b: "新题型", translation: "翻译", writing: "写作",
+  };
+
+  // ============ 真题记词：年份 → 题型 → 背词 ============
+  // 与日常背词共用 cards 表（主键 user_id,word_idx）与 SRS 状态机；studyMode="passage"
+  // 复用 renderCard/nextCard/getExampleFor 既有的 passage 分支。
+  // 重复词（同一 idx 在多篇章出现）去重，保留首例句。
+
+  // 层 1：年份列表（复用 renderPapersList 的去重排序逻辑）
+  function renderRecitePapers() {
+    const wrap = $("recite-papers-list");
+    wrap.innerHTML = "";
+    const papers = (window.PAPERS || []).filter((p) => (p.variant || "en1") === papersVariant);
+    if (papers.length === 0) {
+      wrap.innerHTML = '<div class="hint">暂无真题数据。请运行 scripts/parse_paper.py + match_vocab.py 生成。</div>';
+      return;
+    }
+    const seen = {};
+    papers.forEach((p, i) => {
+      const key = p.year || ("来源" + i);
+      if (seen[key] === undefined) seen[key] = i;
+    });
+    Object.keys(seen).sort((a, b) => parseInt(String(b).replace(/\D/g, "") || 0, 10) - parseInt(String(a).replace(/\D/g, "") || 0, 10)).forEach((key) => {
+      const p = papers[seen[key]];
+      // 该年份所有 passage 的命中词按 idx 去重后的总数
+      const uniq = new Set();
+      p.sections.forEach((sec) => sec.passages.forEach((psg) => psg.words.forEach((w) => uniq.add(w.idx))));
+      const card = document.createElement("div");
+      card.className = "paper-card";
+      card.innerHTML = `<div class="pc-year">${p.year || "?"}</div>
+        <div class="pc-body">
+          <div class="pc-title">${p.year ? p.year + " 年考研英语" + (papersVariant === "en2" ? "二" : "一") + "真题" : p.source}</div>
+          <div class="pc-sub">${p.sections.length} 个题型 · 共 ${uniq.size} 个红宝书词汇</div>
+        </div><div class="pc-arrow">›</div>`;
+      card.addEventListener("click", () => renderReciteSections(seen[key]));
+      wrap.appendChild(card);
+    });
+    // 切到年份层
+    showReciteLayer("years");
+  }
+
+  // 层 2：题型/篇章列表。每个 passage 一张卡（阅读A 铺平成 Text 1/2/3/4，写作铺平成 Part A/B）。
+  // 同 type 仅当多篇时，标题才带 label 后缀（「阅读A · Text 1」）；单篇题型只显示类型名。
+  // 同篇内按 idx 去重保留首 5 例句；跨篇不去重（共用记忆曲线，背完一篇的词在下一篇会自动跳过）。
+  function renderReciteSections(paperIdx) {
+    const p = (window.PAPERS || [])[paperIdx];
+    if (!p) return;
+    currentPaperIdx = paperIdx;
+    const variantLabel = (p.variant || "en1") === "en2" ? "英语二" : "英语一";
+    $("recite-sec-title").textContent = (p.year ? p.year + " 年" : "真题") + " · " + variantLabel + " · 题型";
+    const wrap = $("recite-sections-list");
+    wrap.innerHTML = "";
+    // 先统计每个 type 的篇数，决定标题是否带 label 后缀
+    const typeCount = new Map();
+    p.sections.forEach((sec) => {
+      if (!sec || !sec.passages) return;
+      typeCount.set(sec.type, (typeCount.get(sec.type) || 0) + sec.passages.length);
+    });
+    let any = false;
+    p.sections.forEach((sec) => {
+      if (!sec || !sec.passages) return;
+      const typeLabel = TYPE_LABEL[sec.type] || sec.type;
+      const multi = (typeCount.get(sec.type) || 0) > 1;
+      sec.passages.forEach((psg) => {
+        any = true;
+        // 同篇内按 idx 去重，保留首 5 例句
+        const wordMap = new Map();
+        (psg.words || []).forEach((w) => {
+          if (!wordMap.has(w.idx)) {
+            wordMap.set(w.idx, {
+              idx: w.idx, english: w.english, senses: w.senses,
+              sentences: (w.sentences || []).slice(0, 5),
+            });
+          }
+        });
+        const words = Array.from(wordMap.values());
+        const learned = words.filter((w) => {
+          const c = Store.getCard(w.idx);
+          return !!(c && c.state === "review");
+        }).length;
+        const totalItems = psg.itemCount || 0;
+        const titleText = multi ? `${typeLabel} · ${psg.label}` : typeLabel;
+        const card = document.createElement("div");
+        card.className = "recite-section-card";
+        const subHTML = `命中 <b>${words.length}</b> 词 · 已背 <b>${learned}</b> · ${totalItems} 题 · ${psg.body.length} 字`;
+        card.innerHTML = `
+          <div class="recite-sec-head">
+            <span class="ps-type">${typeLabel}</span>
+            <div class="recite-sec-body">
+              <div class="recite-sec-title">${titleText}</div>
+              <div class="recite-sec-sub">${subHTML}</div>
+            </div>
+            <div class="pc-arrow">›</div>
+          </div>`;
+        card.addEventListener("click", () => startReciteStudy(paperIdx, sec.type, words));
+        wrap.appendChild(card);
+      });
+    });
+    if (!any) {
+      wrap.innerHTML = '<div class="hint">该年份无可用题型。</div>';
+    }
+    showReciteLayer("sections");
+  }
+
+  // 切换真题记词屏的两层
+  function showReciteLayer(layer) {
+    $("recite-layer-years").hidden = layer !== "years";
+    $("recite-layer-sections").hidden = layer !== "sections";
+    // 切层时同步显示/隐藏英一/英二切换条：只在年份层显示
+    const bar = $("recite-variant-bar");
+    if (bar) bar.style.display = layer === "years" ? "" : "none";
+  }
+
+  // 英一/英二切换：点切换条按钮 → 切 papersVariant、重渲染当前屏的年份列表
+  function setPapersVariant(v) {
+    if (v !== "en1" && v !== "en2") return;
+    papersVariant = v;
+    // 同步两处切换条的 active 态（用户可能在任一屏切换）
+    document.querySelectorAll(".variant-bar .variant-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.variant === v);
+    });
+    // 重渲染当前可见屏的年份列表
+    if (!($("screen-papers").classList.contains("active"))) {
+      // 真题列表屏不可见时，若在真题记词屏则刷新记词年份层
+      if ($("screen-papers-recite").classList.contains("active")) {
+        showReciteLayer("years");
+        renderRecitePapers();
+      }
+      return;
+    }
+    renderPapersList();
+  }
+
+  // 核心：装填真题记词队列，进 passage 背词。
+  // words: 去重后的 [{idx,english,senses,sentences}]（来自 renderReciteSections）
+  function startReciteStudy(paperIdx, type, words) {
+    if (!words || words.length === 0) {
+      // 无命中词：直接给个空完成屏
+      studyMode = "passage";
+      reciteOrigin = { paperIdx, type };
+      passageSkipped = 0;
+      queue = []; qpos = 0;
+      sessionStats = { again: 0, studied: 0, newDone: 0, reviewDone: 0 };
+      showDone(true);
+      return;
+    }
+    // 装填队列：已毕业（state=review）的跳过并计 passageSkipped
+    passageSkipped = 0;
+    queue = [];
+    words.forEach((w) => {
+      const existing = Store.getCard(w.idx);
+      if (existing && existing.state === "review") {
+        passageSkipped++;
+        return;
+      }
+      const card = existing || SRS.newCard();
+      // entry：passage 模式专用词条。形如 window.WORDS 条目 [idx, english, senses]，
+      // 再挂 .sentences 供 getExampleFor 优先取（passage 分支用 entry[1]/entry[2] 数组下标）。
+      const entry = [w.idx, w.english, w.senses];
+      entry.sentences = w.sentences || [];
+      queue.push({ idx: w.idx, card, isNew: !existing, entry });
+    });
+    reciteOrigin = { paperIdx, type };
+    // passageReader 仅作兜底（reader 不再从真题记词进入，但 passage 模式渲染仍可能引用）
+    passageReader = null;
+    studyMode = "passage";
+    qpos = 0;
+    sessionStats = { again: 0, studied: 0, newDone: 0, reviewDone: 0 };
+    if (queue.length === 0) {
+      // 全部已背熟：直接完成屏
+      showDone(true);
+      return;
+    }
+    show("passage");
+    nextCard();
+  }
+
+// 把 passageReader 装填好（标题/正文/词/items/年份），openReader 用。
   function setPassageReader(paperIdx, secIdx, psgIdx) {
     const p = (window.PAPERS || [])[paperIdx];
     const psg = p.sections[secIdx].passages[psgIdx];
@@ -1455,26 +1640,32 @@
       <div class="stat"><div class="stat-num">${sessionStats.newDone}</div><div class="stat-label">新词</div></div>
       <div class="stat"><div class="stat-num">${sessionStats.reviewDone}</div><div class="stat-label">复习</div></div>
       <div class="stat"><div class="stat-num">${sessionStats.again}</div><div class="stat-label">需重来</div></div>`;
-    // passage 模式完成后给出「读真题原文」入口；并提示有多少词是已背过自动跳过的
-    const existing = document.getElementById("btn-read-done");
-    if (existing) existing.remove();
+    // passage 模式完成后提示有多少词是已背过自动跳过的，并给「返回题型」入口
     const existingSkip = document.getElementById("done-skip-note");
     if (existingSkip) existingSkip.remove();
-    if (studyMode === "passage" && passageReader) {
+    const existingBack = document.getElementById("btn-back-sections");
+    if (existingBack) existingBack.remove();
+    if (studyMode === "passage") {
       if (passageSkipped > 0) {
         const note = document.createElement("div");
         note.id = "done-skip-note";
         note.className = "hint";
         note.style.textAlign = "center";
-        note.textContent = `本篇有 ${passageSkipped} 个词已背熟，自动跳过 · 共用记忆曲线`;
+        note.textContent = `本题型有 ${passageSkipped} 个词已背熟，自动跳过 · 共用记忆曲线`;
         document.querySelector("#screen-done .done-wrap").appendChild(note);
       }
-      const btn = document.createElement("button");
-      btn.id = "btn-read-done";
-      btn.className = "primary big";
-      btn.innerHTML = "读真题原文 → 在语境中加深";
-      btn.addEventListener("click", openReader);
-      document.querySelector("#screen-done .done-wrap").appendChild(btn);
+      // 「返回题型」：回真题记词的题型层（读原文入口在「真题」tab，不在真题记词里）
+      if (reciteOrigin) {
+        const backBtn = document.createElement("button");
+        backBtn.id = "btn-back-sections";
+        backBtn.className = "primary big";
+        backBtn.innerHTML = "返回题型";
+        backBtn.addEventListener("click", () => {
+          show("papers-recite");
+          renderReciteSections(reciteOrigin.paperIdx);
+        });
+        document.querySelector("#screen-done .done-wrap").appendChild(backBtn);
+      }
     }
   }
 
@@ -1854,9 +2045,14 @@
       b.classList.toggle("active", b.dataset.tab === name);
     });
     // 子屏（非主 tab）隐藏全局 header/tab-bar
-    const isMain = ["dashboard", "papers", "transmgr", "parsemgr", "settings"].includes(name);
+    const isMain = ["dashboard", "papers", "papers-recite", "transmgr", "parsemgr", "settings"].includes(name);
     document.body.classList.toggle("sub-screen", !isMain);
     if (name === "dashboard") renderDashboard();
+    // 进入真题记词屏时默认回年份层（除非已经在子层）
+    if (name === "papers-recite") {
+      const inSubLayer = !($("recite-layer-years").hidden);
+      if (inSubLayer) showReciteLayer("years");
+    }
   }
 
   // ============ settings UI ============
@@ -2151,7 +2347,17 @@
     $("btn-review").addEventListener("click", startReviewSession);
     // btn-settings / btn-papers-back / btn-set-back / btn-transmgr-back 已移除（顶栏 tab 替代）
     $("btn-back").addEventListener("click", () => show("dashboard"));
-    $("btn-home").addEventListener("click", () => show("dashboard"));
+    $("btn-home").addEventListener("click", () => {
+      // 完成屏返回：真题记词来源回题型层，否则回 dashboard；同时重置 studyMode
+      if (studyMode === "passage" && reciteOrigin) {
+        show("papers-recite");
+        renderReciteSections(reciteOrigin.paperIdx);
+      } else {
+        show("dashboard");
+      }
+      studyMode = "daily";
+      reciteOrigin = null;
+    });
     // study 与 passage 各有一个 flip 按钮，都绑 flipCurrent
     ["btn-flip-study", "btn-flip-passage"].forEach((id) => {
       const el = $(id);
@@ -2162,19 +2368,30 @@
     $("btn-papers").addEventListener("click", () => { renderPapersList(); show("papers"); });
     $("btn-paper-back").addEventListener("click", () => show("papers"));
     $("btn-passage-back").addEventListener("click", () => {
-      // 返回篇章列表
-      if (currentPaperIdx >= 0) openPaper(currentPaperIdx);
+      // 返回：真题记词来源 → 回题型层；否则回篇章列表
+      if (reciteOrigin) {
+        show("papers-recite");
+        renderReciteSections(reciteOrigin.paperIdx);
+      } else if (currentPaperIdx >= 0) openPaper(currentPaperIdx);
       else show("papers");
     });
     $("btn-read").addEventListener("click", openReader);
     $("btn-reader-back").addEventListener("click", () => {
-      // 退出 reader：回当前年份篇章列表；无则回真题年份列表
+      // 退出 reader：回该年份篇章列表；无则回真题年份列表
       if (currentPaperIdx >= 0) show("paper");
       else show("papers");
     });
     $("btn-reader-done").addEventListener("click", () => {
       if (currentPaperIdx >= 0) show("paper");
       else show("papers");
+    });
+
+    // 真题记词屏：层级返回（题型层 → 年份层）
+    $("btn-recite-sec-back").addEventListener("click", () => renderRecitePapers());
+
+    // 英一/英二切换条（真题列表屏 + 真题记词屏各一套）
+    document.querySelectorAll(".variant-bar .variant-btn").forEach((b) => {
+      b.addEventListener("click", () => setPapersVariant(b.dataset.variant));
     });
 
     // rating buttons：初始化时绑一次，按钮文本/数量由 setRatingButtons 动态替换；
@@ -2565,6 +2782,7 @@
         if (tab === 'transmgr') { openTransMgr(); return; }
         if (tab === 'parsemgr') { openParseMgr(); return; }
         if (tab === 'papers') { renderPapersList(); show('papers'); return; }
+        if (tab === 'papers-recite') { renderRecitePapers(); show('papers-recite'); return; }
         show(tab);
       });
     });

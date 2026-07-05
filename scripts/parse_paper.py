@@ -62,7 +62,9 @@ def cut_answer_key(text: str) -> str:
 def words_to_lines(words, y_tol: float = 3.0):
     """把 PyMuPDF 的 words 按 y 坐标聚成视觉行，每行内按 x 排序。
     关键作用：完形选项若排成 4 列网格，get_text('text') 会按列读（全是 A 再全是 B…），
-    这里按 y 聚行后还原成 "1. [A].. [B].. [C].. [D].." 的真实阅读顺序。"""
+    这里按 y 聚行后还原成 "1. [A].. [B].. [C].. [D].." 的真实阅读顺序。
+    另：修复题号被切成相邻 word 的情形（如 "2" 与 "4." 在同一行但 x 相邻、本属同一题号 "24."）：
+    聚行后，对相邻的「裸数字 + 句点数字」做粘连还原。"""
     ws = sorted(words, key=lambda w: (w[1], w[0]))  # (y0, x0)
     if not ws:
         return []
@@ -87,6 +89,10 @@ def words_to_lines(words, y_tol: float = 3.0):
     # 抽取 "Text" + 后续首个 1-4 数字（中间可有任意正文词）作为标题，余词按 x 顺序拼回正文。
     final = []
     for row in out:
+        # 先修复题号粘连：行首若出现「裸整数 word + 紧随其后的 "N." word」、且二者 x 紧邻
+        # （如 "2" + "4." 本是 "24."），还原成完整题号，避免 QNUM_RE 把 "2" 当题号、
+        # "4." 漂成下一题的题号。仅当裸整数是 1-2 位且后续句点数字也是 1-2 位时合并。
+        row = _merge_split_qnum(row)
         m = re.search(r"Text\s+(?:\S+\s+)*?([1-4])(?!\d)", row)
         if m:
             header = "Text " + m.group(1)
@@ -102,6 +108,19 @@ def words_to_lines(words, y_tol: float = 3.0):
         else:
             final.append(row)
     return final
+
+
+def _merge_split_qnum(row: str) -> str:
+    """修复题号被 PyMuPDF 切成两个相邻 word 的情形：行首「裸整数 + 句点数字」
+    如 "2 4." 本是 "24."。仅当行首匹配且合并后落在合理题号区间（1-52）时还原。
+    避免误合并正文里"1 2."这类并列数字（正文行通常不以裸整数+句点数字开头）。"""
+    m = re.match(r"^(\d{1,2})\s+(\d{1,2})\.", row)
+    if not m:
+        return row
+    merged = m.group(1) + m.group(2)
+    if 1 <= int(merged) <= 52:
+        return merged + "." + row[m.end():]
+    return row
 
 
 def extract_pages(pdf_path: str):
@@ -533,6 +552,13 @@ def parse_translation(body: str):
         seg = passage[start:end].strip()
         seg = re.sub(r"\s*\(\s*\d+\s*\)\s*$", "", seg).strip()
         segments.append({"n": n, "segment": seg})
+    # 英语二翻译是「整篇全文翻译」：正文里没有 (46)..(50) 段标记。
+    # 兜底：若无 segment 命中但正文非空，把整篇当作 1 段（题号取 directions 里的
+    # 「46.」；取不到则默认 46）。避免英二翻译段全空。
+    if not segments and passage.strip():
+        mnum = re.search(r"(\d{1,2})\s*\.\s*Directions", directions or body)
+        n = int(mnum.group(1)) if mnum and 45 <= int(mnum.group(1)) <= 55 else 46
+        segments.append({"n": n, "segment": passage.strip()})
     return {
         "type": "translation",
         "title": "Section II Reading Comprehension — Part C",
@@ -544,10 +570,11 @@ def parse_translation(body: str):
 
 # ---- Writing ----
 def parse_writing(body: str):
-    """按 51./52. Directions（冒号兼容 ASCII":"与全角"："）切 Part A/B。
-    两者之间的文本归属前者；并截断答案区尾巴。"""
+    """按 N. Directions 切 Part A/B（英一题号 51/52、英二题号 47/48，统一 \\d{1,2} 兼容）。
+    冒号兼容 ASCII":"与全角"："；两者之间的文本归属前者；并截断答案区尾巴。
+    题号与 Directions 之间允许夹一行「Part A/B」（英二 2023 等年份排版）。"""
     body = cut_answer_key(body)
-    pat = re.compile(r"(?m)^\s*(5[12])\s*\.\s*Directions\s*[:：]")
+    pat = re.compile(r"(?m)^\s*(\d{1,2})\s*\.\s*(?:Part\s+[A-C]\b[^\n]*\n\s*)?Directions\s*[:：]")
     marks = [(int(m.group(1)), m.start(), m.end()) for m in pat.finditer(body)]
     # 去重：同一题号只取首次
     seen_n = set()
@@ -631,10 +658,40 @@ def parse_paper(pdf_path: str, year=None):
         if "C" in parts:
             out["sections"].append(parse_translation(parts["C"]))
 
-    if "III" in sec_map:
-        out["sections"].append(parse_writing(sec_map["III"]))
+    has_translation = any(s["type"] == "translation" for s in out["sections"])
+    # 英语二：翻译是独立 Section III（Section II 只有 Part A/B，无 Part C）。
+    # split_top_sections 对重复罗马数字早停，故 2022+ 年份 sec_map["III"] 里
+    # 会夹带第二个「Section III Writing」——_truncate_at_writing 把写作段切掉。
+    if not has_translation and "III" in sec_map:
+        out["sections"].append(parse_translation(_truncate_at_writing(sec_map["III"])))
+
+    # 写作：英一在 Section III；英二在 Section IV（传统）或第二个 Section III（2022+）。
+    if "IV" in sec_map:
+        out["sections"].append(parse_writing(sec_map["IV"]))
+    elif "III" in sec_map:
+        if has_translation:
+            # 英一：Section III 即写作
+            out["sections"].append(parse_writing(sec_map["III"]))
+        else:
+            # 英二 2022+：写作是全文里第二个「Section III Writing」
+            wb = _find_writing_in_full(full)
+            if wb is not None:
+                out["sections"].append(parse_writing(wb))
 
     return out
+
+
+def _truncate_at_writing(sec_iii_body: str) -> str:
+    """EN2 Section III（翻译）正文若夹带第二个「Section III Writing」子标题，截掉写作段。"""
+    m = re.search(r"Section\s*\n?\s*(?:Ⅲ|III)\s+Writing", sec_iii_body, re.I)
+    return sec_iii_body[: m.start()] if m else sec_iii_body
+
+
+def _find_writing_in_full(full: str):
+    """EN2 2022+：全文里定位第二个「Section III Writing」（写作段），返回该段正文到文末。
+    答案区由 parse_writing 内 cut_answer_key 再截。未找到返回 None。"""
+    m = re.search(r"Section\s*\n?\s*(?:Ⅲ|III|Ⅳ|IV)\s+Writing", full, re.I)
+    return full[m.start():] if m else None
 
 
 def guess_year(pdf_path: str, data):

@@ -15,6 +15,7 @@
   <nav class="header-nav">
     <button data-tab="dashboard" class="active">首页面板</button>
     <button data-tab="papers">真题</button>
+    <button data-tab="papers-recite">真题记词</button>
     <button data-tab="transmgr">翻译管理</button>
     <button data-tab="parsemgr">解析管理</button>
     <button data-tab="settings">设置</button>
@@ -129,8 +130,34 @@
 
   <!-- ============ PAPERS LIST ============ -->
   <section id="screen-papers" class="screen">
-    <div class="hint">选择年份与篇章，阅读真题原文：左侧按句翻译、右侧段落分析、底部附阅读题。</div>
+    <div class="variant-bar" id="papers-variant-bar">
+      <button class="variant-btn active" data-variant="en1" data-target="papers-list">英语一</button>
+      <button class="variant-btn" data-variant="en2" data-target="papers-list">英语二</button>
+    </div>
+    <div class="hint" id="papers-hint">选择年份与篇章，阅读真题原文：左侧按句翻译、右侧段落分析、底部附阅读题。</div>
     <div id="papers-list" class="papers-list"></div>
+  </section>
+
+  <!-- ============ PAPERS RECITE (真题记词：年份 → 题型 → 背词) ============ -->
+  <section id="screen-papers-recite" class="screen">
+    <div class="variant-bar" id="recite-variant-bar">
+      <button class="variant-btn active" data-variant="en1" data-target="recite-papers-list">英语一</button>
+      <button class="variant-btn" data-variant="en2" data-target="recite-papers-list">英语二</button>
+    </div>
+    <!-- 层1：年份 -->
+    <div class="recite-layer" id="recite-layer-years">
+      <div class="hint">选择年份 → 题型 → 背该题型真题里命中的红宝书词汇（与日常背词共用记忆曲线）。</div>
+      <div id="recite-papers-list" class="papers-list"></div>
+    </div>
+    <!-- 层2：题型 -->
+    <div class="recite-layer" id="recite-layer-sections" hidden>
+      <header class="topbar">
+        <button class="icon-btn" id="btn-recite-sec-back" title="返回">‹</button>
+        <div class="brand" id="recite-sec-title">题型</div>
+        <span style="width:40px"></span>
+      </header>
+      <div id="recite-sections-list" class="passages-list"></div>
+    </div>
   </section>
 
   <!-- ============ PAPER DETAIL (passages) ============ -->
@@ -394,9 +421,9 @@
 <!-- ============ 全局底栏（移动） ============ -->
 <nav class="tab-bar">
   <button data-tab="dashboard" class="active">🏠<span>首页</span></button>
-  <button data-tab="papers">📚<span>真题</span></button>
+  <button data-tab="papers-recite">📖<span>真题记词</span></button>
   <button data-tab="study" class="tab-center">▶<span>学习</span></button>
-  <button data-tab="parsemgr">📖<span>解析</span></button>
+  <button data-tab="parsemgr">📝<span>解析</span></button>
   <button data-tab="settings">⚙<span>我的</span></button>
 </nav>
 
@@ -406,6 +433,6 @@
 <script src="srs.js"></script>
 <script src="store.js?v=3"></script>
 <script src="llm.js?v=3"></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

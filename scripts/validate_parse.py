@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 # validate_parse.py — 跑全部年份 PDF，按预期题量校验，报告偏差。
+# 同时扫 papers/*.pdf（英语一）与 papers/en2/*.pdf（英语二）。
+# 英二题号与英一不同（翻译 46 段、写作 47/48），故 writing/translation 校验按 variant 分档。
 import sys, json, subprocess, glob, os
 sys.path.insert(0, os.path.dirname(__file__))
 from parse_paper import parse_paper, guess_year, section_summary
 
-EXPECTED = {
+EXPECTED_EN1 = {
     "use_of_english": {"items": 20, "opts_per": 4},
     "reading_a": {"texts": 4, "items_per_text": 5, "opts_per": 4},
     "reading_b": {"gaps": 5},
     "translation": {"segments": 5},
     "writing": {"parts": [51, 52]},
 }
+# 英二：翻译 46.（1 段全文翻译，非英一的 46-50 五段），写作 47/48
+EXPECTED_EN2 = {
+    "use_of_english": {"items": 20, "opts_per": 4},
+    "reading_a": {"texts": 4, "items_per_text": 5, "opts_per": 4},
+    "reading_b": {"gaps": 5},
+    "translation": {"segments": 1},
+    "writing": {"parts": [47, 48]},
+}
 
-def check(data):
+
+def check(data, variant):
+    exp = EXPECTED_EN2 if variant == "en2" else EXPECTED_EN1
     issues = []
     secs = {s["type"]: s for s in data["sections"]}
     # use_of_english
@@ -53,14 +65,17 @@ def check(data):
         if len(b.get("gaps", [])) != 5:
             issues.append(f"rb gaps={b.get('gaps')}(expect 5)")
         if not b.get("options"):
-            issues.append("rb EMPTY options")
+            # 英二 2010 是「判断正误 T/F」变体：无 [A]-[G] 选项，只有 41-45 陈述句。
+            # passage 非空即视为合法变体，不报 EMPTY options。
+            if not b.get("passage", "").strip():
+                issues.append("rb EMPTY options")
     # translation
     t = secs.get("translation")
     if not t:
         issues.append("MISSING translation")
     else:
-        if len(t.get("segments", [])) != 5:
-            issues.append(f"tr segments={len(t.get('segments',[]))}(expect 5)")
+        if len(t.get("segments", [])) != exp["translation"]["segments"]:
+            issues.append(f"tr segments={len(t.get('segments',[]))}(expect {exp['translation']['segments']})")
         if not t.get("passage", "").strip():
             issues.append("tr EMPTY passage")
     # writing
@@ -69,15 +84,17 @@ def check(data):
         issues.append("MISSING writing")
     else:
         ns = [p["n"] for p in w.get("parts", [])]
-        if ns != [51, 52]:
-            issues.append(f"wr parts={ns}(expect [51,52])")
+        if ns != exp["writing"]["parts"]:
+            issues.append(f"wr parts={ns}(expect {exp['writing']['parts']})")
     return issues
 
+
 def main():
-    pdfs = sorted(glob.glob("papers/*.pdf"))
-    print(f"Found {len(pdfs)} PDFs")
+    pdfs = sorted(glob.glob("papers/*.pdf")) + sorted(glob.glob("papers/en2/*.pdf"))
+    print(f"Found {len(pdfs)} PDFs ({len(glob.glob('papers/*.pdf'))} en1, {len(glob.glob('papers/en2/*.pdf'))} en2)")
     all_bad = 0
     for pdf in pdfs:
+        variant = "en2" if os.sep + "en2" in pdf or "/en2/" in pdf.replace("\\", "/") else "en1"
         try:
             data = parse_paper(pdf)
             data["year"] = guess_year(pdf, data)
@@ -85,12 +102,12 @@ def main():
             print(f"\n=== {os.path.basename(pdf)} CRASH: {e}")
             all_bad += 1
             continue
-        issues = check(data)
+        issues = check(data, variant)
         yr = data.get("year")
         tag = "OK " if not issues else "BAD"
         if issues:
             all_bad += 1
-        print(f"{tag} {yr} {os.path.basename(pdf)}: {'; '.join(issues) if issues else 'all sections nominal'}")
+        print(f"{tag} {yr} [{variant}] {os.path.basename(pdf)}: {'; '.join(issues) if issues else 'all sections nominal'}")
     print(f"\n{all_bad}/{len(pdfs)} papers with issues")
 
 if __name__ == "__main__":

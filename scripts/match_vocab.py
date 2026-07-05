@@ -442,7 +442,14 @@ def main():
     all_papers = []
     for p in args:
         data = json.loads(Path(p).read_text(encoding="utf-8"))
-        paper = {"year": data.get("year"), "source": data.get("source"), "sections": []}
+        paper = {
+            "year": data.get("year"),
+            "source": data.get("source"),
+            # variant: "en1" 英语一 / "en2" 英语二。从 source 路径推断（papers/en2/*.json），
+            # 缺省视为 en1（兼容根目录下既有 20 份英一真题）。前端据此分导航。
+            "variant": data.get("variant") or ("en2" if "/en2/" in str(p).replace("\\", "/") else "en1"),
+            "sections": [],
+        }
         for sec in data.get("sections", []):
             sec_out = {
                 "type": sec["type"],
@@ -512,8 +519,11 @@ def main():
                 # 写作题目文本较短，但仍可匹配
                 for part in sec.get("parts", []):
                     words_hits = match_passage(part.get("directions", ""), lookup, word_map)
+                    n = part["n"]
+                    # 英一题号 51/52（Part A/B），英二 47/48。统一映射成 A/B 标签。
+                    letter = "A" if (n == 51 or n == 47) else ("B" if (n == 52 or n == 48) else str(n))
                     passages.append({
-                        "label": f"写作 Part {chr(64 + (part['n'] - 50))}",
+                        "label": f"写作 Part {letter}",
                         "body": part.get("directions", ""),
                         "words": words_hits,
                         "itemCount": 0,

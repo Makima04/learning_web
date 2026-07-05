@@ -260,6 +260,40 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
 .ps-sub{font-size:12px; color:var(--txt-3); margin-top:3px;}
 .ps-sub b{color:var(--ok);}
 
+/* ===== Papers Recite (真题记词) ===== */
+#screen-papers-recite .recite-layer{display:flex; flex-direction:column; gap:10px;}
+#screen-papers-recite .recite-layer[hidden]{display:none;}
+
+/* 英一/英二 切换条 */
+.variant-bar{
+  display:flex; gap:0; padding:4px; background:var(--bg-muted, #eef0f3);
+  border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:8px; width:fit-content;
+}
+.variant-btn{
+  border:0; background:transparent; color:var(--muted, #667);
+  padding:6px 18px; border-radius:calc(var(--r-md) - 4px); cursor:pointer; font-size:14px; font-weight:500;
+  transition:background .15s, color .15s, box-shadow .15s;
+}
+.variant-btn:hover{color:var(--text, #222);}
+.variant-btn.active{
+  background:var(--card); color:var(--brand, #c0392b); box-shadow:0 1px 3px rgba(0,0,0,.08); font-weight:600;
+}
+
+.recite-section-card{
+  background:var(--card); border:1px solid var(--line); border-left:3px solid var(--brand);
+  border-radius:var(--r-md); padding:14px 16px; cursor:pointer;
+  display:flex; align-items:center; gap:12px;
+  transition:border-color .15s, box-shadow .15s, transform .1s;
+  box-shadow:var(--shadow-sm);
+}
+.recite-section-card:active{transform:scale(.99);}
+.recite-section-card:hover{border-color:var(--brand); box-shadow:var(--shadow-md);}
+.recite-sec-head{display:flex; align-items:center; gap:12px; flex:1;}
+.recite-sec-body{flex:1;}
+.recite-sec-title{font-size:15px; font-weight:600; color:var(--txt);}
+.recite-sec-sub{font-size:12px; color:var(--txt-3); margin-top:3px;}
+.recite-sec-sub b{color:var(--ok);}
+
 /* ===== Reader ===== */
 .reader{font-size:16px; line-height:1.9; color:var(--txt); padding:6px 4px 40px;}
 .reader p{margin:0 0 14px;}
@@ -458,19 +492,23 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
 
 /* ===== Settings inputs ===== */
 .text-input{
-  flex-basis:100%; margin-top:6px; background:var(--bg-soft);
+  flex-basis:100%; margin-top:8px; background:var(--bg-soft);
   border:1px solid var(--line); color:var(--txt);
   border-radius:10px; padding:11px 12px; font-size:14px; font-family:inherit;
+  transition:border-color .15s, background .15s;
 }
+.text-input:focus{background:var(--card);}
 .text-input::placeholder{color:var(--txt-4);}
 .text-input:focus{outline:none; border-color:var(--brand);}
-.llm-actions{display:flex; gap:0; border-top:1px solid var(--line); margin-top:8px;}
+.llm-actions{display:flex; gap:0; border-top:1px solid var(--line); margin-top:12px; padding-top:4px;}
 .llm-actions .row-btn{flex:1; text-align:center; padding:12px 0; border-bottom:none; border-right:1px solid var(--line); font-size:13px;}
 .llm-actions .row-btn:last-child{border-right:none;}
 .llm-status{
-  font-size:12px; color:var(--txt-2); margin-top:10px; padding:8px 10px;
+  font-size:12px; color:var(--txt-2); margin:0 0 4px; padding:8px 10px;
   background:var(--bg-soft); border-radius:8px; word-break:break-word;
+  display:flex; align-items:center; gap:6px;
 }
+.llm-status::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor; flex:none; opacity:.7;}
 .llm-status.ok{color:var(--ok); background:var(--ok-soft);}
 .llm-status.err{color:var(--bad); background:var(--bad-soft);}
 .llm-status.busy{color:var(--warn); background:var(--warn-soft);}
@@ -516,16 +554,19 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
 .done-stats .stat-label{font-size:11px; color:var(--txt-3); margin-top:2px;}
 
 /* ===== Settings fields ===== */
-.field{display:flex; flex-wrap:wrap; align-items:center; padding:12px 0; border-bottom:1px solid var(--line-soft); gap:8px;}
-.field:last-child{border-bottom:none;}
-.field-label{flex:1; font-size:14px; color:var(--txt-2);}
-.field-val{font-size:14px; color:var(--txt-3);}
-.field-val b{color:var(--txt); font-size:18px; font-variant-numeric:tabular-nums;}
-.field input[type=range]{flex-basis:100%; accent-color:var(--brand); height:24px;}
+.field{display:flex; flex-wrap:wrap; align-items:center; padding:14px 0; border-bottom:1px solid var(--line-soft); gap:6px 12px;}
+.field:last-child{border-bottom:none; padding-bottom:2px;}
+.field:first-child{padding-top:2px;}
+.field-label{flex:1 1 auto; min-width:0; font-size:14px; color:var(--txt-2); line-height:1.5;}
+.field-label small{display:block; margin-top:2px; font-size:11px; color:var(--txt-4); font-weight:400;}
+.field-label b{color:var(--txt); font-size:16px; font-variant-numeric:tabular-nums; font-weight:600;}
+.field-val{flex:none; font-size:13px; color:var(--txt-3); white-space:nowrap;}
+.field-val b{color:var(--txt); font-size:18px; font-variant-numeric:tabular-nums; font-weight:700;}
+.field input[type=range]{flex-basis:100%; accent-color:var(--brand); height:24px; margin-top:2px;}
 .seg{display:flex; background:var(--bg-soft); border-radius:var(--r-md); padding:3px; gap:2px;}
 .seg button{flex:1; border:none; background:transparent; color:var(--txt-3); padding:7px 10px; border-radius:8px; font-size:13px; cursor:pointer;}
 .seg button.active{background:var(--card); color:var(--brand); box-shadow:var(--shadow-sm); font-weight:600;}
-.switch{display:inline-block; position:relative; width:44px; height:26px;}
+.switch{display:inline-block; position:relative; width:44px; height:26px; flex:none;}
 .switch input{opacity:0; width:0; height:0;}
 .slider{position:absolute; inset:0; background:var(--bg-soft); border:1px solid var(--line); border-radius:99px; transition:.2s;}
 .slider:before{content:""; position:absolute; height:18px; width:18px; left:3px; top:3px; background:var(--txt-3); border-radius:50%; transition:.2s;}
@@ -537,11 +578,11 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
 }
 .row-btn:last-child{border-bottom:none;}
 .row-btn.danger{color:var(--bad);}
-.about{font-size:11px; color:var(--txt-3); text-align:center; padding:16px; line-height:1.7;}
+.about{font-size:11px; color:var(--txt-3); text-align:center; padding:16px 14px; line-height:1.7;}
 
 /* panel（保留旧 class，settings/transmgr 仍在用） */
-.panel{background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); padding:14px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
-.panel-title{font-size:14px; font-weight:600; color:var(--txt); margin-bottom:12px; display:flex; align-items:baseline; gap:8px;}
+.panel{background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); padding:16px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
+.panel-title{font-size:14px; font-weight:600; color:var(--txt); margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid var(--line-soft); display:flex; align-items:baseline; gap:8px;}
 .panel-title small{font-size:11px; color:var(--txt-4); font-weight:400;}
 .card{background:var(--card);}
 
@@ -553,15 +594,15 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
 .r-trans.err{border-left-color:var(--bad); color:var(--bad);}
 
 /* 设置页：左侧分类导航 + 右内容 */
-.settings-layout{display:flex; gap:16px; align-items:flex-start;}
-.settings-nav{flex:0 0 120px; display:flex; flex-direction:column; gap:2px;
+.settings-layout{display:flex; gap:20px; align-items:flex-start;}
+.settings-nav{flex:0 0 132px; display:flex; flex-direction:column; gap:2px;
   background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg);
   padding:6px; position:sticky; top:calc(var(--header-h) + 16px);}
 .settings-nav button{padding:10px 12px; font-size:14px; color:var(--txt-3);
   border:none; background:transparent; border-radius:8px; cursor:pointer; text-align:left; transition:all .15s;}
 .settings-nav button:hover{color:var(--brand); background:var(--brand-soft);}
 .settings-nav button.active{color:var(--brand); background:var(--brand-soft); font-weight:600;}
-.settings-panels{flex:1; min-width:0;}
+.settings-panels{flex:1; min-width:0; max-width:640px;}
 .settings-section[hidden]{display:none;}
 /* 防止 .settings-layout 的 display:flex 覆盖 .screen{display:none}，
    导致非 active 的设置页漏到其它屏上 */
@@ -659,8 +700,9 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
   /* 设置页：窄屏改为顶部横向标签 */
   .settings-layout{flex-direction:column;}
   .settings-nav{flex-direction:row; overflow-x:auto; position:static;
-    width:100%; box-sizing:border-box; top:auto;}
+    width:100%; box-sizing:border-box; top:auto; flex:0 0 auto;}
   .settings-nav button{white-space:nowrap;}
+  .settings-panels{max-width:none;}
 }
 @media (min-width:881px){
   .tab-bar{display:none;}
