@@ -363,36 +363,9 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
 /* ===== Study card ===== */
 .card-area{flex:1; display:flex; align-items:stretch; justify-content:center; padding:8px 0 16px; overflow-y:auto;}
 
-/* ===== 学习屏：卡片 + 解析侧栏（PC）/ 抽屉（移动） ===== */
+/* ===== 学习屏：卡片 ===== */
 .study-layout{display:flex; gap:16px; align-items:stretch; flex:1; min-height:0;}
 .study-layout .card-area{flex:1; min-width:0;}
-.parse-side{
-  flex:0 0 340px; overflow-y:auto; background:var(--card); border:1px solid var(--line);
-  border-radius:var(--r-lg); padding:12px;
-  position:sticky; top:calc(var(--header-h) + 16px);
-  max-height:calc(100vh - var(--header-h) - 32px);
-}
-.parse-side[hidden]{display:none;}
-.parse-side-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;
-  padding-bottom:8px; border-bottom:1px solid var(--line);}
-.parse-side-title{font-weight:600; color:var(--brand); font-size:14px;}
-.parse-side-empty{color:var(--txt-3); font-size:13px; padding:24px 8px; text-align:center; line-height:1.6;}
-.parse-side .r-parse, .parse-drawer-body .r-parse{margin:0; border:none; background:transparent; padding:0;}
-
-/* 移动抽屉（全局，#parse-drawer） */
-.parse-drawer-overlay{position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200;}
-.parse-drawer-overlay[hidden]{display:none;}
-.parse-drawer{
-  position:fixed; left:0; right:0; bottom:0; max-height:78vh; overflow-y:auto;
-  background:var(--card); border-top-left-radius:var(--r-lg); border-top-right-radius:var(--r-lg);
-  box-shadow:var(--shadow-md); z-index:201; transform:translateY(100%); transition:transform .25s ease-out;
-}
-.parse-drawer[hidden]{display:none;}
-.parse-drawer.open{transform:translateY(0);}
-.parse-drawer-head{display:flex; align-items:center; justify-content:space-between;
-  padding:12px 16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--card);
-  font-weight:600; color:var(--brand);}
-.parse-drawer-body{padding:12px 16px;}
 
 .flip-card{width:100%; perspective:1600px; display:flex;}
 .flip-inner{position:relative; width:100%; min-height:340px; transition:transform .5s; transform-style:preserve-3d;}
@@ -451,44 +424,9 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
 }
 .c-trans-btn:active{transform:scale(.96);}
 .c-trans-btn.loading{opacity:.6; cursor:wait;}
-.c-parse-btn{
-  display:inline-block; font-size:12px; color:var(--brand); background:transparent;
-  border:1px solid var(--brand-line); padding:4px 12px; border-radius:99px; cursor:pointer;
-}
-.c-parse-btn:active{transform:scale(.96);}
 .c-trans-text{font-size:14px; line-height:1.8; color:var(--txt-3); margin-top:8px; padding-left:10px; flex-basis:100%;}
 .c-trans-text.err{color:var(--bad);}
 .c-trans-note{font-size:11px; color:var(--txt-3); margin-top:4px;}
-.c-parse{margin-top:8px; flex-basis:100%;}
-
-/* ===== 长难句解析（reader .r-parse / 背词卡 .c-parse 共用） ===== */
-.r-parse, .c-parse{
-  margin:6px 0 10px; padding:10px 12px; background:var(--bg-soft);
-  border-left:3px solid var(--brand); border-radius:4px;
-}
-.r-parse .r-parse-streaming, .c-parse .r-parse-streaming{
-  white-space:pre-wrap; font-size:13px; line-height:1.7; color:var(--txt-2);
-}
-.r-parse .r-parse-streaming.err, .c-parse .r-parse-streaming.err{color:var(--bad);}
-.r-parse details, .c-parse details{margin:4px 0;}
-.r-parse summary, .c-parse summary{cursor:pointer; font-weight:600; color:var(--brand); font-size:14px;}
-.r-parse details[open] summary, .c-parse details[open] summary{margin-bottom:4px;}
-.r-parse-body, .c-parse-body{font-size:13px; line-height:1.7; color:var(--txt); padding-left:4px;}
-.r-parse-body p, .c-parse-body p{margin:4px 0;}
-.r-parse-body ul, .c-parse-body ul{margin:4px 0 4px 18px; padding:0;}
-.r-parse-body li, .c-parse-body li{margin:2px 0;}
-.r-parse-body code, .c-parse-body code{
-  background:var(--bg); padding:1px 5px; border-radius:3px; font-size:12px;
-  border:1px solid var(--line);
-}
-.r-parse-body strong, .c-parse-body strong{color:var(--brand);}
-.r-parse-orig-wrap, .c-parse-orig-wrap{margin-top:8px;}
-.r-parse-orig-wrap summary, .c-parse-orig-wrap summary{color:var(--txt-3); font-weight:500; font-size:12px;}
-.r-parse-orig, .c-parse-orig{
-  margin-top:6px; padding:6px 8px; background:var(--bg); border-radius:4px;
-  font-style:italic; color:var(--txt-2); font-size:13px;
-}
-.r-trans-actions{margin:2px 0 6px;}
 
 /* ===== Settings inputs ===== */
 .text-input{
@@ -552,6 +490,20 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
 .done-stats .stat{background:var(--card); border:1px solid var(--line); border-radius:var(--r-md); padding:10px 12px;}
 .done-stats .stat-num{font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--txt);}
 .done-stats .stat-label{font-size:11px; color:var(--txt-3); margin-top:2px;}
+
+/* ===== 组完成屏：本组单词网格（仅英文） ===== */
+#screen-group-done{justify-content:center; align-items:center;}
+.group-word-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+  gap:8px; width:100%; max-width:760px; margin:12px 0 20px;
+}
+.group-word-cell{
+  display:flex; flex-direction:column; align-items:flex-start;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:10px 12px; gap:2px;
+}
+.gwc-num{font-size:10px; color:var(--txt-3); font-variant-numeric:tabular-nums;}
+.gwc-en{font-size:15px; font-weight:600; color:var(--brand); line-height:1.3; word-break:break-word;}
 
 /* ===== Settings fields ===== */
 .field{display:flex; flex-wrap:wrap; align-items:center; padding:14px 0; border-bottom:1px solid var(--line-soft); gap:6px 12px;}
@@ -695,8 +647,6 @@ body.sub-screen .app-main{max-width:none; min-height:100vh;}
   .stats-row{grid-template-columns:repeat(2,1fr);}
   .main-grid{grid-template-columns:1fr;}
   .screen{padding:12px;}
-  /* 解析侧栏在窄屏隐藏，改用底部抽屉 */
-  .parse-side{display:none !important;}
   /* 设置页：窄屏改为顶部横向标签 */
   .settings-layout{flex-direction:column;}
   .settings-nav{flex-direction:row; overflow-x:auto; position:static;

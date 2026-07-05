@@ -14,6 +14,7 @@
     speakOnWordClick: true,// 点词查义 popover 弹出时是否自动朗读单词
     rate: 1.0,             // TTS rate
     orderSeed: 0x9e3779b9, // for stable per-word pseudo-random order
+    groupSize: 20,         // 分组背诵：每组词数（10/20/40）
     llm: {
       url: "",             // OpenAI-compatible base URL, e.g. https://api.openai.com/v1
       key: "",             // API key
@@ -70,23 +71,6 @@
     const all = loadJSON(KEY_TRANS, {});
     all[text] = zh || "";
     saveJSON(KEY_TRANS, all);
-  }
-
-  // ---- 长难句解析缓存 ----
-  // 镜像 getTrans/setTrans：by text 缓存解析全文。key 独立 ew.parse.v1，
-  // 不与译文混。命中即瞬返（无网络），与 server.parses 表双层缓存。
-  const KEY_PARSE = "ew.parse.v1";
-  function getParse(text) {
-    text = String(text == null ? "" : text).trim();
-    if (!text) return undefined;
-    const all = loadJSON(KEY_PARSE, {});
-    return all[text] || undefined;
-  }
-  function setParse(text, content) {
-    text = String(text == null ? "" : text).trim();
-    const all = loadJSON(KEY_PARSE, {});
-    all[text] = content || "";
-    saveJSON(KEY_PARSE, all);
   }
 
   // 段落解析缓存（Reading Part A 双栏 reader 右栏）。独立命名空间 ew.para.v1，
@@ -224,7 +208,6 @@
     getAllCards, getCard, saveCard, clearAll,
     getMeta, bumpMeta, exportData, importData,
     getAllTrans, getTrans, setTrans,
-    getParse, setParse,
     getParaAnalysisKey, getParaAnalysis, setParaAnalysis,
     sync,
   };

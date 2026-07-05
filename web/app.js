@@ -49,6 +49,7 @@
   let settings = Store.getSettings();
   let queue = [];        // today's work: [{idx, card, isNew}]
   let qpos = 0;          // pointer into queue
+  let groupEnd = 0;      // 当前组在 queue 里的结束下标（exclusive）；qpos 到此即组完成
   let currentEntry = null;
   let currentFrontIsCn = false; // tracks which side the English is on for the visible card
   let sessionStats = { again: 0, studied: 0, newDone: 0, reviewDone: 0 };
@@ -276,8 +277,7 @@
     buildQueue({ mode: "learn" });
     if (queue.length === 0) { showDone(true); return; }
     sessionStats = { again: 0, studied: 0, newDone: 0, reviewDone: 0 };
-    show("study");
-    nextCard();
+    advanceToNextGroup();
   }
 
   // 「复习」：仅装到期 review + learn 在练卡，不引入新词。
@@ -287,6 +287,15 @@
     buildQueue({ mode: "review" });
     if (queue.length === 0) { showDone(true); return; }
     sessionStats = { again: 0, studied: 0, newDone: 0, reviewDone: 0 };
+    advanceToNextGroup();
+  }
+
+  // 切到下一组：在 queue 里取下 groupSize 个，组边界记到 groupEnd。
+  // qpos 已是组起点；若该组有词，进 study 屏背词；若 qpos 越界，全部完成 → showDone。
+  function advanceToNextGroup() {
+    if (qpos >= queue.length) { showDone(false); return; }
+    const gs = settings.groupSize || 20;
+    groupEnd = Math.min(queue.length, qpos + gs);
     show("study");
     nextCard();
   }
@@ -553,9 +562,11 @@
 
   function nextCard() {
     clearHintTimer();
-    // 切词时清空解析侧栏/抽屉，避免上一词的解析残留
-    hideParseSide();
-    closeParseDrawer();
+    // 组边界优先：背完当前组（qpos 到 groupEnd）→ 进组完成屏，即使这是最后一组也先展示本组词
+    if (studyMode !== "passage" && qpos >= groupEnd && qpos > 0 && groupEnd > 0) {
+      showGroupDone();
+      return;
+    }
     if (qpos >= queue.length) { showDone(false); return; }
     const item = queue[qpos];
     // daily 模式用 WORD_BY_INDEX；passage 模式用 item.entry
@@ -760,7 +771,7 @@
   function exampleBlockHTML(entry, example, withTrans) {
     if (!example) return "";
     const buttons = withTrans
-      ? `<div class="c-trans"><button class="c-trans-btn" data-en="${esc(example)}">查看例句翻译</button><button class="c-parse-btn" data-en="${esc(example)}">解析长难句</button></div>`
+      ? `<div class="c-trans"><button class="c-trans-btn" data-en="${esc(example)}">查看例句翻译</button></div>`
       : "";
     return `<div class="c-example"><div class="c-example-label">真题例句</div>
       <div class="c-example-text">${highlightTarget(example, entry[1])}</div>${buttons}</div>`;
@@ -784,6 +795,26 @@
     document.querySelectorAll("#progress-text").forEach((el) => (el.textContent = lbl));
     // passage 模式：显示「读原文 →」入口，让用户随时跳出背词、进 reader 双栏
     if (studyMode === "passage") $("btn-read").hidden = false;
+    // 预取下一条卡的例句译文：若本地未缓存，后台调 /api/translate 灌库，
+    // 用户翻面点「查看例句翻译」时即可瞬返（命中 Store.getTrans）。
+    prefetchNextTranslation();
+  }
+
+  // 后台预取下一条（含 again 重排的）例句译文，不阻塞当前卡。
+  // 命中缓存则跳过；失败静默——不打扰用户背词。
+  function prefetchNextTranslation() {
+    setTimeout(() => {
+      const next = queue[qpos + 1];
+      if (!next) return;
+      const entry = studyMode === "passage" ? next.entry : WORD_BY_INDEX[next.idx];
+      if (!entry) return;
+      let en;
+      if (studyMode === "passage" && entry.sentences && entry.sentences[0]) en = entry.sentences[0];
+      else en = getExample(next.idx);
+      if (!en) return;
+      if (Store.getTrans(en) !== undefined) return;
+      LLM.translate(en).catch(() => {});
+    }, 0);
   }
 
   // ---- 阶段0 assess（新词 state=new）----
@@ -866,7 +897,6 @@
     }
     flipBtn().hidden = true;
     wireTransButtons();
-    wireParseButtons();
     area.querySelectorAll(".c-speak").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); speakEntry(entry, { example }); })
     );
@@ -880,6 +910,7 @@
     if (item.card.state === "learn") {
       item.isNew = false;
       queue.push({ idx: item.idx, card: item.card, isNew: false, entry: item.entry });
+      if (studyMode !== "passage") groupEnd = Math.min(queue.length, groupEnd + 1);
     }
     qpos++;
     nextCard();
@@ -895,6 +926,7 @@
     if (item.card.state === "learn") {
       item.isNew = false;
       queue.push({ idx: item.idx, card: item.card, isNew: false, entry: item.entry });
+      if (studyMode !== "passage") groupEnd = Math.min(queue.length, groupEnd + 1);
     }
     qpos++;
     nextCard();
@@ -974,6 +1006,7 @@
     // push 队尾继续（quiz1 选对进 quiz2，选错重置 quiz1，都还在 learn）
     if (item.card.state === "learn") {
       queue.push({ idx: item.idx, card: item.card, isNew: false, entry: item.entry });
+      if (studyMode !== "passage") groupEnd = Math.min(queue.length, groupEnd + 1);
     }
     setTimeout(() => { qpos++; nextCard(); }, 600);
   }
@@ -1133,7 +1166,6 @@
       b.addEventListener("click", (e) => { e.stopPropagation(); speakEntry(entry, { example }); })
     );
     wireTransButtons();
-    wireParseButtons();
     rafFit();
     if (!flipped) armHintTimer(item); else clearHintTimer();
   }
@@ -1171,15 +1203,8 @@
       flipCurrent();
       return;
     }
-    // 已翻面：
-    if (isMobile()) {
-      // 移动：点卡片空白 = 译文 + 解析抽屉（不再翻回正面；翻回正面走顶栏返回键）
-      if (triggerTransButton()) { triggerParseDrawer(); return; }
-      // 无译文按钮（如 assess 阶段）→ 直接开抽屉
-      triggerParseDrawer();
-      return;
-    }
-    // PC：保持原行为——已翻面再点不翻回（翻回走顶栏返回 / 评分）
+    // 已翻面：点译文按钮展开译文（无解析抽屉后简化）
+    triggerTransButton();
   }
   function flipCurrent() {
     const item = queue[qpos];
@@ -1227,6 +1252,8 @@
     if (q === "again") {
       item.isNew = false;
       queue.push({ idx: item.idx, card: res.card, isNew: false, entry: item.entry });
+      // again 把词 push 到队尾，但仍在当前组内（groupEnd 同步后移），让用户本组内重练
+      if (studyMode !== "passage") groupEnd = Math.min(queue.length, groupEnd + 1);
     }
     qpos++;
     nextCard();
@@ -1252,25 +1279,6 @@
     return true;
   }
 
-  // 触发解析进侧栏/抽屉：取当前卡例句，调 startParse 装载到对应容器。
-  // PC：右侧栏；移动：底部抽屉。空例句则不开。
-  function triggerParseSide() {
-    const en = getCurrentExample();
-    if (!en) return false;
-    if (isMobile()) {
-      showParseDrawer(en);
-    } else {
-      showParseSide();
-      startParse(parseSideBodyEl(), en, "解析中…");
-    }
-    return true;
-  }
-  function triggerParseDrawer() {
-    const en = getCurrentExample();
-    if (!en) { showParseDrawer(); return false; }
-    showParseDrawer(en);
-    return true;
-  }
   // 当前卡的例句（study daily 用 getExample，passage 优先 entry.sentences[0]）
   function getCurrentExample() {
     const item = queue[qpos];
@@ -1334,194 +1342,7 @@
     wrap.appendChild(div);
   }
 
-  // ============ 长难句解析（reader + 背词卡例句，流式 SSE） ============
-  // 母语式 10 层走查：难点预判 → 动词计数 → spine → kernel → 修饰剥离 → 逐层加回 →
-  // 合成训练（第 7 层，closed「对照原文」让用户先自己组装）→ 标点路标 → 复述 → 译文+词表。
-  // 渲染：流式阶段直接 textContent 累加；done 后用 renderParseLayers 重渲染为 <details> 折叠结构。
-  // 缓存：Store.getParse 本地命中瞬返；否则走后端 /api/parse-sentence（其自身有 parses 表缓存）。
-
-  // 极简 markdown→<details> 渲染器（不引入依赖，符合 web/ vanilla 约定）。
-  // 输入是 PARSE_SYS_PROMPT 产出的 10 层文本。按 \n(?=\d+\. \*\*) 切层。
-  function renderParseLayers(markdownText, originalSentence) {
-    if (!markdownText) return "";
-    // 切层：每段以 "N. **Title" 开头
-    const layers = markdownText.split(/\n(?=\d+\.\s+\*\*)/);
-    let html = "";
-    for (const layer of layers) {
-      const m = layer.match(/^(\d+)\.\s+\*\*(.+?)\*\*\n?([\s\S]*)$/);
-      if (!m) {
-        // 不匹配的尾段/前言，原样转义
-        html += `<div class="r-parse-frag">${esc(layer.trim())}</div>`;
-        continue;
-      }
-      const num = m[1], title = m[2], body = m[3] || "";
-      // 第 7 层：默认 open，末尾注入 closed「对照原文」（用户先自己组装再展开对照）
-      const isSynthesis = num === "7";
-      const bodyHTML = renderParseBody(body, isSynthesis ? originalSentence : null);
-      html += `<details open>
-        <summary>${esc(num)}. ${esc(title)}</summary>
-        <div class="r-parse-body">${bodyHTML}</div>
-      </details>`;
-    }
-    return html;
-  }
-
-  // 层体内极简 markdown：**bold**、`code`、*em*、- 列表项、空行分段。其余 esc。
-  // 若 orig 非空（第 7 层），末尾追加 closed <details> 对照原文。
-  function renderParseBody(text, orig) {
-    let s = text;
-    // 先按行处理列表项
-    const lines = s.split(/\n/);
-    let out = "";
-    let inList = false;
-    let para = [];
-    function flushPara() {
-      if (para.length) {
-        out += `<p>${parseInline(para.join(" "))}</p>`;
-        para = [];
-      }
-    }
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) { flushPara(); if (inList) { out += "</ul>"; inList = false; } continue; }
-      if (/^[-•]\s+/.test(trimmed)) {
-        flushPara();
-        if (!inList) { out += "<ul>"; inList = true; }
-        out += `<li>${parseInline(trimmed.replace(/^[-•]\s+/, ""))}</li>`;
-      } else {
-        if (inList) { out += "</ul>"; inList = false; }
-        para.push(trimmed);
-      }
-    }
-    flushPara();
-    if (inList) out += "</ul>";
-    if (orig) {
-      out += `<details class="r-parse-orig-wrap"><summary>▶ 对照原文（先自己组装再展开）</summary><div class="r-parse-orig">${esc(orig)}</div></details>`;
-    }
-    return out;
-  }
-
-  // 行内 markdown：**bold** → <strong>，`code` → <code>，*em* → <em>。先 esc 再插标签。
-  function parseInline(s) {
-    // 用占位符避免 esc 把 < > 弄乱标签
-    s = esc(s);
-    s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
-    s = s.replace(/\*(.+?)\*/g, "<em>$1</em>");
-    return s;
-  }
-
-  // 流式解析：targetEl 是解析内容要填入的容器（PC 侧栏 body / 移动抽屉 body / reader 句下 box）。
-  // 容器内统一套 .r-parse class 复用样式（侧栏/抽屉 CSS 已把 .r-parse 的背景/边框清零）。
-  function startParse(targetEl, en, loadingText) {
-    if (!targetEl) return;
-    targetEl.innerHTML = `<div class="r-parse"><div class="r-parse-streaming">${esc(loadingText || "解析中…")}</div></div>`;
-    const streamEl = targetEl.querySelector(".r-parse-streaming");
-    let raw = "";
-    LLM.parseSentence(
-      en,
-      (delta) => { raw += delta; streamEl.textContent = raw; rafFit(); },
-      (content) => {
-        targetEl.innerHTML = `<div class="r-parse">${renderParseLayers(content, en)}</div>`;
-        rafFit();
-      },
-      (err) => {
-        targetEl.innerHTML = `<div class="r-parse"><div class="r-parse-streaming err">解析失败：${esc(err && err.message || err)}</div></div>`;
-        rafFit();
-      }
-    );
-  }
-
-  // PC 侧栏显示/隐藏。study 与 passage 共用一套：用 cardArea() 同样的屏选择逻辑。
-  function parseSideEl() {
-    const targetScreen = studyMode === "passage" ? "passage" : "study";
-    return document.querySelector(`#screen-${targetScreen} .parse-side`) || $("parse-side");
-  }
-  function parseSideBodyEl() {
-    const side = parseSideEl();
-    return side ? side.querySelector(".parse-side-body") : null;
-  }
-  function showParseSideEmpty() {
-    const body = parseSideBodyEl();
-    if (body) body.innerHTML = `<div class="parse-side-empty">翻面后按空格，或点例句的「解析长难句」</div>`;
-  }
-  function showParseSide() {
-    const side = parseSideEl();
-    if (!side) return;
-    side.hidden = false;
-    if (!side.querySelector(".r-parse")) showParseSideEmpty();
-  }
-  function hideParseSide() {
-    const side = parseSideEl();
-    if (side) side.hidden = true;
-  }
-
-  // 移动抽屉
-  function showParseDrawer(en) {
-    const overlay = $("parse-drawer-overlay");
-    const drawer = $("parse-drawer");
-    if (!overlay || !drawer) return;
-    overlay.hidden = false;
-    drawer.hidden = false;
-    requestAnimationFrame(() => drawer.classList.add("open"));
-    if (en) {
-      startParse($("parse-drawer-body"), en, "解析中…");
-    } else {
-      const body = $("parse-drawer-body");
-      if (body && !body.querySelector(".r-parse")) {
-        body.innerHTML = `<div class="parse-side-empty">点例句的「解析长难句」开始</div>`;
-      }
-    }
-  }
-  function closeParseDrawer() {
-    const overlay = $("parse-drawer-overlay");
-    const drawer = $("parse-drawer");
-    if (!drawer) return;
-    drawer.classList.remove("open");
-    setTimeout(() => {
-      if (drawer) drawer.hidden = true;
-      if (overlay) overlay.hidden = true;
-    }, 250);
-  }
   function isMobile() { return window.matchMedia("(max-width:880px)").matches; }
-
-  // 事件委托：.c-parse-btn（背词卡）与 .r-parse-btn（reader）共用
-  function wireParseButtons() {
-    document.querySelectorAll(".c-parse-btn, .r-parse-btn").forEach((btn) => {
-      if (btn.dataset.wired) return;
-      btn.dataset.wired = "1";
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const en = btn.getAttribute("data-en");
-        if (!en) return;
-        // reader 的 .r-parse-btn：仍走句下内联（不改）
-        if (btn.classList.contains("r-parse-btn")) {
-          const wrap = btn.parentElement;
-          btn.style.display = "none";
-          startParseStream(wrap, en, "解析中…");
-          return;
-        }
-        // 背词卡 .c-parse-btn：PC 进侧栏，移动开抽屉
-        if (isMobile()) {
-          showParseDrawer(en);
-        } else {
-          showParseSide();
-          startParse(parseSideBodyEl(), en, "解析中…");
-        }
-      });
-    });
-  }
-
-  // 兼容旧调用名（reader 句下内联仍用 startParseStream，语义 = 往 host 兄弟节点塞 .r-parse）
-  function startParseStream(host, en, loadingText) {
-    let box = host.parentElement.querySelector(".r-parse, .c-parse");
-    if (!box || !host.parentElement.contains(box)) {
-      box = document.createElement("div");
-      box.className = "r-parse";
-      host.insertAdjacentElement("afterend", box);
-    }
-    startParse(box, en, loadingText);
-  }
 
   // ============ 例句/原文 点词查义 popover ============
   // 任何 .c-word（含 .c-target 目标词、reader 的 .r-hl）点击都弹小卡片显示释义。
@@ -1605,17 +1426,10 @@
     });
     // 滚动/切卡时收起
     document.addEventListener("scroll", hideWordPopover, true);
-    // Esc 收起 popover + 解析抽屉
+    // Esc 收起 popover
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") { hideWordPopover(); closeParseDrawer(); }
+      if (e.key === "Escape") { hideWordPopover(); }
     });
-    // 解析侧栏/抽屉关闭按钮
-    const sideClose = $("parse-side-close");
-    if (sideClose) sideClose.addEventListener("click", hideParseSide);
-    const drawerClose = $("parse-drawer-close");
-    if (drawerClose) drawerClose.addEventListener("click", closeParseDrawer);
-    const drawerOverlay = $("parse-drawer-overlay");
-    if (drawerOverlay) drawerOverlay.addEventListener("click", closeParseDrawer);
     // 段落分析卡折叠/展开：点 head 切换 collapsed
     const ra = $("reader-analysis");
     if (ra) ra.addEventListener("click", (e) => {
@@ -1667,6 +1481,34 @@
         document.querySelector("#screen-done .done-wrap").appendChild(backBtn);
       }
     }
+  }
+
+  // ---- 组完成屏：列出本组全部单词（仅英文，不显中文），「下一组」按钮继续 ----
+  function showGroupDone() {
+    const gs = settings.groupSize || 20;
+    const groupStart = qpos - gs < 0 ? 0 : qpos - gs;
+    // 实际本组词：从 groupStart 到 qpos（exclusive）。但 again 重排会让 qpos 跨过原 groupEnd。
+    // 这里取「最近 groupSize 个已背完的」即 [qpos-gs, qpos)，但更稳妥是按 groupEnd 边界
+    // 取上一组：上一组终点 = qpos（因为 qpos 已越过 groupEnd），起点 = groupEnd - gs。
+    // 简化：本组词 = queue.slice(上组起点, qpos)，上组起点 = max(0, qpos - 已背完数)。
+    // 已背完数 = sessionStats.studied（本会话累计），但 again 重排会让 studied 超过 qpos。
+    // 最简单：本组词就是 queue.slice(qpos - gs, qpos)，按 groupEnd 之前的 gs 个。
+    const start = Math.max(0, qpos - gs);
+    const items = queue.slice(start, qpos);
+    const remaining = queue.length - qpos;
+    show("group-done");
+    $("group-done-title").textContent = studyMode === "review" ? "本组复习完成" : "本组学习完成";
+    $("group-done-sub").textContent = "本组 " + items.length + " 词 · 剩余 " + remaining + " 词";
+    const grid = $("group-word-grid");
+    grid.innerHTML = "";
+    items.forEach((it, i) => {
+      const entry = studyMode === "passage" ? it.entry : WORD_BY_INDEX[it.idx];
+      const en = entry ? entry[1] : ("#" + it.idx);
+      const cell = document.createElement("div");
+      cell.className = "group-word-cell";
+      cell.innerHTML = `<span class="gwc-num">${i + 1}</span><span class="gwc-en">${esc(en)}</span>`;
+      grid.appendChild(cell);
+    });
   }
 
   // ---- 真题原文阅读器 ----
@@ -1958,12 +1800,6 @@
     trans.className = "r-trans";
     trans.textContent = "翻译中…";
     sent.insertAdjacentElement("afterend", trans);
-    // 解析按钮：接在译文后面，与 .r-trans 同容器逻辑
-    const parseBtn = document.createElement("div");
-    parseBtn.className = "r-trans-actions";
-    parseBtn.innerHTML = `<button class="r-parse-btn" data-en="${escAttr(en)}">解析长难句 →</button>`;
-    trans.insertAdjacentElement("afterend", parseBtn);
-    wireParseButtons();
     rafFit();
     try {
       const zh = await LLM.translate(en);
@@ -2045,9 +1881,10 @@
       b.classList.toggle("active", b.dataset.tab === name);
     });
     // 子屏（非主 tab）隐藏全局 header/tab-bar
-    const isMain = ["dashboard", "papers", "papers-recite", "transmgr", "parsemgr", "settings"].includes(name);
+    const isMain = ["dashboard", "papers", "papers-recite", "transmgr", "settings"].includes(name);
     document.body.classList.toggle("sub-screen", !isMain);
     if (name === "dashboard") renderDashboard();
+    if (name === "group-done") { /* 渲染由 showGroupDone 负责 */ }
     // 进入真题记词屏时默认回年份层（除非已经在子层）
     if (name === "papers-recite") {
       const inSubLayer = !($("recite-layer-years").hidden);
@@ -2069,6 +1906,8 @@
     $("val-rate").textContent = settings.rate.toFixed(1);
     $("set-autospeak").checked = !!settings.autoSpeak;
     $("set-speak-word").checked = !!settings.speakOnWordClick;
+    const gs = $("set-group-size");
+    if (gs) gs.value = String(settings.groupSize || 20);
     document.querySelectorAll("#set-direction button").forEach((b) =>
       b.classList.toggle("active", b.dataset.v === settings.direction)
     );
@@ -2253,94 +2092,6 @@
     });
   }
 
-  // ============ 解析管理页（仿 transmgr） ============
-  let pmState = { status: "unparsed", q: "", page: 1, size: 50 };
-  let pmTotal = 0;
-  let pmQTimer = null;
-
-  async function openParseMgr() {
-    pmState = { status: "unparsed", q: "", page: 1, size: 50 };
-    show("parsemgr");
-    await loadPmPage();
-  }
-
-  async function loadPmPage() {
-    const listEl = $("pm-list");
-    const pageEl = $("pm-page");
-    const statsEl = $("pm-stats");
-    if (!listEl) return;
-    listEl.innerHTML = '<div class="hint">加载中…</div>';
-    try {
-      const res = await Api.listSentences(pmState);
-      const items = (res && res.items) || [];
-      pmTotal = (res && res.total) || items.length;
-      // stats：listSentences 返回 parsed/unparsed
-      const parsed = (res && res.parsed) || 0;
-      const total = (res && res.total) || 0;
-      statsEl.textContent = "已解析 " + parsed + " / 共 " + total;
-      renderPmList(items);
-      const pages = Math.max(1, Math.ceil(pmTotal / pmState.size));
-      if (pmState.page > pages) pmState.page = pages;
-      pageEl.textContent = pmState.page + " / " + pages;
-    } catch (err) {
-      listEl.innerHTML = '<div class="hint">加载失败：' + esc((err && err.message) || err) + "</div>";
-    }
-  }
-
-  function renderPmList(items) {
-    const wrap = $("pm-list");
-    wrap.innerHTML = "";
-    if (!items.length) {
-      wrap.innerHTML = '<div class="hint">无匹配句子。</div>';
-      return;
-    }
-    items.forEach((it) => {
-      const parse = it.parse || null;
-      const hasParse = !!(parse && parse.content && parse.status === "ok");
-      const div = document.createElement("div");
-      div.className = "tm-item";
-      const badge = hasParse
-        ? '<span class="tm-badge ok">已解析</span>'
-        : '<span class="tm-badge">未解析</span>';
-      const btnLabel = hasParse ? "重解析" : "解析";
-      const preview = hasParse
-        ? '<div class="tm-zh">' + esc((parse.content || "").slice(0, 120)) + '…</div>'
-        : '';
-      div.innerHTML =
-        '<div class="tm-main">' +
-          '<div class="tm-text">' + esc(it.text || "") + '</div>' +
-          preview +
-        '</div>' +
-        '<div class="tm-actions">' +
-          badge +
-          '<button class="row-btn" data-id="' + esc(it.id) + '">' + btnLabel + '</button>' +
-        '</div>';
-      wrap.appendChild(div);
-    });
-    // 绑定单条解析按钮
-    wrap.querySelectorAll("button[data-id]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const id = btn.getAttribute("data-id");
-        const old = btn.textContent;
-        btn.textContent = "解析中…";
-        btn.disabled = true;
-        try {
-          const r = await Api.parseById(id);
-          if (r && r.status === "unconfigured") {
-            alert("LLM 未配置（请在服务端配置 Key）");
-          } else if (r && r.status !== "ok") {
-            alert("解析失败：" + (r.error || r.status));
-          }
-          await loadPmPage();
-        } catch (err) {
-          btn.textContent = old;
-          btn.disabled = false;
-          alert("解析失败：" + ((err && err.message) || err));
-        }
-      });
-    });
-  }
-
   // ============ events ============
   function bind() {
     $("btn-start").addEventListener("click", startSession);
@@ -2357,6 +2108,16 @@
       }
       studyMode = "daily";
       reciteOrigin = null;
+    });
+    // 组完成屏：「下一组」继续背下一组；「返回」回 dashboard
+    const btnNextGroup = $("btn-next-group");
+    if (btnNextGroup) btnNextGroup.addEventListener("click", () => {
+      advanceToNextGroup();
+    });
+    const btnGroupHome = $("btn-group-home");
+    if (btnGroupHome) btnGroupHome.addEventListener("click", () => {
+      studyMode = "daily";
+      show("dashboard");
     });
     // study 与 passage 各有一个 flip 按钮，都绑 flipCurrent
     ["btn-flip-study", "btn-flip-passage"].forEach((id) => {
@@ -2422,6 +2183,11 @@
     });
     $("set-speak-word").addEventListener("change", (e) => {
       settings.speakOnWordClick = e.target.checked; applySettings();
+    });
+    const gsEl = $("set-group-size");
+    if (gsEl) gsEl.addEventListener("change", (e) => {
+      settings.groupSize = parseInt(e.target.value, 10) || 20;
+      applySettings();
     });
     document.querySelectorAll("#settings-nav button").forEach((b) =>
       b.addEventListener("click", () => selectSettingsSection(b.dataset.s))
@@ -2526,94 +2292,6 @@
       }
     });
 
-    // ============ 解析管理页 events ============
-    document.querySelectorAll("#pm-filter button").forEach((b) =>
-      b.addEventListener("click", () => {
-        document.querySelectorAll("#pm-filter button").forEach((x) => x.classList.toggle("active", x === b));
-        pmState.status = b.dataset.v;
-        pmState.page = 1;
-        loadPmPage();
-      })
-    );
-    $("pm-q").addEventListener("input", (e) => {
-      clearTimeout(pmQTimer);
-      pmQTimer = setTimeout(() => {
-        pmState.q = e.target.value.trim();
-        pmState.page = 1;
-        loadPmPage();
-      }, 300);
-    });
-    $("pm-prev").addEventListener("click", () => {
-      if (pmState.page > 1) { pmState.page--; loadPmPage(); }
-    });
-    $("pm-next").addEventListener("click", () => {
-      const pages = Math.max(1, Math.ceil(pmTotal / pmState.size));
-      if (pmState.page < pages) { pmState.page++; loadPmPage(); }
-    });
-    $("pm-parse-page").addEventListener("click", async () => {
-      const items = document.querySelectorAll("#pm-list .tm-item button[data-id]");
-      const ids = [];
-      items.forEach((b) => ids.push(b.getAttribute("data-id")));
-      if (!ids.length) { alert("本页无待解析项"); return; }
-      if (!confirm("将解析本页 " + ids.length + " 条，耗时较长，确认？")) return;
-      const btn = $("pm-parse-page");
-      const old = btn.textContent;
-      btn.textContent = "解析中…（" + ids.length + " 条）";
-      btn.disabled = true;
-      try {
-        const r = await Api.parseBatch(ids);
-        await loadPmPage();
-        alert("解析完成：" + (r.parsed || 0) + " 成功 / " + (r.failed || 0) + " 失败");
-      } catch (err) {
-        alert("批量解析失败：" + ((err && err.message) || err));
-      } finally {
-        btn.textContent = old;
-        btn.disabled = false;
-      }
-    });
-    $("pm-parse-all").addEventListener("click", async () => {
-      // 取当前过滤条件下（含 status / q）的全部 id，分页拉完再批量提交。
-      // 后端遇错即中止，前端把已完成的落库、剩余标 skipped，提示用户解决网关后重试。
-      const btn = $("pm-parse-all");
-      if (!confirm("将解析当前筛选下的全部未解析项，遇错即中止。耗时很长，确认？")) return;
-      const old = btn.textContent;
-      btn.textContent = "拉取列表…";
-      btn.disabled = true;
-      try {
-        const ids = [];
-        let page = 1;
-        // 强制按 unparsed 取，避免重复解析已解析项；忽略 q（全量）
-        const saved = { ...pmState };
-        pmState.status = "unparsed"; pmState.q = ""; pmState.page = 1;
-        while (true) {
-          const res = await Api.listSentences({ ...pmState, page, size: 200 });
-          const items = (res && res.items) || [];
-          items.forEach((it) => ids.push(String(it.id)));
-          btn.textContent = "拉取列表…（已收 " + ids.length + " 条）";
-          const total = (res && res.total) || ids.length;
-          if (ids.length >= total || items.length === 0) break;
-          page++;
-        }
-        Object.assign(pmState, saved);
-        if (!ids.length) { alert("当前筛选下无待解析项"); return; }
-        if (!confirm("将解析 " + ids.length + " 条，遇错即中止。确认？")) return;
-        btn.textContent = "解析中…（" + ids.length + " 条）";
-        const r = await Api.parseBatch(ids);
-        await loadPmPage();
-        const skipped = (r.results || []).filter((x) => x.status === "skipped").length;
-        const firstErr = (r.results || []).find((x) => x.status === "error");
-        let msg = "解析完成：" + (r.parsed || 0) + " 成功 / " + (r.failed || 0) + " 失败";
-        if (skipped) msg += " / " + skipped + " 跳过";
-        if (firstErr) msg += "\n首个错误：" + (firstErr.error || "");
-        alert(msg);
-      } catch (err) {
-        alert("批量解析失败：" + ((err && err.message) || err));
-      } finally {
-        btn.textContent = old;
-        btn.disabled = false;
-      }
-    });
-
     // 账号 panel
     $("btn-account").addEventListener("click", openSettings);
     $("btn-acc-login").addEventListener("click", async () => {
@@ -2709,13 +2387,12 @@
         return;
       }
 
-      // 翻面后的阶段：空格/Enter 优先展开「查看例句翻译」（未展开时）+ 同步加载解析，再走原流程
+      // 翻面后的阶段：空格/Enter 优先展开「查看例句翻译」（未展开时），再走原流程
       const backWithTrans = (phase === "assess-full" ||
                              phase === "review-back" || phase === "quiz2-back" || phase === "quiz3-back");
       if ((k === " " || k === "Enter") && backWithTrans) {
         if (triggerTransButton()) {
           e.preventDefault();
-          triggerParseSide(); // 译文展开的同时加载解析到侧栏/抽屉
           return;
         }
         // assess-full 译文已展开或无译文 → 空格 = 下一词
@@ -2780,7 +2457,6 @@
         if (tab === 'study') { startSession(); return; }
         if (tab === 'settings') { openSettings(); return; }
         if (tab === 'transmgr') { openTransMgr(); return; }
-        if (tab === 'parsemgr') { openParseMgr(); return; }
         if (tab === 'papers') { renderPapersList(); show('papers'); return; }
         if (tab === 'papers-recite') { renderRecitePapers(); show('papers-recite'); return; }
         show(tab);

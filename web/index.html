@@ -17,7 +17,6 @@
     <button data-tab="papers">真题</button>
     <button data-tab="papers-recite">真题记词</button>
     <button data-tab="transmgr">翻译管理</button>
-    <button data-tab="parsemgr">解析管理</button>
     <button data-tab="settings">设置</button>
   </nav>
   <div class="header-right">
@@ -114,7 +113,6 @@
             <div class="action-grid">
               <button class="action-btn" data-tab="papers"><span class="action-icon">📚</span><span>真题</span></button>
               <button class="action-btn" data-tab="transmgr"><span class="action-icon">🌐</span><span>翻译管理</span></button>
-              <button class="action-btn" data-tab="parsemgr"><span class="action-icon">📖</span><span>解析管理</span></button>
               <button class="action-btn" data-tab="settings"><span class="action-icon">⚙</span><span>设置</span></button>
               <button class="action-btn" id="btn-export-quick"><span class="action-icon">💾</span><span>导出进度</span></button>
             </div>
@@ -179,15 +177,6 @@
     </header>
     <div class="study-layout">
       <div class="card-area" id="card-area"></div>
-      <aside class="parse-side" id="parse-side" hidden>
-        <div class="parse-side-head">
-          <span class="parse-side-title">长难句解析</span>
-          <button class="icon-btn" id="parse-side-close" title="收起">✕</button>
-        </div>
-        <div class="parse-side-body" id="parse-side-body">
-          <div class="parse-side-empty">翻面后按空格，或点例句的「解析长难句」</div>
-        </div>
-      </aside>
     </div>
     <div class="rating" id="rating-passage" hidden>
       <button data-q="again" class="rate rate-again">
@@ -232,15 +221,6 @@
       <div class="card-area" id="card-area">
         <!-- card injected here -->
       </div>
-      <aside class="parse-side" id="parse-side" hidden>
-        <div class="parse-side-head">
-          <span class="parse-side-title">长难句解析</span>
-          <button class="icon-btn" id="parse-side-close" title="收起">✕</button>
-        </div>
-        <div class="parse-side-body" id="parse-side-body">
-          <div class="parse-side-empty">翻面后按空格，或点例句的「解析长难句」</div>
-        </div>
-      </aside>
     </div>
 
     <div class="rating" id="rating-study" hidden>
@@ -267,6 +247,20 @@
       <h2 id="done-title">今日完成</h2>
       <div class="done-stats" id="done-stats"></div>
       <button class="primary big" id="btn-home">返回</button>
+    </div>
+  </section>
+
+  <!-- ============ GROUP DONE (一组背完，展示本组全部单词) ============ -->
+  <section id="screen-group-done" class="screen">
+    <div class="done-wrap">
+      <div class="done-emoji">✅</div>
+      <h2 id="group-done-title">本组完成</h2>
+      <div class="hint" id="group-done-sub">—</div>
+      <div class="group-word-grid" id="group-word-grid"></div>
+      <div class="llm-actions">
+        <button class="primary big" id="btn-next-group">下一组 ›</button>
+        <button class="ghost big" id="btn-group-home">返回</button>
+      </div>
     </div>
   </section>
 
@@ -297,6 +291,15 @@
               <button data-v="random">随机</button>
             </div>
           </div>
+
+          <label class="field">
+            <span class="field-label">每组词数 <small>· 背完一组后展示本组全部单词</small></span>
+            <select id="set-group-size" class="text-input">
+              <option value="10">10 词/组</option>
+              <option value="20" selected>20 词/组</option>
+              <option value="40">40 词/组</option>
+            </select>
+          </label>
         </div>
       </div>
 
@@ -385,45 +388,13 @@
     <div id="tm-list" class="tm-list"></div>
   </section>
 
-  <!-- ============ PARSE MANAGEMENT (长难句解析管理) ============ -->
-  <section id="screen-parsemgr" class="screen">
-    <div class="panel">
-      <div class="panel-title">解析进度 <small id="pm-stats">—</small></div>
-      <div class="seg" id="pm-filter">
-        <button data-v="unparsed" class="active">未解析</button>
-        <button data-v="parsed">已解析</button>
-        <button data-v="all">全部</button>
-      </div>
-      <label class="field" style="margin-top:10px"><span class="field-label">搜索</span><input type="text" id="pm-q" class="text-input" placeholder="按英文句子筛选"></label>
-      <div class="llm-actions">
-        <button class="row-btn" id="pm-parse-page">解析本页</button>
-        <button class="row-btn" id="pm-parse-all">解析全部</button>
-        <button class="row-btn" id="pm-prev">‹ 上一页</button>
-        <span id="pm-page" class="hint">1 / 1</span>
-        <button class="row-btn" id="pm-next">下一页 ›</button>
-      </div>
-    </div>
-    <div id="pm-list" class="tm-list"></div>
-  </section>
-
 </main>
-
-<!-- ============ 长难句解析：移动抽屉（全局，与侧栏共用 body 搬家） ============ -->
-<div class="parse-drawer-overlay" id="parse-drawer-overlay" hidden></div>
-<aside class="parse-drawer" id="parse-drawer" hidden>
-  <div class="parse-drawer-head">
-    <span>长难句解析</span>
-    <button class="icon-btn" id="parse-drawer-close" title="关闭">✕</button>
-  </div>
-  <div class="parse-drawer-body" id="parse-drawer-body"></div>
-</aside>
 
 <!-- ============ 全局底栏（移动） ============ -->
 <nav class="tab-bar">
   <button data-tab="dashboard" class="active">🏠<span>首页</span></button>
   <button data-tab="papers-recite">📖<span>真题记词</span></button>
   <button data-tab="study" class="tab-center">▶<span>学习</span></button>
-  <button data-tab="parsemgr">📝<span>解析</span></button>
   <button data-tab="settings">⚙<span>我的</span></button>
 </nav>
 
