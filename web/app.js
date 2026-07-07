@@ -296,7 +296,7 @@
     if (qpos >= queue.length) { showDone(false); return; }
     const gs = settings.groupSize || 20;
     groupEnd = Math.min(queue.length, qpos + gs);
-    show("study");
+    show(studyMode === "passage" ? "passage" : "study");
     nextCard();
   }
 
@@ -541,8 +541,7 @@
       showDone(true);
       return;
     }
-    show("passage");
-    nextCard();
+    advanceToNextGroup();
   }
 
 // 把 passageReader 装填好（标题/正文/词/items/年份），openReader 用。
@@ -563,7 +562,7 @@
   function nextCard() {
     clearHintTimer();
     // 组边界优先：背完当前组（qpos 到 groupEnd）→ 进组完成屏，即使这是最后一组也先展示本组词
-    if (studyMode !== "passage" && qpos >= groupEnd && qpos > 0 && groupEnd > 0) {
+    if (qpos >= groupEnd && qpos > 0 && groupEnd > 0) {
       showGroupDone();
       return;
     }
@@ -910,7 +909,7 @@
     if (item.card.state === "learn") {
       item.isNew = false;
       queue.push({ idx: item.idx, card: item.card, isNew: false, entry: item.entry });
-      if (studyMode !== "passage") groupEnd = Math.min(queue.length, groupEnd + 1);
+      groupEnd = Math.min(queue.length, groupEnd + 1);
     }
     qpos++;
     nextCard();
@@ -926,7 +925,7 @@
     if (item.card.state === "learn") {
       item.isNew = false;
       queue.push({ idx: item.idx, card: item.card, isNew: false, entry: item.entry });
-      if (studyMode !== "passage") groupEnd = Math.min(queue.length, groupEnd + 1);
+      groupEnd = Math.min(queue.length, groupEnd + 1);
     }
     qpos++;
     nextCard();
@@ -1006,7 +1005,7 @@
     // push 队尾继续（quiz1 选对进 quiz2，选错重置 quiz1，都还在 learn）
     if (item.card.state === "learn") {
       queue.push({ idx: item.idx, card: item.card, isNew: false, entry: item.entry });
-      if (studyMode !== "passage") groupEnd = Math.min(queue.length, groupEnd + 1);
+      groupEnd = Math.min(queue.length, groupEnd + 1);
     }
     setTimeout(() => { qpos++; nextCard(); }, 600);
   }
@@ -1253,7 +1252,7 @@
       item.isNew = false;
       queue.push({ idx: item.idx, card: res.card, isNew: false, entry: item.entry });
       // again 把词 push 到队尾，但仍在当前组内（groupEnd 同步后移），让用户本组内重练
-      if (studyMode !== "passage") groupEnd = Math.min(queue.length, groupEnd + 1);
+      groupEnd = Math.min(queue.length, groupEnd + 1);
     }
     qpos++;
     nextCard();
@@ -2116,8 +2115,15 @@
     });
     const btnGroupHome = $("btn-group-home");
     if (btnGroupHome) btnGroupHome.addEventListener("click", () => {
+      // passage（真题记词）模式：返回题型层；其余回 dashboard
+      if (studyMode === "passage" && reciteOrigin) {
+        show("papers-recite");
+        renderReciteSections(reciteOrigin.paperIdx);
+        reciteOrigin = null;
+      } else {
+        show("dashboard");
+      }
       studyMode = "daily";
-      show("dashboard");
     });
     // study 与 passage 各有一个 flip 按钮，都绑 flipCurrent
     ["btn-flip-study", "btn-flip-passage"].forEach((id) => {
