@@ -12,6 +12,7 @@
   function getUser() { try { return JSON.parse(localStorage.getItem(KEY_USER) || "null"); } catch (e) { return null; } }
   function setUser(u) { if (u) localStorage.setItem(KEY_USER, JSON.stringify(u)); else localStorage.removeItem(KEY_USER); }
   function isLoggedIn() { return !!getToken(); }
+  function isAdmin() { const u = getUser(); return !!(u && u.is_admin); }
 
   // 统一请求:自动带 token(若有)、JSON in/out、错误抛 Error(status/data 附带)
   async function req(path, opts) {
@@ -37,7 +38,12 @@
   async function register(username, password) { const d = await req("/api/auth/register", { method: "POST", body: JSON.stringify({ username, password }) }); setToken(d.token); setUser(d.user); return d; }
   async function login(username, password) { const d = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }); setToken(d.token); setUser(d.user); return d; }
   async function logout() { try { await req("/api/auth/logout", { method: "POST" }); } catch (e) { } setToken(""); setUser(""); }
-  async function me() { return req("/api/auth/me"); }
+  async function me() {
+    const d = await req("/api/auth/me");
+    // me 返回最新 is_admin，合并回 localStorage（login/register 写入的 user 可能过期）
+    if (d && d.user) setUser(Object.assign({}, getUser(), d.user));
+    return d;
+  }
 
   // ---- sentences / translations (read) ----
   async function stats() { return req("/api/sentences/stats"); }
@@ -77,7 +83,7 @@
   async function putMeta(meta) { return req("/api/meta", { method: "PUT", body: JSON.stringify({ meta }) }); }
 
   global.Api = {
-    BASE, getToken, setToken, getUser, setUser, isLoggedIn,
+    BASE, getToken, setToken, getUser, setUser, isLoggedIn, isAdmin,
     req, register, login, logout, me,
     stats, listSentences,
     translateByText, translateById, retranslateById, batchTranslate,

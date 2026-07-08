@@ -2,7 +2,8 @@
 
 - pbkdf2_hmac('sha256', 100000) + 每用户 salt
 - token = secrets.token_urlsafe(32)
-- FastAPI 依赖 get_user：从 Authorization: Bearer 解析 token → 查 sessions → 返回 user row
+- FastAPI 依赖 get_user：从 Authorization: Bearer 解析 token → 查 sessions → 返回 user row（含 is_admin）
+- get_admin：在 get_user 基础上要求 is_admin，否则 403
 """
 import hashlib
 import secrets
@@ -40,7 +41,7 @@ def _now():
 
 
 def get_user(request: Request) -> dict:
-    """FastAPI 依赖：解析 Bearer token，返回 users 表行（dict）。
+    """FastAPI 依赖：解析 Bearer token，返回 users 表行（dict，含 is_admin 布尔）。
 
     失败（缺 header / 格式错 / token 不在 sessions / user 不存在）→ 401。
     """
@@ -59,10 +60,17 @@ def get_user(request: Request) -> dict:
         if s is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "invalid token")
         u = conn.execute(
-            "SELECT id, username FROM users WHERE id=?", (s["user_id"],)
+            "SELECT id, username, is_admin FROM users WHERE id=?", (s["user_id"],)
         ).fetchone()
         if u is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "user not found")
-        return {"id": u["id"], "username": u["username"]}
+        return {"id": u["id"], "username": u["username"], "is_admin": bool(u["is_admin"])}
     finally:
         conn.close()
+
+
+def get_admin(user: dict = Depends(get_user)) -> dict:
+    """FastAPI 依赖：要求当前用户是管理员，否则 403。"""
+    if not user.get("is_admin"):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "admin only")
+    return user

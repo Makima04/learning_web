@@ -553,8 +553,11 @@
       body: psg.body,
       words: psg.words.map((w) => w.english),
       year: p.year,
+      variant: p.variant || "en1",
       label: psg.label,
       items: psg.items || [],
+      answers: psg.answers || {},
+      sectionType: p.sections[secIdx].type,
       wordsFull: psg.words,
     };
   }
@@ -1537,22 +1540,55 @@
     // 底部追加阅读题（题干 + ABCD 选项）。用 insertAdjacentHTML 而非 innerHTML+=，
     // 避免重建段落节点、使下方 readerActiveSent 引用失效。
     const items = passageReader.items || [];
-    if (items.length) {
+    const answers = passageReader.answers || {};
+    if (items.length || Object.keys(answers).length) {
       const optsHTML = (it) => Object.keys(it.options || {}).sort()
-        .map((k) => `<li><b>${esc(k)}.</b> ${esc(it.options[k] || "")}</li>`).join("");
-      const qHTML = `<div class="r-items">
-        <h3 class="r-items-title">阅读题</h3>
-        ${items.map((it) => `
-          <div class="r-item">
+        .map((k) => `<li data-opt="${escAttr(k)}"><b>${esc(k)}.</b> ${esc(it.options[k] || "")}</li>`).join("");
+      const ansCount = Object.keys(answers).length;
+      // 每题 data-ans = 答案字母（无则空）；reading_b items 空时只展示答案列表
+      const itemsHTML = items.length ? items.map((it) => {
+        const a = answers[String(it.n)] || "";
+        return `<div class="r-item" data-q="${escAttr(String(it.n ?? ''))}" data-ans="${escAttr(a)}">
             <div class="r-item-stem"><b>${esc(it.n ?? "")}.</b> ${esc(it.stem || "")}</div>
             <ul class="r-item-opts">${optsHTML(it)}</ul>
-          </div>`).join("")}
+            <div class="r-ans">正确答案：${a ? esc(a) : "无答案"}</div>
+          </div>`;
+      }).join("") : "";
+      // reading_b 兜底：无 items 时给一行答案总览
+      const ansListHTML = !items.length && ansCount
+        ? `<div class="r-ans-list">答案：${Object.keys(answers).sort((a,b)=>parseInt(a)-parseInt(b)).map((k) => `<span>${esc(k)}.${esc(answers[k])}</span>`).join(" · ")}</div>`
+        : "";
+      const qHTML = `<div class="r-items">
+        <h3 class="r-items-title">阅读题${items.length ? "" : " · 答案"}<button class="r-answers-toggle" id="r-answers-toggle">显示答案</button></h3>
+        ${itemsHTML}
+        ${ansListHTML}
       </div>`;
       body.insertAdjacentHTML("beforeend", qHTML);
+      // 绑定 toggle：切 show-answers class；同时给正确选项 li 打 .correct
+      const toggleBtn = body.querySelector("#r-answers-toggle");
+      if (toggleBtn) {
+        toggleBtn.addEventListener("click", () => {
+          const wrap = body.querySelector(".r-items");
+          if (!wrap) return;
+          const show = !wrap.classList.contains("show-answers");
+          wrap.classList.toggle("show-answers", show);
+          toggleBtn.textContent = show ? "隐藏答案" : "显示答案";
+          if (show) {
+            // 给每题正确选项打高亮
+            wrap.querySelectorAll(".r-item").forEach((itEl) => {
+              const a = itEl.getAttribute("data-ans");
+              if (!a) return;
+              itEl.querySelectorAll(".r-item-opts li").forEach((li) => {
+                li.classList.toggle("correct", li.getAttribute("data-opt") === a);
+              });
+            });
+          }
+        });
+      }
     }
     readerActiveSent = body.querySelector(".r-sent");
     if (readerActiveSent) readerActiveSent.classList.add("active");
-    // 右栏：先建 N 个空 card 占位，再后台串行填充
+    // 右栏：先建 N 个空 card 占位，再尝试用 Store 缓存预填，命中即「已生成」态
     if (analysis) {
       analysis.hidden = false;
       analysis.innerHTML = paras.map((p, i) => (
@@ -1571,11 +1607,26 @@
       Array.prototype.forEach.call(analysis.querySelectorAll(".pa-card"), (card) => {
         const i = parseInt(card.getAttribute("data-pa-idx"), 10);
         readerAnalysisState[i].el = card;
+        // 优先读 Store 缓存：命中即渲染为「已生成（缓存）」，跳过 LLM 调用
+        const payload = {
+          year: passageReader.year, label: passageReader.label,
+          para_idx: i, text: readerParas[i], full_body: passageReader.body || "",
+          items: passageReader.items || [],
+        };
+        const cacheKey = Store.getParaAnalysisKey(payload);
+        const cached = Store.getParaAnalysis(cacheKey);
+        if (cached) {
+          const st = readerAnalysisState[i];
+          st.done = true;
+          const statusEl = card.querySelector(".pa-card-status");
+          if (statusEl) statusEl.textContent = "已生成（缓存）";
+          renderParaAnalysisMarkdown(card, cached);
+        }
       });
     }
     show("reader");
     wireWordClicks(body);
-    // 后台串行生成段落分析（首段立刻开始，其余排队；失败即停）
+    // 后台串行生成段落分析（首段立刻开始，其余排队；失败即停；缓存命中的段已 done，自动跳过）
     startReaderAnalysisChain();
   }
 
@@ -1875,14 +1926,18 @@
     clearHintTimer();
     document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
     $("screen-" + name).classList.add("active");
-    // 同步顶栏/底栏 tab 高亮
-    document.querySelectorAll(".header-nav button[data-tab], .tab-bar button[data-tab]").forEach((b) => {
+    // 同步顶栏/底栏/全局左侧栏 tab 高亮
+    document.querySelectorAll(".header-nav button[data-tab], .tab-bar button[data-tab], .global-nav button[data-tab]").forEach((b) => {
       b.classList.toggle("active", b.dataset.tab === name);
     });
-    // 子屏（非主 tab）隐藏全局 header/tab-bar
+    // 子屏（非主 tab）隐藏全局 header/tab-bar。settings 是主 tab，顶栏需保留。
     const isMain = ["dashboard", "papers", "papers-recite", "transmgr", "settings"].includes(name);
     document.body.classList.toggle("sub-screen", !isMain);
     if (name === "dashboard") renderDashboard();
+    if (name === "settings") {
+      // 进设置页时滚到顶部，避免上一屏的滚动位置残留
+      window.scrollTo(0, 0);
+    }
     if (name === "group-done") { /* 渲染由 showGroupDone 负责 */ }
     // 进入真题记词屏时默认回年份层（除非已经在子层）
     if (name === "papers-recite") {
@@ -1905,16 +1960,24 @@
     $("val-rate").textContent = settings.rate.toFixed(1);
     $("set-autospeak").checked = !!settings.autoSpeak;
     $("set-speak-word").checked = !!settings.speakOnWordClick;
-    const gs = $("set-group-size");
-    if (gs) gs.value = String(settings.groupSize || 20);
+    // 每组词数：现在是 .group-btn 按钮组，按 dataset.v 切 active
+    const gs = settings.groupSize || 20;
+    document.querySelectorAll("#set-group-size .group-btn").forEach((b) =>
+      b.classList.toggle("active", parseInt(b.dataset.v, 10) === gs)
+    );
     document.querySelectorAll("#set-direction button").forEach((b) =>
       b.classList.toggle("active", b.dataset.v === settings.direction)
     );
     // LLM: 服务端代理，从 Api 拉配置/模型列表
     refreshAccountUI();
     refreshLlmUI();
+    // 版本号
+    const vEl = $("app-version");
+    if (vEl) vEl.textContent = (window.EW_VERSION || "dev");
     selectSettingsSection("study");
     show("settings");
+    // 进设置页后定位滑块气泡（show 异步切屏后布局才稳定，下一帧再算）
+    requestAnimationFrame(repositionAllSliderBubbles);
   }
 
   // ---- 账号 panel UI ----
@@ -1925,7 +1988,8 @@
     if (window.Api && Api.isLoggedIn()) {
       const u = Api.getUser() || {};
       const name = u.username || "已登录";
-      state.textContent = name;
+      const admin = Api.isAdmin();
+      state.innerHTML = esc(name) + (admin ? ' <span class="acc-badge">管理员</span>' : "");
       btnLogout.hidden = false;
       $("acc-user").value = "";
       $("acc-pass").value = "";
@@ -1936,6 +2000,21 @@
       btnLogout.hidden = true;
       if (btnAccount) btnAccount.textContent = "👤";
     }
+    // 管理入口（翻译管理 / LLM 配置）按 admin 显隐
+    applyAdminGating();
+  }
+
+  // 非 admin 隐藏翻译管理入口、禁用 LLM 配置控件。在 refreshAccountUI 与
+  // openSettings 流程里调用，保证登录态变更后 UI 同步。
+  function applyAdminGating() {
+    const admin = !!(window.Api && Api.isAdmin());
+    // 翻译管理入口：左侧栏、dashboard 快捷操作、设置页 LLM section 的「翻译管理」按钮
+    document.querySelectorAll('[data-tab="transmgr"]').forEach((b) => {
+      b.hidden = !admin;
+    });
+    // 设置页 LLM section 内的「翻译管理」按钮（无 data-tab，按 id 处理）
+    const tmBtn = $("btn-transmgr");
+    if (tmBtn) tmBtn.hidden = !admin;
   }
 
   // ---- LLM panel UI（服务端代理模式）----
@@ -1943,8 +2022,22 @@
     const el = $("llm-status");
     const sel = $("set-llm-model");
     el.classList.remove("ok", "err", "busy");
+    // 隐藏 LLM 控件容器（model select / 并发滑块 / 三个按钮），非 admin 不展示
+    const controls = document.querySelectorAll("#screen-settings .settings-section[data-s='llm'] .field, #screen-settings .settings-section[data-s='llm'] .llm-actions");
     if (!window.Api) { el.textContent = "未连接"; return; }
-    if (!Api.isLoggedIn()) { el.textContent = "未登录（请先在上方登录）"; el.classList.add("err"); return; }
+    if (!Api.isLoggedIn()) {
+      el.textContent = "登录后可用（管理员配置）";
+      el.classList.add("err");
+      controls.forEach((c) => c.hidden = true);
+      return;
+    }
+    if (!Api.isAdmin()) {
+      el.textContent = "仅管理员可配置 LLM";
+      el.classList.add("err");
+      controls.forEach((c) => c.hidden = true);
+      return;
+    }
+    controls.forEach((c) => c.hidden = false);
     el.textContent = "读取配置中…"; el.classList.add("busy");
     try {
       const cfg = await Api.llmConfig();
@@ -1967,6 +2060,8 @@
       const concVal = $("val-llm-concurrency");
       if (concEl) { concEl.value = c; }
       if (concVal) { concVal.textContent = c; }
+      // 并发滑块灌值后重定位气泡 + 轨道填充
+      positionSliderBubble(concEl, $("conc-bubble"));
     } catch (err) {
       el.classList.remove("busy");
       el.textContent = "读取失败：" + (err && err.message || err);
@@ -1995,6 +2090,31 @@
     Store.saveSettings(settings);
   }
 
+  // ============ 滑块气泡 + 轨道填充 ============
+  // 按当前 value 在 min/max 中的百分比定位气泡（补偿拇指半宽防越界），
+  // 同时把 range 轨道用 linear-gradient 填充已选区间为薄荷绿。
+  function positionSliderBubble(slider, bubble) {
+    if (!slider || !bubble) return;
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    const step = parseFloat(slider.step) || 1;
+    const v = parseFloat(slider.value);
+    const pct = (max === min) ? 0 : ((v - min) / (max - min)) * 100;
+    const thumbW = 20;
+    const leftPx = (pct / 100) * (slider.offsetWidth - thumbW) + thumbW / 2;
+    bubble.style.left = leftPx + "px";
+    bubble.textContent = (step < 1) ? v.toFixed(1) : String(v);
+    const track = getComputedStyle(document.body).getPropertyValue("--bg-soft").trim();
+    slider.style.background =
+      `linear-gradient(to right, var(--brand) 0%, var(--brand) ${pct}%, ${track} ${pct}%, ${track} 100%)`;
+  }
+  // 重算所有设置页滑块气泡（resize / 主题切换 / 进入设置页时调用）
+  function repositionAllSliderBubbles() {
+    positionSliderBubble($("set-daily"), $("daily-bubble"));
+    positionSliderBubble($("set-rate"), $("rate-bubble"));
+    positionSliderBubble($("set-llm-concurrency"), $("conc-bubble"));
+  }
+
   // ============ helpers ============
   function esc(s) {
     return String(s == null ? "" : s)
@@ -2009,6 +2129,10 @@
   let tmQTimer = null;
 
   async function openTransMgr() {
+    if (window.Api && Api.isLoggedIn() && !Api.isAdmin()) {
+      alert("仅管理员可访问翻译管理");
+      return;
+    }
     tmState = { status: "untranslated", q: "", page: 1, size: 50 };
     show("transmgr");
     await loadTmPage();
@@ -2177,11 +2301,13 @@
     $("set-daily").addEventListener("input", (e) => {
       settings.dailyNew = parseInt(e.target.value, 10);
       $("val-daily").textContent = settings.dailyNew;
+      positionSliderBubble(e.target, $("daily-bubble"));
       applySettings();
     });
     $("set-rate").addEventListener("input", (e) => {
       settings.rate = parseFloat(e.target.value);
       $("val-rate").textContent = settings.rate.toFixed(1);
+      positionSliderBubble(e.target, $("rate-bubble"));
       applySettings();
     });
     $("set-autospeak").addEventListener("change", (e) => {
@@ -2190,11 +2316,15 @@
     $("set-speak-word").addEventListener("change", (e) => {
       settings.speakOnWordClick = e.target.checked; applySettings();
     });
-    const gsEl = $("set-group-size");
-    if (gsEl) gsEl.addEventListener("change", (e) => {
-      settings.groupSize = parseInt(e.target.value, 10) || 20;
-      applySettings();
-    });
+    // 每组词数：现在是 .group-btn 按钮组，click 切 active
+    document.querySelectorAll("#set-group-size .group-btn").forEach((b) =>
+      b.addEventListener("click", () => {
+        document.querySelectorAll("#set-group-size .group-btn").forEach((x) =>
+          x.classList.toggle("active", x === b));
+        settings.groupSize = parseInt(b.dataset.v, 10) || 20;
+        applySettings();
+      })
+    );
     document.querySelectorAll("#settings-nav button").forEach((b) =>
       b.addEventListener("click", () => selectSettingsSection(b.dataset.s))
     );
@@ -2212,12 +2342,16 @@
       try { await Api.setLlmModel(model); updateLlmStatusSimple("已切换模型 · " + model, "ok"); }
       catch (err) { updateLlmStatusSimple("切换失败：" + (err && err.message || err), "err"); }
     });
-    // 并发数滑块：拖动时实时显示数值，松手（change）才提交，避免拖动风暴
+    // 并发数滑块：拖动时实时显示数值 + 气泡跟随，松手（change）才提交，避免拖动风暴
     (function () {
       const conc = $("set-llm-concurrency");
       const val = $("val-llm-concurrency");
+      const bubble = $("conc-bubble");
       if (!conc || !val) return;
-      conc.addEventListener("input", () => { val.textContent = conc.value; });
+      conc.addEventListener("input", () => {
+        val.textContent = conc.value;
+        positionSliderBubble(conc, bubble);
+      });
       conc.addEventListener("change", async () => {
         const n = parseInt(conc.value, 10);
         try {
@@ -2456,8 +2590,8 @@
       }
     });
 
-    // ---- 全局 tab 导航（顶栏 / 底栏 / dashboard 快捷操作）----
-    document.querySelectorAll('.header-nav button[data-tab], .tab-bar button[data-tab], .action-btn[data-tab]').forEach((b) => {
+    // ---- 全局 tab 导航（顶栏 / 底栏 / 全局左侧栏 / dashboard 快捷操作）----
+    document.querySelectorAll('.header-nav button[data-tab], .tab-bar button[data-tab], .global-nav button[data-tab], .action-btn[data-tab]').forEach((b) => {
       b.addEventListener('click', () => {
         const tab = b.dataset.tab;
         if (tab === 'study') { startSession(); return; }
@@ -2475,6 +2609,8 @@
       document.body.dataset.theme = t;
       if (btnTheme) btnTheme.textContent = t === 'dark' ? '☀️' : '🌙';
       try { localStorage.setItem('ew.theme', t); } catch (e) {}
+      // 主题切换后滑块轨道色取自 CSS 变量，重算一次气泡 + 轨道填充
+      requestAnimationFrame(repositionAllSliderBubbles);
     }
     if (btnTheme) {
       btnTheme.addEventListener('click', () => {
@@ -2482,6 +2618,11 @@
       });
     }
     try { const t = localStorage.getItem('ew.theme'); if (t) applyTheme(t); } catch (e) {}
+
+    // ---- 窗口尺寸变化时重算滑块气泡位置 ----
+    window.addEventListener('resize', () => {
+      requestAnimationFrame(repositionAllSliderBubbles);
+    });
 
     // ---- dashboard 快捷导出 ----
     const btnExportQuick = $('btn-export-quick');
@@ -2503,7 +2644,7 @@
     // 启动时若已登录，校验 token 仍有效，并同步进度
     if (window.Api && Api.isLoggedIn()) {
       try {
-        await Api.me();
+        await Api.me();  // me() 内部把 is_admin 合并回 localStorage
         refreshAccountUI();
         try { await Store.sync(); } catch (e) {}
         renderDashboard();

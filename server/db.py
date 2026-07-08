@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users(
     username TEXT UNIQUE NOT NULL,
     pw_hash TEXT NOT NULL,
     salt TEXT NOT NULL,
+    is_admin INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS sessions(
@@ -59,6 +60,16 @@ CREATE TABLE IF NOT EXISTS paragraph_analyses(
     status TEXT,
     model TEXT,
     analyzed_at TEXT,
+    updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS paper_answers(
+    -- 真题选择题答案缓存。cache_key = "{year}|{variant}|{section_type}|{label}"，
+    -- answers 是 JSON {"21":"A",...}（字符串键，按题号）。source: pdf（PDF 抽取）/ llm（LLM 做题）。
+    cache_key TEXT PRIMARY KEY,
+    answers TEXT,
+    source TEXT,
+    model TEXT,
+    created_at TEXT,
     updated_at TEXT
 );
 CREATE TABLE IF NOT EXISTS cards(
@@ -109,6 +120,14 @@ def init_db():
     try:
         conn.executescript(SCHEMA)
         conn.commit()
+        # 老库迁移：SCHEMA 用 CREATE TABLE IF NOT EXISTS，不会给已存在的 users 表补
+        # is_admin 列。用 PRAGMA table_info 探测，缺列才 ALTER（幂等）。
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+        if "is_admin" not in cols:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0"
+            )
+            conn.commit()
         # seed active_llm_model：若 config 里没有，且 ew_llm.json 有 model，则写入
         row = conn.execute(
             "SELECT value FROM config WHERE key=?", ("active_llm_model",)

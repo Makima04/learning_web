@@ -442,6 +442,12 @@ def main():
     all_papers = []
     for p in args:
         data = json.loads(Path(p).read_text(encoding="utf-8"))
+        # 顶层 answers：{"1":"A","21":"B","41":"C",...}（extract_answers.py 写入）。
+        # 按 section 题号范围切到各 passage。无则空 dict。
+        top_answers = data.get("answers") or {}
+        def slice_ans(start, end):
+            return {k: v for k, v in top_answers.items()
+                    if start <= int(k) <= end}
         paper = {
             "year": data.get("year"),
             "source": data.get("source"),
@@ -459,11 +465,19 @@ def main():
             passages = []
             if sec["type"] == "use_of_english":
                 words_hits = match_passage(sec.get("passage", ""), lookup, word_map)
+                # 透传 items（完形选项，stem 通常为空）——reader 显示答案需选项列表
+                items = [
+                    {"n": it.get("n"), "stem": it.get("stem", ""),
+                     "options": it.get("options", {})}
+                    for it in sec.get("items", [])
+                ]
                 passages.append({
                     "label": "完形填空",
                     "body": sec.get("passage", ""),
                     "words": words_hits,
                     "itemCount": len(sec.get("items", [])),
+                    "items": items,
+                    "answers": slice_ans(1, 20),
                 })
             elif sec["type"] == "reading_a":
                 for t in sec.get("passages", []):
@@ -474,12 +488,20 @@ def main():
                          "options": it.get("options", {})}
                         for it in t.get("items", [])
                     ]
+                    # 该 Text 的题号范围（items[0].n ~ items[-1].n），切 answers
+                    ns = [it.get("n") for it in items if it.get("n")]
+                    if ns:
+                        a_min, a_max = min(ns), max(ns)
+                        ans = slice_ans(a_min, a_max)
+                    else:
+                        ans = {}
                     passages.append({
                         "label": t["label"],
                         "body": t.get("body", ""),
                         "words": words_hits,
                         "itemCount": len(t.get("items", [])),
                         "items": items,
+                        "answers": ans,
                     })
             elif sec["type"] == "reading_b":
                 # 七选五: 正文在 passage；排序/小标题变体有时把可重排段落放在 options
@@ -504,6 +526,7 @@ def main():
                     "body": passage_body,
                     "words": words_hits,
                     "itemCount": len(sec.get("gaps", [])),
+                    "answers": slice_ans(41, 45),
                 })
             elif sec["type"] == "translation":
                 # 翻译：把全文 + 各 segment 都算上

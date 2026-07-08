@@ -6,6 +6,7 @@ SPA fallback：未命中的路径返 index.html，支持客户端路由深链（
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+import json
 import threading
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
@@ -13,7 +14,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from .auth import gen_salt, gen_token, get_user, hash_password, verify_password
+from .auth import gen_salt, gen_token, get_admin, get_user, hash_password, verify_password
 from .db import get_db, init_db, now_iso, set_config_value
 from .llm import (
     LlmNotConfigured,
@@ -188,12 +189,18 @@ def register(body: AuthBody):
         ).fetchone()
         if exist:
             raise HTTPException(409, "username already exists")
+        # 首注册即管理员：库内无管理员时，本次注册者升 admin。
+        # 仅初始部署引导用——之后注册一律普通用户，提升需改库。
+        admin_count = conn.execute(
+            "SELECT COUNT(*) c FROM users WHERE is_admin=1"
+        ).fetchone()["c"]
+        is_admin = 1 if admin_count == 0 else 0
         salt = gen_salt()
         pw_hash = hash_password(pw, salt)
         now = now_iso()
         cur = conn.execute(
-            "INSERT INTO users(username, pw_hash, salt, created_at) VALUES(?,?,?,?)",
-            (u, pw_hash, salt, now),
+            "INSERT INTO users(username, pw_hash, salt, is_admin, created_at) VALUES(?,?,?,?,?)",
+            (u, pw_hash, salt, is_admin, now),
         )
         uid = cur.lastrowid
         token = gen_token()
@@ -202,7 +209,7 @@ def register(body: AuthBody):
             (token, uid, now),
         )
         conn.commit()
-        return {"token": token, "user": {"id": uid, "username": u}}
+        return {"token": token, "user": {"id": uid, "username": u, "is_admin": bool(is_admin)}}
     finally:
         conn.close()
 
@@ -214,7 +221,7 @@ def login(body: AuthBody):
     conn = get_db()
     try:
         row = conn.execute(
-            "SELECT id, username, pw_hash, salt FROM users WHERE username=?", (u,)
+            "SELECT id, username, pw_hash, salt, is_admin FROM users WHERE username=?", (u,)
         ).fetchone()
         if not row or not verify_password(pw, row["salt"], row["pw_hash"]):
             raise HTTPException(401, "invalid credentials")
@@ -225,7 +232,7 @@ def login(body: AuthBody):
             (token, row["id"], now),
         )
         conn.commit()
-        return {"token": token, "user": {"id": row["id"], "username": row["username"]}}
+        return {"token": token, "user": {"id": row["id"], "username": row["username"], "is_admin": bool(row["is_admin"])}}
     finally:
         conn.close()
 
@@ -246,7 +253,7 @@ def logout(request: Request, user: dict = Depends(get_user)):
 
 @app.get("/api/auth/me")
 def me(user: dict = Depends(get_user)):
-    return {"user": {"id": user["id"], "username": user["username"]}}
+    return {"user": {"id": user["id"], "username": user["username"], "is_admin": user["is_admin"]}}
 
 
 # ====================================================================
@@ -275,6 +282,7 @@ def sentences_list(
     q: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     size: int = Query(50, ge=1, le=200),
+    user: dict = Depends(get_admin),
 ):
     # 计算过滤条件。status 取值：all / translated / untranslated / parsed / unparsed
     # （translated/untranslated 看 translations；parsed/unparsed 看 parses）
@@ -332,7 +340,7 @@ def sentences_list(
 
 
 @app.get("/api/sentences/{sid}")
-def sentence_detail(sid: int):
+def sentence_detail(sid: int, user: dict = Depends(get_admin)):
     conn = get_db()
     try:
         r = conn.execute(
@@ -542,9 +550,71 @@ def analyze_paragraph_endpoint(body: ParaAnalyzeBody):
         raise
 
 
+# ====================================================================
+# 真题选择题答案（完形 / 阅读 A / 新题型）
+# ====================================================================
+class PaperAnswersBody(BaseModel):
+    """POST /api/paper-answers：admin 灌入答案。answers 形如 {"21":"A",...}。"""
+    year: int
+    variant: str = "en1"
+    section: str  # use_of_english / reading_a / reading_b
+    label: str = ""
+    answers: dict
+    source: str = "llm"  # pdf / llm
+
+
+def _answers_cache_key(year, variant, section, label):
+    return f"{year}|{variant}|{section}|{label or ''}"
+
+
+@app.get("/api/paper-answers")
+def paper_answers_get(
+    year: int = Query(...),
+    variant: str = Query("en1"),
+    section: str = Query(...),
+    label: str = Query(""),
+):
+    """公开读：按 year/variant/section/label 取答案缓存。无则返空。"""
+    key = _answers_cache_key(year, variant, section, label)
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT answers, source FROM paper_answers WHERE cache_key=?", (key,)
+        ).fetchone()
+        if row is None:
+            return {"answers": {}, "source": None, "cached": False}
+        try:
+            ans = json.loads(row["answers"]) if row["answers"] else {}
+        except Exception:
+            ans = {}
+        return {"answers": ans, "source": row["source"], "cached": True}
+    finally:
+        conn.close()
+
+
+@app.post("/api/paper-answers")
+def paper_answers_set(body: PaperAnswersBody, user: dict = Depends(get_admin)):
+    """admin 灌答案：upsert paper_answers。answers 键须为字符串题号。"""
+    key = _answers_cache_key(body.year, body.variant, body.section, body.label)
+    now = now_iso()
+    conn = get_db()
+    try:
+        conn.execute(
+            "INSERT INTO paper_answers(cache_key, answers, source, model, "
+            "created_at, updated_at) VALUES(?,?,?,?,?,?) "
+            "ON CONFLICT(cache_key) DO UPDATE SET answers=excluded.answers, "
+            "source=excluded.source, model=excluded.model, updated_at=excluded.updated_at",
+            (key, json.dumps(body.answers, ensure_ascii=False), body.source, None, now, now),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "cache_key": key}
+
+
 # 注意：/batch 必须在 /{sid} 之前注册，否则 "batch" 会被当成 sid 匹配
 @app.post("/api/translate/batch")
-def translate_batch(body: TranslateBatchBody, user: dict = Depends(get_user)):
+def translate_batch(body: TranslateBatchBody, user: dict = Depends(get_admin)):
     ids = body.ids or []
     if len(ids) > 200:
         raise HTTPException(400, "ids exceeds 200")
@@ -627,7 +697,7 @@ class ParseBatchBody(BaseModel):
 
 
 @app.post("/api/parse/batch")
-def parse_batch(body: ParseBatchBody, user: dict = Depends(get_user)):
+def parse_batch(body: ParseBatchBody, user: dict = Depends(get_admin)):
     """批量解析：对每个 sentence_id 取原文 → 流式调 LLM 读完 → save_parse。
     遇错即中止：任一任务出错即取消尚未开始的任务，等待在途任务结束，提前返回。
     （解析批量更大、单条更慢，LLM 网关故障时应快速失败，避免空跑几千条。）
@@ -743,7 +813,7 @@ def parse_batch(body: ParseBatchBody, user: dict = Depends(get_user)):
 
 
 @app.post("/api/translate/{sid}")
-def translate_by_id(sid: int, user: dict = Depends(get_user)):
+def translate_by_id(sid: int, user: dict = Depends(get_admin)):
     conn = get_db()
     try:
         s = conn.execute("SELECT id FROM sentences WHERE id=?", (sid,)).fetchone()
@@ -756,7 +826,7 @@ def translate_by_id(sid: int, user: dict = Depends(get_user)):
 
 
 @app.post("/api/translate/{sid}/retranslate")
-def retranslate_by_id(sid: int, user: dict = Depends(get_user)):
+def retranslate_by_id(sid: int, user: dict = Depends(get_admin)):
     conn = get_db()
     try:
         s = conn.execute("SELECT id FROM sentences WHERE id=?", (sid,)).fetchone()
@@ -772,7 +842,7 @@ def retranslate_by_id(sid: int, user: dict = Depends(get_user)):
 # LLM 配置
 # ====================================================================
 @app.get("/api/llm/config")
-def llm_config(user: dict = Depends(get_user)):
+def llm_config(user: dict = Depends(get_admin)):
     # model 取 active_model()：config.active_llm_model 优先，否则 fallback json model。
     # 与 translate_text 实际使用的 model 一致，避免 UI 显示旧 json model。
     return {
@@ -783,7 +853,7 @@ def llm_config(user: dict = Depends(get_user)):
 
 
 @app.get("/api/llm/models")
-def llm_models(user: dict = Depends(get_user)):
+def llm_models(user: dict = Depends(get_admin)):
     try:
         return fetch_models()
     except ValueError as e:
@@ -793,7 +863,7 @@ def llm_models(user: dict = Depends(get_user)):
 
 
 @app.post("/api/llm/config")
-def llm_config_set(body: LlmConfigBody, user: dict = Depends(get_user)):
+def llm_config_set(body: LlmConfigBody, user: dict = Depends(get_admin)):
     conn = get_db()
     try:
         if body.model is not None:

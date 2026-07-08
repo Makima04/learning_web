@@ -5,25 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f8fafc">
 <title>红宝书 · 背单词</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body data-theme="light">
 
 <!-- ============ 全局顶栏（桌面） ============ -->
 <header class="app-header">
   <div class="header-left">📕 <span>红宝书</span><small>乱序·6550</small></div>
-  <nav class="header-nav">
-    <button data-tab="dashboard" class="active">首页面板</button>
-    <button data-tab="papers">真题</button>
-    <button data-tab="papers-recite">真题记词</button>
-    <button data-tab="transmgr">翻译管理</button>
-    <button data-tab="settings">设置</button>
-  </nav>
   <div class="header-right">
     <button class="icon-btn" id="btn-theme" title="主题">🌙</button>
-    <button class="icon-btn" id="btn-account" title="账号">👤</button>
+    <button class="avatar" id="btn-account" title="账号">👤</button>
   </div>
 </header>
+
+<!-- ============ 主体：左侧栏 + 主内容 ============ -->
+<div class="app-body">
+
+  <!-- 全局左侧栏（桌面，常驻） -->
+  <aside class="global-nav">
+    <div class="nav-title">导航</div>
+    <button data-tab="dashboard" class="active"><span class="ic">🏠</span>首页</button>
+    <button data-tab="papers"><span class="ic">📚</span>真题</button>
+    <button data-tab="papers-recite"><span class="ic">📖</span>真题记词</button>
+    <button data-tab="transmgr"><span class="ic">🌐</span>翻译管理</button>
+  </aside>
 
 <!-- ============ 主内容区 ============ -->
 <main class="app-main">
@@ -266,75 +271,136 @@
 
   <!-- ============ SETTINGS ============ -->
   <section id="screen-settings" class="screen settings-layout">
-    <nav class="settings-nav" id="settings-nav">
-      <button data-s="study" class="active">学习</button>
-      <button data-s="speech">发音</button>
-      <button data-s="llm">翻译</button>
-      <button data-s="account">账号</button>
-      <button data-s="data">数据</button>
-    </nav>
+    <aside class="settings-nav" id="settings-nav">
+      <div class="nav-title">设置</div>
+      <button data-s="study" class="nav-item active"><span class="ic">📖</span>学习</button>
+      <button data-s="speech" class="nav-item"><span class="ic">🔊</span>发音</button>
+      <button data-s="llm" class="nav-item"><span class="ic">🌐</span>翻译</button>
+      <button data-s="account" class="nav-item"><span class="ic">👤</span>账号</button>
+      <button data-s="data" class="nav-item"><span class="ic">💾</span>数据</button>
+    </aside>
     <div class="settings-panels">
 
+      <!-- ===== 学习 ===== -->
       <div class="settings-section" data-s="study">
-        <div class="panel">
-          <label class="field">
-            <span class="field-label">每日新词数</span>
-            <span class="field-val"><b id="val-daily">20</b> 词/天</span>
-            <input type="range" id="set-daily" min="0" max="100" step="5" value="20">
-          </label>
+        <div class="section-head">
+          <h2>学习</h2>
+          <span class="sub">即时保存</span>
+        </div>
 
-          <div class="field">
-            <span class="field-label">记忆方向</span>
-            <div class="seg" id="set-direction">
-              <button data-v="en2cn" class="active">英→中</button>
-              <button data-v="cn2en">中→英</button>
-              <button data-v="random">随机</button>
-            </div>
+        <!-- 每日新词数 -->
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">每日新词数</span>
+            <span class="s-card-hint">每天新引入的单词量</span>
           </div>
+          <div class="slider-wrap">
+            <div class="slider-bubble" id="daily-bubble">20</div>
+            <input type="range" id="set-daily" class="range-slider" min="0" max="100" step="5" value="20">
+          </div>
+          <div class="slider-meta">
+            <span>0</span><span><b id="val-daily">20</b> 词 / 天</span><span>100</span>
+          </div>
+        </div>
 
-          <label class="field">
-            <span class="field-label">每组词数 <small>· 背完一组后展示本组全部单词</small></span>
-            <select id="set-group-size" class="text-input">
-              <option value="10">10 词/组</option>
-              <option value="20" selected>20 词/组</option>
-              <option value="40">40 词/组</option>
-            </select>
-          </label>
+        <!-- 记忆方向 -->
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">记忆方向</span>
+            <span class="s-card-hint">卡片正面显示哪种语言</span>
+          </div>
+          <div class="dir-grid" id="set-direction">
+            <button class="dir-btn active" data-v="en2cn">
+              <div class="flags"><span>🇬🇧</span><span class="arrow">→</span><span>🇨🇳</span></div>
+              <div class="label">英 → 中</div>
+            </button>
+            <button class="dir-btn" data-v="cn2en">
+              <div class="flags"><span>🇨🇳</span><span class="arrow">→</span><span>🇬🇧</span></div>
+              <div class="label">中 → 英</div>
+            </button>
+            <button class="dir-btn" data-v="random">
+              <div class="flags"><span>🇬🇧</span><span class="arrow">⇄</span><span>🇨🇳</span></div>
+              <div class="label">随机</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 每组词数 -->
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">每组词数</span>
+            <span class="s-card-hint">背完一组后展示本组全部单词</span>
+          </div>
+          <div class="group-grid" id="set-group-size">
+            <button class="group-btn" data-v="10"><span class="num">10</span><span class="unit">词 / 组</span></button>
+            <button class="group-btn active" data-v="20"><span class="num">20</span><span class="unit">词 / 组</span></button>
+            <button class="group-btn" data-v="40"><span class="num">40</span><span class="unit">词 / 组</span></button>
+          </div>
         </div>
       </div>
 
+      <!-- ===== 发音 ===== -->
       <div class="settings-section" data-s="speech" hidden>
-        <div class="panel">
-          <label class="field">
-            <span class="field-label">自动发音</span>
-            <label class="switch"><input type="checkbox" id="set-autospeak"><span class="slider"></span></label>
-          </label>
+        <div class="section-head">
+          <h2>发音</h2>
+          <span class="sub">语音朗读控制</span>
+        </div>
 
-          <label class="field">
-            <span class="field-label">点词朗读 <small>· 例句/原文点词查义时是否自动读单词</small></span>
-            <label class="switch"><input type="checkbox" id="set-speak-word" checked><span class="slider"></span></label>
-          </label>
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">自动发音</span>
+            <span class="s-card-hint">卡片渲染时朗读目标词</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="set-autospeak"><span class="slider"></span></label>
+        </div>
 
-          <label class="field">
-            <span class="field-label">语速 <b id="val-rate">1.0</b>×</span>
-            <input type="range" id="set-rate" min="0.6" max="1.6" step="0.1" value="1.0">
-          </label>
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">点词朗读</span>
+            <span class="s-card-hint">例句/原文点词查义时自动读单词</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="set-speak-word" checked><span class="slider"></span></label>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">语速</span>
+            <span class="s-card-hint">朗读速度倍率</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-bubble" id="rate-bubble">1.0</div>
+            <input type="range" id="set-rate" class="range-slider" min="0.6" max="1.6" step="0.1" value="1.0">
+          </div>
+          <div class="slider-meta">
+            <span>0.6×</span><span><b id="val-rate">1.0</b>×</span><span>1.6×</span>
+          </div>
         </div>
       </div>
 
+      <!-- ===== 翻译 ===== -->
       <div class="settings-section" data-s="llm" hidden>
-        <div class="panel">
-          <div class="panel-title">翻译服务 <small>· 服务端代理，Key 不存浏览器</small></div>
+        <div class="section-head">
+          <h2>翻译</h2>
+          <span class="sub">仅管理员可配置 · Key 存服务端</span>
+        </div>
+
+        <div class="s-card">
           <div class="llm-status" id="llm-status">未连接</div>
+
           <label class="field">
             <span class="field-label">模型</span>
             <select id="set-llm-model" class="text-input"></select>
           </label>
+
           <label class="field">
             <span class="field-label">并发请求数 <small>· 批量翻译同时发起的请求数</small></span>
             <span class="field-val"><b id="val-llm-concurrency">4</b> 路</span>
-            <input type="range" id="set-llm-concurrency" min="1" max="100" step="1" value="4">
+            <div class="slider-wrap">
+              <div class="slider-bubble" id="conc-bubble">4</div>
+              <input type="range" id="set-llm-concurrency" class="range-slider" min="1" max="100" step="1" value="4">
+            </div>
           </label>
+
           <div class="llm-actions">
             <button class="row-btn" id="btn-llm-fetch">刷新模型列表</button>
             <button class="row-btn" id="btn-llm-test">测试翻译</button>
@@ -343,24 +409,49 @@
         </div>
       </div>
 
+      <!-- ===== 账号 ===== -->
       <div class="settings-section" data-s="account" hidden>
-        <div class="panel" id="account-panel">
+        <div class="section-head">
+          <h2>账号</h2>
+          <span class="sub">登录后跨设备同步</span>
+        </div>
+
+        <div class="s-card" id="account-panel">
           <div class="panel-title">账号 <small id="acc-state">未登录</small></div>
           <div id="acc-form">
             <label class="field"><span class="field-label">用户名</span><input type="text" id="acc-user" class="text-input" autocomplete="off"></label>
             <label class="field"><span class="field-label">密码</span><input type="password" id="acc-pass" class="text-input" autocomplete="off"></label>
-            <div class="llm-actions"><button class="row-btn" id="btn-acc-login">登录</button><button class="row-btn" id="btn-acc-register">注册</button><button class="row-btn danger" id="btn-acc-logout" hidden>登出</button></div>
+            <div class="llm-actions">
+              <button class="row-btn" id="btn-acc-login">登录</button>
+              <button class="row-btn" id="btn-acc-register">注册</button>
+              <button class="row-btn danger" id="btn-acc-logout" hidden>登出</button>
+            </div>
           </div>
         </div>
       </div>
 
+      <!-- ===== 数据 ===== -->
       <div class="settings-section" data-s="data" hidden>
-        <div class="panel">
-          <button class="row-btn" id="btn-export">导出进度 (JSON)</button>
-          <button class="row-btn" id="btn-import">导入进度</button>
-          <button class="row-btn danger" id="btn-reset">重置全部进度</button>
+        <div class="section-head">
+          <h2>数据</h2>
+          <span class="sub">进度本地存储</span>
         </div>
-        <div class="about">数据本地存储，不会上传。词库来源：2027考研英语红宝书（乱序版）。</div>
+
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">进度管理</span>
+          </div>
+          <div class="llm-actions">
+            <button class="row-btn" id="btn-export">导出进度 (JSON)</button>
+            <button class="row-btn" id="btn-import">导入进度</button>
+            <button class="row-btn danger" id="btn-reset">重置全部进度</button>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="about">数据本地存储，不会上传。词库来源：2027考研英语红宝书（乱序版）。</div>
+          <div class="version-row">版本 <code id="app-version">—</code></div>
+        </div>
         <input type="file" id="import-file" accept="application/json" hidden>
       </div>
 
@@ -390,6 +481,8 @@
 
 </main>
 
+</div><!-- /.app-body -->
+
 <!-- ============ 全局底栏（移动） ============ -->
 <nav class="tab-bar">
   <button data-tab="dashboard" class="active">🏠<span>首页</span></button>
@@ -400,10 +493,11 @@
 
 <script src="data.js"></script>
 <script src="papers.js"></script>
-<script src="api.js?v=3"></script>
+<script src="version.js?v=1"></script>
+<script src="api.js?v=4"></script>
 <script src="srs.js"></script>
 <script src="store.js?v=3"></script>
 <script src="llm.js?v=3"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>
