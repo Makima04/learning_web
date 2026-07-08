@@ -21,21 +21,20 @@ PAPERS_JS_FALLBACK = _ROOT / "web" / "papers.js"
 
 
 def parse_papers_js(path: Path):
-    """读 papers.js，把 `window.PAPERS=<json>;` 的 JSON 段抠出来解析。"""
+    """读 papers.js，把 `window.PAPERS=<json>;` 的 JSON 段抠出来解析。
+
+    用 raw_decode 只解析首个 JSON 值，容忍尾部多余语句（如较新的
+    match_vocab.py 追加的 `window.PAPERS_META={...};`），避免 json.loads
+    因「Extra data」整体失败。
+    """
     raw = path.read_text(encoding="utf-8")
-    # 去掉首行注释（如果有）——直接找第一个 '='
+    # 直接找第一个 '='（即 window.PAPERS= 的赋值号）
     eq = raw.find("=")
     if eq < 0:
         raise RuntimeError("papers.js: 找不到 '='")
-    # 末尾分号（去 trailing 空白后）
-    stripped = raw.rstrip()
-    if not stripped.endswith(";"):
-        # 容错：可能没分号
-        end = len(stripped)
-    else:
-        end = stripped.rfind(";")
-    js = raw[eq + 1:end].strip()
-    return json.loads(js)
+    js = raw[eq + 1:]
+    # raw_decode 解析首个完整 JSON 值后忽略其后所有多余字符
+    return json.JSONDecoder().raw_decode(js)[0]
 
 
 def collect_sentences(papers):
