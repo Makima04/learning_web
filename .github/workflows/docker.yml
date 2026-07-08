@@ -7,7 +7,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装开发依赖
+        run: pip install -r requirements-dev.txt
+
+      - name: Ruff 静态检查
+        run: ruff check .
+
+      - name: Pytest 单元测试
+        run: pytest -q
+
   build:
+    needs: lint-test
     runs-on: ubuntu-latest
     permissions:
       contents: read

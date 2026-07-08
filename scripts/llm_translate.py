@@ -17,88 +17,60 @@ model 解析额外读 config 表 active_llm_model（与 server/llm.py 一致）�
   优先级 --model flag > active_llm_model > (env / ew_llm.json)。
   即用户没显式传 --model 时，active_llm_model 覆盖 json/env 的 model。
 """
-import argparse, json, os, sys, urllib.request, urllib.error
+import argparse
+import json
+import os
+import sqlite3
+import sys
 
-# project root (one level up from this script's scripts/ dir)
-CONF_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ew_llm.json")
+# 把项目根加入 sys.path，便于 `from server.llm_common import ...`
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+from server.llm_common import (
+    SYS_PROMPT,
+    join_url,
+    http_json,
+    load_conf as _common_load_conf,
+    active_model_from,
+)
+
 # 与 server/db.py 的 DB_PATH 同位置：项目根 english_web.db
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "english_web.db")
 
 
-def _active_llm_model():
-    """读 config 表 active_llm_model；DB 缺失/异常/未设置 → 返回 ''（fallback json/env model）。
-
-    与 server/llm.py._active_model 行为对齐，保证 CLI 是服务端翻译的真正 mirror。
-    """
+def _db_get(key):
+    """读 config 表某 key 的值；DB 缺失/异常/未设置 → None。"""
     try:
-        import sqlite3
         if not os.path.exists(DB_PATH):
-            return ""
+            return None
         conn = sqlite3.connect(DB_PATH)
         try:
             row = conn.execute(
-                "SELECT value FROM config WHERE key=?", ("active_llm_model",)
+                "SELECT value FROM config WHERE key=?", (key,)
             ).fetchone()
-            return (row[0] if row else "") or ""
+            return (row[0] if row else None) or None
         finally:
             conn.close()
     except Exception:
-        return ""
+        return None
 
 
 def load_conf(args):
-    env = os.environ
-    conf = {}
-    if os.path.exists(CONF_PATH):
-        try:
-            with open(CONF_PATH) as f:
-                conf = json.load(f)
-        except Exception as e:
-            print(f"warn: bad {CONF_PATH}: {e}", file=sys.stderr)
-    def pick(flag, env_key, key):
-        v = flag
-        if not v:
-            v = env.get(env_key)
-        if not v:
-            v = conf.get(key)
-        return (v or "").strip()
-    return {
-        "url": pick(args.url, "EW_LLM_URL", "url"),
-        "key": pick(args.key, "EW_LLM_KEY", "key"),
-        "model": pick(args.model, "EW_LLM_MODEL", "model"),
-    }
+    """读 LLM 配置，返回 {url,key,model}（trim）。
 
-
-def join_url(base, path):
-    b = (base or "").rstrip("/")
-    if "/v" not in b.rsplit("/", 1)[-1]:  # crude: append /v1 if no version segment at end
-        # match llm.js: append /v1 unless base already ends with /vN
-        import re
-        if not re.search(r"/v\d+$", b):
-            b += "/v1"
-    return b + path
-
-
-def http_json(url, headers, payload=None, method="GET"):
-    data = None
-    if payload is not None:
-        data = json.dumps(payload).encode("utf-8")
-        headers = dict(headers); headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            body = r.read().decode("utf-8", "replace")
-            return r.status, json.loads(body) if body else None
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", "replace")
-        try:
-            j = json.loads(body)
-            msg = (j.get("error", {}).get("message") if isinstance(j.get("error"), dict) else j.get("error")) or body
-        except Exception:
-            msg = body
-        raise RuntimeError(f"HTTP {e.code}: {msg}")
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"network error: {e.reason}")
+    最高优先级是 args（--url/--key/--model）；其次环境变量；再 ew_llm.json
+    （由 server.llm_common.load_conf 处理后两者）。
+    """
+    c = _common_load_conf()
+    if args.url:
+        c["url"] = args.url.strip()
+    if args.key:
+        c["key"] = args.key.strip()
+    if args.model:
+        c["model"] = args.model.strip()
+    return c
 
 
 def cmd_models(args):
@@ -126,20 +98,16 @@ def cmd_translate(args):
     # 与 server/llm.py 一致：用户没显式传 --model 时，active_llm_model 覆盖 json/env model。
     model = c["model"]
     if not model:
-        active = _active_llm_model()
-        if active:
-            model = active
+        model = active_model_from(_db_get, "")
     if not model:
         sys.exit("error: need --model (or env / ew_llm.json, 或 config 表 active_llm_model)")
     text = " ".join(args.text).strip()
     if not text:
         sys.exit("error: provide the English text to translate")
     url = join_url(c["url"], "/chat/completions")
-    sys_msg = ("你是翻译引擎。把用户给的英文考研真题句子翻译成简体中文。"
-               "只输出译文，不要原文、不要引号、不要解释、不要多余空白。")
     payload = {
         "model": model, "temperature": 0,
-        "messages": [{"role": "system", "content": sys_msg}, {"role": "user", "content": text}],
+        "messages": [{"role": "system", "content": SYS_PROMPT}, {"role": "user", "content": text}],
     }
     t0 = __import__("time").time()
     _, data = http_json(url, {"Authorization": "Bearer " + c["key"]}, payload, "POST")

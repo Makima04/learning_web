@@ -12,28 +12,24 @@
   function lookupWord(surface) {
     const low = String(surface == null ? "" : surface).toLowerCase();
     if (WORD_BY_EN[low]) return WORD_BY_EN[low];
-    const tries = [
-      // 复数 / 动词变形
+    for (const t of inflectionStems(low)) if (WORD_BY_EN[t]) return WORD_BY_EN[t];
+    return null;
+  }
+
+  // 单一屈折还原真相源：给定小写 surface，返回一组候选原形（含原形自身）。
+  // lookupWord / restoreInflection / highlightTarget 全部复用，避免规则漂移。
+  function inflectionStems(low) {
+    return [
+      low,
       low.replace(/s$/, ""), low.replace(/es$/, ""),
       low.replace(/ing$/, ""), low.replace(/ed$/, ""),
       low.replace(/ing$/, "e"), low.replace(/ed$/, "e"),
       low.replace(/ies$/, "y"), low.replace(/ied$/, "y"),
-      // -ly 副词 → 形容词原形（quickly→quick, bravely→brave, happily→happy）
-      low.replace(/ly$/, ""),
-      low.replace(/ely$/, "e"),   // bravely→brave（先于下一行）
-      low.replace(/ily$/, "y"),   // happily→happy
-      // -ness / -ment / -tion / -sion / -ity 等抽象名词 → 形容词原形
-      low.replace(/ness$/, ""),
-      low.replace(/ment$/, ""),
-      low.replace(/tion$/, "te"),  // creation→create
-      low.replace(/sion$/, "d"),   // decision→decide
-      low.replace(/ity$/, ""),
-      // -ful / -less → 名词原形（careful→care, careless→care）
-      low.replace(/ful$/, ""),
-      low.replace(/less$/, ""),
+      low.replace(/ly$/, ""), low.replace(/ely$/, "e"), low.replace(/ily$/, "y"),
+      low.replace(/ness$/, ""), low.replace(/ment$/, ""),
+      low.replace(/tion$/, "te"), low.replace(/sion$/, "d"), low.replace(/ity$/, ""),
+      low.replace(/ful$/, ""), low.replace(/less$/, ""),
     ];
-    for (const t of tries) if (WORD_BY_EN[t]) return WORD_BY_EN[t];
-    return null;
   }
 
   // ---- tiny seeded RNG (mulberry32) so "random direction" is stable per word ----
@@ -320,9 +316,9 @@
       const totalWords = p.sections.reduce((s, sec) => s + sec.passages.reduce((t, ps) => t + ps.words.length, 0), 0);
       const card = document.createElement("div");
       card.className = "paper-card";
-      card.innerHTML = `<div class="pc-year">${p.year || "?"}</div>
+      card.innerHTML = `<div class="pc-year">${esc(p.year) || "?"}</div>
         <div class="pc-body">
-          <div class="pc-title">${p.year ? p.year + " 年考研英语" + (papersVariant === "en2" ? "二" : "一") + "真题" : p.source}</div>
+          <div class="pc-title">${p.year ? esc(p.year) + " 年考研英语" + (papersVariant === "en2" ? "二" : "一") + "真题" : esc(p.source)}</div>
           <div class="pc-sub">${p.sections.length} 个题型 · 共 ${totalWords} 个红宝书词汇</div>
         </div><div class="pc-arrow">›</div>`;
       card.addEventListener("click", () => openPaper(seen[key]));
@@ -348,9 +344,9 @@
         const card = document.createElement("div");
         card.className = "psg-card";
         const subHTML = `命中 <b>${psg.words.length}</b> 词 · 已背 <b>${learned}</b> · ${psg.itemCount || 0} 题 · ${psg.body.length} 字`;
-        card.innerHTML = `<span class="ps-type">${TYPE_LABEL[sec.type] || sec.type}</span>
+        card.innerHTML = `<span class="ps-type">${esc(TYPE_LABEL[sec.type] || sec.type)}</span>
           <div class="ps-body">
-            <div class="ps-title">${psg.label}</div>
+            <div class="ps-title">${esc(psg.label)}</div>
             <div class="ps-sub">${subHTML}</div>
           </div>
           <div class="pc-arrow">›</div>`;
@@ -455,9 +451,9 @@
         const subHTML = `命中 <b>${words.length}</b> 词 · 已背 <b>${learned}</b> · ${totalItems} 题 · ${psg.body.length} 字`;
         card.innerHTML = `
           <div class="recite-sec-head">
-            <span class="ps-type">${typeLabel}</span>
+            <span class="ps-type">${esc(typeLabel)}</span>
             <div class="recite-sec-body">
-              <div class="recite-sec-title">${titleText}</div>
+              <div class="recite-sec-title">${esc(titleText)}</div>
               <div class="recite-sec-sub">${subHTML}</div>
             </div>
             <div class="pc-arrow">›</div>
@@ -702,15 +698,14 @@
     return String(text).replace(/[A-Za-z][A-Za-z\-']*/g, (m) => {
       const ml = m.toLowerCase();
       // 目标词及其变形都算命中（consciously→conscious 也高亮）
-      const isTarget = ml === low ||
-        ml.replace(/s$/, "") === low || ml.replace(/es$/, "") === low ||
-        ml.replace(/ing$/, "") === low || ml.replace(/ed$/, "") === low ||
-        ml.replace(/ly$/, "") === low || ml.replace(/ely$/, "e") === low ||
-        ml.replace(/ily$/, "y") === low ||
-        ml.replace(/ness$/, "") === low || ml.replace(/ment$/, "") === low ||
-        ml.replace(/tion$/, "te") === low || ml.replace(/sion$/, "d") === low ||
-        ml.replace(/ity$/, "") === low ||
-        ml.replace(/ful$/, "") === low || ml.replace(/less$/, "") === low;
+      const isTarget = (() => {
+        if (ml === low) return true;
+        const restored = restoreInflection(ml);
+        if (restored === low) return true;
+        // 也允许目标词是某变形的原形（如 conscious→consciously）
+        if (restoreInflection(low) === ml) return true;
+        return false;
+      })();
       const e = esc(m);
       if (isTarget) return `<strong class="c-target c-word" data-w="${m}">${e}</strong>`;
       // 其它词：词库收录则可点查，否则保持纯文本
@@ -1669,34 +1664,15 @@
     return set;
   }
 
-  // 粗略屈折还原：复现 lookupWord 的 -s/-ed/-ing 思路，但只返回字符串原形
+  // 粗略屈折还原：复用 inflectionStems，返回第一个有意义原形（去掉长度门槛，统一行为）
   function restoreInflection(low) {
     if (!low) return null;
-    // -ing
-    if (low.length > 5 && low.endsWith("ing")) {
-      const stem = low.slice(0, -3);
-      if (stem.length >= 3) return stem;
-    }
-    // -ed
-    if (low.length > 4 && low.endsWith("ed")) {
-      let stem = low.slice(0, -2);
-      if (stem.length >= 3) return stem;
-      stem = low.slice(0, -3); // -ied → -y
-      if (stem.length >= 3) return stem;
-    }
-    // -s / -es
-    if (low.length > 3 && low.endsWith("es")) {
-      const stem = low.slice(0, -2);
-      if (stem.length >= 3) return stem;
-    }
-    if (low.length > 2 && low.endsWith("s") && !low.endsWith("ss")) {
-      const stem = low.slice(0, -1);
-      if (stem.length >= 3) return stem;
+    const stems = inflectionStems(low);
+    for (let i = 1; i < stems.length; i++) {
+      if (stems[i] && stems[i] !== low && stems[i].length >= 2) return stems[i];
     }
     return null;
   }
-  // alias 给 highlightWords 用（避免与上面 restoreInflection 命名冲突）
-  const restoreInflectionStr = restoreInflection;
 
   // 后台串行生成所有段落分析。1 worker，避免 LLM 网关压力。
   // 失败即停（沿用 fail-fast 教训），该 card 显示错误 + 重试，后续 card 保持「待生成」。
@@ -1911,7 +1887,7 @@
       const low = m.toLowerCase();
       const e = esc(m);
       const lookup = lookupWord(low);
-      const restored = lookup ? lookup[1].toLowerCase() : restoreInflectionStr(low);
+      const restored = lookup ? lookup[1].toLowerCase() : restoreInflection(low);
       const inVocab = wordSet.has(low) || (lookup && wordSet.has(restored));
       const inQ = qset && (qset.has(low) || (restored && qset.has(restored)));
       if (inQ) return `<span class="r-hl-q c-word" data-w="${m}">${e}</span>`;
@@ -2004,8 +1980,8 @@
     applyAdminGating();
   }
 
-  // 非 admin 隐藏翻译管理入口、禁用 LLM 配置控件。在 refreshAccountUI 与
-  // openSettings 流程里调用，保证登录态变更后 UI 同步。
+  // 非 admin 隐藏翻译管理入口、隐藏整个 LLM 配置 section（普通用户不可见也不可设）。
+  // 在 refreshAccountUI 与 openSettings 流程里调用，保证登录态变更后 UI 同步。
   function applyAdminGating() {
     const admin = !!(window.Api && Api.isAdmin());
     // 翻译管理入口：左侧栏、dashboard 快捷操作、设置页 LLM section 的「翻译管理」按钮
@@ -2015,6 +1991,19 @@
     // 设置页 LLM section 内的「翻译管理」按钮（无 data-tab，按 id 处理）
     const tmBtn = $("btn-transmgr");
     if (tmBtn) tmBtn.hidden = !admin;
+    // 整个 LLM 设置区块（侧栏导航 + 内容区）：普通用户完全不可见/不可访问
+    document.querySelectorAll('#settings-nav button[data-s="llm"]').forEach((b) => {
+      b.hidden = !admin;
+    });
+    const llmSec = document.querySelector('.settings-section[data-s="llm"]');
+    if (llmSec) {
+      llmSec.hidden = !admin;
+      // 非 admin 若正在该 section 被强制切走，回到学习区
+      if (!admin && llmSec.hidden) {
+        const studyBtn = document.querySelector('#settings-nav button[data-s="study"]');
+        if (studyBtn) studyBtn.click();
+      }
+    }
   }
 
   // ---- LLM panel UI（服务端代理模式）----
@@ -2634,9 +2623,46 @@
     }
   }
 
+  // ============ 词库版本变化横幅（非阻塞）============
+  function showDataVersionBanner() {
+    if (document.getElementById("dataver-banner")) return;
+    const banner = document.createElement("div");
+    banner.id = "dataver-banner";
+    banner.style.cssText =
+      "position:fixed;left:0;right:0;bottom:0;z-index:9999;display:flex;align-items:center;" +
+      "gap:12px;padding:12px 16px;background:#fef2f2;color:#9b1c1c;border-top:1px solid #fecaca;" +
+      "font-size:14px;line-height:1.4;box-shadow:0 -2px 8px rgba(0,0,0,.08)";
+    const msg = document.createElement("div");
+    msg.style.cssText = "flex:1;min-width:0";
+    msg.textContent =
+      "词库已更新（版本变化）。你本地的背诵进度是基于旧版词序保存的，可能对应到错误的单词。建议重新评估，或在「我的」页重置进度。";
+    const btnReset = document.createElement("button");
+    btnReset.textContent = "重置进度";
+    btnReset.className = "row-btn danger";
+    btnReset.style.cssText = "flex:none;white-space:nowrap";
+    btnReset.onclick = () => {
+      Store.clearAll();
+      location.reload();
+    };
+    const btnClose = document.createElement("button");
+    btnClose.textContent = "×";
+    btnClose.title = "关闭";
+    btnClose.style.cssText =
+      "flex:none;width:28px;height:28px;border:none;background:transparent;font-size:20px;cursor:pointer;color:#9b1c1c";
+    btnClose.onclick = () => banner.remove();
+    banner.appendChild(msg);
+    banner.appendChild(btnReset);
+    banner.appendChild(btnClose);
+    document.body.appendChild(banner);
+  }
+
   // ============ init ============
   async function init() {
     bind();
+    // 词库版本守卫：检测词库是否相对上次保存进度发生重排
+    if (Store.syncDataVersion() || Store.dataVersionChanged()) {
+      showDataVersionBanner();
+    }
     // 启动时构建例句反向索引（word_idx -> [sentence,...]）与点词查义委托
     buildExampleIndex();
     ensureWordClickDelegation();

@@ -82,6 +82,10 @@
   }
   async function putMeta(meta) { return req("/api/meta", { method: "PUT", body: JSON.stringify({ meta }) }); }
 
+  // ---- settings(需登录,账号级持久化)----
+  async function getSettings() { return req("/api/settings"); }
+  async function putSettings(s) { return req("/api/settings", { method: "PUT", body: JSON.stringify({ settings: s }) }); }
+
   global.Api = {
     BASE, getToken, setToken, getUser, setUser, isLoggedIn, isAdmin,
     req, register, login, logout, me,
@@ -90,5 +94,6 @@
     analyzeParagraphByText,
     llmConfig, llmModels, setLlmModel, setLlmConcurrency,
     getCards, putCard, bulkCards, getMeta, putMeta,
+    getSettings, putSettings,
   };
 })(window);

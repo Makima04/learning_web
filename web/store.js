@@ -5,7 +5,10 @@
   const KEY_META = "ew.meta.v1";     // { dayKey, newToday, reviewToday, learnToday, doneToday, created }
   const KEY_SET = "ew.set.v1";       // settings
   const KEY_TRANS = "ew.trans.v1";   // translation cache: { <hash>: <zh|Error> }
+  const KEY_DATAVER = "ew.dataver.v1"; // 上次保存进度时的词库版本戳
   const DAY = 86400000;
+  let _syncing = false;            // 同步进行中的并发锁，避免 saveCard/bumpMeta 与 sync 互相覆盖
+  let _dataVersionChanged = false; // 词库版本相对上次进度是否变化
 
   const DEFAULT_SETTINGS = {
     dailyNew: 20,          // new words per day
@@ -15,11 +18,8 @@
     rate: 1.0,             // TTS rate
     orderSeed: 0x9e3779b9, // for stable per-word pseudo-random order
     groupSize: 20,         // 分组背诵：每组词数（10/20/40）
-    llm: {
-      url: "",             // OpenAI-compatible base URL, e.g. https://api.openai.com/v1
-      key: "",             // API key
-      model: "",           // selected model id
-    },
+    // 注意:llm 不再属于用户设置——LLM 设定仅管理员经 /api/llm/* 在服务端配置,
+    // 普通用户既不可见也不可改,故不进本地 settings 持久化(避免 key 落 localStorage)。
   };
 
   function loadJSON(key, fallback) {
@@ -42,19 +42,27 @@
   }
 
   function getSettings() {
-    // deep-merge so the nested `llm` object always has all keys
     const saved = loadJSON(KEY_SET, {});
-    const merged = Object.assign({}, DEFAULT_SETTINGS, saved);
-    merged.llm = Object.assign({}, DEFAULT_SETTINGS.llm, saved.llm || {});
-    return merged;
+    // 防御:任何历史遗留的 llm 字段都不进入运行时设置(LLM 归管理员/服务端)
+    const clean = Object.assign({}, saved);
+    delete clean.llm;
+    return Object.assign({}, DEFAULT_SETTINGS, clean);
   }
-  function saveSettings(s) { saveJSON(KEY_SET, s); }
+  function saveSettings(s) {
+    // 落本地先去掉 llm(即便调用方误带),再后台镜像到服务端(不 await,失败静默)
+    const clean = Object.assign({}, s);
+    delete clean.llm;
+    saveJSON(KEY_SET, clean);
+    try {
+      if (!_syncing && typeof Api !== "undefined" && Api.isLoggedIn()) {
+        Api.putSettings(clean).catch((e) => console.warn("mirror putSettings failed:", e && e.message));
+      }
+    } catch (e) { /* Api 未加载时忽略 */ }
+  }
 
   // ---- translation store ----
-  // Translations live in two places: a generated static file (window.TRANS,
-  // baked by scripts/gen_trans.py — the durable, repo-committed store) and a
-  // runtime localStorage map (for ad-hoc/test translations). getTrans prefers
-  // the baked file, then falls back to localStorage.
+  // 译文来自两层：运行时 localStorage（KEY_TRANS，按需写入/命中）与服务端 DB（经 /api/translate 灌库）。
+  // global.TRANS 为可选静态译文文件（window.TRANS）：若未来提供则优先合并，当前未定义、恒为空。
   function getAllTrans() {
     const baked = (global.TRANS && typeof global.TRANS === "object") ? global.TRANS : {};
     return Object.assign({}, baked, loadJSON(KEY_TRANS, {}));
@@ -62,6 +70,7 @@
   function getTrans(text) {
     text = String(text == null ? "" : text).trim();
     if (!text) return undefined;
+    // global.TRANS 当前未使用（恒为空），保留读取无害
     if (global.TRANS && global.TRANS[text]) return global.TRANS[text];
     const all = loadJSON(KEY_TRANS, {});
     return all[text] || undefined;
@@ -104,7 +113,7 @@
     saveJSON(KEY_CARDS, all);
     // 登录后在后台镜像写到服务端(不 await,失败静默,不影响 UI)
     try {
-      if (typeof Api !== "undefined" && Api.isLoggedIn()) {
+      if (!_syncing && typeof Api !== "undefined" && Api.isLoggedIn()) {
         Api.putCard(idx, card).catch((e) => console.warn("mirror putCard failed:", e && e.message));
       }
     } catch (e) { /* Api 未加载时忽略 */ }
@@ -112,6 +121,19 @@
   function clearAll() {
     localStorage.removeItem(KEY_CARDS);
     localStorage.removeItem(KEY_META);
+  }
+
+  // ---- 词库版本守卫：词库重排后把「静默错位」变成「可见提示」 ----
+  function currentDataVersion() {
+    return (global.WORDS_META && global.WORDS_META.version) || null;
+  }
+  function syncDataVersion() {
+    const cur = currentDataVersion();
+    if (!cur) return false;
+    const prev = loadJSON(KEY_DATAVER, null);
+    _dataVersionChanged = !!(prev && prev !== cur);
+    saveJSON(KEY_DATAVER, cur);
+    return _dataVersionChanged;
   }
 
   // ---- daily counters ----
@@ -135,10 +157,11 @@
   function bumpMeta(field, by) {
     const meta = getMeta();
     meta[field] = (meta[field] || 0) + (by || 1);
+    meta.data_version = currentDataVersion();
     saveJSON(KEY_META, meta);
     // 登录后整包推到服务端(量小,每次写都推,简化)
     try {
-      if (typeof Api !== "undefined" && Api.isLoggedIn()) {
+      if (!_syncing && typeof Api !== "undefined" && Api.isLoggedIn()) {
         Api.putMeta(meta).catch((e) => console.warn("mirror putMeta failed:", e && e.message));
       }
     } catch (e) { /* Api 未加载时忽略 */ }
@@ -150,6 +173,9 @@
   //       meta——同 dayKey 才覆盖,不同 dayKey 保留本地当前日。
   // 返回 {cards, meta} 摘要给 UI。
   async function sync() {
+    if (_syncing) return { cards: Object.keys(getAllCards()).length, meta: null };
+    _syncing = true;
+    try {
     const remote = await Api.getCards();
     const remoteCards = (remote && remote.cards) || {};
     const localCards = getAllCards();
@@ -181,7 +207,20 @@
       }
     } catch (e) { console.warn("getMeta sync failed:", e && e.message); }
 
+    // 账号级设置:登录后拉服务端覆盖本地(服务端权威,但仅覆盖已持久化的字段)
+    try {
+      const rs = await Api.getSettings();
+      if (rs && rs.settings && Object.keys(rs.settings).length) {
+        const merged = Object.assign({}, getSettings(), rs.settings);
+        delete merged.llm;
+        saveJSON(KEY_SET, merged);
+      }
+    } catch (e) { console.warn("getSettings sync failed:", e && e.message); }
+
     return { cards: Object.keys(getAllCards()).length, meta: metaSummary };
+    } finally {
+      _syncing = false;
+    }
   }
 
   function exportData() {
@@ -192,12 +231,20 @@
       trans: getAllTrans(),
       exportedAt: Date.now(),
       version: 1,
+      dataVersion: currentDataVersion(),
     };
   }
   function importData(blob) {
     if (!blob || typeof blob !== "object") return false;
+    if (blob.cards && typeof blob.cards !== "object") return false;
+    if (blob.trans && typeof blob.trans !== "object") return false;
+    if (blob.meta && typeof blob.meta !== "object") return false;
     if (blob.cards) saveJSON(KEY_CARDS, blob.cards);
-    if (blob.settings) saveJSON(KEY_SET, Object.assign({}, DEFAULT_SETTINGS, blob.settings));
+    if (blob.settings) {
+      const s = Object.assign({}, DEFAULT_SETTINGS, blob.settings);
+      delete s.llm; // LLM 不随导入数据迁移,归管理员/服务端
+      saveJSON(KEY_SET, s);
+    }
     if (blob.meta) saveJSON(KEY_META, blob.meta);
     if (blob.trans) saveJSON(KEY_TRANS, blob.trans);
     return true;
@@ -210,5 +257,7 @@
     getAllTrans, getTrans, setTrans,
     getParaAnalysisKey, getParaAnalysis, setParaAnalysis,
     sync,
+    currentDataVersion, syncDataVersion,
+    dataVersionChanged: () => _dataVersionChanged,
   };
 })(window);

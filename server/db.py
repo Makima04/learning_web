@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE TABLE IF NOT EXISTS sessions(
     token TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id),
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    expires_at TEXT
 );
 CREATE TABLE IF NOT EXISTS sentences(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,6 +93,7 @@ CREATE TABLE IF NOT EXISTS meta(
     review_today INTEGER,
     learn_today INTEGER,
     done_today INTEGER,
+    data_version TEXT,
     updated_at TEXT,
     PRIMARY KEY(user_id, day_key)
 );
@@ -99,14 +101,24 @@ CREATE TABLE IF NOT EXISTS config(
     key TEXT PRIMARY KEY,
     value TEXT
 );
+CREATE TABLE IF NOT EXISTS user_settings(
+    -- 账号级设置（普通用户可改，登录后镜像落库）。整包存 JSON（不含 llm——LLM 仅管理员经 /api/llm/* 配置）。
+    user_id INTEGER PRIMARY KEY REFERENCES users(id),
+    payload TEXT NOT NULL,
+    updated_at TEXT
+);
 """
 
 
 def get_db():
     """每请求开一个连接。FastAPI 同步端点里用没问题（不要跨线程复用）。"""
-    conn = sqlite3.connect(DB_PATH)
+    # check_same_thread=False 必须在 connect 时传入（Python 3.12+ 不允许事后设置该属性），
+    # 以支持流式端点在另一线程使用连接。
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
 
 
@@ -118,6 +130,10 @@ def init_db():
     """建表（IF NOT EXISTS）+ 自动 seed active_llm_model。幂等。"""
     conn = sqlite3.connect(DB_PATH)
     try:
+        # 持久化 WAL + busy_timeout，避免批量翻译并发写锁（database is locked）。
+        # 仅设一次即可落到库文件，后续 get_db 连接也会复用 WAL。
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA busy_timeout = 5000")
         conn.executescript(SCHEMA)
         conn.commit()
         # 老库迁移：SCHEMA 用 CREATE TABLE IF NOT EXISTS，不会给已存在的 users 表补
@@ -127,6 +143,17 @@ def init_db():
             conn.execute(
                 "ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0"
             )
+            conn.commit()
+        # 老库迁移：sessions 表可能缺 expires_at 列。用 PRAGMA table_info 探测，缺列才 ALTER（幂等）。
+        scols = [r[1] for r in conn.execute("PRAGMA table_info(sessions)").fetchall()]
+        if "expires_at" not in scols:
+            conn.execute("ALTER TABLE sessions ADD COLUMN expires_at TEXT")
+            conn.commit()
+        # 老库迁移：meta 表可能缺 data_version 列（配合前端词库版本守卫）。
+        # 用 PRAGMA table_info 探测，缺列才 ALTER（幂等）。
+        mcols = [r[1] for r in conn.execute("PRAGMA table_info(meta)").fetchall()]
+        if "data_version" not in mcols:
+            conn.execute("ALTER TABLE meta ADD COLUMN data_version TEXT")
             conn.commit()
         # seed active_llm_model：若 config 里没有，且 ew_llm.json 有 model，则写入
         row = conn.execute(

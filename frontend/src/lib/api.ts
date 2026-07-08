@@ -8,6 +8,7 @@ const KEY_USER = "ew.user.v1";
 export interface User {
   id: number;
   username: string;
+  is_admin?: boolean;
 }
 
 export interface SentenceItem {
@@ -117,6 +118,10 @@ export function setUser(u: User | null) {
 }
 export function isLoggedIn(): boolean {
   return !!getToken();
+}
+export function isAdmin(): boolean {
+  const u = getUser();
+  return !!(u && u.is_admin);
 }
 
 // ---- 统一请求 ----
@@ -282,6 +287,20 @@ export async function getMeta(day?: string): Promise<{ meta: MetaDTO }> {
 }
 export async function putMeta(meta: MetaDTO) {
   return req("/api/meta", { method: "PUT", body: JSON.stringify({ meta }) });
+}
+
+// ---- settings（需登录，账号级持久化；不含 llm——LLM 仅管理员经 /api/llm/* 配置）----
+export async function getSettings(): Promise<{ settings: Record<string, any> }> {
+  return req("/api/settings");
+}
+export async function putSettings(settings: Record<string, any>) {
+  // 调用方已自行剥离 llm；服务端也会防御性剥离，双保险。
+  const clean = { ...settings };
+  delete clean.llm;
+  return req("/api/settings", {
+    method: "PUT",
+    body: JSON.stringify({ settings: clean }),
+  });
 }
 
 // ---- study events / stats（新）----

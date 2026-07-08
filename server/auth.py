@@ -6,6 +6,7 @@
 - get_admin：在 get_user 基础上要求 is_admin，否则 403
 """
 import hashlib
+import os
 import secrets
 from datetime import datetime, timezone
 
@@ -13,7 +14,20 @@ from fastapi import Depends, HTTPException, Request, status
 
 from .db import get_db
 
-PBKDF2_ITERS = 100_000
+PBKDF2_ITERS = 600_000
+
+SESSION_TTL_DAYS = int(os.environ.get("EW_SESSION_TTL_DAYS", "30"))
+
+
+def _session_expired(expires_at):
+    """expires_at 为 None → 永不过期；否则与当前 UTC 比较。"""
+    if not expires_at:
+        return False
+    try:
+        exp = datetime.fromisoformat(expires_at)
+    except Exception:
+        return False
+    return datetime.now(timezone.utc) >= exp
 
 
 def hash_password(pw: str, salt: str) -> str:
@@ -55,10 +69,14 @@ def get_user(request: Request) -> dict:
     conn = get_db()
     try:
         s = conn.execute(
-            "SELECT user_id FROM sessions WHERE token=?", (token,)
+            "SELECT user_id, expires_at FROM sessions WHERE token=?", (token,)
         ).fetchone()
         if s is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "invalid token")
+        if _session_expired(s["expires_at"]):
+            conn.execute("DELETE FROM sessions WHERE token=?", (token,))
+            conn.commit()
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "session expired")
         u = conn.execute(
             "SELECT id, username, is_admin FROM users WHERE id=?", (s["user_id"],)
         ).fetchone()

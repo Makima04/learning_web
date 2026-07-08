@@ -7,6 +7,8 @@
 用法：python3 scripts/gen_version.py
 start.sh 启动前调用，保证版本号随提交变化。
 """
+import hashlib
+import re
 import subprocess
 from pathlib import Path
 
@@ -25,6 +27,26 @@ def get_version():
         return "dev"
 
 
+def sha256_of_file(path: Path) -> str:
+    if not path.exists():
+        return "dev"
+    h = hashlib.sha256()
+    h.update(path.read_bytes())
+    return h.hexdigest()[:16]
+
+
+def patch_index_html(words_hash: str, papers_hash: str):
+    idx = ROOT / "web" / "index.html"
+    if not idx.exists():
+        return
+    html = idx.read_text(encoding="utf-8")
+    html = re.sub(r'(<script src="data\.js)(?:\?v=[^"]*)?(")',
+                  r'\g<1>?v=' + words_hash + r'\g<2>', html)
+    html = re.sub(r'(<script src="papers\.js)(?:\?v=[^"]*)?(")',
+                  r'\g<1>?v=' + papers_hash + r'\g<2>', html)
+    idx.write_text(html, encoding="utf-8")
+
+
 def main():
     v = get_version()
     OUT.write_text(
@@ -33,6 +55,11 @@ def main():
         encoding="utf-8",
     )
     print(f"wrote {OUT} -> {v}")
+
+    words_hash = sha256_of_file(ROOT / "web" / "data.js")
+    papers_hash = sha256_of_file(ROOT / "web" / "papers.js")
+    patch_index_html(words_hash, papers_hash)
+    print(f"patched index.html data.js?v={words_hash} papers.js?v={papers_hash}")
 
 
 if __name__ == "__main__":

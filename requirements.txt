@@ -1,2 +1,5 @@
 fastapi>=0.100
 uvicorn[standard]
+pdfplumber
+pymupdf
+nltk
