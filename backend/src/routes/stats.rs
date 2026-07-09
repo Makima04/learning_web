@@ -1,0 +1,240 @@
+use axum::{
+    extract::{Query, State},
+    routing::{get, post},
+    Json, Router,
+};
+use chrono::Utc;
+use serde::Deserialize;
+use serde_json::{json, Value};
+
+use crate::auth::AuthUser;
+use crate::error::{AppError, AppResult};
+use crate::state::AppState;
+
+#[derive(Deserialize)]
+struct StudyEventBody {
+    word_idx: i32,
+    event_type: String,
+    quality: Option<String>,
+    day_key: String,
+}
+
+#[derive(Deserialize)]
+struct DayQ {
+    day: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct RangeQ {
+    from: String,
+    to: String,
+}
+
+pub fn router() -> Router<AppState> {
+    Router::new()
+        .route("/api/study-events", post(post_event))
+        .route("/api/stats/today", get(stats_today))
+        .route("/api/stats/daily", get(stats_daily))
+        .route("/api/stats/overview", get(stats_overview))
+}
+
+async fn post_event(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(body): Json<StudyEventBody>,
+) -> AppResult<Json<Value>> {
+    if body.day_key.is_empty() {
+        return Err(AppError::BadRequest("day_key required".into()));
+    }
+    sqlx::query(
+        r#"
+        INSERT INTO study_events (user_id, word_idx, event_type, quality, day_key, studied_at)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        "#,
+    )
+    .bind(user.id)
+    .bind(body.word_idx)
+    .bind(&body.event_type)
+    .bind(&body.quality)
+    .bind(&body.day_key)
+    .bind(Utc::now())
+    .execute(&state.pool)
+    .await?;
+    Ok(Json(json!({ "ok": true })))
+}
+
+async fn stats_today(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<DayQ>,
+) -> AppResult<Json<Value>> {
+    let day = q
+        .day
+        .unwrap_or_else(|| Utc::now().format("%Y-%m-%d").to_string());
+    let rows = sqlx::query_as::<_, (i32, String, Option<String>, chrono::DateTime<Utc>)>(
+        r#"
+        SELECT word_idx, event_type, quality, studied_at
+        FROM study_events
+        WHERE user_id = $1 AND day_key = $2
+        ORDER BY studied_at
+        "#,
+    )
+    .bind(user.id)
+    .bind(&day)
+    .fetch_all(&state.pool)
+    .await?;
+
+    let mut summary = json!({"new": 0, "review": 0, "learn": 0, "done": 0});
+    let items: Vec<Value> = rows
+        .into_iter()
+        .map(|(word_idx, event_type, quality, studied_at)| {
+            if let Some(obj) = summary.as_object_mut() {
+                let key = match event_type.as_str() {
+                    "new" => "new",
+                    "review" => "review",
+                    "learn" => "learn",
+                    _ => "done",
+                };
+                if let Some(v) = obj.get_mut(key) {
+                    *v = json!(v.as_i64().unwrap_or(0) + 1);
+                }
+                if let Some(v) = obj.get_mut("done") {
+                    *v = json!(v.as_i64().unwrap_or(0) + 1);
+                }
+            }
+            json!({
+                "word_idx": word_idx,
+                "english": "",
+                "event_type": event_type,
+                "quality": quality,
+                "studied_at": studied_at.to_rfc3339(),
+            })
+        })
+        .collect();
+
+    Ok(Json(json!({ "items": items, "summary": summary })))
+}
+
+async fn stats_daily(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RangeQ>,
+) -> AppResult<Json<Value>> {
+    let rows = sqlx::query_as::<_, (String, i64, i64, i64, i64, i64)>(
+        r#"
+        SELECT day_key,
+          COUNT(*) FILTER (WHERE event_type = 'new') AS new_c,
+          COUNT(*) FILTER (WHERE event_type = 'review') AS review_c,
+          COUNT(*) FILTER (WHERE event_type = 'learn') AS learn_c,
+          COUNT(*) AS done_c,
+          COUNT(DISTINCT word_idx) AS distinct_words
+        FROM study_events
+        WHERE user_id = $1 AND day_key >= $2 AND day_key <= $3
+        GROUP BY day_key
+        ORDER BY day_key
+        "#,
+    )
+    .bind(user.id)
+    .bind(&q.from)
+    .bind(&q.to)
+    .fetch_all(&state.pool)
+    .await?;
+
+    let out: Vec<Value> = rows
+        .into_iter()
+        .map(|(day_key, n, r, l, d, dw)| {
+            json!({
+                "day_key": day_key,
+                "new": n,
+                "review": r,
+                "learn": l,
+                "done": d,
+                "distinct_words": dw,
+            })
+        })
+        .collect();
+    Ok(Json(json!(out)))
+}
+
+async fn stats_overview(
+    State(state): State<AppState>,
+    user: AuthUser,
+) -> AppResult<Json<Value>> {
+    let total_studied: i64 =
+        sqlx::query_scalar("SELECT COUNT(DISTINCT word_idx) FROM cards WHERE user_id = $1")
+            .bind(user.id)
+            .fetch_one(&state.pool)
+            .await?;
+    let total_reviews: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM study_events WHERE user_id = $1 AND event_type = 'review'",
+    )
+    .bind(user.id)
+    .fetch_one(&state.pool)
+    .await?;
+    let days_active: i64 =
+        sqlx::query_scalar("SELECT COUNT(DISTINCT day_key) FROM study_events WHERE user_id = $1")
+            .bind(user.id)
+            .fetch_one(&state.pool)
+            .await?;
+
+    // simple streak: count consecutive days ending today from study_events
+    let days: Vec<String> = sqlx::query_scalar(
+        "SELECT DISTINCT day_key FROM study_events WHERE user_id = $1 ORDER BY day_key DESC",
+    )
+    .bind(user.id)
+    .fetch_all(&state.pool)
+    .await?;
+
+    let (current_streak, longest_streak) = compute_streaks(&days);
+
+    Ok(Json(json!({
+        "total_studied": total_studied,
+        "total_reviews": total_reviews,
+        "current_streak": current_streak,
+        "longest_streak": longest_streak,
+        "retention_rate": 0.0,
+        "days_active": days_active,
+    })))
+}
+
+fn compute_streaks(days_desc: &[String]) -> (i64, i64) {
+    if days_desc.is_empty() {
+        return (0, 0);
+    }
+    use chrono::NaiveDate;
+    let mut dates: Vec<NaiveDate> = days_desc
+        .iter()
+        .filter_map(|s| NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
+        .collect();
+    dates.sort();
+    dates.dedup();
+
+    let mut longest = 1i64;
+    let mut run = 1i64;
+    for w in dates.windows(2) {
+        if (w[1] - w[0]).num_days() == 1 {
+            run += 1;
+            longest = longest.max(run);
+        } else {
+            run = 1;
+        }
+    }
+
+    let today = Utc::now().date_naive();
+    let mut current = 0i64;
+    let last = *dates.last().unwrap();
+    // allow today or yesterday as streak head
+    if last == today || last == today - chrono::Duration::days(1) {
+        let mut expect = today;
+        if !dates.contains(&today) {
+            expect = today - chrono::Duration::days(1);
+        }
+        let set: std::collections::HashSet<_> = dates.iter().copied().collect();
+        while set.contains(&expect) {
+            current += 1;
+            expect -= chrono::Duration::days(1);
+        }
+    }
+
+    (current, longest.max(current))
+}

@@ -24,30 +24,30 @@
     --border: 38 18% 82%;
     --input: 38 18% 82%;
     --ring: 25 70% 45%;
-    --radius: 0.9rem;
+    --radius: 0.95rem;
   }
 
-  /* 暗色：沿用旧 #0f1320 族 */
+  /* 暗色：沿用旧 #0f1320 族；主色略提亮以保证对比 */
   .dark {
     --background: 222 30% 10%;     /* #0f1320 */
     --foreground: 220 25% 94%;
-    --card: 222 26% 16%;           /* #1c2238 */
+    --card: 222 26% 15%;           /* 主内容略亮层级 */
     --card-foreground: 220 25% 94%;
     --popover: 222 26% 16%;
     --popover-foreground: 220 25% 94%;
-    --primary: 215 100% 71%;       /* #6ea8ff */
+    --primary: 214 100% 72%;       /* 略提亮，WCAG 更友好 */
     --primary-foreground: 222 30% 10%;
     --secondary: 225 24% 22%;
     --secondary-foreground: 220 25% 94%;
-    --muted: 225 24% 20%;
-    --muted-foreground: 220 16% 65%;
+    --muted: 225 24% 18%;
+    --muted-foreground: 220 16% 68%;
     --accent: 225 24% 24%;
     --accent-foreground: 220 25% 94%;
     --destructive: 0 72% 65%;
     --destructive-foreground: 220 25% 94%;
     --border: 225 26% 28%;         /* #2c344f */
     --input: 225 26% 28%;
-    --ring: 215 100% 71%;
+    --ring: 214 100% 72%;
   }
 }
 

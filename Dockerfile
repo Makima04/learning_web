@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.6
-# 多阶段：frontend 构建 React dist → runtime 挂 frontend/dist + web/ 数据
+# 多阶段：frontend (Vite) → rust builder → 精简 runtime
+# 运行时依赖 PostgreSQL（见 docker-compose.yml）
 
-# ---- frontend build ----
+# ---- frontend ----
 FROM node:22-slim AS frontend
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
@@ -11,35 +12,41 @@ COPY web/data.js public/data.js
 COPY web/papers.js public/papers.js
 RUN npm run build
 
-# ---- Python deps ----
-FROM python:3.12-slim AS deps
-WORKDIR /app
-ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
+# ---- rust build ----
+FROM rust:1-bookworm AS rust
+WORKDIR /app/backend
+# 依赖缓存层：仅 toml/lock + 空 main
+COPY backend/Cargo.toml backend/Cargo.lock ./
+RUN mkdir -p src && echo 'fn main(){}' > src/main.rs \
+ && cargo build --release \
+ && rm -rf src
+COPY backend/ ./
+RUN touch src/main.rs && cargo build --release \
+ && strip target/release/english_web_server
 # ---- runtime ----
-FROM python:3.12-slim AS runtime
+FROM debian:bookworm-slim AS runtime
 LABEL org.opencontainers.image.title="english_web" \
-      org.opencontainers.image.description="考研英语背词应用 · 红宝书乱序 6550 词"
+      org.opencontainers.image.description="考研英语背词 · 红宝书乱序 6550 · Rust+PG"
 
-COPY --from=deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=deps /usr/local/bin /usr/local/bin
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates libssl3 \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+COPY --from=rust /app/backend/target/release/english_web_server /app/english_web_server
+COPY --from=frontend /app/frontend/dist /app/frontend/dist
+# seed 用 papers（可选，容器内也可挂卷）
+COPY web/ /app/web/
 
-COPY server/ ./server/
-# 数据产物：seed_sentences 与镜像内备用
-COPY web/ ./web/
-COPY --from=frontend /app/frontend/dist ./frontend/dist
-
-ENV EW_DB_PATH=/data/english_web.db \
+ENV EW_DATABASE_URL=postgres://english:english@db:5432/english_web \
+    EW_HOST=0.0.0.0 \
+    EW_PORT=8000 \
+    EW_STATIC_DIR=/app/frontend/dist \
     EW_LLM_URL="" \
     EW_LLM_KEY="" \
     EW_LLM_MODEL="" \
-    PYTHONUNBUFFERED=1
+    RUST_LOG=english_web_server=info,tower_http=info
 
-VOLUME ["/data"]
 EXPOSE 8000
-
-CMD ["sh", "-c", "python -m server.seed_sentences && uvicorn server.app:app --host 0.0.0.0 --port 8000"]
+USER nobody
+CMD ["/app/english_web_server"]

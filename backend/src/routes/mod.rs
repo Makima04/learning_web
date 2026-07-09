@@ -1,0 +1,33 @@
+mod auth;
+mod cards;
+mod llm_cfg;
+mod meta;
+mod paper;
+mod parse;
+mod sentences;
+mod settings;
+mod spa;
+mod stats;
+mod translate;
+
+use axum::Router;
+
+use crate::state::AppState;
+
+pub fn api_router() -> Router<AppState> {
+    Router::new()
+        .merge(auth::router())
+        .merge(cards::router())
+        .merge(meta::router())
+        .merge(settings::router())
+        .merge(sentences::router())
+        .merge(translate::router())
+        .merge(parse::router())
+        .merge(paper::router())
+        .merge(llm_cfg::router())
+        .merge(stats::router())
+}
+
+pub fn spa_router() -> Router<AppState> {
+    spa::router()
+}

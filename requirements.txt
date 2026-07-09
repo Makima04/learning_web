@@ -3,3 +3,5 @@ uvicorn[standard]
 pdfplumber
 pymupdf
 nltk
+# SQLite → PostgreSQL 迁移 / PG seed
+psycopg[binary]>=3.1

@@ -13,27 +13,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 考研英语背词应用「红宝书 · 乱序 · 6550 词」。三层结构，自底向上：
 
 1. **数据管线脚本** `scripts/` —— 从 PDF 抽取词库与真题，生成 `web/data.js` / `web/papers.js`。
-2. **后端** `server/` —— FastAPI + stdlib sqlite3，同源挂 `frontend/dist`，提供 `/api/*`。
+2. **后端** `backend/` —— Rust Axum + PostgreSQL，同源挂 `frontend/dist`，提供 `/api/*`（旧 Python `server/` 仍保留）。
 3. **前端** `frontend/` —— Vite + React 18 + TS + Tailwind + Zustand + Radix。
 
 `web/` **仅存放数据产物**（`data.js`、`papers.js`），无应用代码。
 
-运行入口 `start.sh`：`gen_version` + `seed_sentences` + `npm run build` + `uvicorn :8000`。  
-开发：后端 `:8000` + `cd frontend && npm run dev`（Vite `:5173`，/api 代理到 8000）。
+运行入口 `start.sh`：`npm run build` + `cargo build --release` + Rust `:8000`。  
+开发：`cd backend && cargo run` + `cd frontend && npm run dev`（Vite `:5173`，/api 代理到 8000）。
 
 ## 常用命令
 
-所有 Python 命令用项目根的 `.venv/bin/python3`（Python 3.14，已装 pdfplumber/pymupdf/fastapi/uvicorn/nltk 等）。
+Python 管线仍用 `.venv/bin/python3`。后端默认 Rust。
 
 ```bash
-# 运行应用（同源前后端）
+# 运行应用（同源前后端，Rust + PG）
+export EW_DATABASE_URL=postgres://makima@localhost/english_web
 ./start.sh
 # 或手动：
-.venv/bin/python3 scripts/gen_version.py
-.venv/bin/python3 -m server.seed_sentences
 cp web/data.js web/papers.js frontend/public/
 cd frontend && npm run build
-.venv/bin/uvicorn server.app:app --port 8000
+cd backend && cargo run --release
 
 # 词库管线（从红宝书 PDF 重建词库，极少重跑）
 .venv/bin/python3 scripts/extract_all.py          # PDF → words.json / words.csv / report.txt
@@ -65,13 +64,13 @@ cd frontend && npm run build
 - **`src/pages/`**：Dashboard、Study、Papers、PapersRecite、Reader、Settings、TransMgr。
 - **开发**：`cd frontend && npm run dev`；生产：`npm run build` → `frontend/dist`。
 
-### 后端：单文件路由 + stdlib sqlite3
+### 后端：Rust Axum + PostgreSQL
 
-- **`server/app.py`**：所有 `/api` 路由；静态根 `frontend/dist`（无 dist 时 SPA 返 503）。`/api/translate/batch` 须在 `/api/translate/{sid}` 之前注册。
-- **`server/db.py`**：SQLite 在项目根 `english_web.db`。每请求一连接，`PRAGMA foreign_keys=ON`。
-- **`server/auth.py`**：pbkdf2 + token；`get_user` / `get_admin` 依赖。
-- **`server/llm.py`**：OpenAI 兼容网关，stdlib urllib；读 `ew_llm.json` / 环境变量。`join_url` 与 `scripts/llm_translate.py` 保持一致。
-- **`server/seed_sentences.py`**：从 `web/papers.js` 灌例句（幂等）。
+- **`backend/`**：Axum 路由在 `src/routes/*`；`migrations/001_init.sql` 启动时执行。
+- **DB**：`EW_DATABASE_URL`（默认 `postgres://makima@localhost/english_web`）。
+- **鉴权**：PBKDF2-HMAC-SHA256（600k，兼容旧 100k）+ Bearer session，与旧前端兼容。
+- **LLM**：`ew_llm.json` / `EW_LLM_*` 环境变量；OpenAI 兼容网关。
+- **旧 Python**：`server/` 仍可用，但默认 `start.sh` 已切到 Rust。
 
 ### LLM key 收归服务端
 

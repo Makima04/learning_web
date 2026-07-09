@@ -3,6 +3,9 @@ english_web.db
 english_web.db-*
 ew_llm.json
 
+# Rust
+backend/target/
+
 # Python
 .venv/
 **/__pycache__/
