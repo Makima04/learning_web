@@ -16,7 +16,16 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
 
-from .auth import SESSION_TTL_DAYS, gen_salt, gen_token, get_admin, get_user, hash_password, verify_password
+from .auth import (
+    SESSION_TTL_DAYS,
+    gen_salt,
+    gen_token,
+    get_admin,
+    get_user,
+    hash_password,
+    needs_rehash,
+    verify_password,
+)
 from .db import get_db, init_db, now_iso, set_config_value
 from .llm import (
     LlmNotConfigured,
@@ -256,6 +265,12 @@ def login(body: AuthBody, request: Request):
         ).fetchone()
         if not row or not verify_password(pw, row["salt"], row["pw_hash"]):
             raise HTTPException(401, "invalid credentials")
+        # 旧 100k 迭代哈希：登录成功后就地升级到 600k，避免永久双路径
+        if needs_rehash(pw, row["salt"], row["pw_hash"]):
+            conn.execute(
+                "UPDATE users SET pw_hash=? WHERE id=?",
+                (hash_password(pw, row["salt"]), row["id"]),
+            )
         token = gen_token()
         now = now_iso()
         expires_at = (datetime.now(timezone.utc) + timedelta(days=SESSION_TTL_DAYS)).isoformat()
