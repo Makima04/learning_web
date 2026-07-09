@@ -62,7 +62,7 @@ export function saveSettings(s: Settings) {
   if (api.isLoggedIn()) {
     void api
       .putSettings(clean)
-      .catch((e) => console.warn("mirror putSettings failed:", e?.message));
+      .catch((e: any) => console.warn("mirror putSettings failed:", e?.message));
   }
 }
 
@@ -90,7 +90,7 @@ export const useSettings = create<SettingsStore>((set, get) => ({
         saveSettings(merged);
         set(merged);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn("getSettings sync failed:", e?.message);
     }
   },

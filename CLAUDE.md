@@ -13,10 +13,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 考研英语背词应用「红宝书 · 乱序 · 6550 词」。三层结构，自底向上：
 
 1. **数据管线脚本** `scripts/` —— 从 PDF 抽取词库与真题，生成前端可直接 `<script>` 加载的 JS 数据文件。
-2. **后端** `server/` —— FastAPI + stdlib sqlite3，同源挂 `web/` 静态，提供 `/api/*`。
-3. **前端** `web/` —— 纯 vanilla JS（无构建、无框架），靠全局对象通信。
+2. **后端** `server/` —— FastAPI + stdlib sqlite3，同源挂静态前端，提供 `/api/*`。
+3. **前端（React 现役 + vanilla 回退）**
+   - **`frontend/`（现役）** —— Vite + React 18 + TS + Tailwind + Zustand + Radix。`npm run build` → `frontend/dist`。`server/app.py` 优先挂载 `frontend/dist`（有 `index.html` 时），否则回退 `web/`。
+   - **`web/`（回退）** —— 旧版 vanilla JS；无 dist 时仍可跑。日常改 UI 以 `frontend/src/` 为准。
 
-运行入口 `start.sh`：先跑 `server.seed_sentences`（幂等灌例句），再 `uvicorn server.app:app --port 8000`，浏览器开 http://localhost:8000 。
+运行入口 `start.sh`：`gen_version` + `seed_sentences` +（有 frontend 则）`npm run build`，再 `uvicorn :8000`。开发也可：后端 `:8000` + `cd frontend && npm run dev`（Vite `:5173`，/api 代理到 8000）。
 
 ## 常用命令
 
@@ -44,7 +46,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 .venv/bin/python3 scripts/llm_translate.py translate "The homeless make up..."
 ```
 
-无测试套件（`package.json` 的 test 是占位）。无 lint 配置。Node 侧仅 `pdfjs-dist`，给 `scripts/inspect-pdf.mjs` 这类探针用。
+有少量 Python 测试（`tests/`，如 `test_db.py`、`test_llm_common.py`）。前端无测试/lint。根 `package.json` 若存在，test 可能是占位；`frontend/package.json` 仅有 dev/build/preview。Node 侧：`frontend/` 用 Vite 工具链；根/脚本侧另有 `pdfjs-dist` 给 `scripts/inspect-pdf.mjs` 探针用。
 
 ## 关键架构点
 
@@ -54,14 +56,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 之所以用 `<script src="data.js">` 而非 `fetch(words.json)`：`file://` 打开 index.html 时 fetch 会被 CORS 挡，classic script 不受影响——应用可以双击运行，不必起服务。
 
-### 前端：全局对象 + 固定加载顺序
+### 前端现役（frontend/）：React + Zustand
 
-`index.html` 末尾按序加载：`data.js` → `papers.js` → `api.js` → `srs.js` → `store.js` → `llm.js` → `app.js`。每个文件挂一个全局：`window.WORDS`/`PAPERS`/`Api`/`SRS`/`Store`/`LLM`。`app.js` 是主控制器，负责 dashboard、study session、真题模式、设置 UI、翻译管理页。改依赖关系时注意这个加载顺序。
+> 改 UI/交互以 `frontend/src/` 为准；`docs/UI设计.md` 描述的学习流程仍适用（assess / quiz / review）。`web/` 仅作无 dist 时的回退。
 
-- **`srs.js`**：纯函数 SM-2 风格间隔重复状态机。卡片对象形如 `{state, due, ivl, ease, reps, lapses, step}`，状态流转 `new → learn → review`。`answer(card,q,now)` 就地改 card 并返回；`preview` 不改。无依赖，可单测。
-- **`store.js`**：localStorage 持久化 + 每日计数器按本地日期 `YYYY-MM-DD` 重置。**本地优先**：所有写操作先落 localStorage，登录后在后台静默镜像到服务端（`saveCard`→`Api.putCard`、`bumpMeta`→`Api.putMeta`，均不 await、失败静默）。`sync()` 登录时合并：cards 以 remote 为权威覆盖本地、本地独有保留；meta 仅同 dayKey 才覆盖。
-- **`api.js`**：所有 `/api/*` 调用集中于此，自动带 Bearer token、统一错误抛 `Error(status,data)`。
-- **`llm.js`**：翻译客户端，**只走后端 `/api/translate`**，不再直连 LLM 网关（key 不放前端）。`isConfigured()` 恒返 true，让 on-card 翻译总能尝试；后端未配置时返 `status:'unconfigured'`，UI 据此提示。译文命中 `Store.getTrans` 缓存则瞬返。
+- **入口**：`index.html` 先 classic script 加载 `/data.js`、`/papers.js`（`window.WORDS` / `window.PAPERS`），再挂 React。
+- **`src/lib/`**：`api.ts`、`srs.ts`、`llm.ts`、`tts.ts`、`words.ts`、`lookup.ts`（词形还原）—— 镜像原 `web/*.js`。
+- **`src/stores/`**：`cards` / `meta` / `settings` / `auth` / `trans` / `theme` / `study`（会话队列与 UI 阶段）。本地优先 + 登录后 fire-and-forget 镜像服务端。
+- **`src/pages/`**：Dashboard、Study、Papers、PapersRecite、Reader、Settings、TransMgr。
+- **开发**：`cd frontend && npm run dev`（:5173，代理 `/api` → :8000）；生产：`npm run build` → `frontend/dist`。
 
 ### 后端：单文件路由 + stdlib sqlite3
 

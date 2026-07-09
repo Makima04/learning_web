@@ -33,9 +33,10 @@ from .llm import (
     translate_text,
 )
 
-# 静态根：当前可运行前端是 vanilla 版 web/（frontend/ 的 React 重写尚未完成、无 dist）。
-# start.sh 的 npm run build 若产出 frontend/dist，可改回 "frontend"/"dist"。
-WEB = Path(__file__).resolve().parent.parent / "web"
+# 静态根：优先 frontend/dist（React），不存在则回退 web/（vanilla）。
+_ROOT = Path(__file__).resolve().parent.parent
+_DIST = _ROOT / "frontend" / "dist"
+WEB = _DIST if (_DIST / "index.html").exists() else _ROOT / "web"
 INDEX = WEB / "index.html"
 
 app = FastAPI(title="english_web")

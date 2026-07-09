@@ -268,7 +268,9 @@
   }
 
   // ============ study flow ============
-  function startSession() {
+  async function startSession() {
+    // 未登录：弹窗提示登录；可「先本地学习」继续（本地优先）
+    if (!(await ensureAuthForStudy())) return;
     studyMode = "learn";
     buildQueue({ mode: "learn" });
     if (queue.length === 0) { showDone(true); return; }
@@ -278,7 +280,8 @@
 
   // 「复习」：仅装到期 review + learn 在练卡，不引入新词。
   // 复用 study 屏与 rate 流程；rate 里 isNew 全为 false，故一律计 reviewToday、不消耗 dailyNew 预算。
-  function startReviewSession() {
+  async function startReviewSession() {
+    if (!(await ensureAuthForStudy())) return;
     studyMode = "review";
     buildQueue({ mode: "review" });
     if (queue.length === 0) { showDone(true); return; }
@@ -1922,14 +1925,130 @@
     }
   }
 
+  // ============ 登录 / 注册弹窗 ============
+  // 未登录时点头像 / 学习等入口弹出；学习入口可「先本地学习」（本地优先，不强制账号）。
+  let authCb = null; // { resolve, allowSkip }
+  function isLoggedIn() {
+    try { return !!(window.Api && Api.isLoggedIn()); } catch (e) { return false; }
+  }
+  function openAuthModal(opts) {
+    opts = opts || {};
+    const modal = $("auth-modal");
+    if (!modal) return Promise.resolve({ ok: false, skipped: false });
+    const skip = $("btn-auth-skip");
+    const err = $("auth-err");
+    const sub = $("auth-sub");
+    const title = $("auth-title");
+    if (title) title.textContent = "登录";
+    if (sub) {
+      sub.textContent = opts.subtitle
+        || (opts.allowSkip
+          ? "登录后可跨设备同步进度；也可先在本机背词。"
+          : "登录后可跨设备同步学习进度");
+    }
+    if (err) { err.hidden = true; err.textContent = ""; }
+    if (skip) {
+      skip.hidden = !opts.allowSkip;
+      skip.textContent = opts.skipLabel || "先本地学习";
+    }
+    const user = $("auth-user");
+    const pass = $("auth-pass");
+    if (user) user.value = "";
+    if (pass) pass.value = "";
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => { if (user) user.focus(); });
+    return new Promise((resolve) => {
+      authCb = { resolve, allowSkip: !!opts.allowSkip };
+    });
+  }
+  function closeAuthModal(result) {
+    const modal = $("auth-modal");
+    if (modal) modal.hidden = true;
+    document.body.style.overflow = "";
+    const cb = authCb;
+    authCb = null;
+    if (cb && cb.resolve) cb.resolve(result || { ok: false, skipped: false });
+  }
+  function setAuthErr(msg) {
+    const err = $("auth-err");
+    if (!err) return;
+    if (!msg) { err.hidden = true; err.textContent = ""; return; }
+    err.hidden = false;
+    err.textContent = msg;
+  }
+  function setAuthBusy(busy) {
+    ["btn-auth-login", "btn-auth-register"].forEach((id) => {
+      const b = $(id);
+      if (b) b.disabled = !!busy;
+    });
+  }
+  async function afterAuthSuccess() {
+    refreshAccountUI();
+    try { await Store.sync(); } catch (e) {}
+    renderDashboard();
+  }
+  async function doAuthLogin() {
+    const u = ($("auth-user") && $("auth-user").value || "").trim();
+    const p = ($("auth-pass") && $("auth-pass").value) || "";
+    if (!u || !p) { setAuthErr("请输入用户名和密码"); return; }
+    setAuthBusy(true); setAuthErr("");
+    try {
+      await Api.login(u, p);
+      closeAuthModal({ ok: true, skipped: false });
+      await afterAuthSuccess();
+    } catch (err) {
+      setAuthErr("登录失败：" + ((err && err.message) || err));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+  async function doAuthRegister() {
+    const u = ($("auth-user") && $("auth-user").value || "").trim();
+    const p = ($("auth-pass") && $("auth-pass").value) || "";
+    if (!u || !p) { setAuthErr("请输入用户名和密码"); return; }
+    if (p.length < 4) { setAuthErr("密码至少 4 位"); return; }
+    setAuthBusy(true); setAuthErr("");
+    try {
+      await Api.register(u, p);
+      try { await Api.login(u, p); } catch (e) {
+        setAuthErr("注册成功，请登录");
+        setAuthBusy(false);
+        return;
+      }
+      closeAuthModal({ ok: true, skipped: false });
+      await afterAuthSuccess();
+    } catch (err) {
+      setAuthErr("注册失败：" + ((err && err.message) || err));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+  // 学习入口：未登录弹窗；关闭=取消；跳过=本地继续；登录成功=继续
+  async function ensureAuthForStudy() {
+    if (isLoggedIn()) return true;
+    const r = await openAuthModal({
+      allowSkip: true,
+      skipLabel: "先本地学习",
+      subtitle: "登录后可跨设备同步进度；也可先在本机背词。",
+    });
+    return !!(r && (r.ok || r.skipped));
+  }
+
   // ============ settings UI ============
+  let lastSettingsSection = "study";
   function selectSettingsSection(s) {
+    if (!s) s = "study";
+    // 非 admin 不可停留在 llm
+    if (s === "llm" && !(window.Api && Api.isAdmin())) s = "study";
+    lastSettingsSection = s;
     document.querySelectorAll("#settings-nav button").forEach((b) =>
       b.classList.toggle("active", b.dataset.s === s));
     document.querySelectorAll(".settings-section").forEach((sec) =>
       (sec.hidden = sec.dataset.s !== s));
   }
-  function openSettings() {
+  // section 可选：指定打开哪一块（如 "account"）；默认记住上次
+  function openSettings(section) {
     $("set-daily").value = settings.dailyNew;
     $("val-daily").textContent = settings.dailyNew;
     $("set-rate").value = settings.rate;
@@ -1950,7 +2069,7 @@
     // 版本号
     const vEl = $("app-version");
     if (vEl) vEl.textContent = (window.EW_VERSION || "dev");
-    selectSettingsSection("study");
+    selectSettingsSection(section || lastSettingsSection || "study");
     show("settings");
     // 进设置页后定位滑块气泡（show 异步切屏后布局才稳定，下一帧再算）
     requestAnimationFrame(repositionAllSliderBubbles);
@@ -1959,21 +2078,29 @@
   // ---- 账号 panel UI ----
   function refreshAccountUI() {
     const state = $("acc-state");
-    const btnLogout = $("btn-acc-logout");
+    const loggedIn = $("acc-logged-in");
+    const loggedOut = $("acc-logged-out");
     const btnAccount = $("btn-account");
-    if (window.Api && Api.isLoggedIn()) {
+    if (isLoggedIn()) {
       const u = Api.getUser() || {};
       const name = u.username || "已登录";
       const admin = Api.isAdmin();
-      state.innerHTML = esc(name) + (admin ? ' <span class="acc-badge">管理员</span>' : "");
-      btnLogout.hidden = false;
-      $("acc-user").value = "";
-      $("acc-pass").value = "";
-      // 顶栏按钮显示用户名首字
+      if (state) state.textContent = name + (admin ? "（管理员）" : "");
+      if (loggedIn) loggedIn.hidden = false;
+      if (loggedOut) loggedOut.hidden = true;
+      const nameEl = $("acc-name");
+      if (nameEl) {
+        nameEl.innerHTML = esc(name) + (admin ? ' <span class="acc-badge">管理员</span>' : "");
+      }
+      const hint = $("acc-hint");
+      if (hint) hint.textContent = admin ? "管理员 · 进度已同步" : "进度已与账号同步";
+      const av = $("acc-avatar");
+      if (av) av.textContent = (name + "").charAt(0).toUpperCase() || "👤";
       if (btnAccount) btnAccount.textContent = (name + "").charAt(0) || "👤";
     } else {
-      state.textContent = "未登录";
-      btnLogout.hidden = true;
+      if (state) state.textContent = "未登录";
+      if (loggedIn) loggedIn.hidden = true;
+      if (loggedOut) loggedOut.hidden = false;
       if (btnAccount) btnAccount.textContent = "👤";
     }
     // 管理入口（翻译管理 / LLM 配置）按 admin 显隐
@@ -1997,11 +2124,11 @@
     });
     const llmSec = document.querySelector('.settings-section[data-s="llm"]');
     if (llmSec) {
-      llmSec.hidden = !admin;
-      // 非 admin 若正在该 section 被强制切走，回到学习区
-      if (!admin && llmSec.hidden) {
-        const studyBtn = document.querySelector('#settings-nav button[data-s="study"]');
-        if (studyBtn) studyBtn.click();
+      // 仅当非 admin 且当前正停留在 llm 时，才切回学习（避免无关 refresh 踢页）
+      if (!admin && lastSettingsSection === "llm") {
+        selectSettingsSection("study");
+      } else if (!admin) {
+        llmSec.hidden = true;
       }
     }
   }
@@ -2315,7 +2442,11 @@
       })
     );
     document.querySelectorAll("#settings-nav button").forEach((b) =>
-      b.addEventListener("click", () => selectSettingsSection(b.dataset.s))
+      b.addEventListener("click", () => {
+        // 隐藏的 nav（如非 admin 的 llm）不响应
+        if (b.hidden) return;
+        selectSettingsSection(b.dataset.s);
+      })
     );
     document.querySelectorAll("#set-direction button").forEach((b) =>
       b.addEventListener("click", () => {
@@ -2421,42 +2552,52 @@
       }
     });
 
-    // 账号 panel
-    $("btn-account").addEventListener("click", openSettings);
-    $("btn-acc-login").addEventListener("click", async () => {
-      const u = $("acc-user").value.trim();
-      const p = $("acc-pass").value;
-      if (!u || !p) { alert("请输入用户名和密码"); return; }
-      try {
-        await Api.login(u, p);
+    // 顶栏头像：已登录 → 设置·账号；未登录 → 登录弹窗
+    $("btn-account").addEventListener("click", () => {
+      if (isLoggedIn()) openSettings("account");
+      else openAuthModal({ allowSkip: false, subtitle: "登录后可跨设备同步学习进度" });
+    });
+    // 设置页账号：未登录点按钮开弹窗
+    const btnAccOpen = $("btn-acc-open-login");
+    if (btnAccOpen) {
+      btnAccOpen.addEventListener("click", () =>
+        openAuthModal({ allowSkip: false, subtitle: "登录后可跨设备同步学习进度" }));
+    }
+    // 登录弹窗控件
+    const btnAuthLogin = $("btn-auth-login");
+    const btnAuthReg = $("btn-auth-register");
+    const btnAuthSkip = $("btn-auth-skip");
+    if (btnAuthLogin) btnAuthLogin.addEventListener("click", doAuthLogin);
+    if (btnAuthReg) btnAuthReg.addEventListener("click", doAuthRegister);
+    if (btnAuthSkip) {
+      btnAuthSkip.addEventListener("click", () => closeAuthModal({ ok: false, skipped: true }));
+    }
+    document.querySelectorAll("[data-auth-dismiss]").forEach((el) => {
+      el.addEventListener("click", () => closeAuthModal({ ok: false, skipped: false }));
+    });
+    // 弹窗内回车登录
+    ["auth-user", "auth-pass"].forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); doAuthLogin(); }
+      });
+    });
+    // Esc 关闭弹窗
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const modal = $("auth-modal");
+      if (modal && !modal.hidden) closeAuthModal({ ok: false, skipped: false });
+    });
+    const btnLogout = $("btn-acc-logout");
+    if (btnLogout) {
+      btnLogout.addEventListener("click", () => {
+        if (!confirm("确认登出？")) return;
+        Api.logout();
         refreshAccountUI();
-        try { await Store.sync(); } catch (e) {}
         renderDashboard();
-      } catch (err) {
-        alert("登录失败：" + ((err && err.message) || err));
-      }
-    });
-    $("btn-acc-register").addEventListener("click", async () => {
-      const u = $("acc-user").value.trim();
-      const p = $("acc-pass").value;
-      if (!u || !p) { alert("请输入用户名和密码"); return; }
-      try {
-        await Api.register(u, p);
-        // 注册成功后自动登录
-        try { await Api.login(u, p); } catch (e) {}
-        refreshAccountUI();
-        try { await Store.sync(); } catch (e) {}
-        renderDashboard();
-      } catch (err) {
-        alert("注册失败：" + ((err && err.message) || err));
-      }
-    });
-    $("btn-acc-logout").addEventListener("click", () => {
-      if (!confirm("确认登出？")) return;
-      Api.logout();
-      refreshAccountUI();
-      renderDashboard();
-    });
+      });
+    }
 
     // export / import / reset
     $("btn-export").addEventListener("click", () => {
@@ -2472,11 +2613,16 @@
       const r = new FileReader();
       r.onload = () => {
         try {
+          if (!confirm("导入将覆盖当前本机进度，确定继续？")) {
+            e.target.value = "";
+            return;
+          }
           Store.importData(JSON.parse(r.result));
           settings = Store.getSettings();
-          applySettings(); openSettings();
+          applySettings(); openSettings("data");
           alert("导入成功");
         } catch (err) { alert("导入失败：" + err.message); }
+        e.target.value = "";
       };
       r.readAsText(f);
     });

@@ -49,7 +49,7 @@ export const useCards = create<CardsStore>((set, get) => ({
     if (api.isLoggedIn()) {
       void api
         .putCard(idx, card)
-        .catch((e) => console.warn("mirror putCard failed:", e?.message));
+        .catch((e: any) => console.warn("mirror putCard failed:", e?.message));
     }
   },
   replaceAll: (cards) => {
@@ -73,7 +73,7 @@ export const useCards = create<CardsStore>((set, get) => ({
       // 首登：服务端空，推本地上去
       try {
         await api.bulkCards(localCards as unknown as Record<string, api.CardDTO>);
-      } catch (e) {
+      } catch (e: any) {
         console.warn("bulkCards push failed:", e?.message);
       }
     } else if (remoteKeys.length > 0) {

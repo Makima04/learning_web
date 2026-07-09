@@ -82,8 +82,14 @@ export const useMeta = create<MetaStore>((set, get) => ({
     saveMeta(next);
     if (api.isLoggedIn()) {
       void api
-        .putMeta(next)
-        .catch((e) => console.warn("mirror putMeta failed:", e?.message));
+        .putMeta({
+          day_key: next.dayKey,
+          new_today: next.newToday,
+          review_today: next.reviewToday,
+          learn_today: next.learnToday,
+          done_today: next.doneToday,
+        })
+        .catch((e: any) => console.warn("mirror putMeta failed:", e?.message));
     }
     return next[field];
   },
@@ -118,7 +124,7 @@ export const useMeta = create<MetaStore>((set, get) => ({
         }
         // 不同 dayKey：保留本地当前日
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn("getMeta sync failed:", e?.message);
     }
   },

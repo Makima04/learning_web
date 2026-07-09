@@ -29,6 +29,7 @@ export interface PaperSection {
 export interface Paper {
   year: number;
   source?: string;
+  variant?: "en1" | "en2";
   sections: PaperSection[];
 }
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f8fafc">
 <title>红宝书 · 背单词</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body data-theme="light">
 
@@ -27,6 +27,7 @@
     <button data-tab="dashboard" class="active"><span class="ic">🏠</span>首页</button>
     <button data-tab="papers"><span class="ic">📚</span>真题</button>
     <button data-tab="papers-recite"><span class="ic">📖</span>真题记词</button>
+    <button data-tab="settings"><span class="ic">⚙</span>设置</button>
     <button data-tab="transmgr"><span class="ic">🌐</span>翻译管理</button>
   </aside>
 
@@ -124,7 +125,7 @@
           </div>
           <div class="section-card announce">
             <div class="section-title">关于</div>
-            <div class="announce-body">数据本地存储，不会上传。词库来源：2027 考研英语红宝书（乱序版）。</div>
+            <div class="announce-body">进度本地优先保存；登录后可跨设备同步。词库来源：2027 考研英语红宝书（乱序版）。</div>
           </div>
         </aside>
       </div>
@@ -299,7 +300,7 @@
             <input type="range" id="set-daily" class="range-slider" min="0" max="100" step="5" value="20">
           </div>
           <div class="slider-meta">
-            <span>0</span><span><b id="val-daily">20</b> 词 / 天</span><span>100</span>
+            <span>0</span><span class="sr-only"><b id="val-daily">20</b> 词 / 天</span><span>100</span>
           </div>
         </div>
 
@@ -346,16 +347,16 @@
           <span class="sub">语音朗读控制</span>
         </div>
 
-        <div class="s-card">
-          <div class="s-card-head">
+        <div class="s-card s-card-toggle">
+          <div class="s-card-text">
             <span class="s-card-title">自动发音</span>
             <span class="s-card-hint">卡片渲染时朗读目标词</span>
           </div>
-          <label class="switch"><input type="checkbox" id="set-autospeak"><span class="slider"></span></label>
+          <label class="switch"><input type="checkbox" id="set-autospeak" checked><span class="slider"></span></label>
         </div>
 
-        <div class="s-card">
-          <div class="s-card-head">
+        <div class="s-card s-card-toggle">
+          <div class="s-card-text">
             <span class="s-card-title">点词朗读</span>
             <span class="s-card-hint">例句/原文点词查义时自动读单词</span>
           </div>
@@ -372,7 +373,7 @@
             <input type="range" id="set-rate" class="range-slider" min="0.6" max="1.6" step="0.1" value="1.0">
           </div>
           <div class="slider-meta">
-            <span>0.6×</span><span><b id="val-rate">1.0</b>×</span><span>1.6×</span>
+            <span>0.6×</span><span class="sr-only"><b id="val-rate">1.0</b>×</span><span>1.6×</span>
           </div>
         </div>
       </div>
@@ -417,16 +418,24 @@
         </div>
 
         <div class="s-card" id="account-panel">
-          <div class="panel-title">账号 <small id="acc-state">未登录</small></div>
-          <div id="acc-form">
-            <label class="field"><span class="field-label">用户名</span><input type="text" id="acc-user" class="text-input" autocomplete="off"></label>
-            <label class="field"><span class="field-label">密码</span><input type="password" id="acc-pass" class="text-input" autocomplete="off"></label>
-            <div class="llm-actions">
-              <button class="row-btn" id="btn-acc-login">登录</button>
-              <button class="row-btn" id="btn-acc-register">注册</button>
-              <button class="row-btn danger" id="btn-acc-logout" hidden>登出</button>
+          <!-- 已登录 -->
+          <div id="acc-logged-in" hidden>
+            <div class="acc-profile">
+              <div class="acc-avatar" id="acc-avatar">👤</div>
+              <div class="acc-meta">
+                <div class="acc-name" id="acc-name">—</div>
+                <div class="acc-hint" id="acc-hint">进度已与账号同步</div>
+              </div>
             </div>
+            <button class="row-btn danger" id="btn-acc-logout">登出</button>
           </div>
+          <!-- 未登录：引导弹窗，不在设置页内嵌表单 -->
+          <div id="acc-logged-out">
+            <p class="acc-empty-desc">登录后可把学习进度同步到账号，换设备也能继续背。</p>
+            <button class="primary full" id="btn-acc-open-login">登录 / 注册</button>
+          </div>
+          <!-- 兼容：状态文案（脚本也会写） -->
+          <span id="acc-state" class="sr-only">未登录</span>
         </div>
       </div>
 
@@ -434,22 +443,22 @@
       <div class="settings-section" data-s="data" hidden>
         <div class="section-head">
           <h2>数据</h2>
-          <span class="sub">进度本地存储</span>
+          <span class="sub">本地优先 · 登录后同步</span>
         </div>
 
         <div class="s-card">
           <div class="s-card-head">
             <span class="s-card-title">进度管理</span>
           </div>
-          <div class="llm-actions">
+          <div class="data-actions">
             <button class="row-btn" id="btn-export">导出进度 (JSON)</button>
             <button class="row-btn" id="btn-import">导入进度</button>
-            <button class="row-btn danger" id="btn-reset">重置全部进度</button>
           </div>
+          <button class="row-btn danger data-danger" id="btn-reset">重置全部进度</button>
         </div>
 
         <div class="s-card">
-          <div class="about">数据本地存储，不会上传。词库来源：2027考研英语红宝书（乱序版）。</div>
+          <div class="about">进度默认保存在本机；登录后会同步到账号。词库来源：2027考研英语红宝书（乱序版）。</div>
           <div class="version-row">版本 <code id="app-version">—</code></div>
         </div>
         <input type="file" id="import-file" accept="application/json" hidden>
@@ -488,8 +497,32 @@
   <button data-tab="dashboard" class="active">🏠<span>首页</span></button>
   <button data-tab="papers-recite">📖<span>真题记词</span></button>
   <button data-tab="study" class="tab-center">▶<span>学习</span></button>
-  <button data-tab="settings">⚙<span>我的</span></button>
+  <button data-tab="settings">⚙<span>设置</span></button>
 </nav>
+
+<!-- ============ 登录 / 注册弹窗 ============ -->
+<div id="auth-modal" class="modal" hidden>
+  <div class="modal-backdrop" data-auth-dismiss></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <button type="button" class="modal-close" data-auth-dismiss aria-label="关闭">×</button>
+    <h2 id="auth-title" class="modal-title">登录</h2>
+    <p id="auth-sub" class="modal-sub">登录后可跨设备同步学习进度</p>
+    <label class="field">
+      <span class="field-label">用户名</span>
+      <input type="text" id="auth-user" class="text-input" autocomplete="username" spellcheck="false">
+    </label>
+    <label class="field">
+      <span class="field-label">密码</span>
+      <input type="password" id="auth-pass" class="text-input" autocomplete="current-password">
+    </label>
+    <p id="auth-err" class="auth-err" hidden></p>
+    <div class="auth-actions">
+      <button type="button" class="primary full" id="btn-auth-login">登录</button>
+      <button type="button" class="ghost full" id="btn-auth-register">注册并登录</button>
+    </div>
+    <button type="button" class="auth-skip" id="btn-auth-skip" hidden>先本地学习</button>
+  </div>
+</div>
 
 <script src="data.js?v=55bb5fc145a13f35"></script>
 <script src="papers.js?v=960dd738a5d64cc0"></script>
@@ -498,6 +531,6 @@
 <script src="srs.js"></script>
 <script src="store.js?v=3"></script>
 <script src="llm.js?v=3"></script>
-<script src="app.js?v=10"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

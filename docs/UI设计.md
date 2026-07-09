@@ -1,8 +1,10 @@
 # UI 设计与功能文档
 
-本文档描述 english_web 前端的 UI 设计与交互功能要求。代码实现应以此为准；若发现实现与本文档不符，以本文档为准并修复实现（除非本文档已过时，则先更新文档）。
+本文档描述 english_web **现役前端 `frontend/`（React）** 的 UI 设计与交互功能要求。代码实现应以此为准；若发现实现与本文档不符，以本文档为准并修复实现（除非本文档已过时，则先更新文档）。
 
-> 状态机骨架见 `CLAUDE.md` 与 `web/srs.js`：卡片 `new → learn → review`，新词「评估 → 3 次练习 → 复习」。本文档补充各阶段的 UI 细则。
+> **实现位置**：页面在 `frontend/src/pages/`，学习状态机在 `frontend/src/stores/study.ts` + `lib/srs.ts`。旧版 `web/` 仅作无 dist 时的回退。
+>
+> 状态机骨架见 `CLAUDE.md` 与 `frontend/src/lib/srs.ts`：卡片 `new → learn → review`，新词「评估 → 3 次练习 → 复习」。本文档补充各阶段的 UI 细则。
 
 ---
 

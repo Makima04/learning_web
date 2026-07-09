@@ -1,6 +1,8 @@
 # english_web · 考研英语背词应用
 
-红宝书 · 乱序 · 6550 词。三层结构：数据管线脚本 → FastAPI + SQLite 后端 → 纯 vanilla JS 前端（同源挂载）。
+红宝书 · 乱序 · 6550 词。三层结构：数据管线脚本 → FastAPI + SQLite 后端 → React 前端（同源挂载）。
+
+**前端**：`frontend/`（Vite + React 18 + TS + Tailwind + Zustand）。`./start.sh` 会 `npm run build` 产出 `frontend/dist` 并由后端挂载；无 dist 时回退 `web/`（旧 vanilla）。
 
 ## 功能
 
@@ -89,7 +91,12 @@ docker rm -f english_web
 .venv/bin/uvicorn server.app:app --port 8000
 ```
 
-需要 Python 3.12+，依赖见 `requirements.txt`。前端是 `web/` 下的 vanilla JS，无需构建。
+需要 Python 3.12+，依赖见 `requirements.txt`。前端需 Node（`frontend/` 下 `npm install` / `npm run build`）。日常开发也可：
+
+```bash
+.venv/bin/uvicorn server.app:app --port 8000   # 终端 1
+cd frontend && npm run dev                     # 终端 2，浏览器开 :5173
+```
 
 ## 数据来源
 
@@ -100,14 +107,17 @@ docker rm -f english_web
 
 ```
 server/              FastAPI + stdlib sqlite3（单文件路由）
-  app.py             /api/* 路由 + 静态挂载 web/
+  app.py             /api/* + 静态：优先 frontend/dist，否则 web/
   db.py              SQLite 数据层
   auth.py            pbkdf2 + token
   llm.py             OpenAI 兼容网关代理（stdlib urllib）
   seed_sentences.py  从 papers.js 灌例句（幂等）
-web/                 vanilla JS 前端（data.js/papers.js/api.js/srs.js/store.js/llm.js/app.js）
+frontend/            【现役】React（Vite/TS/Tailwind/Zustand）→ dist
+web/                 【回退】旧 vanilla JS
+docs/                UI 设计说明（学习流程细则）
 scripts/             数据管线（PDF 抽词库、真题解析匹配）
-Dockerfile           多阶段构建，runner 不含 node
+tests/               少量 Python 单测
+Dockerfile           多阶段构建
 .github/workflows/   GitHub Actions 构建并推送镜像到 ghcr.io
 ```
 

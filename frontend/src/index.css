@@ -94,6 +94,19 @@
   cursor: pointer;
 }
 
+/* 例句目标词 / 可点词 */
+.c-target {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+.c-word {
+  cursor: pointer;
+  border-bottom: 1px dashed hsl(var(--primary) / 0.35);
+}
+.c-word:hover {
+  background: hsl(var(--primary) / 0.08);
+}
+
 /* 滚动条美化 */
 ::-webkit-scrollbar {
   width: 8px;
