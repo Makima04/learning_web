@@ -13,7 +13,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-# 与 web/llm.js 一致的翻译系统 prompt
+# 翻译系统 prompt（与前端 on-card 翻译共用语义）
 SYS_PROMPT = (
     "你是翻译引擎。把用户给的英文考研真题句子翻译成简体中文。"
     "只输出译文，不要原文、不要引号、不要解释、不要多余空白。"

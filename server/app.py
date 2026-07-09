@@ -1,7 +1,7 @@
 """app.py — FastAPI 后端，所有 /api 路由集中在此文件。
 
-静态挂 web/ 在根路径（同源，无 CORS）。启动时 init_db()。
-SPA fallback：未命中的路径返 index.html，支持客户端路由深链（如 /papers/2006）。
+静态挂 frontend/dist（React 构建产物）在根路径（同源，无 CORS）。启动时 init_db()。
+SPA fallback：未命中的路径返 index.html，支持客户端路由深链。
 """
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -33,10 +33,9 @@ from .llm import (
     translate_text,
 )
 
-# 静态根：优先 frontend/dist（React），不存在则回退 web/（vanilla）。
+# 静态根：frontend/dist（npm run build 产物）。无 dist 时 API 仍可用，页面 503。
 _ROOT = Path(__file__).resolve().parent.parent
-_DIST = _ROOT / "frontend" / "dist"
-WEB = _DIST if (_DIST / "index.html").exists() else _ROOT / "web"
+WEB = _ROOT / "frontend" / "dist"
 INDEX = WEB / "index.html"
 
 app = FastAPI(title="english_web")
@@ -1072,6 +1071,11 @@ def settings_put(body: SettingsBody, user: dict = Depends(get_user)):
 # ====================================================================
 @app.get("/{full_path:path}")
 def spa_fallback(full_path: str):
+    if not INDEX.exists():
+        raise HTTPException(
+            503,
+            "frontend/dist missing — run: cd frontend && npm run build",
+        )
     p = (WEB / full_path).resolve()
     if p.is_relative_to(WEB.resolve()) and p.is_file():
         return FileResponse(p)

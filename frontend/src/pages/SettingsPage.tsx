@@ -345,7 +345,10 @@ export function SettingsPage() {
                 </div>
                 {msg && <p className="text-sm text-muted-foreground">{msg}</p>}
                 <p className="text-xs text-muted-foreground pt-4">
-                  红宝书 · 乱序 · 6550 词 · React 前端
+                  红宝书 · 乱序 · 6550 词
+                  {typeof window !== "undefined" && window.EW_VERSION
+                    ? ` · ${window.EW_VERSION}`
+                    : ""}
                 </p>
               </CardContent>
             </Card>

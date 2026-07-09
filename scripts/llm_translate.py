@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""llm_translate.py — CLI mirror of web/llm.js for testing LLM translation.
+"""llm_translate.py — CLI mirror of frontend/src/lib/llm.ts for testing LLM translation.
 
 Usage:
   # list models

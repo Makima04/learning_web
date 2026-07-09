@@ -1,12 +1,8 @@
-"""seed_sentences.py — 把 frontend/public/papers.js 里 window.PAPERS 的真题例句灌入 sentences 表。
+"""seed_sentences.py — 把 web/papers.js 里 window.PAPERS 的真题例句灌入 sentences 表。
 
-papers.js 形如 `/* 注释 */\\nwindow.PAPERS=<json>;`。本脚本直接抠出 JSON 段 json.loads，
+papers.js 形如 `/* 注释 */\\nwindow.PAPERS=<json>;`。本脚本抠出 JSON 段 json.loads，
 遍历每个 paper.year → sections[].passages[] → words[].sentences[]，按 text 去重，
 INSERT OR IGNORE（首条 year/label 留下）。打印 `seeded N sentences (M new, K existed)`。
-
-paper.sections 的 passage 字段在 papers/*.json 里是 str，但在 papers.js（经
-match_vocab.py 处理后）里是统一的 passages[] 列表、每个 passage 含 words[]——
-本脚本以 papers.js 为准。
 """
 import json
 import sqlite3
@@ -14,26 +10,24 @@ from pathlib import Path
 
 from .db import DB_PATH, init_db, now_iso
 
-# 优先 frontend/public/papers.js（本地开发），回退 web/papers.js（Docker 镜像内只 COPY 了 web/）
 _ROOT = Path(__file__).resolve().parent.parent
-PAPERS_JS = _ROOT / "frontend" / "public" / "papers.js"
-PAPERS_JS_FALLBACK = _ROOT / "web" / "papers.js"
+# 数据源：web/papers.js（管线产物）。Docker 镜像内也会 COPY web/。
+PAPERS_JS = _ROOT / "web" / "papers.js"
+# 开发时若只在 public 有一份，兼容一下
+PAPERS_JS_FALLBACK = _ROOT / "frontend" / "public" / "papers.js"
 
 
 def parse_papers_js(path: Path):
     """读 papers.js，把 `window.PAPERS=<json>;` 的 JSON 段抠出来解析。
 
-    用 raw_decode 只解析首个 JSON 值，容忍尾部多余语句（如较新的
-    match_vocab.py 追加的 `window.PAPERS_META={...};`），避免 json.loads
-    因「Extra data」整体失败。
+    用 raw_decode 只解析首个 JSON 值，容忍尾部多余语句（如
+    match_vocab.py 追加的 `window.PAPERS_META={...};`）。
     """
     raw = path.read_text(encoding="utf-8")
-    # 直接找第一个 '='（即 window.PAPERS= 的赋值号）
     eq = raw.find("=")
     if eq < 0:
         raise RuntimeError("papers.js: 找不到 '='")
-    js = raw[eq + 1:]
-    # raw_decode 解析首个完整 JSON 值后忽略其后所有多余字符
+    js = raw[eq + 1 :]
     return json.JSONDecoder().raw_decode(js)[0]
 
 

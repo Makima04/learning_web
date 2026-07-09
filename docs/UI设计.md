@@ -1,10 +1,10 @@
 # UI 设计与功能文档
 
-本文档描述 english_web **现役前端 `frontend/`（React）** 的 UI 设计与交互功能要求。代码实现应以此为准；若发现实现与本文档不符，以本文档为准并修复实现（除非本文档已过时，则先更新文档）。
+本文档描述 english_web 前端（`frontend/` React）的 UI 设计与交互功能要求。代码实现应以此为准；若发现实现与本文档不符，以本文档为准并修复实现（除非本文档已过时，则先更新文档）。
 
-> **实现位置**：页面在 `frontend/src/pages/`，学习状态机在 `frontend/src/stores/study.ts` + `lib/srs.ts`。旧版 `web/` 仅作无 dist 时的回退。
+> **实现位置**：页面在 `frontend/src/pages/`，学习状态机在 `frontend/src/stores/study.ts` + `lib/srs.ts` / `lib/lookup.ts`。
 >
-> 状态机骨架见 `CLAUDE.md` 与 `frontend/src/lib/srs.ts`：卡片 `new → learn → review`，新词「评估 → 3 次练习 → 复习」。本文档补充各阶段的 UI 细则。
+> 状态机：卡片 `new → learn → review`，新词「评估 → 3 次练习 → 复习」。本文档补充各阶段的 UI 细则。
 
 ---
 
@@ -119,7 +119,7 @@
 
 ## 词形还原（点词查义 / 原文高亮）
 
-`lookupWord(surface)`（`web/app.js`）负责把原文里的变形形还原到词库原形，决定点词能否弹释义卡、原文词能否高亮。还原顺序（先命中先返，原形优先）：
+`lookupWord(surface)`（`frontend/src/lib/lookup.ts`）负责把原文里的变形形还原到词库原形，决定点词能否弹释义卡、原文词能否高亮。还原顺序（先命中先返，原形优先）：
 
 - 原形（surface 本身）
 - 复数 / 动词变形：`-s`、`-es`、`-ing`、`-ed`、`-ing→e`、`-ed→e`、`-ies→y`、`-ied→y`

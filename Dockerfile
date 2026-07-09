@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-# 多阶段：frontend 构建 React dist → runtime 挂 frontend/dist（无 dist 时 server 回退 web/）
+# 多阶段：frontend 构建 React dist → runtime 挂 frontend/dist + web/ 数据
 
 # ---- frontend build ----
 FROM node:22-slim AS frontend
@@ -7,7 +7,6 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-# data.js / papers.js 来自 web/，Vite public 复制进 dist
 COPY web/data.js public/data.js
 COPY web/papers.js public/papers.js
 RUN npm run build
@@ -30,6 +29,7 @@ COPY --from=deps /usr/local/bin /usr/local/bin
 WORKDIR /app
 
 COPY server/ ./server/
+# 数据产物：seed_sentences 与镜像内备用
 COPY web/ ./web/
 COPY --from=frontend /app/frontend/dist ./frontend/dist
 

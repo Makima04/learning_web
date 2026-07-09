@@ -20,6 +20,7 @@ report.txt
 papers/
 frontend/public/papers.js
 frontend/public/data.js
+frontend/public/version.js
 frontend/dist/
 
 # 编辑器/系统

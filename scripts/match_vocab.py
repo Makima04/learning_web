@@ -556,7 +556,7 @@ def main():
             paper["sections"].append(sec_out)
         all_papers.append(paper)
 
-    # 写 papers.js 到 web/（现役 vanilla 前端，server 同源挂载）。
+    # 写 papers.js 到 web/（数据产物目录；构建时拷到 frontend/public）。
     # CLAUDE.md：数据是构建产物；改源头（这里）再重跑，别手改 JS。
     out_paths = [
         base_dir / "web" / "papers.js",

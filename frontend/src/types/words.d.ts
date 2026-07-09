@@ -37,6 +37,7 @@ declare global {
   interface Window {
     WORDS: WordEntry[];
     PAPERS: Paper[];
+    EW_VERSION?: string;
     // 旧版可选的 baked 译文文件
     TRANS?: Record<string, string>;
   }
