@@ -1,4 +1,19 @@
 import { useState } from "react";
+import {
+  BookOpen,
+  ChevronRight,
+  FileText,
+  Languages,
+  LayoutDashboard,
+  LibraryBig,
+  Monitor,
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+  Sun,
+  UserRound,
+} from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useTheme } from "@/stores/theme";
 import { useAuth } from "@/stores/auth";
@@ -6,11 +21,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
-  { to: "/", label: "首页", icon: "🏠", end: true },
-  { to: "/papers", label: "真题", icon: "📚" },
-  { to: "/papers-recite", label: "真题记词", icon: "📖" },
-  { to: "/settings", label: "设置", icon: "⚙" },
-  { to: "/transmgr", label: "翻译管理", icon: "🌐" },
+  { to: "/", label: "学习概览", icon: LayoutDashboard, end: true },
+  { to: "/papers", label: "真题阅读", icon: FileText },
+  { to: "/papers-recite", label: "真题记词", icon: LibraryBig },
+  { to: "/transmgr", label: "翻译管理", icon: Languages },
+  { to: "/settings", label: "学习设置", icon: Settings },
 ];
 
 export function AppLayout() {
@@ -19,109 +34,123 @@ export function AppLayout() {
   const user = useAuth((s) => s.user);
   const navigate = useNavigate();
   const [navCollapsed, setNavCollapsed] = useState(false);
-
-  const themeIcon = mode === "dark" ? "🌙" : mode === "light" ? "☀️" : "💻";
+  const ThemeIcon = mode === "dark" ? Moon : mode === "light" ? Sun : Monitor;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <header className="h-14 border-b flex items-center justify-between px-4 shrink-0">
-        <div className="font-semibold flex items-center gap-2">
-          <span
-            className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-red-600/15 text-base"
-            aria-hidden
-          >
-            📕
-          </span>
-          <span className="text-red-700 dark:text-red-400">红宝书</span>
-          <small className="text-muted-foreground font-normal hidden sm:inline">
-            乱序·6550
-          </small>
+    <div className="min-h-screen bg-background text-foreground md:flex">
+      <aside
+        className={cn(
+          "hidden md:sticky md:top-0 md:flex h-screen shrink-0 flex-col border-r bg-card transition-[width] duration-200",
+          navCollapsed ? "w-[76px]" : "w-[250px]"
+        )}
+      >
+        <div className="flex h-20 items-center border-b px-4">
+          <NavLink to="/" className="flex min-w-0 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+              <BookOpen className="h-5 w-5" strokeWidth={2.4} />
+            </span>
+            {!navCollapsed && (
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">红宝书</span>
+                <span className="block text-xs text-muted-foreground">考研词汇 6550</span>
+              </span>
+            )}
+          </NavLink>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden md:inline-flex rounded-xl"
-            onClick={() => setNavCollapsed((v) => !v)}
-            title={navCollapsed ? "展开导航" : "折叠导航"}
-          >
-            {navCollapsed ? "»" : "«"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-xl"
-            onClick={cycle}
-            title="主题"
-          >
-            {themeIcon}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-xl"
-            title={user?.username || "账号"}
-            onClick={() => navigate("/settings")}
-          >
-            👤
-          </Button>
-        </div>
-      </header>
 
-      <div className="flex flex-1 min-h-0">
-        <aside
-          className={cn(
-            "hidden md:flex shrink-0 border-r flex-col p-2 gap-0.5 transition-[width] duration-200",
-            navCollapsed ? "w-[3.75rem]" : "w-48"
-          )}
-        >
-          {!navCollapsed && (
-            <div className="text-xs text-muted-foreground px-2 py-1.5">导航</div>
-          )}
-          {NAV.map((n) => (
+        <nav className="flex-1 space-y-1 p-3">
+          {!navCollapsed && <p className="px-3 py-2 text-xs font-medium text-muted-foreground">学习空间</p>}
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                title={item.label}
+                className={({ isActive }) =>
+                  cn(
+                    "group flex h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
+                    navCollapsed && "justify-center px-0",
+                    isActive
+                      ? "bg-accent font-semibold text-accent-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )
+                }
+              >
+                <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
+                {!navCollapsed && <span className="truncate">{item.label}</span>}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        <div className="border-t p-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-full justify-start px-3 text-muted-foreground"
+            title={navCollapsed ? "展开导航" : "收起导航"}
+            onClick={() => setNavCollapsed((value) => !value)}
+          >
+            {navCollapsed ? <PanelLeftOpen className="h-[18px] w-[18px]" /> : <PanelLeftClose className="h-[18px] w-[18px]" />}
+            {!navCollapsed && <span className="ml-1 text-sm">收起导航</span>}
+          </Button>
+        </div>
+      </aside>
+
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col pb-16 md:pb-0">
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-8">
+          <div className="flex items-center gap-3 md:hidden">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
+              <BookOpen className="h-4 w-4" />
+            </span>
+            <span className="text-sm font-semibold">红宝书</span>
+          </div>
+          <div className="hidden text-sm text-muted-foreground md:block">今日学习</div>
+          <div className="ml-auto flex items-center gap-1">
+            <Button variant="ghost" size="icon" title="切换主题" onClick={cycle}>
+              <ThemeIcon className="h-[18px] w-[18px]" strokeWidth={1.9} />
+            </Button>
+            <Button
+              variant="ghost"
+              className="hidden h-10 gap-2 px-3 sm:inline-flex"
+              title={user?.username || "登录或管理账号"}
+              onClick={() => navigate("/settings")}
+            >
+              <UserRound className="h-[18px] w-[18px]" strokeWidth={1.9} />
+              <span className="max-w-24 truncate text-sm">{user?.username || "账号"}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            <Button variant="ghost" size="icon" className="sm:hidden" title="账号" onClick={() => navigate("/settings")}>
+              <UserRound className="h-[18px] w-[18px]" strokeWidth={1.9} />
+            </Button>
+          </div>
+        </header>
+
+        <main className="min-h-0 flex-1 overflow-auto"><Outlet /></main>
+      </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-4 border-t bg-card md:hidden">
+        {NAV.slice(0, 4).map((item) => {
+          const Icon = item.icon;
+          return (
             <NavLink
-              key={n.to}
-              to={n.to}
-              end={n.end}
-              title={n.label}
+              key={item.to}
+              to={item.to}
+              end={item.end}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
-                  navCollapsed && "justify-center px-0",
-                  isActive
-                    ? "bg-accent text-accent-foreground font-medium"
-                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                  "flex flex-col items-center justify-center gap-1 text-[11px]",
+                  isActive ? "font-semibold text-primary" : "text-muted-foreground"
                 )
               }
             >
-              <span className="text-base shrink-0">{n.icon}</span>
-              {!navCollapsed && <span className="truncate">{n.label}</span>}
+              <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
+              <span className="max-w-full truncate px-1">{item.label.replace("学习", "")}</span>
             </NavLink>
-          ))}
-        </aside>
-
-        <main className="flex-1 min-w-0 overflow-auto">
-          <Outlet />
-        </main>
-      </div>
-
-      <nav className="md:hidden border-t flex shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        {NAV.slice(0, 4).map((n) => (
-          <NavLink
-            key={n.to}
-            to={n.to}
-            end={n.end}
-            className={({ isActive }) =>
-              cn(
-                "flex-1 flex flex-col items-center gap-0.5 py-2 text-[11px] transition-colors",
-                isActive ? "text-primary font-medium" : "text-muted-foreground"
-              )
-            }
-          >
-            <span className="text-base">{n.icon}</span>
-            {n.label}
-          </NavLink>
-        ))}
+          );
+        })}
       </nav>
     </div>
   );

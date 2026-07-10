@@ -30,6 +30,8 @@ pub struct CardState {
     pub step: Option<i32>,
     #[serde(default)]
     pub quiz: Option<i32>,
+    #[serde(default)]
+    pub updated_at: Option<i64>,
 }
 
 #[derive(Deserialize)]
@@ -65,10 +67,12 @@ async fn list_cards(
             Option<i32>,
             Option<i32>,
             Option<i32>,
+            Option<i64>,
         ),
     >(
         r#"
-        SELECT word_idx, state, due, ivl, ease, reps, lapses, step, quiz
+        SELECT word_idx, state, due, ivl, ease, reps, lapses, step, quiz,
+               (EXTRACT(EPOCH FROM updated_at) * 1000)::BIGINT
         FROM cards WHERE user_id = $1
         "#,
     )
@@ -77,7 +81,7 @@ async fn list_cards(
     .await?;
 
     let mut cards = Map::new();
-    for (idx, state_s, due, ivl, ease, reps, lapses, step, quiz) in rows {
+    for (idx, state_s, due, ivl, ease, reps, lapses, step, quiz, updated_at) in rows {
         cards.insert(
             idx.to_string(),
             json!({
@@ -89,6 +93,7 @@ async fn list_cards(
                 "lapses": lapses,
                 "step": step,
                 "quiz": quiz,
+                "updated_at": updated_at,
             }),
         );
     }
@@ -125,10 +130,11 @@ async fn upsert_card(
     idx: i32,
     c: &CardState,
 ) -> AppResult<()> {
+    let updated_at = c.updated_at.unwrap_or_else(|| Utc::now().timestamp_millis());
     sqlx::query(
         r#"
         INSERT INTO cards (user_id, word_idx, state, due, ivl, ease, reps, lapses, step, quiz, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,to_timestamp($11::DOUBLE PRECISION / 1000))
         ON CONFLICT (user_id, word_idx) DO UPDATE SET
             state = EXCLUDED.state,
             due = EXCLUDED.due,
@@ -139,6 +145,7 @@ async fn upsert_card(
             step = EXCLUDED.step,
             quiz = EXCLUDED.quiz,
             updated_at = EXCLUDED.updated_at
+        WHERE cards.updated_at IS NULL OR EXCLUDED.updated_at >= cards.updated_at
         "#,
     )
     .bind(user_id)
@@ -151,7 +158,7 @@ async fn upsert_card(
     .bind(c.lapses)
     .bind(c.step)
     .bind(c.quiz)
-    .bind(Utc::now())
+    .bind(updated_at)
     .execute(&state.pool)
     .await?;
     Ok(())

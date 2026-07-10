@@ -42,6 +42,8 @@ export interface CardDTO {
   /** 旧字段 step 已废弃，新流程用 quiz（1/2/3=待做第 N 次练习）。 */
   step?: number | null;
   quiz?: number | null;
+  /** Unix epoch milliseconds. Used to resolve cross-device card writes. */
+  updated_at?: number | null;
 }
 
 export interface MetaDTO {

@@ -7,6 +7,7 @@ export type Direction = "en2cn" | "cn2en" | "random";
 
 export interface Settings {
   dailyNew: number;
+  dailyReview: number;
   direction: Direction;
   autoSpeak: boolean;
   speakOnWordClick: boolean;
@@ -19,6 +20,7 @@ const KEY = "ew.set.v1";
 
 export const DEFAULT_SETTINGS: Settings = {
   dailyNew: 20,
+  dailyReview: 100,
   direction: "en2cn",
   autoSpeak: true,
   speakOnWordClick: true,

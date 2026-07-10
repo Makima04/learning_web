@@ -71,6 +71,7 @@ export function SettingsPage() {
       meta: useMeta.getState().meta,
       settings: {
         dailyNew: settings.dailyNew,
+        dailyReview: settings.dailyReview,
         direction: settings.direction,
         autoSpeak: settings.autoSpeak,
         speakOnWordClick: settings.speakOnWordClick,
@@ -152,6 +153,20 @@ export function SettingsPage() {
                     value={settings.dailyNew}
                     onChange={(e) =>
                       setSettings({ dailyNew: Math.max(1, +e.target.value || 1) })
+                    }
+                    className="w-28"
+                  />
+                </Field>
+                <Field label="每日复习上限">
+                  <Input
+                    type="number"
+                    min={10}
+                    max={500}
+                    value={settings.dailyReview}
+                    onChange={(e) =>
+                      setSettings({
+                        dailyReview: Math.max(10, +e.target.value || 100),
+                      })
                     }
                     className="w-28"
                   />

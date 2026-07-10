@@ -6,9 +6,11 @@ use axum::{
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::time::Instant;
 
 use crate::auth::{
-    gen_salt, gen_token, hash_password, needs_rehash, session_expires_at, verify_password, AuthUser,
+    gen_salt, gen_token, hash_password, session_expires_at, verify_password, AuthUser,
+    PasswordHashVersion,
 };
 use crate::db;
 use crate::error::{AppError, AppResult};
@@ -98,35 +100,82 @@ async fn login(
     axum::extract::ConnectInfo(addr): axum::extract::ConnectInfo<std::net::SocketAddr>,
     Json(body): Json<AuthBody>,
 ) -> AppResult<Json<serde_json::Value>> {
+    let total_started = Instant::now();
     let ip = db::client_ip(&headers, Some(addr));
     state.rate.check(&ip, "login", 10, 60)?;
 
     let username = body.username.trim().to_string();
+    let lookup_started = Instant::now();
     let row = sqlx::query_as::<_, (i64, String, String, String, bool)>(
         "SELECT id, username, pw_hash, salt, is_admin FROM users WHERE username = $1",
     )
     .bind(&username)
     .fetch_optional(&state.pool)
     .await?;
+    let lookup_ms = lookup_started.elapsed().as_millis() as u64;
 
     let Some((id, username, pw_hash, salt, is_admin)) = row else {
+        tracing::info!(
+            event = "auth.login_timing",
+            outcome = "invalid_credentials",
+            account_found = false,
+            lookup_ms,
+            total_ms = total_started.elapsed().as_millis() as u64,
+            "login timing"
+        );
         return Err(AppError::Unauthorized("invalid credentials".into()));
     };
 
-    if !verify_password(&body.password, &salt, &pw_hash) {
+    let verify_started = Instant::now();
+    let password_version = verify_password(&body.password, &salt, &pw_hash);
+    let verify_ms = verify_started.elapsed().as_millis() as u64;
+    let Some(password_version) = password_version else {
+        tracing::info!(
+            event = "auth.login_timing",
+            outcome = "invalid_credentials",
+            user_id = id,
+            account_found = true,
+            lookup_ms,
+            verify_ms,
+            total_ms = total_started.elapsed().as_millis() as u64,
+            "login timing"
+        );
         return Err(AppError::Unauthorized("invalid credentials".into()));
-    }
+    };
 
-    if needs_rehash(&body.password, &salt, &pw_hash) {
+    let rehash_needed = password_version == PasswordHashVersion::Legacy;
+    let mut rehash_hash_ms = 0;
+    let mut rehash_write_ms = 0;
+    if rehash_needed {
+        let rehash_hash_started = Instant::now();
         let new_hash = hash_password(&body.password, &salt);
+        rehash_hash_ms = rehash_hash_started.elapsed().as_millis() as u64;
+
+        let rehash_write_started = Instant::now();
         let _ = sqlx::query("UPDATE users SET pw_hash = $1 WHERE id = $2")
             .bind(&new_hash)
             .bind(id)
             .execute(&state.pool)
             .await;
+        rehash_write_ms = rehash_write_started.elapsed().as_millis() as u64;
     }
 
+    let session_started = Instant::now();
     let token = create_session(&state, id).await?;
+    let session_ms = session_started.elapsed().as_millis() as u64;
+    tracing::info!(
+        event = "auth.login_timing",
+        outcome = "success",
+        user_id = id,
+        lookup_ms,
+        verify_ms,
+        rehash_needed,
+        rehash_hash_ms,
+        rehash_write_ms,
+        session_ms,
+        total_ms = total_started.elapsed().as_millis() as u64,
+        "login timing"
+    );
     Ok(Json(json!({
         "token": token,
         "user": UserOut { id, username, is_admin },

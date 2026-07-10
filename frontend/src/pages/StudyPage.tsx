@@ -33,7 +33,7 @@ export function StudyPage() {
   const handleRate = useStudy((s) => s.handleRate);
   const assessFullNext = useStudy((s) => s.assessFullNext);
   const assessFullMistake = useStudy((s) => s.assessFullMistake);
-  const quiz1Answer = useStudy((s) => s.quiz1Answer);
+  const quiz2Answer = useStudy((s) => s.quiz2Answer);
   const flip = useStudy((s) => s.flip);
   const setQuizChoices = useStudy((s) => s.setQuizChoices);
   const setHintVisible = useStudy((s) => s.setHintVisible);
@@ -62,9 +62,9 @@ export function StudyPage() {
     null
   );
 
-  // quiz1 choices init
+  // quiz2 choices init
   useEffect(() => {
-    if (uiPhase !== "quiz1" || !item || !entry) return;
+    if (uiPhase !== "quiz2" || !item || !entry) return;
     const correctCn = entry[2]?.[0]?.[1] || "";
     const WORDS = getWords();
     const pool = WORDS.filter((w) => w[0] !== item.idx);
@@ -107,12 +107,12 @@ export function StudyPage() {
     if (!settings.autoSpeak || !entry) return;
     if (
       uiPhase === "assess-front" ||
-      uiPhase === "quiz1" ||
-      uiPhase === "quiz2-front" ||
+      uiPhase === "quiz1-front" ||
+      uiPhase === "quiz1-back" ||
+      uiPhase === "quiz2" ||
       (uiPhase === "review-front" && !useCnFirst()) ||
       uiPhase === "assess-full" ||
       uiPhase === "review-back" ||
-      uiPhase === "quiz2-back" ||
       uiPhase === "quiz3-back"
     ) {
       speakEnglish(entry[1], settings.rate);
@@ -139,13 +139,13 @@ export function StudyPage() {
         if (uiPhase === "assess-full") {
           assessFullNext();
         } else if (
-          uiPhase === "quiz2-front" ||
+          uiPhase === "quiz1-front" ||
           uiPhase === "quiz3-front" ||
           uiPhase === "review-front"
         ) {
           flip();
         } else if (
-          (uiPhase === "review-back" || uiPhase === "quiz2-back") &&
+          uiPhase === "review-back" &&
           !transText &&
           example
         ) {
@@ -160,10 +160,10 @@ export function StudyPage() {
       } else if (uiPhase === "assess-full") {
         if (e.key === "1") assessFullNext();
         if (e.key === "2" && assessChoice !== "again") assessFullMistake();
-      } else if (uiPhase === "quiz1" && !quizLocked) {
+      } else if (uiPhase === "quiz2" && !quizLocked) {
         const i = parseInt(e.key, 10) - 1;
-        if (i >= 0 && i < 4) quiz1Answer(i);
-      } else if (uiPhase === "quiz2-back" || uiPhase === "quiz3-back") {
+        if (i >= 0 && i < 4) quiz2Answer(i);
+      } else if (uiPhase === "quiz1-back" || uiPhase === "quiz3-back") {
         if (e.key === "1") handleRate("good");
         if (e.key === "2") handleRate("again");
       } else if (uiPhase === "review-back") {
@@ -209,6 +209,10 @@ export function StudyPage() {
     const rect = w.getBoundingClientRect();
     setPop({ word: surface, x: rect.left + rect.width / 2, y: rect.bottom + 6 });
     if (settings.speakOnWordClick) speakEnglish(surface, settings.rate);
+  }
+
+  function onCardBlankClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) void loadTrans();
   }
 
   // empty / wrong entry
@@ -362,7 +366,7 @@ export function StudyPage() {
 
   if (uiPhase === "assess-front") {
     body = (
-      <div className="relative flex flex-col items-center justify-center min-h-[320px] p-6">
+      <div className="relative flex flex-col items-center justify-center min-h-[360px] p-6 md:min-h-[460px] md:p-8">
         <div className="text-xs text-muted-foreground mb-4 self-start">新词 · 评估</div>
         <SpeakBtn />
         <div className="text-3xl md:text-4xl font-semibold tracking-wide">{entry[1]}</div>
@@ -395,7 +399,10 @@ export function StudyPage() {
       again: "已标记「忘记」→ 进入 3 次练习",
     };
     body = (
-      <div className="relative flex flex-col items-center p-6 min-h-[320px]">
+      <div
+        className="relative flex flex-col items-center min-h-[360px] p-6 md:min-h-[460px] md:p-8"
+        onClick={onCardBlankClick}
+      >
         <div className="text-xs text-muted-foreground mb-3 self-start">
           {noteMap[assessChoice || ""] || ""}
         </div>
@@ -428,63 +435,23 @@ export function StudyPage() {
           }}
         />
       );
-  } else if (uiPhase === "quiz1") {
-    body = (
-      <div className="relative flex flex-col p-6 min-h-[320px]">
-        <div className="text-xs text-muted-foreground mb-3">练习 1 · 选释义</div>
-        <SpeakBtn withEx />
-        {example ? (
-          <div className="mb-4" onClick={onWordClick}>
-            <div className="text-xs text-muted-foreground mb-1">
-              练习 1 · 选出加粗词的含义
-            </div>
-            <div
-              className="text-base leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: exHTML }}
-            />
-          </div>
-        ) : (
-          <div className="text-3xl font-semibold mb-4 text-center">{entry[1]}</div>
-        )}
-        <div className="grid gap-2 mt-auto">
-          {quizChoices.map((c, i) => (
-            <button
-              key={i}
-              disabled={quizLocked}
-              onClick={() => quiz1Answer(i)}
-              className={cn(
-                "text-left rounded-lg border px-3 py-3 text-sm transition-colors",
-                "hover:bg-accent disabled:opacity-80",
-                quizLocked && c.correct && "border-emerald-500 bg-emerald-500/10",
-                quizLocked && !c.correct && "opacity-50"
-              )}
-            >
-              <span className="inline-flex w-6 h-6 items-center justify-center rounded bg-muted text-xs mr-2">
-                {i + 1}
-              </span>
-              {c.cn}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  } else if (uiPhase === "quiz2-front") {
+  } else if (uiPhase === "quiz1-front") {
     body = (
       <div
-        className="relative flex flex-col items-center justify-center min-h-[320px] p-6 cursor-pointer"
+        className="relative flex flex-col items-center justify-center min-h-[360px] p-6 cursor-pointer md:min-h-[460px] md:p-8"
         onClick={() => flip()}
       >
-        <div className="text-xs text-muted-foreground mb-4 self-start">练习 2 · 回想释义</div>
+        <div className="text-xs text-muted-foreground mb-4 self-start">练习 1 · 回想释义</div>
         <SpeakBtn withEx />
         <div className="text-3xl font-semibold">{entry[1]}</div>
         <div className="text-sm text-muted-foreground mt-6">点击卡片或按空格显示释义</div>
       </div>
     );
     showFlip = true;
-  } else if (uiPhase === "quiz2-back") {
+  } else if (uiPhase === "quiz1-back") {
     body = (
-      <div className="relative flex flex-col items-center p-6 min-h-[320px]">
-        <div className="text-xs text-muted-foreground mb-3 self-start">练习 2</div>
+      <div className="relative flex flex-col items-center min-h-[360px] p-6 md:min-h-[460px] md:p-8">
+        <div className="text-xs text-muted-foreground mb-3 self-start">练习 1</div>
         <SpeakBtn withEx />
         <div className="text-3xl font-semibold mb-3">{entry[1]}</div>
         <div
@@ -503,10 +470,50 @@ export function StudyPage() {
         onRate={handleRate}
       />
     );
+  } else if (uiPhase === "quiz2") {
+    body = (
+      <div className="relative flex min-h-[360px] flex-col p-6 md:min-h-[460px] md:p-8">
+        <div className="text-xs text-muted-foreground mb-3">练习 2 · 选释义</div>
+        <SpeakBtn withEx />
+        {example ? (
+          <div className="mb-4" onClick={onWordClick}>
+            <div className="text-xs text-muted-foreground mb-1">
+              练习 2 · 选出加粗词的含义
+            </div>
+            <div
+              className="text-base leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: exHTML }}
+            />
+          </div>
+        ) : (
+          <div className="text-3xl font-semibold mb-4 text-center">{entry[1]}</div>
+        )}
+        <div className="grid gap-2 mt-auto">
+          {quizChoices.map((c, i) => (
+            <button
+              key={i}
+              disabled={quizLocked}
+              onClick={() => quiz2Answer(i)}
+              className={cn(
+                "text-left rounded-lg border px-3 py-3 text-sm transition-colors",
+                "hover:bg-accent disabled:opacity-80",
+                quizLocked && c.correct && "border-emerald-500 bg-emerald-500/10",
+                quizLocked && !c.correct && "opacity-50"
+              )}
+            >
+              <span className="inline-flex w-6 h-6 items-center justify-center rounded bg-muted text-xs mr-2">
+                {i + 1}
+              </span>
+              {c.cn}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   } else if (uiPhase === "quiz3-front") {
     body = (
       <div
-        className="relative flex flex-col items-center justify-center min-h-[320px] p-6 cursor-pointer"
+        className="relative flex flex-col items-center justify-center min-h-[360px] p-6 cursor-pointer md:min-h-[460px] md:p-8"
         onClick={() => flip()}
       >
         <div className="text-xs text-muted-foreground mb-4 self-start">练习 3 · 回想单词</div>
@@ -517,7 +524,7 @@ export function StudyPage() {
     showFlip = true;
   } else if (uiPhase === "quiz3-back") {
     body = (
-      <div className="relative flex flex-col items-center p-6 min-h-[320px]">
+      <div className="relative flex flex-col items-center min-h-[360px] p-6 md:min-h-[460px] md:p-8">
         <div className="text-xs text-muted-foreground mb-3 self-start">练习 3</div>
         <SpeakBtn withEx />
         <div className="text-3xl font-semibold mb-3">{entry[1]}</div>
@@ -541,7 +548,7 @@ export function StudyPage() {
     const cnFirst = useCnFirst();
     body = (
       <div
-        className="relative flex flex-col items-center justify-center min-h-[320px] p-6 cursor-pointer"
+        className="relative flex flex-col items-center justify-center min-h-[360px] p-6 cursor-pointer md:min-h-[460px] md:p-8"
         onClick={() => flip()}
       >
         <div className="text-xs text-muted-foreground mb-4 self-start">复习</div>
@@ -572,7 +579,10 @@ export function StudyPage() {
     showFlip = true;
   } else if (uiPhase === "review-back") {
     body = (
-      <div className="relative flex flex-col items-center p-6 min-h-[320px]">
+      <div
+        className="relative flex flex-col items-center min-h-[360px] p-6 md:min-h-[460px] md:p-8"
+        onClick={onCardBlankClick}
+      >
         <div className="text-xs text-muted-foreground mb-3 self-start">复习</div>
         <SpeakBtn withEx />
         <div className="text-3xl font-semibold mb-3">{entry[1]}</div>
@@ -598,7 +608,7 @@ export function StudyPage() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-[calc(100vh-3.5rem)]">
+    <div className="flex h-[calc(100dvh-8rem)] flex-col overflow-hidden md:h-[calc(100vh-4rem)]">
       <header className="flex items-center gap-3 px-3 py-2 border-b shrink-0">
         <Button
           variant="ghost"
@@ -621,18 +631,22 @@ export function StudyPage() {
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-lg rounded-xl border bg-card shadow-sm overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto p-4 md:p-8">
+        <div className="w-full max-w-lg overflow-hidden rounded-xl border bg-card shadow-sm md:max-w-2xl">
           {body}
         </div>
         {showFlip && (
-          <Button className="mt-4 w-full max-w-lg" onClick={() => flip()}>
+          <Button className="mt-4 w-full max-w-lg md:max-w-2xl" onClick={() => flip()}>
             显示答案
           </Button>
         )}
       </div>
 
-      {rating && <div className="shrink-0 border-t p-3 bg-background">{rating}</div>}
+      {rating && (
+        <div className="shrink-0 border-t bg-background p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          {rating}
+        </div>
+      )}
 
       {pop && (
         <WordPopover
@@ -658,7 +672,7 @@ function RateRow({
   onAction?: (a: string) => void;
 }) {
   return (
-    <div className={cn("grid gap-2 max-w-lg mx-auto", className)}>
+    <div className={cn("mx-auto grid max-w-lg gap-2 md:max-w-2xl", className)}>
       {btns.map((b) => (
         <button
           key={b.k + b.l}

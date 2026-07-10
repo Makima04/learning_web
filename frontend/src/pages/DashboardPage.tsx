@@ -1,436 +1,216 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowUpRight,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  GraduationCap,
+  RotateCcw,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useStudy } from "@/stores/study";
-import { useAuth } from "@/stores/auth";
-import { useCards } from "@/stores/cards";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { DAY } from "@/lib/day";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/stores/auth";
+import { useCards } from "@/stores/cards";
+import { useStudy } from "@/stores/study";
 
-function tipFor(s: {
-  due: number;
-  newAvailable: number;
-  doneToday: number;
-  learned: number;
-}): string {
-  if (s.due > 0 && s.due >= s.newAvailable)
-    return `有 ${s.due} 张待复习，建议先清掉再学新词`;
-  if (s.newAvailable > 0) return `今日还可学 ${s.newAvailable} 个新词，加油`;
-  if (s.due === 0 && s.newAvailable === 0)
-    return s.doneToday > 0
-      ? "今日目标已完成，休息一下或去读真题吧"
-      : "今天没有待办，去真题里捡几个词也可以";
-  return `已掌握 ${s.learned} 词，继续保持节奏`;
+type Tone = "quiet" | "new" | "review" | "mastered";
+
+function tipFor(snapshot: { due: number; newAvailable: number; doneToday: number }): string {
+  if (snapshot.due > 0) return `有 ${snapshot.due} 个词正在等你复习，先处理它们会更轻松。`;
+  if (snapshot.newAvailable > 0) return `今天还有 ${snapshot.newAvailable} 个新词，保持这个节奏就很好。`;
+  return snapshot.doneToday > 0 ? "今天的任务已经完成，去读一篇真题巩固一下。" : "今天没有待办，去真题里继续积累语感。";
+}
+
+function Metric({ icon: Icon, label, value, tone }: { icon: LucideIcon; label: string; value: number; tone: Tone }) {
+  const toneClass = {
+    quiet: "bg-muted text-muted-foreground",
+    new: "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
+    review: "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
+    mastered: "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
+  }[tone];
+
+  return (
+    <Card className="border-border/80 shadow-none">
+      <CardContent className="flex items-center gap-3 p-4">
+        <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", toneClass)}>
+          <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="mt-0.5 text-2xl font-semibold leading-none tnum">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const snapshot = useStudy((s) => s.snapshot);
-  const startLearn = useStudy((s) => s.startLearn);
-  const startReview = useStudy((s) => s.startReview);
-  const cards = useCards((s) => s.cards);
-  const user = useAuth((s) => s.user);
-  const [aboutOpen, setAboutOpen] = useState(false);
-
-  const s = snapshot();
-  const todayGoal = s.due + s.newAvailable;
-  const done = s.doneToday;
-  const pct = todayGoal > 0 ? Math.min(1, done / todayGoal) : done > 0 ? 1 : 0;
-  const pctLabel = Math.round(pct * 100);
-  const C = 2 * Math.PI * 52;
-  const tip = tipFor(s);
+  const snapshot = useStudy((state) => state.snapshot);
+  const startLearn = useStudy((state) => state.startLearn);
+  const startReview = useStudy((state) => state.startReview);
+  const cards = useCards((state) => state.cards);
+  const user = useAuth((state) => state.user);
+  const stats = snapshot();
+  const totalToday = stats.todayPlan;
+  const done = stats.doneToday;
+  const progress = totalToday > 0 ? Math.min(1, done / totalToday) : done > 0 ? 1 : 0;
+  const progressLabel = Math.round(progress * 100);
+  const dateLabel = new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "short" }).format(new Date());
 
   const forecast = useMemo(() => {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const buckets = new Array(7).fill(0) as number[];
-    for (const idx in cards) {
-      const c = cards[+idx];
-      if (!c || c.state !== "review") continue;
-      const dd = Math.floor((c.due - startOfDay.getTime()) / DAY);
-      if (dd >= 0 && dd < 7) buckets[dd]++;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const buckets = new Array<number>(7).fill(0);
+    for (const key in cards) {
+      const card = cards[Number(key)];
+      if (!card || card.state !== "review") continue;
+      const day = Math.floor((card.due - today.getTime()) / DAY);
+      if (day >= 0 && day < buckets.length) buckets[day] += 1;
     }
     return buckets;
   }, [cards]);
-  const maxF = Math.max(1, ...forecast);
-  const hasForecast = forecast.some((n) => n > 0);
-  const labels = ["今", "明", "+2", "+3", "+4", "+5", "+6"];
-  const tot = s.total || 1;
 
-  function onStart() {
+  const maxForecast = Math.max(1, ...forecast);
+  const labels = ["今天", "明天", "周+2", "周+3", "周+4", "周+5", "周+6"];
+  const knownPercent = stats.total ? (stats.mastered / stats.total) * 100 : 0;
+  const reviewingPercent = stats.total
+    ? ((stats.reviewing - stats.mastered) / stats.total) * 100
+    : 0;
+  const learningPercent = stats.total ? (stats.learn / stats.total) * 100 : 0;
+
+  function beginLearn() {
     startLearn();
     navigate("/study");
   }
-  function onReview() {
+
+  function beginReview() {
     startReview();
     navigate("/study");
   }
 
-  const stats: {
-    label: string;
-    value: number;
-    icon: string;
-    tone: "muted" | "new" | "due" | "ok";
-  }[] = [
-    { label: "今日完成", value: done, icon: "✓", tone: "muted" },
-    { label: "新词待背", value: s.newAvailable, icon: "✨", tone: "new" },
-    { label: "待复习", value: s.due, icon: "🔁", tone: "due" },
-    { label: "已学", value: s.learned, icon: "📚", tone: "ok" },
-  ];
-
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-        {stats.map((x) => (
-          <Card
-            key={x.label}
-            className={cn(
-              "rounded-xl border-transparent shadow-sm",
-              x.tone === "due" &&
-                x.value > 0 &&
-                "bg-destructive/10 ring-1 ring-destructive/30",
-              x.tone === "new" &&
-                x.value > 0 &&
-                "bg-amber-500/10 ring-1 ring-amber-500/30",
-              x.tone === "muted" && "bg-muted/40",
-              x.tone === "ok" && "bg-card"
-            )}
-          >
-            <CardContent className="p-3.5 flex items-center gap-2.5">
-              <div
-                className={cn(
-                  "text-xl shrink-0",
-                  x.tone === "muted" && "opacity-50",
-                  x.tone === "due" && x.value > 0 && "text-destructive",
-                  x.tone === "new" && x.value > 0 && "text-amber-600 dark:text-amber-400"
-                )}
-              >
-                {x.icon}
-              </div>
-              <div className="min-w-0">
-                <div className="text-[11px] text-muted-foreground leading-tight">
-                  {x.label}
-                </div>
-                <div
-                  className={cn(
-                    "font-bold tnum leading-tight tracking-tight",
-                    x.tone === "muted" && "text-xl text-muted-foreground",
-                    x.tone === "due" &&
-                      x.value > 0 &&
-                      "text-3xl text-destructive",
-                    x.tone === "new" &&
-                      x.value > 0 &&
-                      "text-3xl text-amber-600 dark:text-amber-400",
-                    (x.tone === "ok" ||
-                      (x.tone === "due" && x.value === 0) ||
-                      (x.tone === "new" && x.value === 0)) &&
-                      "text-2xl"
-                  )}
-                >
-                  {x.value}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid md:grid-cols-[1fr_240px] gap-4 items-start">
-        <div className="space-y-4">
-          <Card className="rounded-xl bg-card shadow-md border-border/60">
-            <CardContent className="p-5 md:p-6 space-y-5">
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0 space-y-1">
-                  <div className="text-xs text-muted-foreground">欢迎回来</div>
-                  <div className="text-xl font-semibold truncate">
-                    {user?.username || "背词人"}
-                  </div>
-                  <div className="text-sm text-muted-foreground leading-snug">
-                    {tip}
-                  </div>
-                  {done > 0 && (
-                    <div className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400 mt-1">
-                      <span aria-hidden>🔥</span>
-                      今日已完成 {done} 词
-                      {pctLabel >= 100 ? " · 目标达成！" : ` · ${pctLabel}%`}
-                    </div>
-                  )}
-                </div>
-                <div className="relative w-28 h-28 shrink-0">
-                  <svg
-                    className="w-full h-full -rotate-90"
-                    viewBox="0 0 120 120"
-                    aria-hidden
-                  >
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="52"
-                      fill="none"
-                      stroke="hsl(var(--muted))"
-                      strokeWidth="10"
-                    />
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="52"
-                      fill="none"
-                      stroke={
-                        pct >= 1
-                          ? "hsl(142 70% 45%)"
-                          : "hsl(var(--primary))"
-                      }
-                      strokeWidth="10"
-                      strokeDasharray={C}
-                      strokeDashoffset={C * (1 - pct)}
-                      strokeLinecap="round"
-                      className="transition-[stroke-dashoffset] duration-500 ease-out"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-2xl font-bold tnum leading-none">
-                      {pctLabel}%
-                    </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5 tnum">
-                      {done}/{todayGoal || "—"}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      今日目标
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {todayGoal > 0 && (
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>今日学习计划</span>
-                    <span className="tnum">
-                      {done} / {todayGoal}
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={cn(
-                        "h-full rounded-full transition-all duration-500 ease-out",
-                        pct >= 1 ? "bg-emerald-500" : "bg-primary"
-                      )}
-                      style={{ width: `${pct * 100}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2.5">
-                <Button
-                  className={cn(
-                    "w-full h-14 text-base rounded-2xl font-semibold shadow-md shadow-primary/25",
-                    "hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all",
-                    s.newAvailable === 0 && "opacity-90"
-                  )}
-                  onClick={onStart}
-                >
-                  {s.newAvailable === 0
-                    ? "今日新词已学完 🎉"
-                    : `学习新词 · ${s.newAvailable} 个待学`}
-                </Button>
-                <Button
-                  variant="secondary"
-                  className={cn(
-                    "w-full h-12 text-base rounded-xl",
-                    s.due > 0 &&
-                      "bg-destructive/15 text-destructive hover:bg-destructive/25 border border-destructive/20"
-                  )}
-                  onClick={onReview}
-                  disabled={s.due === 0}
-                >
-                  {s.due === 0
-                    ? "暂无待复习"
-                    : `🔁 复习 · ${s.due} 张到期`}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full h-10 text-sm text-muted-foreground hover:text-foreground"
-                  onClick={() => navigate("/papers")}
-                >
-                  📚 真题 · 读原文
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl">
-            <CardHeader className="pb-2 pt-5 px-5">
-              <CardTitle className="text-base">
-                未来 7 天复习量预测{" "}
-                <span className="text-muted-foreground font-normal text-sm">
-                  · 基于遗忘曲线
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-5 pb-5">
-              {!hasForecast ? (
-                <div className="h-32 flex flex-col items-center justify-center gap-2 text-center rounded-xl bg-muted/40 border border-dashed border-border">
-                  <div className="text-3xl opacity-60" aria-hidden>
-                    📈
-                  </div>
-                  <p className="text-sm text-muted-foreground max-w-[16rem]">
-                    开始学习后这里会显示你的复习预测～
-                  </p>
-                </div>
-              ) : (
-                <div className="flex items-end gap-2 h-36">
-                  {forecast.map((n, i) => {
-                    const isToday = i === 0;
-                    const heavy = n > 0 && n === maxF;
-                    return (
-                      <div
-                        key={i}
-                        className="flex-1 flex flex-col items-center gap-1 h-full justify-end"
-                      >
-                        <div
-                          className={cn(
-                            "text-xs tnum",
-                            isToday
-                              ? "text-primary font-semibold"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          {n}
-                        </div>
-                        <div
-                          className={cn(
-                            "w-full rounded-t-md transition-all",
-                            isToday && "bg-primary",
-                            !isToday && heavy && "bg-primary/55",
-                            !isToday && !heavy && "bg-primary/35"
-                          )}
-                          style={{
-                            height: `${(n / maxF) * 78}%`,
-                            minHeight: n ? 6 : 0,
-                          }}
-                        />
-                        <div
-                          className={cn(
-                            "text-xs",
-                            isToday
-                              ? "text-primary font-medium"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          {labels[i]}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl">
-            <CardHeader className="pb-2 pt-5 px-5">
-              <CardTitle className="text-base">词库掌握进度</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 px-5 pb-5">
-              <div className="h-3 rounded-full overflow-hidden flex bg-muted">
-                <div
-                  className="bg-emerald-500 transition-all duration-500"
-                  style={{ width: `${(s.learned / tot) * 100}%` }}
-                />
-                <div
-                  className="bg-amber-400 transition-all duration-500"
-                  style={{ width: `${(s.learn / tot) * 100}%` }}
-                />
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <span>
-                  已掌握{" "}
-                  <b className="text-foreground tnum">{s.learned}</b>
-                </span>
-                <span>
-                  学习中 <b className="text-foreground tnum">{s.learn}</b>
-                </span>
-                <span>
-                  未学 <b className="text-foreground tnum">{s.unseen}</b>
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-8">
+      <section className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" />{dateLabel}</p>
+          <h1 className="text-2xl font-semibold">{user?.username ? `${user.username}，继续前进` : "今天，继续前进"}</h1>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{tipFor(stats)}</p>
         </div>
+        <Button variant="outline" className="shrink-0" onClick={() => navigate("/papers")}>
+          阅读真题 <ArrowUpRight className="h-4 w-4" />
+        </Button>
+      </section>
 
-        <div className="space-y-4 md:sticky md:top-4">
-          <Card className="rounded-xl">
-            <CardHeader className="pb-2 pt-4 px-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                快捷操作
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-2 pb-2 space-y-0.5">
-              {[
-                { label: "真题", desc: "读原文练词", icon: "📚", to: "/papers" },
-                {
-                  label: "真题记词",
-                  desc: "按篇背词",
-                  icon: "📖",
-                  to: "/papers-recite",
-                },
-                {
-                  label: "翻译管理",
-                  desc: "例句译文",
-                  icon: "🌐",
-                  to: "/transmgr",
-                },
-                { label: "设置", desc: "学习偏好", icon: "⚙", to: "/settings" },
-              ].map((a) => (
-                <button
-                  key={a.label}
-                  type="button"
-                  onClick={() => navigate(a.to)}
-                  className={cn(
-                    "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left",
-                    "hover:bg-muted/80 active:scale-[0.99] transition-colors"
-                  )}
-                >
-                  <span className="text-lg w-7 text-center opacity-80">
-                    {a.icon}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium leading-tight">
-                      {a.label}
-                    </span>
-                    <span className="block text-[11px] text-muted-foreground">
-                      {a.desc}
-                    </span>
-                  </span>
-                </button>
+      <section className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Metric icon={CheckCircle2} label="今日完成" value={done} tone="quiet" />
+        <Metric icon={Sparkles} label="新词待学" value={stats.newAvailable} tone="new" />
+        <Metric icon={RotateCcw} label="等待复习" value={stats.due} tone="review" />
+        <Metric icon={GraduationCap} label="已掌握" value={stats.mastered} tone="mastered" />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(290px,0.8fr)]">
+        <Card className="overflow-hidden border-border/90 shadow-sm">
+          <CardContent className="p-0">
+            <div className="border-b p-5 md:p-6">
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">今日学习计划</p>
+                  <p className="mt-2 text-4xl font-semibold tnum">{progressLabel}<span className="ml-1 text-xl text-muted-foreground">%</span></p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium tnum">{done} / {totalToday || 0}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">已完成 / 今日计划</p>
+                </div>
+              </div>
+              <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${progress * 100}%` }} />
+              </div>
+            </div>
+            <div className="grid gap-3 p-5 md:grid-cols-2 md:p-6">
+              <button type="button" onClick={beginLearn} className="group flex min-h-32 flex-col justify-between rounded-lg bg-primary p-5 text-left text-primary-foreground transition-opacity hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/15"><BookOpen className="h-5 w-5" /></span>
+                <span>
+                  <span className="block text-lg font-semibold">学习新词</span>
+                  <span className="mt-1 block text-sm text-white/80">{stats.newAvailable > 0 ? `还有 ${stats.newAvailable} 个待学习` : "今天的新词已经完成"}</span>
+                </span>
+              </button>
+              <button type="button" onClick={beginReview} disabled={stats.due === 0} className="group flex min-h-32 flex-col justify-between rounded-lg border bg-card p-5 text-left transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300"><Clock3 className="h-5 w-5" /></span>
+                <span>
+                  <span className="block text-lg font-semibold">复习到期词</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">{stats.due > 0 ? `本轮处理 ${stats.learnDue + stats.reviewAvailable} 个，待办共 ${stats.due} 个` : "暂时没有到期复习"}</span>
+                </span>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/90 shadow-none">
+          <CardContent className="p-5 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">词库掌握</p>
+                <p className="mt-1 text-sm text-muted-foreground">6550 词长期积累</p>
+              </div>
+              <span className="text-2xl font-semibold tnum">{Math.round(knownPercent)}%</span>
+            </div>
+            <div className="mt-7 flex h-3 overflow-hidden rounded-full bg-muted">
+              <div className="h-full bg-emerald-500" style={{ width: `${knownPercent}%` }} />
+              <div className="h-full bg-sky-500" style={{ width: `${reviewingPercent}%` }} />
+              <div className="h-full bg-amber-400" style={{ width: `${learningPercent}%` }} />
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+              <span><b className="block text-base tnum">{stats.mastered}</b><span className="text-xs text-muted-foreground">已掌握</span></span>
+              <span><b className="block text-base tnum">{stats.reviewing - stats.mastered}</b><span className="text-xs text-muted-foreground">长期复习</span></span>
+              <span><b className="block text-base tnum">{stats.learn}</b><span className="text-xs text-muted-foreground">学习中</span></span>
+              <span><b className="block text-base tnum">{stats.unseen}</b><span className="text-xs text-muted-foreground">未开始</span></span>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(290px,0.8fr)]">
+        <Card className="border-border/90 shadow-none">
+          <CardContent className="p-5 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold"><TrendingUp className="h-4 w-4 text-primary" />未来 7 天复习量</p>
+                <p className="mt-1 text-sm text-muted-foreground">基于目前记忆间隔的预测</p>
+              </div>
+            </div>
+            <div className="mt-7 flex h-40 items-end gap-3">
+              {forecast.map((count, index) => (
+                <div key={labels[index]} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2">
+                  <span className={cn("text-xs tnum", index === 0 ? "font-semibold text-primary" : "text-muted-foreground")}>{count || ""}</span>
+                  <div className="flex h-24 w-full items-end rounded-sm bg-muted/70">
+                    <div className={cn("w-full rounded-sm", index === 0 ? "bg-primary" : "bg-foreground/25")} style={{ height: count ? `${Math.max(10, (count / maxForecast) * 100)}%` : "0%" }} />
+                  </div>
+                  <span className="whitespace-nowrap text-[11px] text-muted-foreground">{labels[index]}</span>
+                </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-xl">
-            <button
-              type="button"
-              className="w-full flex items-center justify-between px-4 py-3 text-left"
-              onClick={() => setAboutOpen((v) => !v)}
-            >
-              <span className="text-sm font-medium text-muted-foreground">
-                关于
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {aboutOpen ? "收起" : "更多"}
-              </span>
-            </button>
-            {aboutOpen && (
-              <CardContent className="text-sm text-muted-foreground pt-0 px-4 pb-4">
-                进度本地优先保存；登录后可跨设备同步。词库来源：2027
-                考研英语红宝书（乱序版）。
-              </CardContent>
-            )}
-          </Card>
-        </div>
-      </div>
+        <Card className="border-border/90 shadow-none">
+          <CardContent className="p-5 md:p-6">
+            <p className="text-sm font-semibold">学习资源</p>
+            <div className="mt-3 divide-y">
+              <button type="button" onClick={() => navigate("/papers")} className="flex w-full items-center justify-between py-3 text-left text-sm hover:text-primary"><span>真题阅读</span><ArrowUpRight className="h-4 w-4" /></button>
+              <button type="button" onClick={() => navigate("/papers-recite")} className="flex w-full items-center justify-between py-3 text-left text-sm hover:text-primary"><span>按篇记词</span><ArrowUpRight className="h-4 w-4" /></button>
+              <button type="button" onClick={() => navigate("/settings")} className="flex w-full items-center justify-between py-3 text-left text-sm hover:text-primary"><span>调整学习计划</span><ArrowUpRight className="h-4 w-4" /></button>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

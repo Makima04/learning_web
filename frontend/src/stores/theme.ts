@@ -30,7 +30,7 @@ export function applyTheme(mode: ThemeMode) {
     meta.setAttribute("name", "theme-color");
     document.head.appendChild(meta);
   }
-  meta.setAttribute("content", dark ? "#0f1320" : "#faf8ee");
+  meta.setAttribute("content", dark ? "#181719" : "#f9fafb");
 }
 
 interface ThemeStore {

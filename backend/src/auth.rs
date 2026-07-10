@@ -3,9 +3,8 @@ use axum::{
     http::{header::AUTHORIZATION, request::Parts},
 };
 use chrono::{DateTime, Duration, Utc};
-use pbkdf2::pbkdf2_hmac;
+use openssl::{hash::MessageDigest, pkcs5::pbkdf2_hmac};
 use rand::RngCore;
-use sha2::Sha256;
 use sqlx::PgPool;
 
 use crate::error::{AppError, AppResult};
@@ -13,6 +12,12 @@ use crate::state::AppState;
 
 pub const PBKDF2_ITERS: u32 = 600_000;
 pub const PBKDF2_ITERS_LEGACY: u32 = 100_000;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PasswordHashVersion {
+    Current,
+    Legacy,
+}
 
 #[derive(Debug, Clone)]
 pub struct AuthUser {
@@ -24,7 +29,14 @@ pub struct AuthUser {
 
 fn hash_with(pw: &str, salt: &str, iters: u32) -> String {
     let mut dk = [0u8; 32];
-    pbkdf2_hmac::<Sha256>(pw.as_bytes(), salt.as_bytes(), iters, &mut dk);
+    pbkdf2_hmac(
+        pw.as_bytes(),
+        salt.as_bytes(),
+        iters as usize,
+        MessageDigest::sha256(),
+        &mut dk,
+    )
+    .expect("OpenSSL PBKDF2-HMAC-SHA256 failed");
     hex::encode(dk)
 }
 
@@ -32,20 +44,18 @@ pub fn hash_password(pw: &str, salt: &str) -> String {
     hash_with(pw, salt, PBKDF2_ITERS)
 }
 
-pub fn verify_password(pw: &str, salt: &str, pw_hash: &str) -> bool {
+/// 校验密码并返回命中的哈希版本，避免登录后为判断是否升级再做一次 PBKDF2。
+pub fn verify_password(pw: &str, salt: &str, pw_hash: &str) -> Option<PasswordHashVersion> {
     let cur = hash_with(pw, salt, PBKDF2_ITERS);
     if constant_eq(&cur, pw_hash) {
-        return true;
+        return Some(PasswordHashVersion::Current);
     }
     let legacy = hash_with(pw, salt, PBKDF2_ITERS_LEGACY);
-    constant_eq(&legacy, pw_hash)
-}
-
-pub fn needs_rehash(pw: &str, salt: &str, pw_hash: &str) -> bool {
-    if constant_eq(&hash_with(pw, salt, PBKDF2_ITERS), pw_hash) {
-        return false;
+    if constant_eq(&legacy, pw_hash) {
+        Some(PasswordHashVersion::Legacy)
+    } else {
+        None
     }
-    constant_eq(&hash_with(pw, salt, PBKDF2_ITERS_LEGACY), pw_hash)
 }
 
 fn constant_eq(a: &str, b: &str) -> bool {
@@ -164,4 +174,30 @@ impl FromRequestParts<AppState> for AdminUser {
         let user = require_admin(&state.pool, &token).await?;
         Ok(AdminUser(user))
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const PASSWORD: &str = "compatibility-password";
+    const SALT: &str = "compatibility-salt";
+    const CURRENT_HASH: &str = "8b687f94fa33c2b5c6d44a76b1a1aec893ab0dd3b8d78d735cf56df442ec5b44";
+    const LEGACY_HASH: &str = "95892dee0f2f21158d1f11a5e4eac745356c8a442c09abf57c02ad052e3f4046";
+
+    #[test]
+    fn openssl_pbkdf2_matches_existing_hash_format() {
+        assert_eq!(hash_password(PASSWORD, SALT), CURRENT_HASH);
+        assert_eq!(hash_with(PASSWORD, SALT, PBKDF2_ITERS_LEGACY), LEGACY_HASH);
+        assert_eq!(
+            verify_password(PASSWORD, SALT, CURRENT_HASH),
+            Some(PasswordHashVersion::Current)
+        );
+        assert_eq!(
+            verify_password(PASSWORD, SALT, LEGACY_HASH),
+            Some(PasswordHashVersion::Legacy)
+        );
+        assert_eq!(verify_password("wrong", SALT, CURRENT_HASH), None);
+    }
+
 }
