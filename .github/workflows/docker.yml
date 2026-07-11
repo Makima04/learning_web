@@ -1,4 +1,4 @@
-name: build-and-push-image
+name: build-and-push-amd64-image
 
 # 触发条件：推送到 main 分支，或手动 Dispatch
 on:
@@ -38,9 +38,6 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 QEMU（多架构构建所需）
-        uses: docker/setup-qemu-action@v3
-
       - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -59,15 +56,15 @@ jobs:
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
           echo "构建镜像: $IMAGE"
 
-      - name: 构建并推送
+      - name: 构建并推送 AMD64 镜像
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64   # lan (arm64) + 普通云主机 (amd64)
+          platforms: linux/amd64
           push: true
           tags: |
-            ${{ steps.meta.outputs.image }}:latest
-            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+            ${{ steps.meta.outputs.image }}:amd64-latest
+            ${{ steps.meta.outputs.image }}:amd64-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
