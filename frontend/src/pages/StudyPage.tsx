@@ -6,6 +6,7 @@ import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
 import { esc, cn } from "@/lib/utils";
 import { speakEnglish } from "@/lib/tts";
+import { translate } from "@/lib/llm";
 import { Button } from "@/components/ui/button";
 import { WordPopover } from "@/components/WordPopover";
 
@@ -33,9 +34,18 @@ export function StudyPage() {
   const entry = currentEntry();
   const example = item ? getExample(item) : null;
   const [pop, setPop] = useState<{ word: string; x: number; y: number } | null>(null);
+  const [exampleTranslation, setExampleTranslation] = useState("");
+  const [isExampleTranslating, setIsExampleTranslating] = useState(false);
+  const [exampleTranslationError, setExampleTranslationError] = useState("");
 
   useEffect(() => {
     setPop(null);
+    setExampleTranslation("");
+    setIsExampleTranslating(false);
+    setExampleTranslationError("");
+  }, [entry?.[0], qpos, uiPhase]);
+
+  useEffect(() => {
     if (settings.autoSpeak && entry) speakEnglish(entry[1], settings.rate);
   }, [entry?.[0], qpos, uiPhase, settings.autoSpeak, settings.rate]);
 
@@ -76,6 +86,25 @@ export function StudyPage() {
     const surface = word.dataset.w || word.textContent || "";
     setPop({ word: surface, x: rect.left + rect.width / 2, y: rect.bottom + 6 });
     if (settings.speakOnWordClick) speakEnglish(surface, settings.rate);
+  }
+
+  async function showExampleTranslation() {
+    if (!example || isExampleTranslating || exampleTranslation) return;
+    setIsExampleTranslating(true);
+    setExampleTranslationError("");
+    try {
+      setExampleTranslation(await translate(example));
+    } catch (error) {
+      setExampleTranslationError(error instanceof Error ? error.message : "翻译失败");
+    } finally {
+      setIsExampleTranslating(false);
+    }
+  }
+
+  function onCardClick(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    if (target.closest(".c-word, button")) return;
+    void showExampleTranslation();
   }
 
   if (uiPhase === "idle") {
@@ -127,10 +156,16 @@ export function StudyPage() {
   const groupName = item.group === "review" ? "复习组" : "新词组";
 
   const fullCard = (
-    <div className="relative min-h-[360px] p-6 md:min-h-[460px] md:p-8">
+    <div className="relative min-h-[360px] p-6 md:min-h-[460px] md:p-8" onClick={onCardClick}>
       <CardHeader label={groupName} word={entry[1]} onSpeak={() => speakEnglish(entry[1], settings.rate)} />
       <div className="w-full text-left" dangerouslySetInnerHTML={{ __html: sensesHtml }} />
-      <ExampleBlock html={exampleHtml} onClick={onExampleWordClick} />
+      <ExampleBlock
+        html={exampleHtml}
+        onClick={onExampleWordClick}
+        translation={exampleTranslation}
+        translating={isExampleTranslating}
+        translationError={exampleTranslationError}
+      />
     </div>
   );
 
@@ -162,7 +197,18 @@ export function StudyPage() {
       ]} />
     );
   } else {
-    const relearn = relearnBody(uiPhase, entry[1], chinese, exampleHtml, onExampleWordClick, () => speakEnglish(entry[1], settings.rate));
+    const relearn = relearnBody(
+      uiPhase,
+      entry[1],
+      chinese,
+      exampleHtml,
+      onExampleWordClick,
+      onCardClick,
+      () => speakEnglish(entry[1], settings.rate),
+      exampleTranslation,
+      isExampleTranslating,
+      exampleTranslationError
+    );
     body = relearn;
     controls = (
       <ActionRow columns="grid-cols-2" actions={[
@@ -200,9 +246,21 @@ function CardHeader({ label, word, onSpeak }: { label: string; word: string; onS
   </>;
 }
 
-function ExampleBlock({ html, onClick }: { html: string; onClick: (event: MouseEvent<HTMLDivElement>) => void }) {
+function ExampleBlock({
+  html,
+  onClick,
+  translation,
+  translating,
+  translationError,
+}: {
+  html: string;
+  onClick: (event: MouseEvent<HTMLDivElement>) => void;
+  translation: string;
+  translating: boolean;
+  translationError: string;
+}) {
   if (!html) return null;
-  return <div className="mt-5 text-left" onClick={onClick}><div className="mb-1 text-xs text-muted-foreground">真题例句</div><div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} /></div>;
+  return <div className="mt-5 text-left" onClick={onClick}><div className="mb-1 text-xs text-muted-foreground">真题例句</div><div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />{translating && <div className="mt-2 text-sm text-muted-foreground">例句翻译中…</div>}{translation && <div className="mt-2 border-l-2 border-primary/30 pl-2 text-sm text-muted-foreground">{translation}</div>}{translationError && <div className="mt-2 text-sm text-destructive">{translationError}，点击卡片空白处重试</div>}</div>;
 }
 
 function relearnBody(
@@ -211,10 +269,14 @@ function relearnBody(
   chinese: string,
   exampleHtml: string,
   onExampleClick: (event: MouseEvent<HTMLDivElement>) => void,
-  onSpeak: () => void
+  onCardClick: (event: MouseEvent<HTMLDivElement>) => void,
+  onSpeak: () => void,
+  exampleTranslation: string,
+  isExampleTranslating: boolean,
+  exampleTranslationError: string
 ) {
   const shared = "relative flex min-h-[360px] flex-col items-center justify-center p-6 md:min-h-[460px] md:p-8";
-  if (phase === "relearn-example") return <div className={shared}><div className="mb-4 self-start text-xs text-muted-foreground">重学第 1 轮 · 看例句回忆中文释义</div><ExampleBlock html={exampleHtml} onClick={onExampleClick} /><div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div></div>;
+  if (phase === "relearn-example") return <div className={shared} onClick={onCardClick}><div className="mb-4 self-start text-xs text-muted-foreground">重学第 1 轮 · 看例句回忆中文释义</div><ExampleBlock html={exampleHtml} onClick={onExampleClick} translation={exampleTranslation} translating={isExampleTranslating} translationError={exampleTranslationError} /><div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div></div>;
   if (phase === "relearn-word") return <div className={shared}><div className="mb-4 self-start text-xs text-muted-foreground">重学第 2 轮 · 看英文回忆中文释义</div><button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={onSpeak}>🔊</button><div className="text-3xl font-semibold">{word}</div><div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div></div>;
   return <div className={shared}><div className="mb-4 self-start text-xs text-muted-foreground">重学第 3 轮 · 看中文回忆英文单词</div><div className="text-xl text-center">{chinese}</div><div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div></div>;
 }
