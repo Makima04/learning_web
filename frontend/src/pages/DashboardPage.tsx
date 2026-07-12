@@ -112,7 +112,7 @@ export function DashboardPage() {
       <section className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={CheckCircle2} label="今日完成" value={done} tone="quiet" />
         <Metric icon={Sparkles} label="新词待学" value={stats.newAvailable} tone="new" />
-        <Metric icon={RotateCcw} label="等待复习" value={stats.due} tone="review" />
+        <Metric icon={RotateCcw} label="复习词" value={stats.due} tone="review" />
         <Metric icon={GraduationCap} label="已掌握" value={stats.mastered} tone="mastered" />
       </section>
 
@@ -142,11 +142,11 @@ export function DashboardPage() {
                   <span className="mt-1 block text-sm text-white/80">{stats.newAvailable > 0 ? `还有 ${stats.newAvailable} 个待学习` : "今天的新词已经完成"}</span>
                 </span>
               </button>
-              <button type="button" onClick={beginReview} disabled={stats.due === 0} className="group flex min-h-32 flex-col justify-between rounded-lg border bg-card p-5 text-left transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+              <button type="button" onClick={beginReview} disabled={stats.reviewAvailable === 0} className="group flex min-h-32 flex-col justify-between rounded-lg border bg-card p-5 text-left transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                 <span className="grid h-9 w-9 place-items-center rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300"><Clock3 className="h-5 w-5" /></span>
                 <span>
-                  <span className="block text-lg font-semibold">复习到期词</span>
-                  <span className="mt-1 block text-sm text-muted-foreground">{stats.due > 0 ? `本轮处理 ${stats.learnDue + stats.reviewAvailable} 个，待办共 ${stats.due} 个` : "暂时没有到期复习"}</span>
+                  <span className="block text-lg font-semibold">复习旧词</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">{stats.reviewAvailable > 0 ? `本轮处理 ${stats.reviewAvailable} 个，复习组共 ${stats.due} 个` : "今天的复习额度已完成"}</span>
                 </span>
               </button>
             </div>

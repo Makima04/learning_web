@@ -33,6 +33,7 @@ export interface LlmConfig {
 }
 
 export interface CardDTO {
+  learned?: boolean | null;
   state: string | null;
   due: number | null;
   ivl: number | null;

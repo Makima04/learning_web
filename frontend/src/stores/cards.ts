@@ -12,7 +12,13 @@ function loadAll(): Record<number, Card> {
     if (!raw) return {};
     const obj = JSON.parse(raw) as Record<string, Card>;
     const out: Record<number, Card> = {};
-    for (const k of Object.keys(obj)) out[parseInt(k, 10)] = obj[k];
+    for (const k of Object.keys(obj)) {
+      const card = obj[k];
+      out[parseInt(k, 10)] = {
+        ...card,
+        learned: card.learned ?? card.state === "review",
+      };
+    }
     return out;
   } catch {
     return {};
@@ -30,6 +36,7 @@ function saveAll(cards: Record<number, Card>) {
 
 function toDto(card: Card): api.CardDTO {
   return {
+    learned: !!card.learned,
     state: card.state,
     due: card.due,
     ivl: card.ivl,
@@ -43,6 +50,7 @@ function toDto(card: Card): api.CardDTO {
 
 function fromDto(card: api.CardDTO): Card {
   return {
+    learned: !!card.learned,
     state: (card.state || "new") as Card["state"],
     due: card.due ?? 0,
     ivl: card.ivl ?? 0,
@@ -86,7 +94,11 @@ export const useCards = create<CardsStore>((set, get) => ({
     const normalized = Object.fromEntries(
       Object.entries(cards).map(([idx, card]) => [
         +idx,
-        { ...card, updatedAt: card.updatedAt ?? 0 },
+        {
+          ...card,
+          learned: card.learned ?? card.state === "review",
+          updatedAt: card.updatedAt ?? 0,
+        },
       ])
     ) as Record<number, Card>;
     set({ cards: normalized });

@@ -15,6 +15,8 @@ export type CardState = "new" | "learn" | "review";
 export type Quality = "again" | "hard" | "good" | "easy";
 
 export interface Card {
+  /** 是否已完成首次学习；用于区分新词组与复习组。 */
+  learned?: boolean;
   state: CardState;
   due: number;
   ivl: number;
@@ -37,6 +39,7 @@ function round(x: number): number {
 // 新建空卡。
 export function newCard(): Card {
   return {
+    learned: false,
     state: "new",
     due: 0,
     ivl: 0,

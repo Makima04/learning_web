@@ -1,24 +1,21 @@
-// study store —— 会话队列 + UI 阶段，移植 web/app.js 背词状态机。
+// study store —— 三个入口共用的「初轮评估 → 组内三轮重学」状态机。
 import { create } from "zustand";
-import * as SRS from "@/lib/srs";
-import type { Card, Quality } from "@/lib/srs";
-import { getWords, getExamples, isStudied } from "@/lib/words";
+import type { Card } from "@/lib/srs";
+import { DAY } from "@/lib/srs";
+import { getExamples, getWords } from "@/lib/words";
 import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
-import type { WordEntry, PassageWord } from "@/types/words";
+import type { PassageWord, WordEntry } from "@/types/words";
 
 export type StudyMode = "daily" | "passage" | "learn" | "review";
+export type Assessment = "known" | "uncertain" | "unknown";
 export type UiPhase =
   | "assess-front"
   | "assess-full"
-  | "quiz1-front"
-  | "quiz1-back"
-  | "quiz2"
-  | "quiz3-front"
-  | "quiz3-back"
-  | "review-front"
-  | "review-back"
+  | "relearn-example"
+  | "relearn-word"
+  | "relearn-meaning"
   | "done"
   | "group-done"
   | "idle";
@@ -26,13 +23,13 @@ export type UiPhase =
 export interface QueueItem {
   idx: number;
   card: Card;
-  isNew: boolean;
-  /** passage 模式挂 sentences 的 entry */
+  group: "new" | "review";
+  round?: 1 | 2 | 3;
+  needsRelearning?: boolean;
   entry?: WordEntry & { sentences?: string[] };
 }
 
 export interface SessionStats {
-  again: number;
   studied: number;
   newDone: number;
   reviewDone: number;
@@ -57,19 +54,16 @@ interface StudyState {
   qpos: number;
   sessionId: number;
   groupStart: number;
+  groupInitialEnd: number;
   groupEnd: number;
-  /** 当前组是否已完成首轮，并开始处理本组忘记词。 */
-  groupRelearningStarted: boolean;
+  relearningStarted: boolean;
+  relearnPending: QueueItem[];
   uiPhase: UiPhase;
-  assessChoice: Quality | null;
-  quizChoices: { cn: string; correct: boolean }[];
-  quizLocked: boolean;
+  assessChoice: Assessment | null;
   sessionStats: SessionStats;
   passageSkipped: number;
   passageReader: PassageReader | null;
   reciteOrigin: { paperIdx: number; type: string } | null;
-  flipped: boolean;
-  hintVisible: boolean;
 
   snapshot: () => {
     due: number;
@@ -98,38 +92,55 @@ interface StudyState {
   currentItem: () => QueueItem | null;
   currentEntry: () => (WordEntry & { sentences?: string[] }) | null;
   getExample: (item: QueueItem) => string | null;
-  setPhase: (p: UiPhase) => void;
-  setFlipped: (v: boolean) => void;
-  setHintVisible: (v: boolean) => void;
-  setQuizChoices: (c: { cn: string; correct: boolean }[]) => void;
-  setQuizLocked: (v: boolean) => void;
-  assessSubmit: (q: Quality) => void;
+  chooseAssessment: (choice: Assessment) => void;
   assessFullNext: () => void;
   assessFullMistake: () => void;
-  quiz2Answer: (i: number) => void;
-  learnRate: (q: Quality) => void;
-  reviewRate: (q: Quality) => void;
-  handleRate: (q: Quality) => void;
-  flip: () => void;
-  setPassageReader: (r: PassageReader | null) => void;
+  answerRelearning: (known: boolean) => void;
+  advanceWithinGroup: () => void;
+  setPassageReader: (reader: PassageReader | null) => void;
   resetSession: () => void;
-  /** 推进 qpos 后根据队列/组边界刷新 uiPhase */
-  afterAdvance: () => void;
 }
 
-const emptyStats = (): SessionStats => ({
-  again: 0,
-  studied: 0,
-  newDone: 0,
-  reviewDone: 0,
-});
+const emptyStats = (): SessionStats => ({ studied: 0, newDone: 0, reviewDone: 0 });
 
-function saveCard(idx: number, card: Card) {
-  card.updatedAt = Date.now();
-  useCards.getState().save(idx, card);
+function isLearned(card: Card | undefined): boolean {
+  return !!card?.learned;
 }
-function bump(field: "newToday" | "reviewToday" | "learnToday" | "doneToday", by = 1) {
-  useMeta.getState().bump(field, by);
+
+function cloneCard(card?: Card): Card {
+  return {
+    learned: !!card?.learned,
+    state: card?.state || "new",
+    due: card?.due || 0,
+    ivl: card?.ivl || 0,
+    ease: card?.ease || 2.5,
+    reps: card?.reps || 0,
+    lapses: card?.lapses || 0,
+    quiz: 0,
+    updatedAt: card?.updatedAt || 0,
+  };
+}
+
+function savePassedCard(idx: number, previous: Card): Card {
+  const now = Date.now();
+  const next: Card = {
+    ...cloneCard(previous),
+    learned: true,
+    state: "review",
+    due: now + DAY,
+    ivl: Math.max(1, previous.ivl || 1),
+    reps: Math.max(1, previous.reps || 0) + (previous.learned ? 1 : 0),
+    quiz: 0,
+    updatedAt: now,
+  };
+  useCards.getState().save(idx, next);
+  return next;
+}
+
+function phaseForRound(round: 1 | 2 | 3): UiPhase {
+  if (round === 1) return "relearn-example";
+  if (round === 2) return "relearn-word";
+  return "relearn-meaning";
 }
 
 export const useStudy = create<StudyState>((set, get) => ({
@@ -138,203 +149,117 @@ export const useStudy = create<StudyState>((set, get) => ({
   qpos: 0,
   sessionId: 0,
   groupStart: 0,
+  groupInitialEnd: 0,
   groupEnd: 0,
-  groupRelearningStarted: false,
+  relearningStarted: false,
+  relearnPending: [],
   uiPhase: "idle",
   assessChoice: null,
-  quizChoices: [],
-  quizLocked: false,
   sessionStats: emptyStats(),
   passageSkipped: 0,
   passageReader: null,
   reciteOrigin: null,
-  flipped: false,
-  hintVisible: false,
 
   snapshot: () => {
-    const now = Date.now();
-    const all = useCards.getState().cards;
-    const WORDS = getWords();
-    let reviewDue = 0,
-      learnDue = 0,
-      learn = 0,
-      reviewing = 0,
-      mastered = 0;
-    const total = WORDS.length;
-    for (const idx in all) {
-      const c = all[+idx];
-      if (!c) continue;
-      if (c.state === "review") {
-        reviewing++;
-        if (SRS.isMastered(c)) mastered++;
-        if (c.due <= now) reviewDue++;
-      } else if (c.state === "learn") {
-        learn++;
-        if (c.due <= now) learnDue++;
-      }
-    }
-    const meta = useMeta.getState().get();
+    const cards = useCards.getState().cards;
     const settings = useSettings.getState();
-    const newToday = meta.newToday || 0;
-    const newAvailable = Math.max(0, settings.dailyNew - newToday);
+    const meta = useMeta.getState().get();
+    const allWords = getWords();
+    const learned = Object.values(cards).filter(isLearned);
+    const newAvailable = Math.max(0, settings.dailyNew - meta.newToday);
     const reviewAvailable = Math.min(
-      reviewDue,
-      Math.max(0, settings.dailyReview - (meta.reviewToday || 0))
+      learned.length,
+      Math.max(0, settings.dailyReview - meta.reviewToday)
     );
-    const unseen = total - reviewing - learn;
     return {
-      due: reviewDue + learnDue,
+      due: learned.length,
       reviewAvailable,
-      learnDue,
-      learn,
-      reviewing,
-      mastered,
-      total,
+      learnDue: 0,
+      learn: 0,
+      reviewing: learned.length,
+      mastered: learned.length,
+      total: allWords.length,
       newAvailable,
-      unseen,
-      newToday,
-      reviewToday: meta.reviewToday || 0,
-      learnToday: meta.learnToday || 0,
-      doneToday: meta.doneToday || 0,
-      todayPlan:
-        Math.min(settings.dailyNew, newToday + newAvailable) +
-        (meta.reviewToday || 0) +
-        (meta.learnToday || 0) +
-        learnDue +
-        reviewAvailable,
+      unseen: allWords.length - learned.length,
+      newToday: meta.newToday,
+      reviewToday: meta.reviewToday,
+      learnToday: meta.learnToday,
+      doneToday: meta.doneToday,
+      todayPlan: newAvailable + reviewAvailable,
     };
   },
 
   buildQueue: (mode) => {
-    const reviewOnly = mode === "review";
-    const newOnly = mode === "learn";
-    const now = Date.now();
-    const all = useCards.getState().cards;
-    const learningDue: number[] = [];
-    const reviewDue: number[] = [];
-    for (const idx in all) {
-      const c = all[+idx];
-      if (!c) continue;
-      if (c.state === "learn" && c.due <= now) learningDue.push(+idx);
-      else if (c.state === "review" && c.due <= now) reviewDue.push(+idx);
-    }
-    learningDue.sort((a, b) => (all[a].due || 0) - (all[b].due || 0));
-    reviewDue.sort(
-      (a, b) =>
-        (all[a].due || 0) - (all[b].due || 0) ||
-        (all[b].lapses || 0) - (all[a].lapses || 0)
-    );
+    const cards = useCards.getState().cards;
+    const settings = useSettings.getState();
+    const meta = useMeta.getState().get();
+    let queue: QueueItem[] = [];
 
-    const queue: QueueItem[] = [];
-    learningDue.forEach((idx) =>
-      queue.push({ idx, card: { ...all[idx] }, isNew: false })
-    );
-    if (!newOnly) {
-      const meta = useMeta.getState().get();
-      const settings = useSettings.getState();
-      const reviewRemaining = Math.max(
-        0,
-        settings.dailyReview - (meta.reviewToday || 0)
-      );
-      reviewDue.slice(0, reviewRemaining).forEach((idx) =>
-        queue.push({ idx, card: { ...all[idx] }, isNew: false })
-      );
+    if (mode !== "review") {
+      const limit = Math.max(0, settings.dailyNew - meta.newToday);
+      queue = getWords()
+        .filter((word) => !isLearned(cards[word[0]]))
+        .slice(0, limit)
+        .map((word) => ({ idx: word[0], card: cloneCard(cards[word[0]]), group: "new" }));
+    } else {
+      const limit = Math.max(0, settings.dailyReview - meta.reviewToday);
+      queue = Object.entries(cards)
+        .filter(([, card]) => isLearned(card))
+        .sort(([, left], [, right]) => left.due - right.due)
+        .slice(0, limit)
+        .map(([idx, card]) => ({ idx: +idx, card: cloneCard(card), group: "review" }));
     }
-    if (!reviewOnly) {
-      const meta = useMeta.getState().get();
-      const settings = useSettings.getState();
-      const newRemaining = Math.max(0, settings.dailyNew - (meta.newToday || 0));
-      const newWords: number[] = [];
-      for (const w of getWords()) {
-        if (newWords.length >= newRemaining) break;
-        if (!all[w[0]]) newWords.push(w[0]);
-      }
-      newWords.forEach((idx) =>
-        queue.push({ idx, card: SRS.newCard(), isNew: true })
-      );
-    }
-    set({ queue, qpos: 0, groupRelearningStarted: false });
+    set({ queue, qpos: 0, relearnPending: [], relearningStarted: false });
   },
 
   startLearn: () => {
     get().buildQueue("learn");
-    const { queue } = get();
-    if (queue.length === 0) {
-      set({
-        mode: "learn",
-        uiPhase: "done",
-        sessionStats: emptyStats(),
-        sessionId: get().sessionId + 1,
-      });
+    if (!get().queue.length) {
+      set({ mode: "learn", uiPhase: "done", sessionStats: emptyStats() });
       return false;
     }
-    set({
-      mode: "learn",
-      sessionStats: emptyStats(),
-      assessChoice: null,
-      flipped: false,
-      hintVisible: false,
-      sessionId: get().sessionId + 1,
-    });
+    set({ mode: "learn", sessionStats: emptyStats(), passageSkipped: 0, sessionId: get().sessionId + 1 });
     get().advanceToNextGroup();
     return true;
   },
 
   startReview: () => {
     get().buildQueue("review");
-    const { queue } = get();
-    if (queue.length === 0) {
-      set({
-        mode: "review",
-        uiPhase: "done",
-        sessionStats: emptyStats(),
-        sessionId: get().sessionId + 1,
-      });
+    if (!get().queue.length) {
+      set({ mode: "review", uiPhase: "done", sessionStats: emptyStats() });
       return false;
     }
-    set({
-      mode: "review",
-      sessionStats: emptyStats(),
-      assessChoice: null,
-      flipped: false,
-      hintVisible: false,
-      sessionId: get().sessionId + 1,
-    });
+    set({ mode: "review", sessionStats: emptyStats(), passageSkipped: 0, sessionId: get().sessionId + 1 });
     get().advanceToNextGroup();
     return true;
   },
 
   startPassage: (words, origin = null) => {
-    let passageSkipped = 0;
-    const queue: QueueItem[] = [];
     const cards = useCards.getState().cards;
-    for (const w of words) {
-      const existing = cards[w.idx];
-      if (existing && existing.state === "review") {
-        passageSkipped++;
-        continue;
-      }
-      const card = existing ? { ...existing } : SRS.newCard();
-      const entry = [w.idx, w.english, w.senses] as WordEntry & {
-        sentences?: string[];
-      };
-      entry.sentences = (w.sentences || []).slice(0, 5);
-      queue.push({ idx: w.idx, card, isNew: !existing, entry });
+    const queue: QueueItem[] = [];
+    for (const word of words) {
+      const card = cards[word.idx];
+      const entry = [word.idx, word.english, word.senses] as WordEntry & { sentences?: string[] };
+      entry.sentences = (word.sentences || []).slice(0, 5);
+      queue.push({
+        idx: word.idx,
+        card: cloneCard(card),
+        group: isLearned(card) ? "review" : "new",
+        entry,
+      });
     }
     set({
       mode: "passage",
       queue,
       qpos: 0,
-      groupRelearningStarted: false,
-      passageSkipped,
+      relearnPending: [],
+      relearningStarted: false,
+      passageSkipped: 0,
       reciteOrigin: origin,
       sessionStats: emptyStats(),
-      assessChoice: null,
-      flipped: false,
-      hintVisible: false,
       sessionId: get().sessionId + 1,
     });
-    if (queue.length === 0) {
+    if (!queue.length) {
       set({ uiPhase: "done" });
       return false;
     }
@@ -348,325 +273,153 @@ export const useStudy = create<StudyState>((set, get) => ({
       set({ uiPhase: "done" });
       return;
     }
-    const gs = useSettings.getState().groupSize || 20;
-    const groupEnd = Math.min(queue.length, qpos + gs);
-    const item = queue[qpos];
-    let uiPhase: UiPhase = "assess-front";
-    if (item.card.state === "new") uiPhase = "assess-front";
-    else if (item.card.state === "learn") {
-      const q = item.card.quiz || 1;
-      uiPhase = q === 1 ? "quiz1-front" : q === 2 ? "quiz2" : "quiz3-front";
-    } else uiPhase = "review-front";
+    const groupSize = useSettings.getState().groupSize || 20;
+    const groupInitialEnd = Math.min(queue.length, qpos + groupSize);
     set({
-      groupEnd,
       groupStart: qpos,
-      groupRelearningStarted: false,
-      uiPhase,
-      flipped: false,
-      hintVisible: false,
+      groupInitialEnd,
+      groupEnd: groupInitialEnd,
+      relearningStarted: false,
+      relearnPending: [],
+      assessChoice: null,
+      uiPhase: "assess-front",
     });
   },
 
-  currentItem: () => {
-    const { queue, qpos } = get();
-    return queue[qpos] || null;
-  },
+  currentItem: () => get().queue[get().qpos] || null,
 
   currentEntry: () => {
     const item = get().currentItem();
     if (!item) return null;
-    if (get().mode === "passage" && item.entry) return item.entry;
-    const w = getWords().find((x) => x[0] === item.idx);
-    return w || null;
+    if (item.entry) return item.entry;
+    return getWords().find((word) => word[0] === item.idx) || null;
   },
 
   getExample: (item) => {
-    if (get().mode === "passage" && item.entry?.sentences?.[0])
-      return item.entry.sentences[0];
-    const exs = getExamples(item.idx, 1);
-    return exs[0]?.sentence || null;
+    if (item.entry?.sentences?.[0]) return item.entry.sentences[0];
+    return getExamples(item.idx, 1)[0]?.sentence || null;
   },
 
-  setPhase: (p) => set({ uiPhase: p }),
-  setFlipped: (v) => set({ flipped: v }),
-  setHintVisible: (v) => set({ hintVisible: v }),
-  setQuizChoices: (c) => set({ quizChoices: c }),
-  setQuizLocked: (v) => set({ quizLocked: v }),
-
-  assessSubmit: (q) => {
-    const st = get();
-    const item = st.queue[st.qpos];
+  chooseAssessment: (choice) => {
+    const item = get().currentItem();
     if (!item) return;
-    const wasNew = item.isNew;
-    const res = SRS.answer(item.card, q, Date.now());
-    item.card = res.card;
-    saveCard(item.idx, res.card);
-    const stats = { ...st.sessionStats, studied: st.sessionStats.studied + 1 };
-    if (wasNew) {
-      bump("newToday", 1);
-      bump("doneToday", 1);
-      stats.newDone++;
-    }
-    const queue = [...st.queue];
-    queue[st.qpos] = { ...item };
-    set({
-      queue,
-      assessChoice: q,
-      uiPhase: "assess-full",
-      sessionStats: stats,
-      flipped: true,
-      hintVisible: false,
-    });
+    set({ assessChoice: choice, uiPhase: "assess-full" });
   },
 
   assessFullNext: () => {
-    const st = get();
-    const { queue, qpos } = st;
-    const item = queue[qpos];
-    if (!item) return;
-    set({ queue, qpos: qpos + 1, flipped: false, hintVisible: false });
-    get().afterAdvance();
+    const state = get();
+    const item = state.currentItem();
+    if (!item || !state.assessChoice) return;
+    const needsRelearning = state.assessChoice !== "known";
+    if (needsRelearning) {
+      const pending: QueueItem = { ...item, card: cloneCard(item.card), round: 1, needsRelearning: true };
+      set({ relearnPending: [...state.relearnPending, pending] });
+    } else {
+      const card = savePassedCard(item.idx, item.card);
+      const stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
+      if (item.group === "new") {
+        useMeta.getState().bump("newToday");
+        stats.newDone++;
+      } else {
+        useMeta.getState().bump("reviewToday");
+        stats.reviewDone++;
+      }
+      useMeta.getState().bump("doneToday");
+      const queue = [...state.queue];
+      queue[state.qpos] = { ...item, card };
+      set({ queue, sessionStats: stats });
+    }
+    set({ qpos: state.qpos + 1, assessChoice: null });
+    get().advanceWithinGroup();
   },
 
   assessFullMistake: () => {
-    const st = get();
-    const { queue, qpos, assessChoice } = st;
-    const item = queue[qpos];
+    const state = get();
+    const item = state.currentItem();
     if (!item) return;
-    if (assessChoice !== "again") {
-      const res = SRS.answer(item.card, "again", Date.now());
-      item.card = res.card;
-      saveCard(item.idx, res.card);
-    }
-    set({ queue, qpos: qpos + 1, flipped: false, hintVisible: false });
-    get().afterAdvance();
+    const pending: QueueItem = { ...item, card: cloneCard(item.card), round: 1, needsRelearning: true };
+    set({ relearnPending: [...state.relearnPending, pending], qpos: state.qpos + 1, assessChoice: null });
+    get().advanceWithinGroup();
   },
 
-  quiz2Answer: (i) => {
-    const st = get();
-    if (st.quizLocked) return;
-    const item = st.queue[st.qpos];
-    if (!item) return;
-    const choice = st.quizChoices[i];
-    const correct = !!(choice && choice.correct);
-    set({ quizLocked: true });
-    const q: Quality = correct ? "good" : "again";
-    const res = SRS.answer(item.card, q, Date.now());
-    item.card = res.card;
-    saveCard(item.idx, res.card);
-    bump("learnToday", 1);
-    bump("doneToday", 1);
-    let queue = [...st.queue];
-    queue[st.qpos] = { ...item };
-    let groupEnd = st.groupEnd;
-    if (
-      item.card.state === "learn" &&
-      item.card.due <= Date.now() &&
-      st.groupRelearningStarted
-    ) {
-      queue = [
-        ...queue.slice(0, groupEnd),
-        { idx: item.idx, card: item.card, isNew: false, entry: item.entry },
-        ...queue.slice(groupEnd),
-      ];
-      groupEnd++;
-    }
-    const stats = {
-      ...st.sessionStats,
-      studied: st.sessionStats.studied + 1,
-    };
-    const sessionId = st.sessionId;
-    setTimeout(() => {
-      if (get().sessionId !== sessionId) return;
-      set({
-        queue,
-        qpos: st.qpos + 1,
-        groupEnd,
-        sessionStats: stats,
-        quizLocked: false,
-        flipped: false,
-        hintVisible: false,
-      });
-      get().afterAdvance();
-    }, 600);
-  },
-
-  learnRate: (q) => {
-    const st = get();
-    const item = st.queue[st.qpos];
-    if (!item) return;
-    const res = SRS.answer(item.card, q, Date.now());
-    item.card = res.card;
-    saveCard(item.idx, res.card);
-    bump("learnToday", 1);
-    bump("doneToday", 1);
-    let queue = [...st.queue];
-    queue[st.qpos] = { ...item };
-    let groupEnd = st.groupEnd;
-    if (
-      st.groupRelearningStarted &&
-      res.card.state === "learn" &&
-      res.card.due <= Date.now()
-    ) {
-      queue = [
-        ...queue.slice(0, groupEnd),
-        { idx: item.idx, card: res.card, isNew: false, entry: item.entry },
-        ...queue.slice(groupEnd),
-      ];
-      groupEnd++;
-    }
-    set({
-      queue,
-      qpos: st.qpos + 1,
-      groupEnd,
-      sessionStats: {
-        ...st.sessionStats,
-        studied: st.sessionStats.studied + 1,
-      },
-      flipped: false,
-      hintVisible: false,
-    });
-    get().afterAdvance();
-  },
-
-  reviewRate: (q) => {
-    const st = get();
-    const item = st.queue[st.qpos];
-    if (!item) return;
-    const wasNew = item.isNew;
-    const res = SRS.answer(item.card, q, Date.now());
-    item.card = res.card;
-    saveCard(item.idx, res.card);
-    const stats = {
-      ...st.sessionStats,
-      studied: st.sessionStats.studied + 1,
-      again: st.sessionStats.again + (q === "again" ? 1 : 0),
-    };
-    if (wasNew) {
-      bump("newToday", 1);
-      stats.newDone++;
-    } else {
-      bump("reviewToday", 1);
-      stats.reviewDone++;
-    }
-    bump("doneToday", 1);
-    let queue = [...st.queue];
-    queue[st.qpos] = { ...item };
-    let groupEnd = st.groupEnd;
-    if (
-      q === "again" &&
-      res.card.state === "learn" &&
-      res.card.due <= Date.now() &&
-      st.groupRelearningStarted
-    ) {
-      queue = [
-        ...queue.slice(0, groupEnd),
-        { idx: item.idx, card: res.card, isNew: false, entry: item.entry },
-        ...queue.slice(groupEnd),
-      ];
-      groupEnd++;
-    }
-    set({
-      queue,
-      qpos: st.qpos + 1,
-      groupEnd,
-      sessionStats: stats,
-      flipped: false,
-      hintVisible: false,
-    });
-    get().afterAdvance();
-  },
-
-  handleRate: (q) => {
-    const item = get().currentItem();
-    if (!item) return;
-    if (item.card.state === "new") get().assessSubmit(q);
-    else if (item.card.state === "learn") get().learnRate(q);
-    else get().reviewRate(q);
-  },
-
-  flip: () => {
-    const st = get();
-    const item = st.currentItem();
-    if (!item) return;
-    if (item.card.state === "new") return;
-    if (item.card.state === "learn") {
-      const quiz = item.card.quiz || 0;
-      if (quiz === 1 && st.uiPhase === "quiz1-front")
-        set({ uiPhase: "quiz1-back", flipped: true, hintVisible: false });
-      else if (quiz === 3 && st.uiPhase === "quiz3-front")
-        set({ uiPhase: "quiz3-back", flipped: true, hintVisible: false });
+  answerRelearning: (known) => {
+    const state = get();
+    const item = state.currentItem();
+    if (!item || !item.round) return;
+    if (!known) return;
+    if (item.round < 3) {
+      const next = { ...item, round: (item.round + 1) as 2 | 3 };
+      const queue = [...state.queue];
+      queue[state.qpos] = next;
+      set({ queue, uiPhase: phaseForRound(next.round) });
       return;
     }
-    if (st.uiPhase === "review-front")
-      set({ uiPhase: "review-back", flipped: true, hintVisible: false });
+    const card = savePassedCard(item.idx, item.card);
+    const stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
+    if (item.group === "new") {
+      useMeta.getState().bump("newToday");
+      stats.newDone++;
+    } else {
+      useMeta.getState().bump("reviewToday");
+      stats.reviewDone++;
+    }
+    useMeta.getState().bump("doneToday");
+    const queue = [...state.queue];
+    queue[state.qpos] = { ...item, card };
+    set({ queue, qpos: state.qpos + 1, sessionStats: stats });
+    get().advanceWithinGroup();
   },
 
-  setPassageReader: (r) => set({ passageReader: r }),
+  advanceWithinGroup: () => {
+    const state = get();
+    if (state.qpos < state.groupInitialEnd) {
+      set({ uiPhase: "assess-front" });
+      return;
+    }
+    if (!state.relearningStarted) {
+      if (state.relearnPending.length) {
+        const queue = [
+          ...state.queue.slice(0, state.qpos),
+          ...state.relearnPending,
+          ...state.queue.slice(state.qpos),
+        ];
+        const first = state.relearnPending[0];
+        set({
+          queue,
+          groupEnd: state.qpos + state.relearnPending.length,
+          relearningStarted: true,
+          relearnPending: [],
+          uiPhase: phaseForRound(first.round || 1),
+        });
+        return;
+      }
+      set({ uiPhase: state.qpos >= state.queue.length ? "done" : "group-done" });
+      return;
+    }
+    if (state.qpos < state.groupEnd) {
+      const item = state.queue[state.qpos];
+      set({ uiPhase: phaseForRound(item.round || 1) });
+      return;
+    }
+    set({ uiPhase: state.qpos >= state.queue.length ? "done" : "group-done" });
+  },
+
+  setPassageReader: (reader) => set({ passageReader: reader }),
 
   resetSession: () =>
     set({
       mode: "daily",
       queue: [],
       qpos: 0,
-      sessionId: get().sessionId + 1,
       groupStart: 0,
+      groupInitialEnd: 0,
       groupEnd: 0,
-      groupRelearningStarted: false,
+      relearningStarted: false,
+      relearnPending: [],
       uiPhase: "idle",
       assessChoice: null,
-      quizChoices: [],
-      quizLocked: false,
       sessionStats: emptyStats(),
       passageSkipped: 0,
-      flipped: false,
-      hintVisible: false,
+      sessionId: get().sessionId + 1,
     }),
-
-  afterAdvance: () => {
-    const st = get();
-    if (st.qpos >= st.groupEnd && st.qpos > 0 && st.groupEnd > 0) {
-      if (!st.groupRelearningStarted) {
-        const relearning = st.queue
-          .slice(st.groupStart, st.groupEnd)
-          .filter((item) => item.card.state === "learn" && item.card.due <= Date.now())
-          .map((item) => ({
-            ...item,
-            card: { ...item.card },
-            isNew: false,
-          }));
-        if (relearning.length > 0) {
-          const queue = [
-            ...st.queue.slice(0, st.qpos),
-            ...relearning,
-            ...st.queue.slice(st.qpos),
-          ];
-          set({
-            queue,
-            groupEnd: st.qpos + relearning.length,
-            groupRelearningStarted: true,
-          });
-          get().afterAdvance();
-          return;
-        }
-      }
-      set({ uiPhase: st.qpos >= st.queue.length ? "done" : "group-done" });
-      return;
-    }
-    if (st.qpos >= st.queue.length) {
-      set({ uiPhase: "done" });
-      return;
-    }
-    const item = st.queue[st.qpos];
-    let uiPhase: UiPhase = "assess-front";
-    if (item.card.state === "new") uiPhase = "assess-front";
-    else if (item.card.state === "learn") {
-      const q = item.card.quiz || 1;
-      uiPhase = q === 1 ? "quiz1-front" : q === 2 ? "quiz2" : "quiz3-front";
-    } else uiPhase = "review-front";
-    set({ uiPhase, flipped: false, hintVisible: false, quizLocked: false });
-  },
 }));
-
-// re-export for consumers that need isStudied
-export { isStudied };

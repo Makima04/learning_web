@@ -2,6 +2,7 @@
 name = "english_web_server"
 version = "0.1.0"
 edition = "2021"
+default-run = "english_web_server"
 
 [dependencies]
 axum = { version = "0.8", features = ["macros"] }

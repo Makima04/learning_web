@@ -15,6 +15,8 @@ use crate::state::AppState;
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CardState {
     #[serde(default)]
+    pub learned: Option<bool>,
+    #[serde(default)]
     pub state: Option<String>,
     #[serde(default)]
     pub due: Option<i64>,
@@ -59,6 +61,7 @@ async fn list_cards(
         _,
         (
             i32,
+            Option<bool>,
             Option<String>,
             Option<i64>,
             Option<i32>,
@@ -71,7 +74,7 @@ async fn list_cards(
         ),
     >(
         r#"
-        SELECT word_idx, state, due, ivl, ease, reps, lapses, step, quiz,
+        SELECT word_idx, learned, state, due, ivl, ease, reps, lapses, step, quiz,
                (EXTRACT(EPOCH FROM updated_at) * 1000)::BIGINT
         FROM cards WHERE user_id = $1
         "#,
@@ -81,10 +84,11 @@ async fn list_cards(
     .await?;
 
     let mut cards = Map::new();
-    for (idx, state_s, due, ivl, ease, reps, lapses, step, quiz, updated_at) in rows {
+    for (idx, learned, state_s, due, ivl, ease, reps, lapses, step, quiz, updated_at) in rows {
         cards.insert(
             idx.to_string(),
             json!({
+                "learned": learned,
                 "state": state_s,
                 "due": due,
                 "ivl": ivl,
@@ -133,9 +137,10 @@ async fn upsert_card(
     let updated_at = c.updated_at.unwrap_or_else(|| Utc::now().timestamp_millis());
     sqlx::query(
         r#"
-        INSERT INTO cards (user_id, word_idx, state, due, ivl, ease, reps, lapses, step, quiz, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,to_timestamp($11::DOUBLE PRECISION / 1000))
+        INSERT INTO cards (user_id, word_idx, learned, state, due, ivl, ease, reps, lapses, step, quiz, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,to_timestamp($12::DOUBLE PRECISION / 1000))
         ON CONFLICT (user_id, word_idx) DO UPDATE SET
+            learned = EXCLUDED.learned,
             state = EXCLUDED.state,
             due = EXCLUDED.due,
             ivl = EXCLUDED.ivl,
@@ -150,6 +155,7 @@ async fn upsert_card(
     )
     .bind(user_id)
     .bind(idx)
+    .bind(c.learned.unwrap_or(false))
     .bind(&c.state)
     .bind(c.due)
     .bind(c.ivl)

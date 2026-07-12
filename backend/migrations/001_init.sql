@@ -77,6 +77,11 @@ CREATE TABLE IF NOT EXISTS cards (
     PRIMARY KEY (user_id, word_idx)
 );
 
+ALTER TABLE cards ADD COLUMN IF NOT EXISTS learned BOOLEAN;
+UPDATE cards SET learned = (state = 'review') WHERE learned IS NULL;
+ALTER TABLE cards ALTER COLUMN learned SET DEFAULT FALSE;
+ALTER TABLE cards ALTER COLUMN learned SET NOT NULL;
+
 CREATE TABLE IF NOT EXISTS meta (
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     day_key TEXT NOT NULL,
