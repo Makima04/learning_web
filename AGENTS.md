@@ -40,12 +40,12 @@ cd backend && cargo run --release
 
 # 真题管线
 .venv/bin/python3 scripts/parse_paper.py papers/2023.pdf papers/2023.json
-.venv/bin/python3 scripts/match_vocab.py papers/*.json   # → web/papers.js (window.PAPERS)
-.venv/bin/python3 scripts/validate_parse.py
+cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- match papers/*.json   # → web/papers.js (window.PAPERS)
+cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- validate
 
 # LLM CLI
-.venv/bin/python3 scripts/llm_translate.py models
-.venv/bin/python3 scripts/llm_translate.py translate "The homeless make up..."
+cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- models
+cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- translate "The homeless make up..."
 ```
 
 有少量 Python 测试（`tests/`）。前端无测试/lint。`frontend/package.json` 有 dev/build/preview。

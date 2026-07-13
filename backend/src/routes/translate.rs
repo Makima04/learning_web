@@ -118,32 +118,29 @@ async fn do_translate(
     user_id: Option<i64>,
     force: bool,
 ) -> AppResult<Json<Value>> {
-    let text: Option<String> =
-        sqlx::query_scalar("SELECT text FROM sentences WHERE id = $1")
-            .bind(sid)
-            .fetch_optional(&state.pool)
-            .await?;
+    let text: Option<String> = sqlx::query_scalar("SELECT text FROM sentences WHERE id = $1")
+        .bind(sid)
+        .fetch_optional(&state.pool)
+        .await?;
     let Some(text) = text else {
         return Err(AppError::NotFound("sentence not found".into()));
     };
 
-    let model = llm::active_model(&state.pool, &state.config.llm_model).await;
-
     if !force {
-        if let Some((zh, status, m)) = sqlx::query_as::<_, (Option<String>, Option<String>, Option<String>)>(
-            "SELECT zh, status, model FROM translations WHERE sentence_id = $1",
+        if let Some((zh, status)) = sqlx::query_as::<_, (Option<String>, Option<String>)>(
+            "SELECT zh, status FROM translations WHERE sentence_id = $1",
         )
         .bind(sid)
         .fetch_optional(&state.pool)
         .await?
         {
             if status.as_deref() == Some("ok") && zh.as_ref().is_some_and(|z| !z.is_empty()) {
-                if m.as_deref() == Some(model.as_str()) || m.is_none() {
-                    return Ok(Json(json!({ "zh": zh, "status": "ok" })));
-                }
+                return Ok(Json(json!({ "zh": zh, "status": "ok" })));
             }
         }
     }
+
+    let model = llm::active_model(&state.pool, &state.config.llm_model).await;
 
     if !state.config.llm_configured() || model.is_empty() {
         return Ok(Json(json!({ "zh": "", "status": "unconfigured" })));

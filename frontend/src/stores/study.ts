@@ -16,6 +16,7 @@ export type UiPhase =
   | "relearn-example"
   | "relearn-word"
   | "relearn-meaning"
+  | "relearn-reveal"
   | "done"
   | "group-done"
   | "idle";
@@ -57,7 +58,9 @@ interface StudyState {
   groupInitialEnd: number;
   groupEnd: number;
   relearningStarted: boolean;
+  relearnRoundEnd: number;
   relearnPending: QueueItem[];
+  relearnReveal: QueueItem | null;
   uiPhase: UiPhase;
   assessChoice: Assessment | null;
   sessionStats: SessionStats;
@@ -96,6 +99,7 @@ interface StudyState {
   assessFullNext: () => void;
   assessFullMistake: () => void;
   answerRelearning: (known: boolean) => void;
+  confirmRelearning: () => void;
   advanceWithinGroup: () => void;
   setPassageReader: (reader: PassageReader | null) => void;
   resetSession: () => void;
@@ -152,7 +156,9 @@ export const useStudy = create<StudyState>((set, get) => ({
   groupInitialEnd: 0,
   groupEnd: 0,
   relearningStarted: false,
+  relearnRoundEnd: 0,
   relearnPending: [],
+  relearnReveal: null,
   uiPhase: "idle",
   assessChoice: null,
   sessionStats: emptyStats(),
@@ -209,7 +215,14 @@ export const useStudy = create<StudyState>((set, get) => ({
         .slice(0, limit)
         .map(([idx, card]) => ({ idx: +idx, card: cloneCard(card), group: "review" }));
     }
-    set({ queue, qpos: 0, relearnPending: [], relearningStarted: false });
+    set({
+      queue,
+      qpos: 0,
+      relearnPending: [],
+      relearningStarted: false,
+      relearnRoundEnd: 0,
+      relearnReveal: null,
+    });
   },
 
   startLearn: () => {
@@ -254,6 +267,8 @@ export const useStudy = create<StudyState>((set, get) => ({
       qpos: 0,
       relearnPending: [],
       relearningStarted: false,
+      relearnRoundEnd: 0,
+      relearnReveal: null,
       passageSkipped: 0,
       reciteOrigin: origin,
       sessionStats: emptyStats(),
@@ -280,13 +295,15 @@ export const useStudy = create<StudyState>((set, get) => ({
       groupInitialEnd,
       groupEnd: groupInitialEnd,
       relearningStarted: false,
+      relearnRoundEnd: groupInitialEnd,
       relearnPending: [],
+      relearnReveal: null,
       assessChoice: null,
       uiPhase: "assess-front",
     });
   },
 
-  currentItem: () => get().queue[get().qpos] || null,
+  currentItem: () => get().relearnReveal || get().queue[get().qpos] || null,
 
   currentEntry: () => {
     const item = get().currentItem();
@@ -346,27 +363,52 @@ export const useStudy = create<StudyState>((set, get) => ({
     const state = get();
     const item = state.currentItem();
     if (!item || !item.round) return;
-    if (!known) return;
-    if (item.round < 3) {
-      const next = { ...item, round: (item.round + 1) as 2 | 3 };
-      const queue = [...state.queue];
-      queue[state.qpos] = next;
-      set({ queue, uiPhase: phaseForRound(next.round) });
-      return;
-    }
-    const card = savePassedCard(item.idx, item.card);
-    const stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
-    if (item.group === "new") {
-      useMeta.getState().bump("newToday");
-      stats.newDone++;
-    } else {
-      useMeta.getState().bump("reviewToday");
-      stats.reviewDone++;
-    }
-    useMeta.getState().bump("doneToday");
     const queue = [...state.queue];
-    queue[state.qpos] = { ...item, card };
-    set({ queue, qpos: state.qpos + 1, sessionStats: stats });
+    queue.splice(state.qpos, 1);
+    let groupEnd = state.groupEnd - 1;
+    let relearnRoundEnd = state.relearnRoundEnd - 1;
+    let stats = state.sessionStats;
+
+    if (!known) {
+      queue.splice(relearnRoundEnd, 0, { ...item, card: cloneCard(item.card) });
+      groupEnd++;
+      relearnRoundEnd++;
+    } else if (item.round < 3) {
+      queue.splice(groupEnd, 0, {
+        ...item,
+        card: cloneCard(item.card),
+        round: (item.round + 1) as 2 | 3,
+      });
+      groupEnd++;
+    } else {
+      const card = savePassedCard(item.idx, item.card);
+      stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
+      if (item.group === "new") {
+        useMeta.getState().bump("newToday");
+        stats.newDone++;
+      } else {
+        useMeta.getState().bump("reviewToday");
+        stats.reviewDone++;
+      }
+      useMeta.getState().bump("doneToday");
+    }
+
+    if (state.qpos === relearnRoundEnd && state.qpos < groupEnd) {
+      relearnRoundEnd = groupEnd;
+    }
+    set({
+      queue,
+      groupEnd,
+      relearnRoundEnd,
+      relearnReveal: item,
+      sessionStats: stats,
+      uiPhase: "relearn-reveal",
+    });
+  },
+
+  confirmRelearning: () => {
+    if (!get().relearnReveal) return;
+    set({ relearnReveal: null });
     get().advanceWithinGroup();
   },
 
@@ -388,6 +430,7 @@ export const useStudy = create<StudyState>((set, get) => ({
           queue,
           groupEnd: state.qpos + state.relearnPending.length,
           relearningStarted: true,
+          relearnRoundEnd: state.qpos + state.relearnPending.length,
           relearnPending: [],
           uiPhase: phaseForRound(first.round || 1),
         });
@@ -415,7 +458,9 @@ export const useStudy = create<StudyState>((set, get) => ({
       groupInitialEnd: 0,
       groupEnd: 0,
       relearningStarted: false,
+      relearnRoundEnd: 0,
       relearnPending: [],
+      relearnReveal: null,
       uiPhase: "idle",
       assessChoice: null,
       sessionStats: emptyStats(),

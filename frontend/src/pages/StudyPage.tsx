@@ -27,6 +27,7 @@ export function StudyPage() {
   const assessFullNext = useStudy((state) => state.assessFullNext);
   const assessFullMistake = useStudy((state) => state.assessFullMistake);
   const answerRelearning = useStudy((state) => state.answerRelearning);
+  const confirmRelearning = useStudy((state) => state.confirmRelearning);
   const advanceToNextGroup = useStudy((state) => state.advanceToNextGroup);
   const resetSession = useStudy((state) => state.resetSession);
 
@@ -67,9 +68,11 @@ export function StudyPage() {
       ) {
         if (event.key === "1") answerRelearning(true);
         if (event.key === "2") answerRelearning(false);
+      } else if (uiPhase === "relearn-reveal" && event.key === "1") {
+        confirmRelearning();
       }
     },
-    [answerRelearning, assessChoice, assessFullMistake, assessFullNext, chooseAssessment, uiPhase]
+    [answerRelearning, assessChoice, assessFullMistake, assessFullNext, chooseAssessment, confirmRelearning, uiPhase]
   );
 
   useEffect(() => {
@@ -157,7 +160,7 @@ export function StudyPage() {
 
   const fullCard = (
     <div className="relative min-h-[360px] p-6 md:min-h-[460px] md:p-8" onClick={onCardClick}>
-      <CardHeader label={groupName} word={entry[1]} onSpeak={() => speakEnglish(entry[1], settings.rate)} />
+      <CardHeader label={uiPhase === "relearn-reveal" ? `${groupName} · 答案确认` : groupName} word={entry[1]} onSpeak={() => speakEnglish(entry[1], settings.rate)} />
       <div className="w-full text-left" dangerouslySetInnerHTML={{ __html: sensesHtml }} />
       <ExampleBlock
         html={exampleHtml}
@@ -196,6 +199,13 @@ export function StudyPage() {
         { key: "2", label: "记错了", onClick: assessFullMistake, tone: "again" },
       ]} />
     );
+  } else if (uiPhase === "relearn-reveal") {
+    body = fullCard;
+    controls = (
+      <ActionRow columns="grid-cols-1" actions={[
+        { key: "1", label: "确认后继续", onClick: confirmRelearning, tone: "good" },
+      ]} />
+    );
   } else {
     const relearn = relearnBody(
       uiPhase,
@@ -225,8 +235,8 @@ export function StudyPage() {
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div>
         <div className="shrink-0 text-sm text-muted-foreground">{qpos + 1} / {queue.length}</div>
       </header>
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto p-4 md:p-8">
-        <div className="w-full max-w-lg overflow-hidden rounded-xl border bg-card shadow-sm md:max-w-2xl">{body}</div>
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden p-4 md:justify-center md:p-8">
+        <div className="min-h-0 max-h-full w-full max-w-lg overflow-y-auto overscroll-contain rounded-xl border bg-card shadow-sm md:max-w-2xl">{body}</div>
       </div>
       <div className="shrink-0 border-t bg-background p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">{controls}</div>
       {pop && <WordPopover surface={pop.word} x={pop.x} y={pop.y} onClose={() => setPop(null)} />}

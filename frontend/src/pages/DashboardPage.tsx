@@ -22,8 +22,8 @@ import { useStudy } from "@/stores/study";
 
 type Tone = "quiet" | "new" | "review" | "mastered";
 
-function tipFor(snapshot: { due: number; newAvailable: number; doneToday: number }): string {
-  if (snapshot.due > 0) return `有 ${snapshot.due} 个词正在等你复习，先处理它们会更轻松。`;
+function tipFor(snapshot: { reviewAvailable: number; newAvailable: number; doneToday: number }): string {
+  if (snapshot.reviewAvailable > 0) return `今天有 ${snapshot.reviewAvailable} 个词需要复习，先处理它们会更轻松。`;
   if (snapshot.newAvailable > 0) return `今天还有 ${snapshot.newAvailable} 个新词，保持这个节奏就很好。`;
   return snapshot.doneToday > 0 ? "今天的任务已经完成，去读一篇真题巩固一下。" : "今天没有待办，去真题里继续积累语感。";
 }
@@ -112,7 +112,7 @@ export function DashboardPage() {
       <section className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={CheckCircle2} label="今日完成" value={done} tone="quiet" />
         <Metric icon={Sparkles} label="新词待学" value={stats.newAvailable} tone="new" />
-        <Metric icon={RotateCcw} label="复习词" value={stats.due} tone="review" />
+        <Metric icon={RotateCcw} label="今日需复习" value={stats.reviewAvailable} tone="review" />
         <Metric icon={GraduationCap} label="已掌握" value={stats.mastered} tone="mastered" />
       </section>
 
@@ -146,7 +146,7 @@ export function DashboardPage() {
                 <span className="grid h-9 w-9 place-items-center rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300"><Clock3 className="h-5 w-5" /></span>
                 <span>
                   <span className="block text-lg font-semibold">复习旧词</span>
-                  <span className="mt-1 block text-sm text-muted-foreground">{stats.reviewAvailable > 0 ? `本轮处理 ${stats.reviewAvailable} 个，复习组共 ${stats.due} 个` : "今天的复习额度已完成"}</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">{stats.reviewAvailable > 0 ? `今天需复习 ${stats.reviewAvailable} 个` : "今天的复习已经完成"}</span>
                 </span>
               </button>
             </div>
