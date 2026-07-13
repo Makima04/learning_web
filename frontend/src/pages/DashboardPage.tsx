@@ -4,50 +4,60 @@ import {
   ArrowUpRight,
   BookOpen,
   CalendarDays,
-  CheckCircle2,
   Clock3,
-  GraduationCap,
-  RotateCcw,
-  Sparkles,
   TrendingUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { DAY } from "@/lib/day";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/stores/auth";
 import { useCards } from "@/stores/cards";
 import { useStudy } from "@/stores/study";
 
-type Tone = "quiet" | "new" | "review" | "mastered";
-
 function tipFor(snapshot: { reviewAvailable: number; newAvailable: number; doneToday: number }): string {
-  if (snapshot.reviewAvailable > 0) return `今天有 ${snapshot.reviewAvailable} 个词需要复习，先处理它们会更轻松。`;
-  if (snapshot.newAvailable > 0) return `今天还有 ${snapshot.newAvailable} 个新词，保持这个节奏就很好。`;
+  if (snapshot.reviewAvailable > 0) return "先完成到期复习，再开始今天的新词。";
+  if (snapshot.newAvailable > 0) return "复习已经清空，可以专心积累新词了。";
   return snapshot.doneToday > 0 ? "今天的任务已经完成，去读一篇真题巩固一下。" : "今天没有待办，去真题里继续积累语感。";
 }
 
-function Metric({ icon: Icon, label, value, tone }: { icon: LucideIcon; label: string; value: number; tone: Tone }) {
-  const toneClass = {
-    quiet: "bg-muted text-muted-foreground",
-    new: "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
-    review: "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
-    mastered: "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
-  }[tone];
-
+function StudyAction({
+  icon: Icon,
+  title,
+  description,
+  primary,
+  disabled,
+  iconClassName,
+  onClick,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  primary: boolean;
+  disabled?: boolean;
+  iconClassName: string;
+  onClick: () => void;
+}) {
   return (
-    <Card className="border-border/80 shadow-none">
-      <CardContent className="flex items-center gap-3 p-4">
-        <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", toneClass)}>
-          <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
-        </span>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="mt-0.5 text-2xl font-semibold leading-none tnum">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "group flex min-h-32 flex-col justify-between rounded-lg p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        primary
+          ? "bg-primary text-primary-foreground transition-opacity hover:opacity-95"
+          : "border bg-card transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50",
+      )}
+    >
+      <span className={cn("grid h-9 w-9 place-items-center rounded-lg", primary ? "bg-white/15" : iconClassName)}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <span>
+        <span className="block text-lg font-semibold">{title}</span>
+        <span className={cn("mt-1 block text-sm", primary ? "text-white/80" : "text-muted-foreground")}>{description}</span>
+      </span>
+    </button>
   );
 }
 
@@ -96,24 +106,36 @@ export function DashboardPage() {
     navigate("/study");
   }
 
+  const reviewIsPriority = stats.reviewAvailable > 0;
+  const reviewAction = {
+    key: "review",
+    icon: Clock3,
+    title: "复习旧词",
+    description: reviewIsPriority ? `今天需复习 ${stats.reviewAvailable} 个` : "今天的复习已经完成",
+    primary: reviewIsPriority,
+    disabled: !reviewIsPriority,
+    iconClassName: "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
+    onClick: beginReview,
+  };
+  const learnAction = {
+    key: "learn",
+    icon: BookOpen,
+    title: "学习新词",
+    description: stats.newAvailable > 0 ? `还有 ${stats.newAvailable} 个待学习` : "今天的新词已经完成",
+    primary: !reviewIsPriority,
+    iconClassName: "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
+    onClick: beginLearn,
+  };
+  const studyActions = reviewIsPriority ? [reviewAction, learnAction] : [learnAction, reviewAction];
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-8">
-      <section className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <section className="mb-6">
         <div>
           <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" />{dateLabel}</p>
           <h1 className="text-2xl font-semibold">{user?.username ? `${user.username}，继续前进` : "今天，继续前进"}</h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{tipFor(stats)}</p>
         </div>
-        <Button variant="outline" className="shrink-0" onClick={() => navigate("/papers")}>
-          阅读真题 <ArrowUpRight className="h-4 w-4" />
-        </Button>
-      </section>
-
-      <section className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={CheckCircle2} label="今日完成" value={done} tone="quiet" />
-        <Metric icon={Sparkles} label="新词待学" value={stats.newAvailable} tone="new" />
-        <Metric icon={RotateCcw} label="今日需复习" value={stats.reviewAvailable} tone="review" />
-        <Metric icon={GraduationCap} label="已掌握" value={stats.mastered} tone="mastered" />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(290px,0.8fr)]">
@@ -135,20 +157,7 @@ export function DashboardPage() {
               </div>
             </div>
             <div className="grid gap-3 p-5 md:grid-cols-2 md:p-6">
-              <button type="button" onClick={beginLearn} className="group flex min-h-32 flex-col justify-between rounded-lg bg-primary p-5 text-left text-primary-foreground transition-opacity hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/15"><BookOpen className="h-5 w-5" /></span>
-                <span>
-                  <span className="block text-lg font-semibold">学习新词</span>
-                  <span className="mt-1 block text-sm text-white/80">{stats.newAvailable > 0 ? `还有 ${stats.newAvailable} 个待学习` : "今天的新词已经完成"}</span>
-                </span>
-              </button>
-              <button type="button" onClick={beginReview} disabled={stats.reviewAvailable === 0} className="group flex min-h-32 flex-col justify-between rounded-lg border bg-card p-5 text-left transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300"><Clock3 className="h-5 w-5" /></span>
-                <span>
-                  <span className="block text-lg font-semibold">复习旧词</span>
-                  <span className="mt-1 block text-sm text-muted-foreground">{stats.reviewAvailable > 0 ? `今天需复习 ${stats.reviewAvailable} 个` : "今天的复习已经完成"}</span>
-                </span>
-              </button>
+              {studyActions.map(({ key, ...action }) => <StudyAction key={key} {...action} />)}
             </div>
           </CardContent>
         </Card>
