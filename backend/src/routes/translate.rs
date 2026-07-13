@@ -37,7 +37,7 @@ async fn translate_text(
     axum::extract::ConnectInfo(addr): axum::extract::ConnectInfo<std::net::SocketAddr>,
     Json(body): Json<TextBody>,
 ) -> AppResult<Json<Value>> {
-    let ip = db::client_ip(&headers, Some(addr));
+    let ip = db::client_ip(&headers, Some(addr), state.config.trusted_proxy_hops);
     state.rate.check(&ip, "translate", 60, 60)?;
 
     let text = body.text.trim();

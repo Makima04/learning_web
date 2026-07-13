@@ -58,19 +58,73 @@ pub async fn ensure_sentence(
     Ok(id)
 }
 
-pub fn client_ip(headers: &axum::http::HeaderMap, fallback: Option<std::net::SocketAddr>) -> String {
-    if let Some(xff) = headers
-        .get("x-forwarded-for")
-        .and_then(|v| v.to_str().ok())
-    {
-        if let Some(first) = xff.split(',').next() {
-            let t = first.trim();
-            if !t.is_empty() {
-                return t.to_string();
-            }
-        }
+pub fn client_ip(
+    headers: &axum::http::HeaderMap,
+    fallback: Option<std::net::SocketAddr>,
+    trusted_proxy_hops: usize,
+) -> String {
+    let fallback_ip = fallback
+        .map(|addr| addr.ip().to_string())
+        .unwrap_or_else(|| "unknown".into());
+    if trusted_proxy_hops == 0 || fallback.is_none() {
+        return fallback_ip;
     }
-    fallback
-        .map(|a| a.ip().to_string())
-        .unwrap_or_else(|| "unknown".into())
+
+    let Some(forwarded) = headers
+        .get("x-forwarded-for")
+        .and_then(|value| value.to_str().ok())
+    else {
+        return fallback_ip;
+    };
+    let Ok(addresses) = forwarded
+        .split(',')
+        .map(str::trim)
+        .map(str::parse::<std::net::IpAddr>)
+        .collect::<Result<Vec<_>, _>>()
+    else {
+        return fallback_ip;
+    };
+    addresses
+        .get(addresses.len().saturating_sub(trusted_proxy_hops))
+        .filter(|_| addresses.len() >= trusted_proxy_hops)
+        .map(ToString::to_string)
+        .unwrap_or(fallback_ip)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::http::{HeaderMap, HeaderValue};
+
+    fn peer() -> std::net::SocketAddr {
+        "127.0.0.1:8000".parse().unwrap()
+    }
+
+    #[test]
+    fn ignores_forwarded_header_without_trusted_proxy() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-forwarded-for", HeaderValue::from_static("203.0.113.7"));
+        assert_eq!(client_ip(&headers, Some(peer()), 0), "127.0.0.1");
+    }
+
+    #[test]
+    fn selects_address_before_configured_proxy_hops() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "x-forwarded-for",
+            HeaderValue::from_static("198.51.100.9, 203.0.113.7"),
+        );
+        assert_eq!(client_ip(&headers, Some(peer()), 1), "203.0.113.7");
+        assert_eq!(client_ip(&headers, Some(peer()), 2), "198.51.100.9");
+    }
+
+    #[test]
+    fn rejects_malformed_forwarded_header() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "x-forwarded-for",
+            HeaderValue::from_static("not-an-ip, 203.0.113.7"),
+        );
+        assert_eq!(client_ip(&headers, Some(peer()), 1), "127.0.0.1");
+    }
 }

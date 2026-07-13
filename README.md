@@ -70,6 +70,7 @@ docker run -d \
 | `EW_STATIC_DIR` | `frontend/dist` | 静态资源目录 |
 | `EW_SESSION_TTL_DAYS` | `30` | 会话天数 |
 | `EW_ALLOW_FIRST_ADMIN` | `1` | 首位注册用户是否 admin |
+| `EW_TRUSTED_PROXY_HOPS` | `0` | 可信反向代理跳数；直连保持 `0`，单层反代设为 `1` |
 | `EW_LLM_URL` / `KEY` / `MODEL` | （空） | LLM 网关（OpenAI 兼容） |
 
 > 也可用项目根 `ew_llm.json`（本地开发）；环境变量优先。

@@ -7,14 +7,13 @@ pub struct Config {
     pub database_url: String,
     pub session_ttl_days: i64,
     pub allow_first_admin: bool,
+    pub trusted_proxy_hops: usize,
     pub llm_url: String,
     pub llm_key: String,
     pub llm_model: String,
     pub host: String,
     pub port: u16,
     pub static_dir: PathBuf,
-    pub conf_path: PathBuf,
-    pub papers_js: PathBuf,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -64,6 +63,10 @@ impl Config {
         let allow_first_admin = std::env::var("EW_ALLOW_FIRST_ADMIN")
             .map(|v| v != "0")
             .unwrap_or(true);
+        let trusted_proxy_hops = std::env::var("EW_TRUSTED_PROXY_HOPS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(0);
 
         let host = env_nonempty("EW_HOST").unwrap_or_else(|| "0.0.0.0".into());
         let port = std::env::var("EW_PORT")
@@ -75,28 +78,17 @@ impl Config {
             .map(PathBuf::from)
             .unwrap_or_else(|| project_root.join("frontend/dist"));
 
-        let papers_js = {
-            let web = project_root.join("web/papers.js");
-            let public = project_root.join("frontend/public/papers.js");
-            if web.is_file() {
-                web
-            } else {
-                public
-            }
-        };
-
         Self {
             database_url,
             session_ttl_days,
             allow_first_admin,
+            trusted_proxy_hops,
             llm_url,
             llm_key,
             llm_model,
             host,
             port,
             static_dir,
-            conf_path,
-            papers_js,
         }
     }
 

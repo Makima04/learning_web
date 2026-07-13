@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { parseImportData } from "@/lib/importData";
 import { Link } from "react-router-dom";
 
 const TABS = [
@@ -98,7 +99,7 @@ export function SettingsPage() {
       if (!f) return;
       try {
         const text = await f.text();
-        const data = JSON.parse(text);
+        const data = parseImportData(text);
         if (data.cards) useCards.getState().replaceAll(data.cards);
         if (data.meta) useMeta.getState().replace(data.meta);
         if (data.settings) setSettings(data.settings);
@@ -359,17 +360,15 @@ export function SettingsPage() {
                   </Button>
                 </div>
                 {msg && <p className="text-sm text-muted-foreground">{msg}</p>}
-                <p className="text-xs text-muted-foreground pt-4">
-                  红宝书 · 乱序 · 6550 词
-                  {typeof window !== "undefined" && window.EW_VERSION
-                    ? ` · ${window.EW_VERSION}`
-                    : ""}
-                </p>
               </CardContent>
             </Card>
           )}
         </div>
       </div>
+      <p className="pt-6 text-center text-xs text-muted-foreground">
+        红宝书 · 乱序 · 6550 词 · 版本：
+        {typeof window !== "undefined" && window.EW_VERSION ? window.EW_VERSION : "dev"}
+      </p>
     </div>
   );
 }

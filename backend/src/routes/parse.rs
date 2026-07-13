@@ -54,7 +54,7 @@ async fn parse_sentence(
     axum::extract::ConnectInfo(addr): axum::extract::ConnectInfo<std::net::SocketAddr>,
     Json(body): Json<TextBody>,
 ) -> Result<Sse<SseStream>, AppError> {
-    let ip = db::client_ip(&headers, Some(addr));
+    let ip = db::client_ip(&headers, Some(addr), state.config.trusted_proxy_hops);
     state.rate.check(&ip, "parse", 60, 60)?;
 
     let text = body.text.trim().to_string();
@@ -141,7 +141,7 @@ async fn analyze_paragraph(
     axum::extract::ConnectInfo(addr): axum::extract::ConnectInfo<std::net::SocketAddr>,
     Json(body): Json<ParaBody>,
 ) -> Result<Sse<SseStream>, AppError> {
-    let ip = db::client_ip(&headers, Some(addr));
+    let ip = db::client_ip(&headers, Some(addr), state.config.trusted_proxy_hops);
     state.rate.check(&ip, "analyze", 60, 60)?;
 
     let text = body.text.trim().to_string();

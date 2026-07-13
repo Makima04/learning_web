@@ -14,6 +14,7 @@ image="ghcr.io/$repository"
 sha="$(git rev-parse HEAD)"
 
 docker buildx build --platform linux/arm64 \
+  --build-arg "EW_VERSION=$sha" \
   --tag "$image:arm64-latest" \
   --tag "$image:arm64-$sha" \
   --push .

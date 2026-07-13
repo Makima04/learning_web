@@ -5,6 +5,7 @@
 # ---- frontend ----
 FROM node:22-slim AS frontend
 WORKDIR /app/frontend
+ARG EW_VERSION
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./

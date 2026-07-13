@@ -53,18 +53,23 @@ async fn register(
         ));
     }
 
+    let salt = gen_salt();
+    let pw_hash = hash_password(&body.password, &salt);
+    let mut tx = state.pool.begin().await?;
+
     let mut is_admin = false;
     if state.config.allow_first_admin {
+        sqlx::query("SELECT pg_advisory_xact_lock($1)")
+            .bind(0x4557_5f41_444d_494e_i64)
+            .execute(&mut *tx)
+            .await?;
         let n: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM users WHERE is_admin = TRUE")
-            .fetch_one(&state.pool)
+            .fetch_one(&mut *tx)
             .await?;
         if n == 0 {
             is_admin = true;
         }
     }
-
-    let salt = gen_salt();
-    let pw_hash = hash_password(&body.password, &salt);
 
     let user_id: i64 = match sqlx::query_scalar(
         r#"
@@ -77,7 +82,7 @@ async fn register(
     .bind(&pw_hash)
     .bind(&salt)
     .bind(is_admin)
-    .fetch_one(&state.pool)
+    .fetch_one(&mut *tx)
     .await
     {
         Ok(id) => id,
@@ -87,7 +92,18 @@ async fn register(
         Err(e) => return Err(e.into()),
     };
 
-    let token = create_session(&state, user_id).await?;
+    let token = gen_token();
+    let exp = session_expires_at(state.config.session_ttl_days);
+    sqlx::query(
+        "INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)",
+    )
+    .bind(&token)
+    .bind(user_id)
+    .bind(Utc::now())
+    .bind(exp)
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
     Ok(Json(json!({
         "token": token,
         "user": UserOut { id: user_id, username, is_admin },
@@ -101,7 +117,7 @@ async fn login(
     Json(body): Json<AuthBody>,
 ) -> AppResult<Json<serde_json::Value>> {
     let total_started = Instant::now();
-    let ip = db::client_ip(&headers, Some(addr));
+    let ip = db::client_ip(&headers, Some(addr), state.config.trusted_proxy_hops);
     state.rate.check(&ip, "login", 10, 60)?;
 
     let username = body.username.trim().to_string();
@@ -115,6 +131,7 @@ async fn login(
     let lookup_ms = lookup_started.elapsed().as_millis() as u64;
 
     let Some((id, username, pw_hash, salt, is_admin)) = row else {
+        let _ = verify_password(&body.password, "english_web_missing_user", "");
         tracing::info!(
             event = "auth.login_timing",
             outcome = "invalid_credentials",

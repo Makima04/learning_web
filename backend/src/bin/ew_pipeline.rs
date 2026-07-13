@@ -111,9 +111,9 @@ fn is_double_consonant(word: &str) -> bool {
 
 fn verb_inflections(base: &str) -> Vec<String> {
     let mut forms = BTreeSet::new();
-    if base.ends_with('e') {
+    if let Some(stem) = base.strip_suffix('e') {
         forms.insert(format!("{base}d"));
-        forms.insert(format!("{}ing", &base[..base.len() - 1]));
+        forms.insert(format!("{stem}ing"));
         forms.insert(format!("{base}s"));
     } else if base.ends_with('y')
         && base.len() > 1
@@ -149,10 +149,10 @@ fn noun_plurals(base: &str) -> Vec<String> {
         .any(|suffix| base.ends_with(suffix))
     {
         format!("{base}es")
-    } else if base.ends_with('f') {
-        format!("{}ves", &base[..base.len() - 1])
-    } else if base.ends_with("fe") {
-        format!("{}ves", &base[..base.len() - 2])
+    } else if let Some(stem) = base.strip_suffix('f') {
+        format!("{stem}ves")
+    } else if let Some(stem) = base.strip_suffix("fe") {
+        format!("{stem}ves")
     } else {
         format!("{base}s")
     };
@@ -603,7 +603,7 @@ fn check_paper(data: &Value, variant: &str) -> Vec<String> {
             if value_array(reading, "gaps").len() != 5 {
                 issues.push("rb gaps(expect 5)".into());
             }
-            if reading["options"].as_object().map_or(true, Map::is_empty)
+            if reading["options"].as_object().is_none_or(Map::is_empty)
                 && reading["passage"]
                     .as_str()
                     .unwrap_or_default()

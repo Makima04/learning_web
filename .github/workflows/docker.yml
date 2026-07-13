@@ -63,6 +63,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
+          build-args: EW_VERSION=${{ github.sha }}
           tags: |
             ${{ steps.meta.outputs.image }}:amd64-latest
             ${{ steps.meta.outputs.image }}:amd64-${{ github.sha }}
