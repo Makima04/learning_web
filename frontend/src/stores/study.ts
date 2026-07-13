@@ -61,6 +61,7 @@ interface StudyState {
   relearnRoundEnd: number;
   relearnPending: QueueItem[];
   relearnReveal: QueueItem | null;
+  relearnAnswerKnown: boolean | null;
   uiPhase: UiPhase;
   assessChoice: Assessment | null;
   sessionStats: SessionStats;
@@ -99,7 +100,7 @@ interface StudyState {
   assessFullNext: () => void;
   assessFullMistake: () => void;
   answerRelearning: (known: boolean) => void;
-  confirmRelearning: () => void;
+  confirmRelearning: (known: boolean) => void;
   advanceWithinGroup: () => void;
   setPassageReader: (reader: PassageReader | null) => void;
   resetSession: () => void;
@@ -159,6 +160,7 @@ export const useStudy = create<StudyState>((set, get) => ({
   relearnRoundEnd: 0,
   relearnPending: [],
   relearnReveal: null,
+  relearnAnswerKnown: null,
   uiPhase: "idle",
   assessChoice: null,
   sessionStats: emptyStats(),
@@ -222,6 +224,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearningStarted: false,
       relearnRoundEnd: 0,
       relearnReveal: null,
+      relearnAnswerKnown: null,
     });
   },
 
@@ -270,6 +273,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearningStarted: false,
       relearnRoundEnd: 0,
       relearnReveal: null,
+      relearnAnswerKnown: null,
       passageSkipped: 0,
       reciteOrigin: origin,
       sessionStats: emptyStats(),
@@ -299,6 +303,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearnRoundEnd: groupInitialEnd,
       relearnPending: [],
       relearnReveal: null,
+      relearnAnswerKnown: null,
       assessChoice: null,
       uiPhase: "assess-front",
     });
@@ -364,13 +369,25 @@ export const useStudy = create<StudyState>((set, get) => ({
     const state = get();
     const item = state.currentItem();
     if (!item || !item.round) return;
+    set({
+      relearnReveal: item,
+      relearnAnswerKnown: known,
+      uiPhase: "relearn-reveal",
+    });
+  },
+
+  confirmRelearning: (known) => {
+    const state = get();
+    const item = state.relearnReveal;
+    if (!item || !item.round || state.relearnAnswerKnown === null) return;
+    const confirmedKnown = state.relearnAnswerKnown && known;
     const queue = [...state.queue];
     queue.splice(state.qpos, 1);
     let groupEnd = state.groupEnd - 1;
     let relearnRoundEnd = state.relearnRoundEnd - 1;
     let stats = state.sessionStats;
 
-    if (!known) {
+    if (!confirmedKnown) {
       queue.splice(relearnRoundEnd, 0, { ...item, card: cloneCard(item.card) });
       groupEnd++;
       relearnRoundEnd++;
@@ -401,15 +418,10 @@ export const useStudy = create<StudyState>((set, get) => ({
       queue,
       groupEnd,
       relearnRoundEnd,
-      relearnReveal: item,
+      relearnReveal: null,
+      relearnAnswerKnown: null,
       sessionStats: stats,
-      uiPhase: "relearn-reveal",
     });
-  },
-
-  confirmRelearning: () => {
-    if (!get().relearnReveal) return;
-    set({ relearnReveal: null });
     get().advanceWithinGroup();
   },
 
@@ -462,6 +474,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearnRoundEnd: 0,
       relearnPending: [],
       relearnReveal: null,
+      relearnAnswerKnown: null,
       uiPhase: "idle",
       assessChoice: null,
       sessionStats: emptyStats(),

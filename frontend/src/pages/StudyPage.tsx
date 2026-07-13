@@ -18,6 +18,7 @@ export function StudyPage() {
   const qpos = useStudy((state) => state.qpos);
   const uiPhase = useStudy((state) => state.uiPhase);
   const assessChoice = useStudy((state) => state.assessChoice);
+  const relearnAnswerKnown = useStudy((state) => state.relearnAnswerKnown);
   const sessionStats = useStudy((state) => state.sessionStats);
   const passageSkipped = useStudy((state) => state.passageSkipped);
   const currentItem = useStudy((state) => state.currentItem);
@@ -68,11 +69,14 @@ export function StudyPage() {
       ) {
         if (event.key === "1") answerRelearning(true);
         if (event.key === "2") answerRelearning(false);
-      } else if (uiPhase === "relearn-reveal" && event.key === "1") {
-        confirmRelearning();
+      } else if (uiPhase === "relearn-reveal") {
+        if (event.key === "1" && relearnAnswerKnown !== null) {
+          confirmRelearning(relearnAnswerKnown);
+        }
+        if (event.key === "2" && relearnAnswerKnown) confirmRelearning(false);
       }
     },
-    [answerRelearning, assessChoice, assessFullMistake, assessFullNext, chooseAssessment, confirmRelearning, uiPhase]
+    [answerRelearning, assessChoice, assessFullMistake, assessFullNext, chooseAssessment, confirmRelearning, relearnAnswerKnown, uiPhase]
   );
 
   useEffect(() => {
@@ -201,9 +205,14 @@ export function StudyPage() {
     );
   } else if (uiPhase === "relearn-reveal") {
     body = fullCard;
-    controls = (
+    controls = relearnAnswerKnown ? (
+      <ActionRow columns="grid-cols-2" actions={[
+        { key: "1", label: "下一词", onClick: () => confirmRelearning(true) },
+        { key: "2", label: "记错了", onClick: () => confirmRelearning(false), tone: "again" },
+      ]} />
+    ) : (
       <ActionRow columns="grid-cols-1" actions={[
-        { key: "1", label: "确认后继续", onClick: confirmRelearning, tone: "good" },
+        { key: "1", label: "下一词", onClick: () => confirmRelearning(false) },
       ]} />
     );
   } else {
