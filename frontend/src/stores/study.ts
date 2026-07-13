@@ -252,12 +252,13 @@ export const useStudy = create<StudyState>((set, get) => ({
     const queue: QueueItem[] = [];
     for (const word of words) {
       const card = cards[word.idx];
+      if (isLearned(card)) continue;
       const entry = [word.idx, word.english, word.senses] as WordEntry & { sentences?: string[] };
       entry.sentences = (word.sentences || []).slice(0, 5);
       queue.push({
         idx: word.idx,
         card: cloneCard(card),
-        group: isLearned(card) ? "review" : "new",
+        group: "new",
         entry,
       });
     }
