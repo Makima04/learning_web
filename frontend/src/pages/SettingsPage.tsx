@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { parseImportData } from "@/lib/importData";
 import { Link } from "react-router-dom";
+import { syncAccountData } from "@/lib/accountSync";
 
 const TABS = [
   { id: "study", label: "学习" },
@@ -51,9 +52,7 @@ export function SettingsPage() {
       if (reg) await api.register(user, pass);
       else await api.login(user, pass);
       auth.refresh();
-      await useCards.getState().sync();
-      await useMeta.getState().syncMeta();
-      await useSettings.getState().syncFromServer();
+      await syncAccountData();
       setMsg("登录成功");
     } catch (e: any) {
       setMsg(e?.message || "失败");

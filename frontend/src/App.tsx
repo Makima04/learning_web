@@ -7,8 +7,11 @@ import { PapersRecitePage } from "@/pages/PapersRecitePage";
 import { ReaderPage } from "@/pages/ReaderPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TransMgrPage } from "@/pages/TransMgrPage";
+import { useAccountSync } from "@/hooks/useAccountSync";
 
 export default function App() {
+  useAccountSync();
+
   return (
     <Routes>
       <Route element={<AppLayout />}>

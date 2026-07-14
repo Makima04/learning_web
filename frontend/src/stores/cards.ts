@@ -131,6 +131,9 @@ export const useCards = create<CardsStore>((set, get) => ({
     } else if (remoteKeys.length > 0) {
       const merged = { ...localCards };
       const localNewer: Record<string, api.CardDTO> = {};
+      for (const [idx, localCard] of Object.entries(localCards)) {
+        if (!remoteCards[idx]) localNewer[idx] = toDto(localCard);
+      }
       for (const [idx, remoteCard] of Object.entries(remoteNum)) {
         const localCard = localCards[+idx];
         if ((localCard?.updatedAt ?? 0) > (remoteCard.updatedAt ?? 0)) {
