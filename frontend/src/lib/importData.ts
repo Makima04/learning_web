@@ -1,11 +1,29 @@
 import type { Card, CardState } from "@/lib/srs";
+import type {
+  JournalCategory,
+  JournalEntry,
+  JournalKind,
+  ReviewLog,
+  ReviewResult,
+  ReviewStep,
+  WeeklySummary,
+} from "@/lib/journal";
 import type { Meta } from "@/stores/meta";
 import type { Direction, Settings } from "@/stores/settings";
+
+export interface JournalImport {
+  categories: JournalCategory[];
+  entries: JournalEntry[];
+  logs: ReviewLog[];
+  weeklies: WeeklySummary[];
+  updatedAt: number;
+}
 
 export interface ImportedData {
   cards?: Record<number, Card>;
   meta?: Meta;
   settings?: Partial<Settings>;
+  journal?: JournalImport;
 }
 
 type UnknownRecord = Record<string, unknown>;
@@ -39,6 +57,13 @@ function number(
 
 function boolean(value: unknown, label: string): boolean {
   if (typeof value !== "boolean") throw new Error(`${label}必须是布尔值`);
+  return value;
+}
+
+function dayString(value: unknown, label: string): string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`${label}日期无效`);
+  }
   return value;
 }
 
@@ -139,14 +164,148 @@ function settings(value: unknown): Partial<Settings> {
   return result;
 }
 
+function journalCategory(value: unknown, index: number): JournalCategory {
+  const item = record(value, `日志分类 ${index}`);
+  if (typeof item.id !== "string" || !item.id) {
+    throw new Error(`日志分类 ${index} 的 id 无效`);
+  }
+  if (typeof item.name !== "string" || !item.name.trim()) {
+    throw new Error(`日志分类 ${index} 的名称无效`);
+  }
+  return {
+    id: item.id,
+    name: item.name.trim(),
+    color: typeof item.color === "string" ? item.color : "#64748b",
+    order: typeof item.order === "number" ? item.order : index,
+  };
+}
+
+function journalEntry(value: unknown, index: number): JournalEntry {
+  const item = record(value, `日志条目 ${index}`);
+  if (typeof item.id !== "string" || !item.id) {
+    throw new Error(`日志条目 ${index} 的 id 无效`);
+  }
+  if (typeof item.categoryId !== "string" || !item.categoryId) {
+    throw new Error(`日志条目 ${index} 的分类无效`);
+  }
+  if (typeof item.title !== "string" || !item.title.trim()) {
+    throw new Error(`日志条目 ${index} 的标题无效`);
+  }
+  const kind = item.kind;
+  if (kind !== "learn" && kind !== "mistake") {
+    throw new Error(`日志条目 ${index} 的类型无效`);
+  }
+  const step = number(item.step, `日志条目 ${index} 的间隔`, {
+    integer: true,
+    min: 1,
+    max: 14,
+  });
+  if (![1, 3, 7, 14].includes(step)) {
+    throw new Error(`日志条目 ${index} 的间隔档位无效`);
+  }
+  const status = item.status;
+  if (status !== "active" && status !== "archived") {
+    throw new Error(`日志条目 ${index} 的状态无效`);
+  }
+  const result: JournalEntry = {
+    id: item.id,
+    categoryId: item.categoryId,
+    title: item.title.trim(),
+    body: typeof item.body === "string" ? item.body : "",
+    kind: kind as JournalKind,
+    createdOn: dayString(item.createdOn, `日志条目 ${index} 的创建日`),
+    nextReviewOn: dayString(item.nextReviewOn, `日志条目 ${index} 的复盘日`),
+    step: step as ReviewStep,
+    status,
+    lapses: number(item.lapses ?? 0, `日志条目 ${index} 的回退次数`, {
+      integer: true,
+      min: 0,
+    }),
+    updatedAt: number(item.updatedAt ?? 0, `日志条目 ${index} 的更新时间`, { min: 0 }),
+  };
+  if (item.lastReviewedOn !== undefined) {
+    result.lastReviewedOn = dayString(item.lastReviewedOn, `日志条目 ${index} 的上次复盘`);
+  }
+  return result;
+}
+
+function journalLog(value: unknown, index: number): ReviewLog {
+  const item = record(value, `复盘记录 ${index}`);
+  if (typeof item.id !== "string" || !item.id) {
+    throw new Error(`复盘记录 ${index} 的 id 无效`);
+  }
+  if (typeof item.entryId !== "string" || !item.entryId) {
+    throw new Error(`复盘记录 ${index} 的条目 id 无效`);
+  }
+  const result = item.result;
+  if (result !== "pass" && result !== "hard" && result !== "fail") {
+    throw new Error(`复盘记录 ${index} 的结果无效`);
+  }
+  const log: ReviewLog = {
+    id: item.id,
+    entryId: item.entryId,
+    date: dayString(item.date, `复盘记录 ${index} 的日期`),
+    result: result as ReviewResult,
+  };
+  if (item.note !== undefined) {
+    if (typeof item.note !== "string") throw new Error(`复盘记录 ${index} 的备注无效`);
+    log.note = item.note;
+  }
+  return log;
+}
+
+function journalWeekly(value: unknown, index: number): WeeklySummary {
+  const item = record(value, `周报 ${index}`);
+  return {
+    weekKey: dayString(item.weekKey, `周报 ${index} 的周键`),
+    note: typeof item.note === "string" ? item.note : "",
+    updatedAt: number(item.updatedAt ?? 0, `周报 ${index} 的更新时间`, { min: 0 }),
+  };
+}
+
+export function parseJournal(value: unknown): JournalImport {
+  const source = record(value, "学习日志");
+  const categoriesRaw = source.categories;
+  const entriesRaw = source.entries;
+  const logsRaw = source.logs;
+  const weekliesRaw = source.weeklies;
+  if (categoriesRaw !== undefined && !Array.isArray(categoriesRaw)) {
+    throw new Error("学习日志分类格式无效");
+  }
+  if (entriesRaw !== undefined && !Array.isArray(entriesRaw)) {
+    throw new Error("学习日志条目格式无效");
+  }
+  if (logsRaw !== undefined && !Array.isArray(logsRaw)) {
+    throw new Error("学习日志复盘记录格式无效");
+  }
+  if (weekliesRaw !== undefined && !Array.isArray(weekliesRaw)) {
+    throw new Error("学习日志周报格式无效");
+  }
+  const categories = (categoriesRaw as unknown[] | undefined)?.map(journalCategory) || [];
+  const entries = (entriesRaw as unknown[] | undefined)?.map(journalEntry) || [];
+  const logs = (logsRaw as unknown[] | undefined)?.map(journalLog) || [];
+  const weeklies = (weekliesRaw as unknown[] | undefined)?.map(journalWeekly) || [];
+  if (categories.length > 200) throw new Error("学习日志分类过多");
+  if (entries.length > 20000) throw new Error("学习日志条目过多");
+  if (logs.length > 50000) throw new Error("学习日志复盘记录过多");
+  return {
+    categories,
+    entries,
+    logs,
+    weeklies,
+    updatedAt: number(source.updatedAt ?? Date.now(), "学习日志更新时间", { min: 0 }),
+  };
+}
+
 export function parseImportData(text: string): ImportedData {
   const source = record(JSON.parse(text) as unknown, "导入文件");
   const result: ImportedData = {};
   if (source.cards !== undefined) result.cards = cards(source.cards);
   if (source.meta !== undefined) result.meta = meta(source.meta);
   if (source.settings !== undefined) result.settings = settings(source.settings);
-  if (!result.cards && !result.meta && !result.settings) {
-    throw new Error("导入文件不包含卡片、统计或设置数据");
+  if (source.journal !== undefined) result.journal = parseJournal(source.journal);
+  if (!result.cards && !result.meta && !result.settings && !result.journal) {
+    throw new Error("导入文件不包含卡片、统计、设置或学习日志数据");
   }
   return result;
 }

@@ -5,14 +5,17 @@ import {
   BookOpen,
   CalendarDays,
   Clock3,
+  NotebookPen,
   TrendingUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { DAY } from "@/lib/day";
+import { DAY, dayKey } from "@/lib/day";
+import { isDueOnOrBefore } from "@/lib/journal";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/stores/auth";
 import { useCards } from "@/stores/cards";
+import { useJournal } from "@/stores/journal";
 import { useStudy } from "@/stores/study";
 
 function tipFor(snapshot: { reviewAvailable: number; newAvailable: number; doneToday: number }): string {
@@ -67,8 +70,13 @@ export function DashboardPage() {
   const startLearn = useStudy((state) => state.startLearn);
   const startReview = useStudy((state) => state.startReview);
   const cards = useCards((state) => state.cards);
+  const journalEntries = useJournal((state) => state.entries);
   const user = useAuth((state) => state.user);
   const stats = snapshot();
+  const journalDueCount = useMemo(() => {
+    const today = dayKey();
+    return journalEntries.filter((e) => isDueOnOrBefore(e, today)).length;
+  }, [journalEntries]);
   const totalToday = stats.todayPlan;
   const done = stats.doneToday;
   const progress = totalToday > 0 ? Math.min(1, done / totalToday) : done > 0 ? 1 : 0;
@@ -158,6 +166,20 @@ export function DashboardPage() {
             </div>
             <div className="grid gap-3 p-5 md:grid-cols-2 md:p-6">
               {studyActions.map(({ key, ...action }) => <StudyAction key={key} {...action} />)}
+              <div className="md:col-span-2">
+                <StudyAction
+                  icon={NotebookPen}
+                  title="学习日志"
+                  description={
+                    journalDueCount > 0
+                      ? `今日待复盘 ${journalDueCount} 张（数学 / 408 / 英语…）`
+                      : "记录今日所学，明日自动提醒复盘"
+                  }
+                  primary={false}
+                  iconClassName="bg-violet-50 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300"
+                  onClick={() => navigate("/journal")}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -306,6 +306,38 @@ export async function putSettings(settings: Record<string, any>) {
   });
 }
 
+// ---- journal（需登录，用户个人学习日志 / 复盘板）----
+export interface JournalPayload {
+  categories?: unknown[];
+  entries?: unknown[];
+  logs?: unknown[];
+  weeklies?: unknown[];
+  updatedAt?: number;
+}
+
+export async function getJournal(): Promise<{
+  journal: JournalPayload | null;
+  updated_at: number;
+}> {
+  return req("/api/journal");
+}
+
+export async function putJournal(
+  journal: JournalPayload,
+  updatedAt: number
+): Promise<{
+  ok: boolean;
+  skipped?: boolean;
+  reason?: string;
+  journal?: JournalPayload;
+  updated_at: number;
+}> {
+  return req("/api/journal", {
+    method: "PUT",
+    body: JSON.stringify({ journal, updated_at: updatedAt }),
+  });
+}
+
 // ---- study events / stats（新）----
 export async function postStudyEvent(body: StudyEventBody) {
   return req<{ ok: boolean }>("/api/study-events", {

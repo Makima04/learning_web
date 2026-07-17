@@ -105,6 +105,13 @@ CREATE TABLE IF NOT EXISTS user_settings (
     updated_at TIMESTAMPTZ
 );
 
+-- 学习日志 / 复盘板（按用户隔离的个人数据）
+CREATE TABLE IF NOT EXISTS user_journal (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    payload JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS study_events (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

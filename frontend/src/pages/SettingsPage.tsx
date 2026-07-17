@@ -3,6 +3,7 @@ import * as api from "@/lib/api";
 import { useAuth } from "@/stores/auth";
 import { useSettings, type Direction } from "@/stores/settings";
 import { useCards } from "@/stores/cards";
+import { useJournal } from "@/stores/journal";
 import { useMeta } from "@/stores/meta";
 import { useTheme } from "@/stores/theme";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ export function SettingsPage() {
   }
 
   function exportData() {
+    const journal = useJournal.getState().exportSnapshot();
     const blob = {
       cards: useCards.getState().cards,
       meta: useMeta.getState().meta,
@@ -79,6 +81,7 @@ export function SettingsPage() {
         orderSeed: settings.orderSeed,
         groupSize: settings.groupSize,
       },
+      journal,
       exportedAt: new Date().toISOString(),
     };
     const a = document.createElement("a");
@@ -102,6 +105,12 @@ export function SettingsPage() {
         if (data.cards) useCards.getState().replaceAll(data.cards);
         if (data.meta) useMeta.getState().replace(data.meta);
         if (data.settings) setSettings(data.settings);
+        if (data.journal) {
+          useJournal.getState().replaceAll({
+            ...data.journal,
+            updatedAt: Date.now(),
+          });
+        }
         setMsg("导入成功");
       } catch (e: any) {
         setMsg("导入失败: " + (e?.message || e));
@@ -111,10 +120,11 @@ export function SettingsPage() {
   }
 
   function resetAll() {
-    if (!confirm("确认清空本地进度？不可恢复。")) return;
+    if (!confirm("确认清空本地进度与学习日志？不可恢复。")) return;
     useCards.getState().clearAll();
     useMeta.getState().reset();
-    setMsg("已重置本地进度");
+    useJournal.getState().clearAll();
+    setMsg("已重置本地进度与学习日志");
   }
 
   return (
@@ -347,6 +357,9 @@ export function SettingsPage() {
                 <CardTitle className="text-base">数据</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  导出包含词库进度、设置与学习日志。登录后学习日志会按账号同步到服务端；导入时若已登录也会写回账号。
+                </p>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={exportData}>
                     导出进度

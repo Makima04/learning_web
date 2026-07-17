@@ -7,6 +7,7 @@ import { PapersRecitePage } from "@/pages/PapersRecitePage";
 import { ReaderPage } from "@/pages/ReaderPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TransMgrPage } from "@/pages/TransMgrPage";
+import { JournalPage } from "@/pages/JournalPage";
 import { useAccountSync } from "@/hooks/useAccountSync";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
       <Route element={<AppLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="study" element={<StudyPage />} />
+        <Route path="journal" element={<JournalPage />} />
         <Route path="papers" element={<PapersPage />} />
         <Route path="papers-recite" element={<PapersRecitePage />} />
         <Route path="reader" element={<ReaderPage />} />

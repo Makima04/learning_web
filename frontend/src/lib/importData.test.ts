@@ -37,6 +37,37 @@ describe("parseImportData", () => {
     expect(result.settings).toEqual({ rate: 1.2, direction: "random" });
   });
 
+  it("accepts journal export", () => {
+    const result = parseImportData(
+      JSON.stringify({
+        journal: {
+          categories: [{ id: "cat-math", name: "数学", color: "#2563eb", order: 0 }],
+          entries: [
+            {
+              id: "je-1",
+              categoryId: "cat-math",
+              title: "中值定理",
+              body: "条件",
+              kind: "mistake",
+              createdOn: "2026-07-17",
+              nextReviewOn: "2026-07-18",
+              step: 1,
+              status: "active",
+              lapses: 0,
+              updatedAt: 1,
+            },
+          ],
+          logs: [],
+          weeklies: [],
+          updatedAt: 100,
+        },
+      })
+    );
+    expect(result.journal?.entries).toHaveLength(1);
+    expect(result.journal?.entries[0]?.title).toBe("中值定理");
+    expect(result.journal?.categories[0]?.name).toBe("数学");
+  });
+
   it("rejects settings with the wrong type", () => {
     expect(() => parseImportData(JSON.stringify({ settings: { rate: "fast" } }))).toThrow(
       "语速必须是数字"
