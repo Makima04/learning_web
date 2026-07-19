@@ -47,14 +47,40 @@ export function StudyPage() {
     setExampleTranslationError("");
   }, [entry?.[0], qpos, uiPhase]);
 
+  // 第 3 轮「看中文回忆英文」不自动读词，避免剧透答案
   useEffect(() => {
-    if (settings.autoSpeak && entry) speakEnglish(entry[1], settings.rate);
+    if (!settings.autoSpeak || !entry || uiPhase === "relearn-meaning") return;
+    speakEnglish(entry[1], settings.rate);
   }, [entry?.[0], qpos, uiPhase, settings.autoSpeak, settings.rate]);
+
+  const showExampleTranslation = useCallback(async () => {
+    if (!example || isExampleTranslating || exampleTranslation) return;
+    setIsExampleTranslating(true);
+    setExampleTranslationError("");
+    try {
+      setExampleTranslation(await translate(example));
+    } catch (error) {
+      setExampleTranslationError(error instanceof Error ? error.message : "翻译失败");
+    } finally {
+      setIsExampleTranslating(false);
+    }
+  }, [example, exampleTranslation, isExampleTranslating]);
 
   const onKey = useCallback(
     (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
         return;
+      if (event.key === " " || event.code === "Space") {
+        const canShowTrans =
+          uiPhase === "assess-full" ||
+          uiPhase === "relearn-reveal" ||
+          uiPhase === "relearn-example";
+        if (canShowTrans) {
+          event.preventDefault();
+          void showExampleTranslation();
+        }
+        return;
+      }
       if (uiPhase === "assess-front") {
         if (event.key === "1") chooseAssessment("known");
         if (event.key === "2") chooseAssessment("uncertain");
@@ -76,7 +102,17 @@ export function StudyPage() {
         if (event.key === "2" && relearnAnswerKnown) confirmRelearning(false);
       }
     },
-    [answerRelearning, assessChoice, assessFullMistake, assessFullNext, chooseAssessment, confirmRelearning, relearnAnswerKnown, uiPhase]
+    [
+      answerRelearning,
+      assessChoice,
+      assessFullMistake,
+      assessFullNext,
+      chooseAssessment,
+      confirmRelearning,
+      relearnAnswerKnown,
+      showExampleTranslation,
+      uiPhase,
+    ]
   );
 
   useEffect(() => {
@@ -93,19 +129,6 @@ export function StudyPage() {
     const surface = word.dataset.w || word.textContent || "";
     setPop({ word: surface, x: rect.left + rect.width / 2, y: rect.bottom + 6 });
     if (settings.speakOnWordClick) speakEnglish(surface, settings.rate);
-  }
-
-  async function showExampleTranslation() {
-    if (!example || isExampleTranslating || exampleTranslation) return;
-    setIsExampleTranslating(true);
-    setExampleTranslationError("");
-    try {
-      setExampleTranslation(await translate(example));
-    } catch (error) {
-      setExampleTranslationError(error instanceof Error ? error.message : "翻译失败");
-    } finally {
-      setIsExampleTranslating(false);
-    }
   }
 
   function onCardClick(event: MouseEvent<HTMLDivElement>) {
@@ -279,7 +302,7 @@ function ExampleBlock({
   translationError: string;
 }) {
   if (!html) return null;
-  return <div className="mt-5 text-left" onClick={onClick}><div className="mb-1 text-xs text-muted-foreground">真题例句</div><div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />{translating && <div className="mt-2 text-sm text-muted-foreground">例句翻译中…</div>}{translation && <div className="mt-2 border-l-2 border-primary/30 pl-2 text-sm text-muted-foreground">{translation}</div>}{translationError && <div className="mt-2 text-sm text-destructive">{translationError}，点击卡片空白处重试</div>}</div>;
+  return <div className="mt-5 text-left" onClick={onClick}><div className="mb-1 text-xs text-muted-foreground">真题例句</div><div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />{translating && <div className="mt-2 text-sm text-muted-foreground">例句翻译中…</div>}{translation && <div className="mt-2 border-l-2 border-primary/30 pl-2 text-sm text-muted-foreground">{translation}</div>}{translationError && <div className="mt-2 text-sm text-destructive">{translationError}，点击卡片空白处或按空格重试</div>}</div>;
 }
 
 function relearnBody(
