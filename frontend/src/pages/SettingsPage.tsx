@@ -49,13 +49,25 @@ export function SettingsPage() {
   const [msg, setMsg] = useState("");
   const [llm, setLlm] = useState<api.LlmConfig | null>(null);
   const [models, setModels] = useState<string[]>([]);
+  const [llmUrl, setLlmUrl] = useState("");
+  const [llmKey, setLlmKey] = useState("");
+  const [llmConcurrency, setLlmConcurrency] = useState(4);
+  const [llmSaving, setLlmSaving] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(getSyncStatus);
 
   useEffect(() => subscribeSyncStatus(setSyncStatus), []);
 
   useEffect(() => {
     if (tab === "llm" && auth.loggedIn) {
-      void api.llmConfig().then(setLlm).catch(() => setLlm(null));
+      void api
+        .llmConfig()
+        .then((c) => {
+          setLlm(c);
+          setLlmUrl(c.url || "");
+          setLlmConcurrency(c.concurrency || 4);
+          setLlmKey("");
+        })
+        .catch(() => setLlm(null));
       void api
         .llmModels()
         .then(setModels)
@@ -336,37 +348,123 @@ export function SettingsPage() {
                       {llm.configured ? (
                         <span className="text-emerald-600">已配置</span>
                       ) : (
-                        <span className="text-amber-600">未配置</span>
+                        <span className="text-amber-600">未配置（需填写网关 URL 与 Key）</span>
                       )}
                     </p>
                     <p>
                       模型：<code>{llm.model || "—"}</code>
                     </p>
                     <p>并发：{llm.concurrency}</p>
-                    {auth.user?.is_admin && models.length > 0 && (
-                      <Field label="切换模型">
-                        <select
-                          className="h-10 rounded-md border border-input bg-background px-3 text-sm max-w-xs"
-                          value={llm.model}
-                          onChange={async (e) => {
-                            await api.setLlmModel(e.target.value);
-                            setLlm(await api.llmConfig());
-                          }}
-                        >
-                          {models.map((m) => (
-                            <option key={m} value={m}>
-                              {m}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
+                    {auth.user?.is_admin ? (
+                      <div className="space-y-3 border-t pt-3">
+                        <p className="text-xs text-muted-foreground">
+                          管理员可改 OpenAI 兼容网关。Key 不回显明文；留空保存表示不修改 Key。写入数据库后即时生效，无需重启。
+                        </p>
+                        <Field label="网关 URL">
+                          <Input
+                            value={llmUrl}
+                            onChange={(e) => setLlmUrl(e.target.value)}
+                            placeholder="https://api.openai.com/v1"
+                            autoComplete="off"
+                          />
+                        </Field>
+                        <Field label="API Key">
+                          <Input
+                            type="password"
+                            value={llmKey}
+                            onChange={(e) => setLlmKey(e.target.value)}
+                            placeholder={
+                              llm.has_key
+                                ? `已配置：${llm.key_masked || "••••"}（留空不改）`
+                                : "sk-…"
+                            }
+                            autoComplete="new-password"
+                          />
+                        </Field>
+                        <Field label="并发（批量翻译）">
+                          <Input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={llmConcurrency}
+                            onChange={(e) => setLlmConcurrency(Number(e.target.value) || 1)}
+                            className="max-w-[8rem]"
+                          />
+                        </Field>
+                        {models.length > 0 && (
+                          <Field label="切换模型">
+                            <select
+                              className="h-10 rounded-md border border-input bg-background px-3 text-sm max-w-xs"
+                              value={llm.model}
+                              onChange={async (e) => {
+                                await api.setLlmModel(e.target.value);
+                                setLlm(await api.llmConfig());
+                              }}
+                            >
+                              {models.map((m) => (
+                                <option key={m} value={m}>
+                                  {m}
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            disabled={llmSaving}
+                            onClick={async () => {
+                              setLlmSaving(true);
+                              setMsg("");
+                              try {
+                                const body: {
+                                  url: string;
+                                  concurrency: number;
+                                  key?: string;
+                                } = {
+                                  url: llmUrl.trim(),
+                                  concurrency: llmConcurrency,
+                                };
+                                if (llmKey.trim()) body.key = llmKey.trim();
+                                const r = await api.setLlmConfig(body);
+                                setLlm({
+                                  configured: r.configured,
+                                  model: r.model,
+                                  concurrency: r.concurrency,
+                                  url: r.url,
+                                  key_masked: r.key_masked,
+                                  has_key: r.has_key,
+                                });
+                                setLlmUrl(r.url || "");
+                                setLlmConcurrency(r.concurrency || 4);
+                                setLlmKey("");
+                                setMsg("LLM 配置已保存");
+                                try {
+                                  setModels(await api.llmModels());
+                                } catch {
+                                  setModels([]);
+                                }
+                              } catch (e: any) {
+                                setMsg(e?.message || "保存失败");
+                              } finally {
+                                setLlmSaving(false);
+                              }
+                            }}
+                          >
+                            {llmSaving ? "保存中…" : "保存网关配置"}
+                          </Button>
+                          <Button variant="outline" asChild>
+                            <Link to="/transmgr">打开翻译管理</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button variant="outline" asChild>
+                        <Link to="/transmgr">打开翻译管理</Link>
+                      </Button>
                     )}
-                    <Button variant="outline" asChild>
-                      <Link to="/transmgr">打开翻译管理</Link>
-                    </Button>
                   </>
                 ) : (
-                  <p className="text-muted-foreground">无法读取配置</p>
+                  <p className="text-muted-foreground">无法读取配置（需管理员权限）</p>
                 )}
               </CardContent>
             </Card>

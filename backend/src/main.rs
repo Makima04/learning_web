@@ -46,7 +46,15 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    let state = AppState::new(pool, config.clone());
+    // LLM url/key：DB 可热更新，启动时 DB 优先，否则 env/ew_llm.json
+    let llm_rt = routes::llm_cfg::load_llm_runtime(&pool, &config).await;
+    tracing::info!(
+        configured = !llm_rt.url.is_empty() && !llm_rt.key.is_empty(),
+        url = %llm_rt.url,
+        "llm runtime ready"
+    );
+
+    let state = AppState::new(pool, config.clone(), llm_rt);
 
     let app = Router::new()
         .merge(routes::api_router())

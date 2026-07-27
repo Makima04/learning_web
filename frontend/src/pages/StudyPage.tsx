@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useStudy } from "@/stores/study";
+import { useStudy, type QueueItem } from "@/stores/study";
 import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
+import { getWordMap } from "@/lib/words";
 import { esc, cn } from "@/lib/utils";
 import { speakEnglish } from "@/lib/tts";
 import { translate } from "@/lib/llm";
@@ -19,6 +20,8 @@ export function StudyPage() {
   const mode = useStudy((state) => state.mode);
   const queue = useStudy((state) => state.queue);
   const qpos = useStudy((state) => state.qpos);
+  const groupStart = useStudy((state) => state.groupStart);
+  const groupInitialEnd = useStudy((state) => state.groupInitialEnd);
   const uiPhase = useStudy((state) => state.uiPhase);
   const assessChoice = useStudy((state) => state.assessChoice);
   const relearnAnswerKnown = useStudy((state) => state.relearnAnswerKnown);
@@ -183,15 +186,16 @@ export function StudyPage() {
 
   if (uiPhase === "group-done") {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-6">
-        <div className="text-4xl">✅</div>
-        <h2 className="text-xl font-semibold">本组已全部通关</h2>
-        <p className="text-muted-foreground">初轮与所有重学轮次均已完成</p>
-        <div className="flex gap-2">
-          <Button onClick={advanceToNextGroup}>下一组</Button>
-          <Button variant="outline" onClick={() => { resetSession(); navigate("/"); }}>回首页</Button>
-        </div>
-      </div>
+      <GroupDoneView
+        queue={queue}
+        groupStart={groupStart}
+        groupInitialEnd={groupInitialEnd}
+        onNext={advanceToNextGroup}
+        onHome={() => {
+          resetSession();
+          navigate("/");
+        }}
+      />
     );
   }
 
@@ -314,6 +318,95 @@ export function StudyPage() {
 
 function EmptyState({ onBack }: { onBack: () => void }) {
   return <div className="p-8 text-center"><Button onClick={onBack}>回首页</Button></div>;
+}
+
+/** 本组通关：回顾本组初轮词表（不含重学插入的重复项） */
+function GroupDoneView({
+  queue,
+  groupStart,
+  groupInitialEnd,
+  onNext,
+  onHome,
+}: {
+  queue: QueueItem[];
+  groupStart: number;
+  groupInitialEnd: number;
+  onNext: () => void;
+  onHome: () => void;
+}) {
+  const rate = useSettings((s) => s.rate);
+  const words = useMemo(() => {
+    const map = getWordMap();
+    const slice = queue.slice(groupStart, groupInitialEnd);
+    // 按 idx 去重，保序（理论上初轮无重复）
+    const seen = new Set<number>();
+    const out: { idx: number; en: string; cn: string }[] = [];
+    for (const it of slice) {
+      if (seen.has(it.idx)) continue;
+      seen.add(it.idx);
+      const entry = it.entry || map.get(it.idx);
+      const en = entry?.[1] || `#${it.idx}`;
+      const senses = entry?.[2] || [];
+      const cn = senses.map((s) => (s[0] ? `${s[0]} ${s[1]}` : s[1])).join("；");
+      out.push({ idx: it.idx, en, cn });
+    }
+    return out;
+  }, [queue, groupStart, groupInitialEnd]);
+
+  return (
+    <div className="mx-auto flex min-h-[60vh] w-full max-w-lg flex-col gap-4 p-4 md:max-w-2xl md:p-6">
+      <div className="flex flex-col items-center gap-1 pt-2 text-center">
+        <div className="text-4xl" aria-hidden>
+          ✅
+        </div>
+        <h2 className="text-xl font-semibold">本组已全部通关</h2>
+        <p className="text-sm text-muted-foreground">
+          初轮与所有重学轮次均已完成 · 共 <span className="tnum font-medium text-foreground">{words.length}</span> 词
+        </p>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border bg-card shadow-sm">
+        <ul className="divide-y">
+          {words.map((w, i) => (
+            <li
+              key={w.idx}
+              className="flex items-start gap-3 px-3 py-2.5 hover:bg-accent/30 md:px-4"
+            >
+              <span className="tnum w-6 shrink-0 pt-0.5 text-right text-xs text-muted-foreground">
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium tracking-wide">{w.en}</span>
+                  <button
+                    type="button"
+                    className="shrink-0 text-sm opacity-50 hover:opacity-100"
+                    aria-label={`朗读 ${w.en}`}
+                    onClick={() => speakEnglish(w.en, rate)}
+                  >
+                    🔊
+                  </button>
+                </div>
+                {w.cn ? (
+                  <div className="mt-0.5 text-sm leading-snug text-muted-foreground">{w.cn}</div>
+                ) : null}
+              </div>
+            </li>
+          ))}
+          {words.length === 0 && (
+            <li className="px-4 py-8 text-center text-sm text-muted-foreground">本组无词</li>
+          )}
+        </ul>
+      </div>
+
+      <div className="flex shrink-0 flex-wrap justify-center gap-2 pb-[env(safe-area-inset-bottom)]">
+        <Button onClick={onNext}>下一组</Button>
+        <Button variant="outline" onClick={onHome}>
+          回首页
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function CardHeader({ label, word, onSpeak }: { label: string; word: string; onSpeak: () => void }) {

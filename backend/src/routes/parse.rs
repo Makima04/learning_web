@@ -84,13 +84,14 @@ async fn parse_sentence(
         }
     }
 
-    if !state.config.llm_configured() || model.is_empty() {
+    let llm_conf = state.llm_config().await;
+    if !llm_conf.llm_configured() || model.is_empty() {
         return Ok(sse_unconfigured());
     }
 
     let stream = match llm::stream_chat(
         &state.http,
-        &state.config,
+        &llm_conf,
         &model,
         llm::PARSE_SYS_PROMPT,
         &text,
@@ -174,7 +175,8 @@ async fn analyze_paragraph(
     }
 
     let model = llm::active_model(&state.pool, &state.config.llm_model).await;
-    if !state.config.llm_configured() || model.is_empty() {
+    let llm_conf = state.llm_config().await;
+    if !llm_conf.llm_configured() || model.is_empty() {
         return Ok(sse_unconfigured());
     }
 
@@ -190,7 +192,7 @@ async fn analyze_paragraph(
 
     let stream = match llm::stream_chat(
         &state.http,
-        &state.config,
+        &llm_conf,
         &model,
         llm::PARSE_PARA_SYS_PROMPT,
         &user,
@@ -277,7 +279,8 @@ async fn parse_batch(
             }
         }
 
-        if !state.config.llm_configured() || model.is_empty() {
+        let llm_conf = state.llm_config().await;
+        if !llm_conf.llm_configured() || model.is_empty() {
             failed += 1;
             results.push(json!({"id": id, "status": "unconfigured"}));
             continue;
@@ -285,7 +288,7 @@ async fn parse_batch(
 
         match llm::chat_completion(
             &state.http,
-            &state.config,
+            &llm_conf,
             &model,
             llm::PARSE_SYS_PROMPT,
             &text,

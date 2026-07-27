@@ -319,6 +319,10 @@ export const useStudy = create<StudyState>((set, get) => ({
   },
 
   getExample: (item) => {
+    // 真题记词：只用入口文章挂在 entry 上的例句，不回落到全局索引（避免串到别年别篇）
+    if (get().mode === "passage") {
+      return item.entry?.sentences?.[0] || null;
+    }
     if (item.entry?.sentences?.[0]) return item.entry.sentences[0];
     return getExamples(item.idx, 1)[0]?.sentence || null;
   },

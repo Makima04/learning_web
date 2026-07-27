@@ -31,6 +31,11 @@ export interface LlmConfig {
   configured: boolean;
   model: string;
   concurrency: number;
+  /** 网关 base URL（管理员可见完整值） */
+  url?: string;
+  /** 脱敏后的 key，如 sk-…abcd */
+  key_masked?: string;
+  has_key?: boolean;
 }
 
 export interface CardDTO {
@@ -301,6 +306,18 @@ export async function setLlmConcurrency(n: number) {
   return req("/api/llm/config", {
     method: "POST",
     body: JSON.stringify({ concurrency: n }),
+  });
+}
+/** 管理员更新 LLM 网关；key 留空表示不改 */
+export async function setLlmConfig(body: {
+  url?: string;
+  key?: string;
+  model?: string;
+  concurrency?: number;
+}): Promise<LlmConfig & { ok?: boolean }> {
+  return req("/api/llm/config", {
+    method: "POST",
+    body: JSON.stringify(body),
   });
 }
 

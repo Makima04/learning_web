@@ -204,12 +204,13 @@ async fn do_translate(
     }
 
     let model = llm::active_model(&state.pool, &state.config.llm_model).await;
+    let llm_conf = state.llm_config().await;
 
-    if !state.config.llm_configured() || model.is_empty() {
+    if !llm_conf.llm_configured() || model.is_empty() {
         return Ok(Json(json!({ "zh": "", "status": "unconfigured" })));
     }
 
-    match llm::translate_text(&state.http, &state.config, &model, &text).await {
+    match llm::translate_text(&state.http, &llm_conf, &model, &text).await {
         Ok(zh) => {
             let now = Utc::now();
             // 竞态：若另一请求已写入 ok，保留已有译文（共用保存）

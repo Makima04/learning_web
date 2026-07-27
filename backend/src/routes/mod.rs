@@ -1,7 +1,7 @@
 mod auth;
 mod cards;
 mod journal;
-mod llm_cfg;
+pub mod llm_cfg;
 mod meta;
 mod paper;
 mod parse;
