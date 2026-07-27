@@ -80,6 +80,19 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- translate "The
 
 `study` store 的 `mode`: `learn` | `review` | `passage`。passage 复用同一套 SRS 卡片；背完可进 reader 读原文，命中词高亮（`lookup.ts` 词形还原）。
 
+### Docker / CI / 部署（arm64 必推）
+
+- 镜像：`ghcr.io/makima04/learning_web`（仓库名小写）。
+- **CI（`.github/workflows/docker.yml`）必须 multi-arch 推送 `linux/amd64` + `linux/arm64`**，并打上至少：
+  - `:latest`、`:<git-sha>`（multi-arch manifest）
+  - `:amd64-latest` / `:amd64-<sha>`、`:arm64-latest` / `:arm64-<sha>`（兼容旧标签）
+- 构建时传入 `EW_VERSION=${{ github.sha }}`，设置页显示的版本即该 sha。
+- **生产板（如 `192.168.1.161` Orange Pi arm64）** 用 compose 拉镜像跑，**不是**服务器上的 git 工作树：
+  - 目录示例：`/home/orangepi/learning_web`，`image: ghcr.io/makima04/learning_web:latest`，端口 `8800:8000`。
+  - 在板子上 `git pull` **不会**更新容器；必须 `docker pull` + `docker compose up -d app`。
+  - 若 CI 只推 amd64，板子 `pull :latest` 会一直停在旧 arm64 镜像（版本号不变）——**禁止**再改回仅 amd64。
+- 本地 macOS arm64 可 `docker compose build` 后 tag/push arm64；日常以 CI multi-arch 为准。
+
 ## 常量与约定
 
 - 词库总量 6550，`window.WORDS` 条目 `[index, english, [[pos,cn],...]]`。

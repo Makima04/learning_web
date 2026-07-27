@@ -5,7 +5,9 @@
 # ---- frontend ----
 FROM node:22-slim AS frontend
 WORKDIR /app/frontend
-ARG EW_VERSION
+# CI 传入 github.sha；未传时 vite 回退 git describe / package version
+ARG EW_VERSION=
+ENV EW_VERSION=$EW_VERSION
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
