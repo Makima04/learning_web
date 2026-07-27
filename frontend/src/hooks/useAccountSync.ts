@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import { syncAccountData } from "@/lib/accountSync";
+import { flushPending } from "@/lib/syncQueue";
 import { useAuth } from "@/stores/auth";
 
 const SYNC_COOLDOWN = 10_000;
 const SYNC_INTERVAL = 5 * 60_000;
+const FLUSH_INTERVAL = 30_000;
 
 export function useAccountSync() {
   const loggedIn = useAuth((state) => state.loggedIn);
@@ -28,18 +30,25 @@ export function useAccountSync() {
     const syncWhenVisible = () => {
       if (document.visibilityState === "visible") sync();
     };
+    const onOnline = () => {
+      void flushPending().then(sync);
+    };
 
     sync();
     window.addEventListener("focus", sync);
-    window.addEventListener("online", sync);
+    window.addEventListener("online", onOnline);
     document.addEventListener("visibilitychange", syncWhenVisible);
     const intervalId = window.setInterval(sync, SYNC_INTERVAL);
+    const flushId = window.setInterval(() => {
+      void flushPending();
+    }, FLUSH_INTERVAL);
 
     return () => {
       window.removeEventListener("focus", sync);
-      window.removeEventListener("online", sync);
+      window.removeEventListener("online", onOnline);
       document.removeEventListener("visibilitychange", syncWhenVisible);
       window.clearInterval(intervalId);
+      window.clearInterval(flushId);
     };
   }, [loggedIn]);
 }

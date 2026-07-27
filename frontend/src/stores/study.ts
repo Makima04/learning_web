@@ -6,7 +6,7 @@ import { getExamples, getWords } from "@/lib/words";
 import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
-import type { PassageWord, WordEntry } from "@/types/words";
+import type { PassageItem, PassageWord, WordEntry } from "@/types/words";
 
 export type StudyMode = "daily" | "passage" | "learn" | "review";
 export type Assessment = "known" | "uncertain" | "unknown";
@@ -43,8 +43,8 @@ export interface PassageReader {
   year?: number;
   variant?: string;
   label?: string;
-  items?: unknown[];
-  answers?: Record<string, unknown>;
+  items?: PassageItem[];
+  answers?: Record<string, string>;
   sectionType?: string;
   wordsFull?: PassageWord[];
 }

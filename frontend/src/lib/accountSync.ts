@@ -1,4 +1,5 @@
 import * as api from "@/lib/api";
+import { flushPending } from "@/lib/syncQueue";
 import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
 import { useMeta } from "@/stores/meta";
@@ -10,16 +11,19 @@ export function syncAccountData(): Promise<void> {
   if (!api.isLoggedIn()) return Promise.resolve();
   if (syncInFlight) return syncInFlight;
 
-  syncInFlight = Promise.all([
-    useCards.getState().sync(),
-    useMeta.getState().syncMeta(),
-    useSettings.getState().syncFromServer(),
-    useJournal.getState().syncFromServer(),
-  ])
-    .then(() => undefined)
-    .finally(() => {
-      syncInFlight = null;
-    });
+  syncInFlight = (async () => {
+    // 先刷出离线队列，再双向合并
+    await flushPending();
+    await Promise.all([
+      useCards.getState().sync(),
+      useMeta.getState().syncMeta(),
+      useSettings.getState().syncFromServer(),
+      useJournal.getState().syncFromServer(),
+    ]);
+    await flushPending();
+  })().finally(() => {
+    syncInFlight = null;
+  });
 
   return syncInFlight;
 }

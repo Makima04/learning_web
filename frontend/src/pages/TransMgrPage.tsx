@@ -41,11 +41,19 @@ export function TransMgrPage() {
     void load();
   }, [load]);
 
-  async function translateOne(id: number, re = false) {
+  async function translateOne(id: number) {
     setBusy(true);
     try {
-      if (re) await api.retranslateById(id);
-      else await api.translateById(id);
+      const r = await api.translateById(id);
+      setMsg(
+        r.cached
+          ? "已有共用译文（未调用 LLM）"
+          : r.status === "ok"
+            ? "翻译完成并写入共用库"
+            : r.status === "unconfigured"
+              ? "服务端未配置 LLM"
+              : r.zh || "完成"
+      );
       await load();
     } catch (e: any) {
       setMsg(e?.message || "翻译失败");
@@ -65,7 +73,9 @@ export function TransMgrPage() {
         return;
       }
       const res = await api.batchTranslate(ids);
-      setMsg(`批量完成：成功 ${res.translated}，失败 ${res.failed}`);
+      setMsg(
+        `批量完成：新译 ${res.translated}，跳过缓存 ${res.skipped ?? 0}，失败 ${res.failed}`
+      );
       await load();
     } catch (e: any) {
       setMsg(e?.message || "批量失败");
@@ -87,6 +97,9 @@ export function TransMgrPage() {
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-4">
       <h1 className="text-xl font-semibold">翻译管理</h1>
+      <p className="text-sm text-muted-foreground">
+        译文全局共用：同一例句只译一次，已有成功译文不会再调用 LLM（已取消重翻）。
+      </p>
 
       {stats && (
         <div className="grid grid-cols-3 gap-3">
@@ -181,22 +194,16 @@ export function TransMgrPage() {
                   )}
                 </div>
                 <div className="flex flex-col gap-1 shrink-0">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy}
-                    onClick={() => void translateOne(it.id, false)}
-                  >
-                    翻译
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={busy}
-                    onClick={() => void translateOne(it.id, true)}
-                  >
-                    重翻
-                  </Button>
+                  {it.status !== "ok" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => void translateOne(it.id)}
+                    >
+                      翻译
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>

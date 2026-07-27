@@ -14,6 +14,12 @@ import { cn } from "@/lib/utils";
 import { parseImportData } from "@/lib/importData";
 import { Link } from "react-router-dom";
 import { syncAccountData } from "@/lib/accountSync";
+import {
+  flushPending,
+  getSyncStatus,
+  subscribeSyncStatus,
+  type SyncStatus,
+} from "@/lib/syncQueue";
 
 const TABS = [
   { id: "study", label: "学习" },
@@ -31,11 +37,21 @@ export function SettingsPage() {
   const setSettings = useSettings((s) => s.set);
   const auth = useAuth();
   const theme = useTheme();
+  /** password | email */
+  const [authMode, setAuthMode] = useState<"password" | "email">("email");
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [emailPurpose, setEmailPurpose] = useState<"login" | "register">("login");
+  const [codeSending, setCodeSending] = useState(false);
+  const [codeHint, setCodeHint] = useState("");
   const [msg, setMsg] = useState("");
   const [llm, setLlm] = useState<api.LlmConfig | null>(null);
   const [models, setModels] = useState<string[]>([]);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(getSyncStatus);
+
+  useEffect(() => subscribeSyncStatus(setSyncStatus), []);
 
   useEffect(() => {
     if (tab === "llm" && auth.loggedIn) {
@@ -54,7 +70,44 @@ export function SettingsPage() {
       else await api.login(user, pass);
       auth.refresh();
       await syncAccountData();
-      setMsg("登录成功");
+      setMsg("登录成功，进度已同步");
+    } catch (e: any) {
+      setMsg(e?.message || "失败");
+    }
+  }
+
+  async function sendCode() {
+    setCodeSending(true);
+    setCodeHint("");
+    setMsg("");
+    try {
+      const r = await api.sendEmailCode(email, emailPurpose);
+      if (r.dev_code) {
+        setCodeHint(`开发模式验证码：${r.dev_code}`);
+        setCode(r.dev_code);
+      } else if (r.sent === false) {
+        setCodeHint("若邮箱已注册将收到验证码（防枚举）");
+      } else {
+        setCodeHint("验证码已发送，10 分钟内有效");
+      }
+    } catch (e: any) {
+      setMsg(e?.message || "发送失败");
+    } finally {
+      setCodeSending(false);
+    }
+  }
+
+  async function doEmailAuth() {
+    setMsg("");
+    try {
+      if (emailPurpose === "register") {
+        await api.registerWithEmail({ email, code, password: pass || undefined });
+      } else {
+        await api.loginWithEmail(email, code);
+      }
+      auth.refresh();
+      await syncAccountData();
+      setMsg("登录成功，进度已同步");
     } catch (e: any) {
       setMsg(e?.message || "失败");
     }
@@ -64,6 +117,16 @@ export function SettingsPage() {
     await api.logout();
     auth.refresh();
     setMsg("已登出");
+  }
+
+  async function forceSync() {
+    setMsg("同步中…");
+    try {
+      await syncAccountData();
+      setMsg("同步完成");
+    } catch (e: any) {
+      setMsg(e?.message || "同步失败");
+    }
   }
 
   function exportData() {
@@ -321,29 +384,160 @@ export function SettingsPage() {
                       已登录：<b>{auth.user?.username}</b>
                       {auth.user?.is_admin ? "（管理员）" : ""}
                     </p>
-                    <Button variant="outline" onClick={() => void doLogout()}>
-                      登出
-                    </Button>
+                    {auth.user?.email && (
+                      <p className="text-sm text-muted-foreground">{auth.user.email}</p>
+                    )}
+                    <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground space-y-1">
+                      <p>
+                        进度同步：
+                        {syncStatus.pending ? (
+                          <span className="text-amber-600">有待上传</span>
+                        ) : syncStatus.lastError ? (
+                          <span className="text-destructive">失败</span>
+                        ) : (
+                          <span className="text-emerald-600">正常</span>
+                        )}
+                      </p>
+                      {syncStatus.lastOkAt && (
+                        <p>
+                          上次成功：{new Date(syncStatus.lastOkAt).toLocaleString()}
+                        </p>
+                      )}
+                      {syncStatus.lastError && (
+                        <p className="text-destructive">{syncStatus.lastError}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" onClick={() => void forceSync()}>
+                        立即同步
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => void flushPending().then(() => setMsg("已刷出待传队列"))}
+                      >
+                        重试上传
+                      </Button>
+                      <Button variant="outline" onClick={() => void doLogout()}>
+                        登出
+                      </Button>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <Input
-                      placeholder="用户名"
-                      value={user}
-                      onChange={(e) => setUser(e.target.value)}
-                    />
-                    <Input
-                      type="password"
-                      placeholder="密码"
-                      value={pass}
-                      onChange={(e) => setPass(e.target.value)}
-                    />
-                    <div className="flex gap-2">
-                      <Button onClick={() => void doLogin(false)}>登录</Button>
-                      <Button variant="outline" onClick={() => void doLogin(true)}>
-                        注册
-                      </Button>
+                    <div className="flex gap-1 rounded-md border p-1 w-fit">
+                      <button
+                        type="button"
+                        className={cn(
+                          "rounded px-3 py-1 text-sm",
+                          authMode === "email" ? "bg-accent font-medium" : "text-muted-foreground"
+                        )}
+                        onClick={() => setAuthMode("email")}
+                      >
+                        邮箱验证码
+                      </button>
+                      <button
+                        type="button"
+                        className={cn(
+                          "rounded px-3 py-1 text-sm",
+                          authMode === "password" ? "bg-accent font-medium" : "text-muted-foreground"
+                        )}
+                        onClick={() => setAuthMode("password")}
+                      >
+                        用户名密码
+                      </button>
                     </div>
+
+                    {authMode === "email" ? (
+                      <div className="space-y-2">
+                        <div className="flex gap-1 rounded-md border p-1 w-fit">
+                          <button
+                            type="button"
+                            className={cn(
+                              "rounded px-2 py-0.5 text-xs",
+                              emailPurpose === "login"
+                                ? "bg-accent font-medium"
+                                : "text-muted-foreground"
+                            )}
+                            onClick={() => setEmailPurpose("login")}
+                          >
+                            登录
+                          </button>
+                          <button
+                            type="button"
+                            className={cn(
+                              "rounded px-2 py-0.5 text-xs",
+                              emailPurpose === "register"
+                                ? "bg-accent font-medium"
+                                : "text-muted-foreground"
+                            )}
+                            onClick={() => setEmailPurpose("register")}
+                          >
+                            注册
+                          </button>
+                        </div>
+                        <Input
+                          type="email"
+                          placeholder="邮箱"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          autoComplete="email"
+                        />
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="6 位验证码"
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            className="flex-1"
+                            inputMode="numeric"
+                            maxLength={6}
+                          />
+                          <Button
+                            variant="outline"
+                            disabled={codeSending || !email.trim()}
+                            onClick={() => void sendCode()}
+                          >
+                            {codeSending ? "发送中…" : "获取验证码"}
+                          </Button>
+                        </div>
+                        {emailPurpose === "register" && (
+                          <Input
+                            type="password"
+                            placeholder="可选密码（≥8，便于密码登录）"
+                            value={pass}
+                            onChange={(e) => setPass(e.target.value)}
+                          />
+                        )}
+                        {codeHint && (
+                          <p className="text-xs text-muted-foreground">{codeHint}</p>
+                        )}
+                        <Button onClick={() => void doEmailAuth()}>
+                          {emailPurpose === "register" ? "验证并注册" : "验证并登录"}
+                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                          生产环境配置 <code>EW_RESEND_API_KEY</code> 发信；本地未配置时为开发模式（验证码会显示在本页）。
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <Input
+                          placeholder="用户名或邮箱"
+                          value={user}
+                          onChange={(e) => setUser(e.target.value)}
+                        />
+                        <Input
+                          type="password"
+                          placeholder="密码"
+                          value={pass}
+                          onChange={(e) => setPass(e.target.value)}
+                        />
+                        <div className="flex gap-2">
+                          <Button onClick={() => void doLogin(false)}>登录</Button>
+                          <Button variant="outline" onClick={() => void doLogin(true)}>
+                            注册
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
                 {msg && <p className="text-sm text-muted-foreground">{msg}</p>}
@@ -358,7 +552,7 @@ export function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  导出包含词库进度、设置与学习日志。登录后学习日志会按账号同步到服务端；导入时若已登录也会写回账号。
+                  导出包含词库进度、设置与学习日志。登录后进度（卡片 / 今日计数 / 设置 / 日志）会同步到账号；断网写入会入队，恢复后自动上传。
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={exportData}>

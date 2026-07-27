@@ -9,11 +9,21 @@ export interface PassageWord {
   count: number;
   sentences: string[];
 }
+
+/** 阅读/完形选择题 */
+export interface PassageItem {
+  n: number;
+  stem: string;
+  options: Record<string, string>; // A/B/C/D → 选项文
+}
+
 export interface Passage {
   label: string;
   body: string;
   words: PassageWord[];
   itemCount?: number;
+  items?: PassageItem[];
+  answers?: Record<string, string>; // 题号 → "A"|"B"|...
 }
 export type SectionType =
   | "use_of_english"

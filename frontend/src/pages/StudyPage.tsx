@@ -10,6 +10,9 @@ import { translate } from "@/lib/llm";
 import { Button } from "@/components/ui/button";
 import { WordPopover } from "@/components/WordPopover";
 
+/** 仅英文测试卡：等待后显示真题例句作回忆提示 */
+const EXAMPLE_HINT_DELAY_MS = 3000;
+
 export function StudyPage() {
   const navigate = useNavigate();
   const settings = useSettings();
@@ -39,13 +42,28 @@ export function StudyPage() {
   const [exampleTranslation, setExampleTranslation] = useState("");
   const [isExampleTranslating, setIsExampleTranslating] = useState(false);
   const [exampleTranslationError, setExampleTranslationError] = useState("");
+  const [showExampleHint, setShowExampleHint] = useState(false);
+
+  const isEnglishOnlyPhase = uiPhase === "assess-front" || uiPhase === "relearn-word";
 
   useEffect(() => {
     setPop(null);
     setExampleTranslation("");
     setIsExampleTranslating(false);
     setExampleTranslationError("");
+    setShowExampleHint(false);
   }, [entry?.[0], qpos, uiPhase]);
+
+  // 仅英文卡片：数秒后显示例句提示（无例句则不触发）
+  useEffect(() => {
+    if (!isEnglishOnlyPhase || !example) {
+      setShowExampleHint(false);
+      return;
+    }
+    setShowExampleHint(false);
+    const timer = window.setTimeout(() => setShowExampleHint(true), EXAMPLE_HINT_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [isEnglishOnlyPhase, example, entry?.[0], qpos, uiPhase]);
 
   // 第 3 轮「看中文回忆英文」不自动读词，避免剧透答案
   useEffect(() => {
@@ -74,7 +92,8 @@ export function StudyPage() {
         const canShowTrans =
           uiPhase === "assess-full" ||
           uiPhase === "relearn-reveal" ||
-          uiPhase === "relearn-example";
+          uiPhase === "relearn-example" ||
+          (showExampleHint && isEnglishOnlyPhase);
         if (canShowTrans) {
           event.preventDefault();
           void showExampleTranslation();
@@ -109,7 +128,9 @@ export function StudyPage() {
       assessFullNext,
       chooseAssessment,
       confirmRelearning,
+      isEnglishOnlyPhase,
       relearnAnswerKnown,
+      showExampleHint,
       showExampleTranslation,
       uiPhase,
     ]
@@ -203,10 +224,24 @@ export function StudyPage() {
   let controls: React.ReactNode;
   if (uiPhase === "assess-front") {
     body = (
-      <div className="relative flex min-h-[360px] flex-col items-center justify-center p-6 md:min-h-[460px] md:p-8">
+      <div
+        className="relative flex min-h-[360px] flex-col items-center justify-center p-6 md:min-h-[460px] md:p-8"
+        onClick={showExampleHint ? onCardClick : undefined}
+      >
         <div className="mb-4 self-start text-xs text-muted-foreground">{groupName} · 初轮判断</div>
         <button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={() => speakEnglish(entry[1], settings.rate)}>🔊</button>
         <div className="text-3xl font-semibold tracking-wide md:text-4xl">{entry[1]}</div>
+        {showExampleHint && exampleHtml ? (
+          <ExampleBlock
+            html={exampleHtml}
+            label="提示 · 真题例句"
+            onClick={onExampleWordClick}
+            translation={exampleTranslation}
+            translating={isExampleTranslating}
+            translationError={exampleTranslationError}
+          />
+        ) : null}
+        <div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div>
       </div>
     );
     controls = (
@@ -249,7 +284,8 @@ export function StudyPage() {
       () => speakEnglish(entry[1], settings.rate),
       exampleTranslation,
       isExampleTranslating,
-      exampleTranslationError
+      exampleTranslationError,
+      showExampleHint
     );
     body = relearn;
     controls = (
@@ -294,15 +330,29 @@ function ExampleBlock({
   translation,
   translating,
   translationError,
+  label = "真题例句",
 }: {
   html: string;
   onClick: (event: MouseEvent<HTMLDivElement>) => void;
   translation: string;
   translating: boolean;
   translationError: string;
+  label?: string;
 }) {
   if (!html) return null;
-  return <div className="mt-5 text-left" onClick={onClick}><div className="mb-1 text-xs text-muted-foreground">真题例句</div><div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />{translating && <div className="mt-2 text-sm text-muted-foreground">例句翻译中…</div>}{translation && <div className="mt-2 border-l-2 border-primary/30 pl-2 text-sm text-muted-foreground">{translation}</div>}{translationError && <div className="mt-2 text-sm text-destructive">{translationError}，点击卡片空白处或按空格重试</div>}</div>;
+  return (
+    <div className="mt-5 w-full text-left" onClick={onClick}>
+      <div className="mb-1 text-xs text-muted-foreground">{label}</div>
+      <div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />
+      {translating && <div className="mt-2 text-sm text-muted-foreground">例句翻译中…</div>}
+      {translation && (
+        <div className="mt-2 border-l-2 border-primary/30 pl-2 text-sm text-muted-foreground">{translation}</div>
+      )}
+      {translationError && (
+        <div className="mt-2 text-sm text-destructive">{translationError}，点击卡片空白处或按空格重试</div>
+      )}
+    </div>
+  );
 }
 
 function relearnBody(
@@ -315,12 +365,54 @@ function relearnBody(
   onSpeak: () => void,
   exampleTranslation: string,
   isExampleTranslating: boolean,
-  exampleTranslationError: string
+  exampleTranslationError: string,
+  showExampleHint: boolean
 ) {
   const shared = "relative flex min-h-[360px] flex-col items-center justify-center p-6 md:min-h-[460px] md:p-8";
-  if (phase === "relearn-example") return <div className={shared} onClick={onCardClick}><div className="mb-4 self-start text-xs text-muted-foreground">重学第 1 轮 · 看例句回忆中文释义</div><ExampleBlock html={exampleHtml} onClick={onExampleClick} translation={exampleTranslation} translating={isExampleTranslating} translationError={exampleTranslationError} /><div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div></div>;
-  if (phase === "relearn-word") return <div className={shared}><div className="mb-4 self-start text-xs text-muted-foreground">重学第 2 轮 · 看英文回忆中文释义</div><button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={onSpeak}>🔊</button><div className="text-3xl font-semibold">{word}</div><div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div></div>;
-  return <div className={shared}><div className="mb-4 self-start text-xs text-muted-foreground">重学第 3 轮 · 看中文回忆英文单词</div><div className="text-xl text-center">{chinese}</div><div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div></div>;
+  if (phase === "relearn-example") {
+    return (
+      <div className={shared} onClick={onCardClick}>
+        <div className="mb-4 self-start text-xs text-muted-foreground">重学第 1 轮 · 看例句回忆中文释义</div>
+        <ExampleBlock
+          html={exampleHtml}
+          onClick={onExampleClick}
+          translation={exampleTranslation}
+          translating={isExampleTranslating}
+          translationError={exampleTranslationError}
+        />
+        <div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div>
+      </div>
+    );
+  }
+  if (phase === "relearn-word") {
+    return (
+      <div className={shared} onClick={showExampleHint ? onCardClick : undefined}>
+        <div className="mb-4 self-start text-xs text-muted-foreground">重学第 2 轮 · 看英文回忆中文释义</div>
+        <button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={onSpeak}>
+          🔊
+        </button>
+        <div className="text-3xl font-semibold">{word}</div>
+        {showExampleHint && exampleHtml ? (
+          <ExampleBlock
+            html={exampleHtml}
+            label="提示 · 真题例句"
+            onClick={onExampleClick}
+            translation={exampleTranslation}
+            translating={isExampleTranslating}
+            translationError={exampleTranslationError}
+          />
+        ) : null}
+        <div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div>
+      </div>
+    );
+  }
+  return (
+    <div className={shared}>
+      <div className="mb-4 self-start text-xs text-muted-foreground">重学第 3 轮 · 看中文回忆英文单词</div>
+      <div className="text-xl text-center">{chinese}</div>
+      <div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div>
+    </div>
+  );
 }
 
 function ActionRow({ columns, actions }: { columns: string; actions: { key: string; label: string; onClick: () => void; tone?: "good" | "hard" | "again" }[] }) {

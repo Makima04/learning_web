@@ -72,8 +72,23 @@ docker run -d \
 | `EW_ALLOW_FIRST_ADMIN` | `1` | 首位注册用户是否 admin |
 | `EW_TRUSTED_PROXY_HOPS` | `0` | 可信反向代理跳数；直连保持 `0`，单层反代设为 `1` |
 | `EW_LLM_URL` / `KEY` / `MODEL` | （空） | LLM 网关（OpenAI 兼容） |
+| `EW_RESEND_API_KEY` | （空） | Resend 发信 API Key；空则默认 `EW_MAIL_DEV` 开发模式 |
+| `EW_MAIL_FROM` | `english_web <onboarding@resend.dev>` | 发件人 |
+| `EW_MAIL_DEV` | key 空时 `1` | `1` 时不真正发信，验证码打日志并在 API 返回 `dev_code` |
 
 > 也可用项目根 `ew_llm.json`（本地开发）；环境变量优先。
+
+### 邮箱验证码
+
+- 发码：`POST /api/auth/email/send-code` `{ email, purpose: "register"|"login" }`
+- 注册：`POST /api/auth/email/register` `{ email, code, password? }`
+- 登录：`POST /api/auth/email/login` `{ email, code }`
+- 生产：配置 `EW_RESEND_API_KEY` + 域名发件人；本地可直接用开发模式。
+
+### 例句翻译（共用缓存）
+
+- `POST /api/translate` 仅接受像例句的文本；成功译文写入全局 `translations`，已 `ok` 永不重翻。
+- 已移除 `/api/translate/{id}/retranslate`。
 
 ## 本地开发
 

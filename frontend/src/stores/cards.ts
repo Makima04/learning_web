@@ -1,8 +1,8 @@
-// cards store —— localStorage 优先 + 登录后 fire-and-forget 镜像 /api/cards。
-// 镜像 web/store.js saveCard / getAllCards / clearAll / sync 语义。
+// cards store —— localStorage 优先 + 登录后批量镜像 /api/cards（syncQueue）。
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import type { Card } from "@/lib/srs";
+import { enqueueCard } from "@/lib/syncQueue";
 
 const KEY = "ew.cards.v1";
 
@@ -83,12 +83,7 @@ export const useCards = create<CardsStore>((set, get) => ({
     const all = { ...get().cards, [idx]: saved };
     set({ cards: all });
     saveAll(all);
-    // 登录后后台镜像写，不 await，失败静默（镜像 putCard）
-    if (api.isLoggedIn()) {
-      void api
-        .putCard(idx, toDto(saved))
-        .catch((e: any) => console.warn("mirror putCard failed:", e?.message));
-    }
+    enqueueCard(idx, toDto(saved));
   },
   replaceAll: (cards) => {
     const normalized = Object.fromEntries(
@@ -103,6 +98,12 @@ export const useCards = create<CardsStore>((set, get) => ({
     ) as Record<number, Card>;
     set({ cards: normalized });
     saveAll(normalized);
+    // 导入后若已登录，整包入队
+    if (api.isLoggedIn()) {
+      for (const [idx, card] of Object.entries(normalized)) {
+        enqueueCard(+idx, toDto(card));
+      }
+    }
   },
   clearAll: () => {
     set({ cards: {} });
@@ -118,15 +119,18 @@ export const useCards = create<CardsStore>((set, get) => ({
     for (const k of remoteKeys) remoteNum[+k] = fromDto(remoteCards[k]);
 
     if (remoteKeys.length === 0 && Object.keys(localCards).length > 0) {
-      // 首登：服务端空，推本地上去
       try {
         await api.bulkCards(
           Object.fromEntries(
             Object.entries(localCards).map(([idx, card]) => [idx, toDto(card)])
           )
         );
-      } catch (e: any) {
-        console.warn("bulkCards push failed:", e?.message);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e);
+        console.warn("bulkCards push failed:", message);
+        for (const [idx, card] of Object.entries(localCards)) {
+          enqueueCard(+idx, toDto(card));
+        }
       }
     } else if (remoteKeys.length > 0) {
       const merged = { ...localCards };
@@ -137,7 +141,7 @@ export const useCards = create<CardsStore>((set, get) => ({
       for (const [idx, remoteCard] of Object.entries(remoteNum)) {
         const localCard = localCards[+idx];
         if ((localCard?.updatedAt ?? 0) > (remoteCard.updatedAt ?? 0)) {
-          localNewer[idx] = toDto(localCard);
+          localNewer[idx] = toDto(localCard!);
         } else {
           merged[+idx] = remoteCard;
         }
@@ -147,8 +151,12 @@ export const useCards = create<CardsStore>((set, get) => ({
       if (Object.keys(localNewer).length > 0) {
         try {
           await api.bulkCards(localNewer);
-        } catch (e: any) {
-          console.warn("bulkCards merge failed:", e?.message);
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : String(e);
+          console.warn("bulkCards merge failed:", message);
+          for (const [idx, card] of Object.entries(localNewer)) {
+            enqueueCard(+idx, card);
+          }
         }
       }
     }

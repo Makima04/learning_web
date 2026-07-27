@@ -62,8 +62,8 @@ export function PapersPage() {
                       year: p.year,
                       variant: (p as any).variant || "en1",
                       label: psg.label,
-                      items: (psg as any).items || [],
-                      answers: (psg as any).answers || {},
+                      items: psg.items || [],
+                      answers: psg.answers || {},
                       sectionType: sec.type,
                       wordsFull: psg.words,
                     });
@@ -107,7 +107,7 @@ export function PapersPage() {
         ))}
       </div>
       <p className="text-sm text-muted-foreground">
-        选择年份与篇章，阅读真题原文：按句翻译、命中词高亮。
+        选择年份与篇章：左侧原文与选择题，右侧译文与答案解析。
       </p>
       <div className="space-y-2">
         {filtered.length === 0 && (

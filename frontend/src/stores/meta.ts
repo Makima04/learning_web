@@ -1,8 +1,8 @@
-// meta store —— 每日计数器，本地时区 YYYY-MM-DD 跨日重置；登录后 fire-and-forget 镜像 /api/meta。
-// 镜像 web/store.js getMeta / bumpMeta / sync（meta 部分）。
+// meta store —— 每日计数器，本地时区 YYYY-MM-DD；登录后入队镜像 /api/meta。
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
+import { enqueueMeta } from "@/lib/syncQueue";
 
 const KEY = "ew.meta.v1";
 
@@ -44,6 +44,16 @@ function saveMeta(meta: Meta) {
   }
 }
 
+function mirrorMeta(meta: Meta) {
+  enqueueMeta({
+    day_key: meta.dayKey,
+    new_today: meta.newToday,
+    review_today: meta.reviewToday,
+    learn_today: meta.learnToday,
+    done_today: meta.doneToday,
+  });
+}
+
 interface MetaStore {
   meta: Meta;
   get: () => Meta;
@@ -57,7 +67,6 @@ interface MetaStore {
 export const useMeta = create<MetaStore>((set, get) => ({
   meta: loadMeta(),
   get: () => {
-    // 访问时若跨日重置
     const today = dayKey();
     const m = get().meta;
     if (m.dayKey !== today) {
@@ -80,22 +89,13 @@ export const useMeta = create<MetaStore>((set, get) => ({
     const next = { ...meta, [field]: (meta[field] || 0) + by };
     set({ meta: next });
     saveMeta(next);
-    if (api.isLoggedIn()) {
-      void api
-        .putMeta({
-          day_key: next.dayKey,
-          new_today: next.newToday,
-          review_today: next.reviewToday,
-          learn_today: next.learnToday,
-          done_today: next.doneToday,
-        })
-        .catch((e: any) => console.warn("mirror putMeta failed:", e?.message));
-    }
+    mirrorMeta(next);
     return next[field];
   },
   replace: (m) => {
     set({ meta: m });
     saveMeta(m);
+    if (api.isLoggedIn()) mirrorMeta(m);
   },
   reset: () => {
     const m = loadMeta();
@@ -104,28 +104,34 @@ export const useMeta = create<MetaStore>((set, get) => ({
   rehydrate: () => set({ meta: loadMeta() }),
   syncMeta: async () => {
     try {
-      // 传本地 dayKey 给服务端：让 meta_get 按客户端当天查，避免跨时区不对称
+      const localMeta = get().get();
+      // 先推本地（服务端 GREATEST 合并）
+      await api.putMeta({
+        day_key: localMeta.dayKey,
+        new_today: localMeta.newToday,
+        review_today: localMeta.reviewToday,
+        learn_today: localMeta.learnToday,
+        done_today: localMeta.doneToday,
+      });
       const rm = await api.getMeta(dayKey());
-      if (rm && rm.meta) {
+      if (rm && rm.meta && rm.meta.day_key === localMeta.dayKey) {
         const rmMeta = rm.meta;
-        const localMeta = get().meta;
-        if (rmMeta.day_key === localMeta.dayKey) {
-          // 同一天：remote 覆盖本地
-          const merged: Meta = {
-            ...localMeta,
-            dayKey: rmMeta.day_key!,
-            newToday: rmMeta.new_today ?? localMeta.newToday,
-            reviewToday: rmMeta.review_today ?? localMeta.reviewToday,
-            learnToday: rmMeta.learn_today ?? localMeta.learnToday,
-            doneToday: rmMeta.done_today ?? localMeta.doneToday,
-          };
-          set({ meta: merged });
-          saveMeta(merged);
-        }
-        // 不同 dayKey：保留本地当前日
+        const merged: Meta = {
+          ...localMeta,
+          dayKey: rmMeta.day_key!,
+          // 取较大值，与服务端 GREATEST 一致
+          newToday: Math.max(localMeta.newToday, rmMeta.new_today ?? 0),
+          reviewToday: Math.max(localMeta.reviewToday, rmMeta.review_today ?? 0),
+          learnToday: Math.max(localMeta.learnToday, rmMeta.learn_today ?? 0),
+          doneToday: Math.max(localMeta.doneToday, rmMeta.done_today ?? 0),
+        };
+        set({ meta: merged });
+        saveMeta(merged);
       }
-    } catch (e: any) {
-      console.warn("getMeta sync failed:", e?.message);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.warn("getMeta sync failed:", message);
+      mirrorMeta(get().get());
     }
   },
 }));

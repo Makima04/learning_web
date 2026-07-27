@@ -3,6 +3,7 @@ mod config;
 mod db;
 mod error;
 mod llm;
+mod mail;
 mod rate_limit;
 mod routes;
 mod state;

@@ -9,6 +9,7 @@ export interface User {
   id: number;
   username: string;
   is_admin?: boolean;
+  email?: string | null;
 }
 
 export interface SentenceItem {
@@ -183,6 +184,43 @@ export async function login(username: string, password: string) {
   setUser(d.user);
   return d;
 }
+
+/** 发送邮箱验证码 purpose: register | login */
+export async function sendEmailCode(
+  email: string,
+  purpose: "register" | "login"
+): Promise<{ ok: boolean; sent?: boolean; expires_in?: number; dev_code?: string }> {
+  return req("/api/auth/email/send-code", {
+    method: "POST",
+    body: JSON.stringify({ email, purpose }),
+  });
+}
+
+export async function registerWithEmail(opts: {
+  email: string;
+  code: string;
+  username?: string;
+  password?: string;
+}) {
+  const d = await req<{ token: string; user: User }>("/api/auth/email/register", {
+    method: "POST",
+    body: JSON.stringify(opts),
+  });
+  setToken(d.token);
+  setUser(d.user);
+  return d;
+}
+
+export async function loginWithEmail(email: string, code: string) {
+  const d = await req<{ token: string; user: User }>("/api/auth/email/login", {
+    method: "POST",
+    body: JSON.stringify({ email, code }),
+  });
+  setToken(d.token);
+  setUser(d.user);
+  return d;
+}
+
 export async function logout() {
   try {
     await req("/api/auth/logout", { method: "POST" });
@@ -219,32 +257,31 @@ export async function listSentences(params: {
 }
 
 // ---- translate ----
-// on-card 按文本翻译，无需 token，后端返 {zh, status}
+// 例句按文本翻译：全局共用 sentences/translations 缓存；已译不重翻
 export async function translateByText(
   text: string
-): Promise<{ zh: string; status: string }> {
+): Promise<{ zh: string; status: string; cached?: boolean }> {
   return req("/api/translate", {
     method: "POST",
     body: JSON.stringify({ text }),
   });
 }
-// 管理端点（需登录）
+// 管理端点（需管理员）：仅补未译，不可 force 重翻
 export async function translateById(id: number) {
-  return req<{ zh: string; status: string }>(`/api/translate/${id}`, {
+  return req<{ zh: string; status: string; cached?: boolean }>(`/api/translate/${id}`, {
     method: "POST",
   });
 }
-export async function retranslateById(id: number) {
-  return req<{ zh: string; status: string }>(
-    `/api/translate/${id}/retranslate`,
-    { method: "POST" }
-  );
-}
 export async function batchTranslate(ids: number[]) {
-  return req<{ translated: number; failed: number; results: any[] }>(
-    "/api/translate/batch",
-    { method: "POST", body: JSON.stringify({ ids }) }
-  );
+  return req<{
+    translated: number;
+    failed: number;
+    skipped?: number;
+    results: any[];
+  }>("/api/translate/batch", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
 }
 
 // ---- llm config（服务端持有 key）----

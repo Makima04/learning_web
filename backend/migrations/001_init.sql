@@ -123,3 +123,21 @@ CREATE TABLE IF NOT EXISTS study_events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_study_events_user_day ON study_events(user_id, day_key);
+
+-- 邮箱（可选；邮箱验证码注册/登录）
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email) WHERE email IS NOT NULL;
+
+-- 邮箱验证码（短时、单次消费）
+CREATE TABLE IF NOT EXISTS email_codes (
+    id BIGSERIAL PRIMARY KEY,
+    email TEXT NOT NULL,
+    code_hash TEXT NOT NULL,
+    purpose TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    consumed BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE INDEX IF NOT EXISTS idx_email_codes_lookup
+    ON email_codes (email, purpose, consumed, expires_at);

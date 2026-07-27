@@ -2,6 +2,7 @@
 // 账号级设置（登录后 fire-and-forget 镜像 /api/settings）；llm 不在此——LLM 仅管理员服务端配置。
 import { create } from "zustand";
 import * as api from "@/lib/api";
+import { enqueueSettings } from "@/lib/syncQueue";
 
 export type Direction = "en2cn" | "cn2en" | "random";
 
@@ -60,11 +61,9 @@ export function getSettings(): Settings {
 export function saveSettings(s: Settings) {
   const clean = stripLlm(s);
   saveJSON(KEY, clean);
-  // 登录后后台镜像写，不 await，失败静默（镜像 putSettings）
+  // 登录后入队批量镜像，失败可重试
   if (api.isLoggedIn()) {
-    void api
-      .putSettings(clean)
-      .catch((e: any) => console.warn("mirror putSettings failed:", e?.message));
+    enqueueSettings(clean as unknown as Record<string, unknown>);
   }
 }
 
@@ -87,13 +86,20 @@ export const useSettings = create<SettingsStore>((set, get) => ({
     try {
       const r = await api.getSettings();
       const remote = r && r.settings;
-      if (remote && Object.keys(remote).length) {
-        const merged = { ...getSettings(), ...stripLlm(remote) };
-        saveSettings(merged);
-        set(merged);
-      }
-    } catch (e: any) {
-      console.warn("getSettings sync failed:", e?.message);
+      const local = getSettings();
+      // 远端填默认缺口，本地当前值优先；再写回账号
+      const preferLocal = {
+        ...DEFAULT_SETTINGS,
+        ...(remote ? stripLlm(remote) : {}),
+        ...local,
+      };
+      saveJSON(KEY, stripLlm(preferLocal));
+      set(preferLocal);
+      enqueueSettings(stripLlm(preferLocal) as unknown as Record<string, unknown>);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.warn("getSettings sync failed:", message);
+      enqueueSettings(getSettings() as unknown as Record<string, unknown>);
     }
   },
 }));

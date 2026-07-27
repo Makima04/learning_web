@@ -83,15 +83,16 @@ async fn put_meta(
         .filter(|s| !s.is_empty())
         .ok_or_else(|| AppError::BadRequest("day_key required".into()))?;
 
+    // 取 max 合并，避免多设备互相覆盖「今日进度」
     sqlx::query(
         r#"
         INSERT INTO meta (user_id, day_key, new_today, review_today, learn_today, done_today, data_version, updated_at)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
         ON CONFLICT (user_id, day_key) DO UPDATE SET
-            new_today = EXCLUDED.new_today,
-            review_today = EXCLUDED.review_today,
-            learn_today = EXCLUDED.learn_today,
-            done_today = EXCLUDED.done_today,
+            new_today = GREATEST(COALESCE(meta.new_today, 0), EXCLUDED.new_today),
+            review_today = GREATEST(COALESCE(meta.review_today, 0), EXCLUDED.review_today),
+            learn_today = GREATEST(COALESCE(meta.learn_today, 0), EXCLUDED.learn_today),
+            done_today = GREATEST(COALESCE(meta.done_today, 0), EXCLUDED.done_today),
             data_version = COALESCE(EXCLUDED.data_version, meta.data_version),
             updated_at = EXCLUDED.updated_at
         "#,

@@ -14,6 +14,12 @@ pub struct Config {
     pub host: String,
     pub port: u16,
     pub static_dir: PathBuf,
+    /// Resend API key（https://resend.com）；空则仅开发模式可发码
+    pub resend_api_key: String,
+    /// 发件地址，如 "红宝书 <noreply@example.com>"
+    pub mail_from: String,
+    /// 开发模式：不真正发信，把验证码打日志并在响应里返回 dev_code
+    pub mail_dev: bool,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -78,6 +84,14 @@ impl Config {
             .map(PathBuf::from)
             .unwrap_or_else(|| project_root.join("frontend/dist"));
 
+        let resend_api_key = env_nonempty("EW_RESEND_API_KEY").unwrap_or_default();
+        let mail_from = env_nonempty("EW_MAIL_FROM")
+            .unwrap_or_else(|| "english_web <onboarding@resend.dev>".into());
+        // 未配置 Resend 时默认开启 dev 发码（本地可测）；配置了 key 则默认关闭
+        let mail_dev = std::env::var("EW_MAIL_DEV")
+            .map(|v| v != "0")
+            .unwrap_or(resend_api_key.is_empty());
+
         Self {
             database_url,
             session_ttl_days,
@@ -89,11 +103,18 @@ impl Config {
             host,
             port,
             static_dir,
+            resend_api_key,
+            mail_from,
+            mail_dev,
         }
     }
 
     pub fn llm_configured(&self) -> bool {
         !self.llm_url.is_empty() && !self.llm_key.is_empty()
+    }
+
+    pub fn mail_configured(&self) -> bool {
+        self.mail_dev || !self.resend_api_key.is_empty()
     }
 }
 
