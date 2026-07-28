@@ -1,8 +1,13 @@
-name: build-and-push-image
+name: build-and-push-amd64-image
 
-# 触发条件：推送到 main 分支，或手动 Dispatch
-# 约束：必须同时推送 linux/amd64 与 linux/arm64（生产 Orange Pi 等为 arm64；
-#       仅 amd64 会导致板子 pull :latest 仍停在旧 arm64 镜像）。
+# 触发：push main 或手动 Dispatch
+#
+# 分工：
+#   - CI（本 workflow）只构建并推送 linux/amd64 标签：:amd64-latest / :amd64-<sha>
+#   - arm64 在本地 macOS 构建：./scripts/publish-arm64-image.sh
+#     该脚本再把 amd64+arm64 合成 multi-arch 的 :latest / :<sha>
+#
+# 生产 Orange Pi（arm64）应 pull :latest（multi-arch），不要只依赖 CI 产物。
 on:
   push:
     branches: [main]
@@ -40,9 +45,6 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 QEMU（交叉构建 arm64）
-        uses: docker/setup-qemu-action@v3
-
       - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -59,24 +61,20 @@ jobs:
           REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           IMAGE="ghcr.io/${REPO_LC}"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
-          echo "构建镜像: $IMAGE (linux/amd64 + linux/arm64)"
+          echo "构建镜像: $IMAGE (linux/amd64 only；arm64 见 scripts/publish-arm64-image.sh)"
 
-      # multi-arch manifest：:latest / :sha 在 amd64 与 arm64 主机上都能 pull 到对应层。
-      # 同时保留 :amd64-* / :arm64-* 标签（内容同为 multi-arch manifest，兼容旧 compose）。
-      - name: 构建并推送 multi-arch 镜像
+      # 只打 :amd64-*，不要覆盖 :latest / :<sha>
+      # multi-arch :latest 由本地 arm 脚本 imagetools 合成。
+      - name: 构建并推送 AMD64 镜像
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           build-args: EW_VERSION=${{ github.sha }}
           tags: |
-            ${{ steps.meta.outputs.image }}:latest
-            ${{ steps.meta.outputs.image }}:${{ github.sha }}
             ${{ steps.meta.outputs.image }}:amd64-latest
             ${{ steps.meta.outputs.image }}:amd64-${{ github.sha }}
-            ${{ steps.meta.outputs.image }}:arm64-latest
-            ${{ steps.meta.outputs.image }}:arm64-${{ github.sha }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true

@@ -61,6 +61,30 @@ docker run -d \
   ghcr.io/makima04/learning_web:latest
 ```
 
+### 发布镜像到 ghcr.io（CI amd64 + 本地 arm64）
+
+GitHub Actions 只构建 **linux/amd64**（`:amd64-latest` / `:amd64-<sha>`），避免 multi-arch QEMU 与 GHA cache 失败。arm64 在本机 Mac 推：
+
+```bash
+# 1. 推 main，等 Actions 成功
+git push origin main
+
+# 2. 登录 ghcr（token 需 write:packages）
+echo "$GHCR_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
+
+# 3. 本地构建 arm64，并合成 multi-arch :latest / :<sha>
+./scripts/publish-arm64-image.sh
+```
+
+生产板（arm64）再：
+
+```bash
+docker pull ghcr.io/makima04/learning_web:latest
+docker compose up -d app
+```
+
+若 CI 已好、arm 已推、只需重合成 manifest：`./scripts/publish-arm64-image.sh --manifest-only`。
+
 ## 环境变量
 
 | 变量 | 默认 | 说明 |
