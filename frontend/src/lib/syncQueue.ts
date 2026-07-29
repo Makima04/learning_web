@@ -3,13 +3,27 @@
 
 import * as api from "@/lib/api";
 import type { CardDTO } from "@/lib/api";
+import { scopedKey } from "@/lib/storageScope";
 
 type PendingCards = Record<string, CardDTO>;
 
-const KEY_CARDS = "ew.sync.pending.cards.v1";
-const KEY_META = "ew.sync.pending.meta.v1";
-const KEY_SETTINGS = "ew.sync.pending.settings.v1";
-const KEY_STATUS = "ew.sync.status.v1";
+const BASE_CARDS = "ew.sync.pending.cards.v1";
+const BASE_META = "ew.sync.pending.meta.v1";
+const BASE_SETTINGS = "ew.sync.pending.settings.v1";
+const BASE_STATUS = "ew.sync.status.v1";
+
+function keyCards() {
+  return scopedKey(BASE_CARDS);
+}
+function keyMeta() {
+  return scopedKey(BASE_META);
+}
+function keySettings() {
+  return scopedKey(BASE_SETTINGS);
+}
+function keyStatus() {
+  return scopedKey(BASE_STATUS);
+}
 
 export type SyncStatus = {
   lastOkAt: number | null;
@@ -43,7 +57,7 @@ function saveJSON(key: string, val: unknown) {
 }
 
 function loadStatus(): SyncStatus {
-  return loadJSON<SyncStatus>(KEY_STATUS, {
+  return loadJSON<SyncStatus>(keyStatus(), {
     lastOkAt: null,
     lastError: null,
     pending: false,
@@ -52,7 +66,7 @@ function loadStatus(): SyncStatus {
 
 function setStatus(patch: Partial<SyncStatus>) {
   status = { ...status, ...patch };
-  saveJSON(KEY_STATUS, status);
+  saveJSON(keyStatus(), status);
   listeners.forEach((fn) => fn(status));
 }
 
@@ -66,33 +80,49 @@ export function subscribeSyncStatus(fn: Listener): () => void {
 }
 
 function recomputePending() {
-  const cards = loadJSON<PendingCards>(KEY_CARDS, {});
-  const meta = loadJSON<api.MetaDTO | null>(KEY_META, null);
-  const settings = loadJSON<Record<string, unknown> | null>(KEY_SETTINGS, null);
+  const cards = loadJSON<PendingCards>(keyCards(), {});
+  const meta = loadJSON<api.MetaDTO | null>(keyMeta(), null);
+  const settings = loadJSON<Record<string, unknown> | null>(keySettings(), null);
   const pending =
     Object.keys(cards).length > 0 || meta != null || settings != null;
   setStatus({ pending });
 }
 
+/** 切换账号作用域后重算 pending / status */
+export function recomputePendingFromStorage() {
+  status = loadStatus();
+  recomputePending();
+  listeners.forEach((fn) => fn(status));
+}
+
+export function clearPendingCards() {
+  try {
+    localStorage.removeItem(keyCards());
+  } catch {
+    /* ignore */
+  }
+  recomputePending();
+}
+
 export function enqueueCard(idx: number, card: CardDTO) {
   if (!api.isLoggedIn()) return;
-  const all = loadJSON<PendingCards>(KEY_CARDS, {});
+  const all = loadJSON<PendingCards>(keyCards(), {});
   all[String(idx)] = card;
-  saveJSON(KEY_CARDS, all);
+  saveJSON(keyCards(), all);
   recomputePending();
   scheduleFlush();
 }
 
 export function enqueueMeta(meta: api.MetaDTO) {
   if (!api.isLoggedIn()) return;
-  saveJSON(KEY_META, meta);
+  saveJSON(keyMeta(), meta);
   recomputePending();
   scheduleFlush();
 }
 
 export function enqueueSettings(settings: Record<string, unknown>) {
   if (!api.isLoggedIn()) return;
-  saveJSON(KEY_SETTINGS, settings);
+  saveJSON(keySettings(), settings);
   recomputePending();
   scheduleFlush();
 }
@@ -112,39 +142,39 @@ export async function flushPending(): Promise<void> {
   try {
     let error: string | null = null;
 
-    const cards = loadJSON<PendingCards>(KEY_CARDS, {});
+    const cards = loadJSON<PendingCards>(keyCards(), {});
     if (Object.keys(cards).length > 0) {
       try {
         await api.bulkCards(cards);
-        localStorage.removeItem(KEY_CARDS);
+        localStorage.removeItem(keyCards());
       } catch (e: unknown) {
         error = e instanceof Error ? e.message : String(e);
       }
     }
 
-    const meta = loadJSON<api.MetaDTO | null>(KEY_META, null);
+    const meta = loadJSON<api.MetaDTO | null>(keyMeta(), null);
     if (meta) {
       try {
         await api.putMeta(meta);
-        localStorage.removeItem(KEY_META);
+        localStorage.removeItem(keyMeta());
       } catch (e: unknown) {
         error = e instanceof Error ? e.message : String(e);
       }
     }
 
-    const settings = loadJSON<Record<string, unknown> | null>(KEY_SETTINGS, null);
+    const settings = loadJSON<Record<string, unknown> | null>(keySettings(), null);
     if (settings) {
       try {
         await api.putSettings(settings);
-        localStorage.removeItem(KEY_SETTINGS);
+        localStorage.removeItem(keySettings());
       } catch (e: unknown) {
         error = e instanceof Error ? e.message : String(e);
       }
     }
 
-    const stillCards = loadJSON<PendingCards>(KEY_CARDS, {});
-    const stillMeta = loadJSON<api.MetaDTO | null>(KEY_META, null);
-    const stillSettings = loadJSON<Record<string, unknown> | null>(KEY_SETTINGS, null);
+    const stillCards = loadJSON<PendingCards>(keyCards(), {});
+    const stillMeta = loadJSON<api.MetaDTO | null>(keyMeta(), null);
+    const stillSettings = loadJSON<Record<string, unknown> | null>(keySettings(), null);
     const pending =
       Object.keys(stillCards).length > 0 || stillMeta != null || stillSettings != null;
 

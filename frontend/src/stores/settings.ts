@@ -2,6 +2,7 @@
 // 账号级设置（登录后 fire-and-forget 镜像 /api/settings）；llm 不在此——LLM 仅管理员服务端配置。
 import { create } from "zustand";
 import * as api from "@/lib/api";
+import { scopedKey } from "@/lib/storageScope";
 import { enqueueSettings } from "@/lib/syncQueue";
 
 export type Direction = "en2cn" | "cn2en" | "random";
@@ -17,7 +18,11 @@ export interface Settings {
   groupSize: number;
 }
 
-const KEY = "ew.set.v1";
+const KEY_BASE = "ew.set.v1";
+
+function storageKey() {
+  return scopedKey(KEY_BASE);
+}
 
 export const DEFAULT_SETTINGS: Settings = {
   dailyNew: 20,
@@ -54,13 +59,13 @@ function stripLlm<T extends Record<string, any>>(s: T): T {
 }
 
 export function getSettings(): Settings {
-  const raw = loadJSON<Partial<Settings>>(KEY, {});
+  const raw = loadJSON<Partial<Settings>>(storageKey(), {});
   const clean = stripLlm(raw);
   return { ...DEFAULT_SETTINGS, ...clean };
 }
 export function saveSettings(s: Settings) {
   const clean = stripLlm(s);
-  saveJSON(KEY, clean);
+  saveJSON(storageKey(), clean);
   // 登录后入队批量镜像，失败可重试
   if (api.isLoggedIn()) {
     enqueueSettings(clean as unknown as Record<string, unknown>);
@@ -93,7 +98,7 @@ export const useSettings = create<SettingsStore>((set, get) => ({
         ...(remote ? stripLlm(remote) : {}),
         ...local,
       };
-      saveJSON(KEY, stripLlm(preferLocal));
+      saveJSON(storageKey(), stripLlm(preferLocal));
       set(preferLocal);
       enqueueSettings(stripLlm(preferLocal) as unknown as Record<string, unknown>);
     } catch (e: unknown) {

@@ -2,13 +2,18 @@
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import type { Card } from "@/lib/srs";
-import { enqueueCard } from "@/lib/syncQueue";
+import { scopedKey } from "@/lib/storageScope";
+import { clearPendingCards, enqueueCard } from "@/lib/syncQueue";
 
-const KEY = "ew.cards.v1";
+const KEY_BASE = "ew.cards.v1";
+
+function storageKey() {
+  return scopedKey(KEY_BASE);
+}
 
 function loadAll(): Record<number, Card> {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(storageKey());
     if (!raw) return {};
     const obj = JSON.parse(raw) as Record<string, Card>;
     const out: Record<number, Card> = {};
@@ -28,7 +33,7 @@ function saveAll(cards: Record<number, Card>) {
   try {
     const obj: Record<string, Card> = {};
     for (const k of Object.keys(cards)) obj[k] = cards[+k];
-    localStorage.setItem(KEY, JSON.stringify(obj));
+    localStorage.setItem(storageKey(), JSON.stringify(obj));
   } catch {
     /* ignore */
   }
@@ -67,7 +72,8 @@ interface CardsStore {
   get: (idx: number) => Card | null;
   save: (idx: number, card: Card) => void;
   replaceAll: (cards: Record<number, Card>) => void;
-  clearAll: () => void;
+  /** 清空本地；登录时同步删除服务端全部卡片 */
+  clearAll: () => Promise<void>;
   rehydrate: () => void;
   sync: () => Promise<{ cards: number }>;
 }
@@ -105,9 +111,22 @@ export const useCards = create<CardsStore>((set, get) => ({
       }
     }
   },
-  clearAll: () => {
+  clearAll: async () => {
     set({ cards: {} });
-    localStorage.removeItem(KEY);
+    try {
+      localStorage.removeItem(storageKey());
+    } catch {
+      /* ignore */
+    }
+    clearPendingCards();
+    if (api.isLoggedIn()) {
+      try {
+        await api.deleteAllCards();
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e);
+        console.warn("deleteAllCards failed:", message);
+      }
+    }
   },
   rehydrate: () => set({ cards: loadAll() }),
   sync: async () => {

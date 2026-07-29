@@ -337,6 +337,12 @@ export async function bulkCards(cards: Record<string, CardDTO>) {
     body: JSON.stringify({ cards }),
   });
 }
+/** 删除当前用户全部卡片（清空进度） */
+export async function deleteAllCards() {
+  return req<{ ok: boolean; deleted?: number }>("/api/cards", {
+    method: "DELETE",
+  });
+}
 export async function getMeta(day?: string): Promise<{ meta: MetaDTO }> {
   // day：本地时区 YYYY-MM-DD，让服务端按客户端当天查，避免跨时区不对称
   const q = day ? `?day=${encodeURIComponent(day)}` : "";

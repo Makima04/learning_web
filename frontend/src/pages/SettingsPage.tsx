@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { parseImportData } from "@/lib/importData";
 import { Link } from "react-router-dom";
+import { applyUserScope } from "@/lib/accountScope";
 import { syncAccountData } from "@/lib/accountSync";
 import {
   flushPending,
@@ -80,6 +81,8 @@ export function SettingsPage() {
     try {
       if (reg) await api.register(user, pass);
       else await api.login(user, pass);
+      const u = api.getUser();
+      applyUserScope(u?.id ?? null);
       auth.refresh();
       await syncAccountData();
       setMsg("登录成功，进度已同步");
@@ -117,6 +120,8 @@ export function SettingsPage() {
       } else {
         await api.loginWithEmail(email, code);
       }
+      const u = api.getUser();
+      applyUserScope(u?.id ?? null);
       auth.refresh();
       await syncAccountData();
       setMsg("登录成功，进度已同步");
@@ -126,7 +131,13 @@ export function SettingsPage() {
   }
 
   async function doLogout() {
+    try {
+      await flushPending();
+    } catch {
+      /* ignore */
+    }
     await api.logout();
+    applyUserScope(null);
     auth.refresh();
     setMsg("已登出");
   }
@@ -194,12 +205,16 @@ export function SettingsPage() {
     input.click();
   }
 
-  function resetAll() {
-    if (!confirm("确认清空本地进度与学习日志？不可恢复。")) return;
-    useCards.getState().clearAll();
+  async function resetAll() {
+    const loggedIn = api.isLoggedIn();
+    const tip = loggedIn
+      ? "确认清空本账号的学习进度与日志？将同时删除服务端卡片（不可恢复）。今日统计在多设备上可能仍取较大值。"
+      : "确认清空本地进度与学习日志？不可恢复。";
+    if (!confirm(tip)) return;
+    await useCards.getState().clearAll();
     useMeta.getState().reset();
     useJournal.getState().clearAll();
-    setMsg("已重置本地进度与学习日志");
+    setMsg(loggedIn ? "已重置本账号进度与学习日志" : "已重置本地进度与学习日志");
   }
 
   return (
@@ -659,8 +674,8 @@ export function SettingsPage() {
                   <Button variant="outline" onClick={importData}>
                     导入进度
                   </Button>
-                  <Button variant="destructive" onClick={resetAll}>
-                    重置本地进度
+                  <Button variant="destructive" onClick={() => void resetAll()}>
+                    重置进度
                   </Button>
                 </div>
                 {msg && <p className="text-sm text-muted-foreground">{msg}</p>}

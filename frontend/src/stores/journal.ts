@@ -19,7 +19,13 @@ import {
   type WeeklySummary,
 } from "@/lib/journal";
 
-const KEY = "ew.journal.v1";
+import { scopedKey } from "@/lib/storageScope";
+
+const KEY_BASE = "ew.journal.v1";
+
+function storageKey() {
+  return scopedKey(KEY_BASE);
+}
 
 export interface JournalSnapshot {
   categories: JournalCategory[];
@@ -42,7 +48,7 @@ function emptySnapshot(): JournalSnapshot {
 
 function load(): JournalSnapshot {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(storageKey());
     if (!raw) return emptySnapshot();
     const parsed = JSON.parse(raw) as Partial<JournalSnapshot>;
     return {
@@ -62,7 +68,7 @@ function load(): JournalSnapshot {
 
 function persist(state: JournalSnapshot) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    localStorage.setItem(storageKey(), JSON.stringify(state));
   } catch {
     /* ignore quota */
   }

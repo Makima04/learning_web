@@ -1,0 +1,18 @@
+// 登录 / 登出时切换 storage 作用域并 rehydrate 各 store。
+import { migrateAllUnscopedIfNeeded, setScopeUserId } from "@/lib/storageScope";
+import { recomputePendingFromStorage } from "@/lib/syncQueue";
+import { useCards } from "@/stores/cards";
+import { useJournal } from "@/stores/journal";
+import { useMeta } from "@/stores/meta";
+import { useSettings } from "@/stores/settings";
+
+/** 切换到指定用户（或 null=访客），并重载本地进度 */
+export function applyUserScope(userId: number | null) {
+  setScopeUserId(userId);
+  if (userId != null) migrateAllUnscopedIfNeeded();
+  useCards.getState().rehydrate();
+  useMeta.getState().rehydrate();
+  useSettings.getState().load();
+  useJournal.getState().rehydrate();
+  recomputePendingFromStorage();
+}

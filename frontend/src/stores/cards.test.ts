@@ -4,6 +4,7 @@ import type { Card } from "@/lib/srs";
 const apiMocks = vi.hoisted(() => ({
   bulkCards: vi.fn(),
   getCards: vi.fn(),
+  deleteAllCards: vi.fn(),
   isLoggedIn: vi.fn(() => true),
   putCard: vi.fn(),
 }));
@@ -37,8 +38,25 @@ describe("cards sync", () => {
     });
     apiMocks.bulkCards.mockReset().mockResolvedValue({ ok: true });
     apiMocks.getCards.mockReset();
+    apiMocks.deleteAllCards.mockReset().mockResolvedValue({ ok: true, deleted: 0 });
     apiMocks.putCard.mockReset().mockResolvedValue({ ok: true });
     useCards.setState({ cards: {} });
+  });
+
+  it("clearAll deletes remote cards when logged in", async () => {
+    useCards.setState({ cards: { 1: card(100) } });
+    await useCards.getState().clearAll();
+    expect(useCards.getState().cards).toEqual({});
+    expect(apiMocks.deleteAllCards).toHaveBeenCalledOnce();
+  });
+
+  it("clearAll skips remote delete when logged out", async () => {
+    apiMocks.isLoggedIn.mockReturnValue(false);
+    useCards.setState({ cards: { 1: card(100) } });
+    await useCards.getState().clearAll();
+    expect(useCards.getState().cards).toEqual({});
+    expect(apiMocks.deleteAllCards).not.toHaveBeenCalled();
+    apiMocks.isLoggedIn.mockReturnValue(true);
   });
 
   it("uses newer remote cards while preserving local-only cards", async () => {

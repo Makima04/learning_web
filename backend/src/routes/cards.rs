@@ -48,7 +48,7 @@ struct BulkBody {
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/cards", get(list_cards))
+        .route("/api/cards", get(list_cards).delete(delete_all_cards))
         .route("/api/cards/{idx}", put(put_card))
         .route("/api/cards/bulk", post(bulk_cards))
 }
@@ -112,6 +112,21 @@ async fn put_card(
 ) -> AppResult<Json<Value>> {
     upsert_card(&state, user.id, idx, &body.card).await?;
     Ok(Json(json!({ "ok": true })))
+}
+
+/// 清空当前用户全部卡片（设置页「重置进度」）。
+async fn delete_all_cards(
+    State(state): State<AppState>,
+    user: AuthUser,
+) -> AppResult<Json<Value>> {
+    let result = sqlx::query("DELETE FROM cards WHERE user_id = $1")
+        .bind(user.id)
+        .execute(&state.pool)
+        .await?;
+    Ok(Json(json!({
+        "ok": true,
+        "deleted": result.rows_affected(),
+    })))
 }
 
 async fn bulk_cards(

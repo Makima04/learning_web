@@ -2,9 +2,14 @@
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
+import { scopedKey } from "@/lib/storageScope";
 import { enqueueMeta } from "@/lib/syncQueue";
 
-const KEY = "ew.meta.v1";
+const KEY_BASE = "ew.meta.v1";
+
+function storageKey() {
+  return scopedKey(KEY_BASE);
+}
 
 export interface Meta {
   dayKey: string;
@@ -19,7 +24,7 @@ function loadMeta(): Meta {
   const today = dayKey();
   let meta: Meta | null = null;
   try {
-    meta = JSON.parse(localStorage.getItem(KEY) || "null");
+    meta = JSON.parse(localStorage.getItem(storageKey()) || "null");
   } catch {
     meta = null;
   }
@@ -38,7 +43,7 @@ function loadMeta(): Meta {
 }
 function saveMeta(meta: Meta) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(meta));
+    localStorage.setItem(storageKey(), JSON.stringify(meta));
   } catch {
     /* ignore */
   }
@@ -98,8 +103,20 @@ export const useMeta = create<MetaStore>((set, get) => ({
     if (api.isLoggedIn()) mirrorMeta(m);
   },
   reset: () => {
-    const m = loadMeta();
+    // 强制当日计数归零（loadMeta 同日会保留旧计数，不能用于清空）
+    const today = dayKey();
+    const prev = get().meta;
+    const m: Meta = {
+      dayKey: today,
+      newToday: 0,
+      reviewToday: 0,
+      learnToday: 0,
+      doneToday: 0,
+      created: prev?.created || Date.now(),
+    };
     set({ meta: m });
+    saveMeta(m);
+    if (api.isLoggedIn()) mirrorMeta(m);
   },
   rehydrate: () => set({ meta: loadMeta() }),
   syncMeta: async () => {

@@ -1,7 +1,7 @@
 // study store —— 三个入口共用的「初轮评估 → 组内三轮重学」状态机。
 import { create } from "zustand";
 import type { Card } from "@/lib/srs";
-import { DAY } from "@/lib/srs";
+import { answer, DAY, isMastered } from "@/lib/srs";
 import { getExamples, getWords } from "@/lib/words";
 import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
@@ -112,6 +112,11 @@ function isLearned(card: Card | undefined): boolean {
   return !!card?.learned;
 }
 
+/** 已学且到期（含 due=0 的遗留数据） */
+function isDue(card: Card | undefined, now: number = Date.now()): boolean {
+  return isLearned(card) && (card!.due || 0) <= now;
+}
+
 function cloneCard(card?: Card): Card {
   return {
     learned: !!card?.learned,
@@ -121,25 +126,36 @@ function cloneCard(card?: Card): Card {
     ease: card?.ease || 2.5,
     reps: card?.reps || 0,
     lapses: card?.lapses || 0,
-    quiz: 0,
+    quiz: card?.quiz ?? 0,
     updatedAt: card?.updatedAt || 0,
   };
 }
 
+/**
+ * 评估通过 / 三轮重学完成 → 写入间隔。
+ * UI 无四键，统一按 quality=good 调度；learned 始终置 true。
+ */
 function savePassedCard(idx: number, previous: Card): Card {
   const now = Date.now();
-  const next: Card = {
-    ...cloneCard(previous),
-    learned: true,
-    state: "review",
-    due: now + DAY,
-    ivl: Math.max(1, previous.ivl || 1),
-    reps: Math.max(1, previous.reps || 0) + (previous.learned ? 1 : 0),
-    quiz: 0,
-    updatedAt: now,
-  };
-  useCards.getState().save(idx, next);
-  return next;
+  const working = cloneCard(previous);
+  // 已标记 learned 但 state 仍为 new 的脏数据：按 review 推进
+  if (working.learned && working.state === "new") {
+    working.state = "review";
+    working.ivl = Math.max(1, working.ivl || 1);
+    working.reps = Math.max(1, working.reps || 0);
+  }
+  const { card } = answer(working, "good", now);
+  card.learned = true;
+  // good 理论上毕业进 review；兜底避免落在 learn
+  if (card.state !== "review") {
+    card.state = "review";
+    card.quiz = 0;
+    card.ivl = Math.max(1, card.ivl || 1);
+    card.due = now + card.ivl * DAY;
+  }
+  card.updatedAt = now;
+  useCards.getState().save(idx, card);
+  return card;
 }
 
 function phaseForRound(round: 1 | 2 | 3): UiPhase {
@@ -169,23 +185,29 @@ export const useStudy = create<StudyState>((set, get) => ({
   reciteOrigin: null,
 
   snapshot: () => {
+    const now = Date.now();
     const cards = useCards.getState().cards;
     const settings = useSettings.getState();
     const meta = useMeta.getState().get();
     const allWords = getWords();
-    const learned = Object.values(cards).filter(isLearned);
+    const allCards = Object.values(cards);
+    const learned = allCards.filter(isLearned);
+    const dueCards = learned.filter((c) => isDue(c, now));
+    const learning = allCards.filter((c) => c.state === "learn");
+    const learnDue = learning.filter((c) => (c.due || 0) <= now).length;
+    const masteredCount = learned.filter(isMastered).length;
     const newAvailable = Math.max(0, settings.dailyNew - meta.newToday);
     const reviewAvailable = Math.min(
-      learned.length,
+      dueCards.length,
       Math.max(0, settings.dailyReview - meta.reviewToday)
     );
     return {
-      due: learned.length,
+      due: dueCards.length,
       reviewAvailable,
-      learnDue: 0,
-      learn: 0,
+      learnDue,
+      learn: learning.length,
       reviewing: learned.length,
-      mastered: learned.length,
+      mastered: masteredCount,
       total: allWords.length,
       newAvailable,
       unseen: allWords.length - learned.length,
@@ -198,6 +220,7 @@ export const useStudy = create<StudyState>((set, get) => ({
   },
 
   buildQueue: (mode) => {
+    const now = Date.now();
     const cards = useCards.getState().cards;
     const settings = useSettings.getState();
     const meta = useMeta.getState().get();
@@ -212,7 +235,7 @@ export const useStudy = create<StudyState>((set, get) => ({
     } else {
       const limit = Math.max(0, settings.dailyReview - meta.reviewToday);
       queue = Object.entries(cards)
-        .filter(([, card]) => isLearned(card))
+        .filter(([, card]) => isDue(card, now))
         .sort(([, left], [, right]) => left.due - right.due)
         .slice(0, limit)
         .map(([idx, card]) => ({ idx: +idx, card: cloneCard(card), group: "review" }));
