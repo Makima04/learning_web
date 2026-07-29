@@ -37,3 +37,6 @@ frontend/dist/
 # Claude Code / Codegraph 工作目录
 .claude/
 .codegraph/
+
+# Python test cache
+.pytest_cache/

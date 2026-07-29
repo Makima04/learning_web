@@ -4,7 +4,5 @@ line-length = 120
 select = ["E", "F", "I"]
 ignore = ["E501"]
 [lint.per-file-ignores]
-# 既有业务代码（server/ 与 scripts/）由 server 代理维护，暂不纳入门禁以免 CI 失败；
-# 门禁聚焦新增的工程文件（tests/、配置等）。
-"server/*" = ["E", "F", "I"]
+# 数据管线脚本风格宽松（一次性/半自动化），不纳入严格门禁
 "scripts/*" = ["E", "F", "I"]

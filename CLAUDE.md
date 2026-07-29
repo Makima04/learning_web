@@ -12,8 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 考研英语背词应用「红宝书 · 乱序 · 6550 词」。三层结构，自底向上：
 
-1. **数据管线脚本** `scripts/` —— 从 PDF 抽取词库与真题，生成 `web/data.js` / `web/papers.js`。
-2. **后端** `backend/` —— Rust Axum + PostgreSQL，同源挂 `frontend/dist`，提供 `/api/*`（旧 Python `server/` **已弃用**，见 `server/DEPRECATED.md`）。
+1. **数据管线脚本** `scripts/` —— 从 PDF 抽取词库与真题；`ew_pipeline`（Rust）生成 `web/papers.js`。
+2. **后端** `backend/` —— Rust Axum + PostgreSQL，同源挂 `frontend/dist`，提供 `/api/*`。
 3. **前端** `frontend/` —— Vite + React 18 + TS + Tailwind + Zustand + Radix。
 
 `web/` **仅存放数据产物**（`data.js`、`papers.js`），无应用代码。
@@ -40,21 +40,21 @@ cd backend && cargo run --release
 
 # 真题管线
 .venv/bin/python3 scripts/parse_paper.py papers/2023.pdf papers/2023.json
-.venv/bin/python3 scripts/match_vocab.py papers/*.json   # → web/papers.js (window.PAPERS)
-.venv/bin/python3 scripts/validate_parse.py
+cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- match papers/*.json   # → web/papers.js (window.PAPERS)
+cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- validate
 
 # LLM CLI
-.venv/bin/python3 scripts/llm_translate.py models
-.venv/bin/python3 scripts/llm_translate.py translate "The homeless make up..."
+cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- models
+cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- translate "The homeless make up..."
 ```
 
-有少量 Python 测试（`tests/`）。前端无测试/lint。`frontend/package.json` 有 dev/build/preview。
+前端有部分 vitest 单元测试（`frontend/src/**/*.test.ts`）；`frontend/package.json` 有 dev/build/preview。
 
 ## 关键架构点
 
 ### 数据是「构建产物」，别手改
 
-`web/data.js`（`window.WORDS`，~500KB）与 `web/papers.js`（`window.PAPERS`，~8MB）由脚本生成。改词库/真题要改源头再重跑 `gen_data.py` / `match_vocab.py`。构建时 `start.sh` / Docker 把它们拷到 `frontend/public/`，Vite 再复制进 `dist/`。
+`web/data.js`（`window.WORDS`，~500KB）与 `web/papers.js`（`window.PAPERS`，~8MB）由脚本生成。改词库/真题要改源头再重跑 `gen_data.py` / `ew_pipeline match`。构建时 `start.sh` / Docker 把它们拷到 `frontend/public/`，Vite 再复制进 `dist/`。
 
 ### 前端（frontend/）：React + Zustand
 
@@ -70,7 +70,6 @@ cd backend && cargo run --release
 - **DB**：`EW_DATABASE_URL`（默认 `postgres://makima@localhost/english_web`）。
 - **鉴权**：PBKDF2-HMAC-SHA256（600k，兼容旧 100k）+ Bearer session，与旧前端兼容。
 - **LLM**：`ew_llm.json` / `EW_LLM_*` 环境变量；OpenAI 兼容网关。
-- **旧 Python**：`server/` **DEPRECATED**，勿用于新部署；默认 `start.sh` / Docker 仅 Rust。
 
 ### LLM key 收归服务端
 

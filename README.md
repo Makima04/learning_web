@@ -158,13 +158,13 @@ export EW_DATABASE_URL=postgres://makima@localhost/english_web
 ## 项目结构
 
 ```
-backend/             Rust Axum + sqlx + PostgreSQL
+backend/             Rust Axum + sqlx + PostgreSQL（含 ew_pipeline CLI）
   src/routes/        /api/* 路由
   migrations/        001_init.sql
-server/              旧 FastAPI（**DEPRECATED**，见 server/DEPRECATED.md；默认用 backend/）
 frontend/            React（Vite/TS/Tailwind/Zustand）→ dist
 web/                 数据产物 only：data.js、papers.js
 scripts/             数据管线 + migrate_sqlite_to_pg.py + seed_sentences_pg.py
+docs/                UI 设计文档
 docker-compose.yml   app + postgres
 Dockerfile           多阶段：Node 前端 + Rust 后端
 ```

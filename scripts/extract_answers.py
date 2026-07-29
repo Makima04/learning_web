@@ -2,8 +2,7 @@
 """extract_answers.py — 从考研真题 PDF 末页答案区抽取选择题答案，写回 papers/*.json。
 
 答案页特征：含「...真题答案」「参考真题答案」「答案与解析」标题行。目前 2010-2019
-（英一）+ en2 的 2010-2012/2014-2020 PDF 末页带答案区；其余年份无答案页，跳过（由
-llm_answers.py 用 LLM 补）。
+（英一）+ en2 的 2010-2012/2014-2020 PDF 末页带答案区；其余年份无答案页，跳过。
 
 答案格式（统一）：
   完形：    1.A 2.B 3.C ... 20.D
@@ -110,7 +109,7 @@ def main():
             continue
         # 写回 json 顶层 answers
         data["answers"] = {str(k): v for k, v in sorted(ans.items())}
-        # variant 推断（与 match_vocab 一致）
+        # variant 推断（与 ew_pipeline match 一致）
         if "variant" not in data:
             data["variant"] = "en2" if "en2" in str(jf).replace("\\", "/") else "en1"
         jf.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
