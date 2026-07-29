@@ -60,7 +60,7 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- translate "The
 
 - **入口**：`index.html` classic script 加载 `/data.js`、`/papers.js`、`/version.js`，再挂 React。
 - **`src/lib/`**：`api.ts`、`srs.ts`、`llm.ts`、`tts.ts`、`words.ts`、`lookup.ts`。
-- **`src/stores/`**：`cards` / `meta` / `settings` / `auth` / `trans` / `theme` / `study`。本地优先 + 登录后 fire-and-forget 镜像服务端。
+- **`src/stores/`**：`cards` / `meta` / `settings` / `auth` / `trans` / `theme` / `study` / `todayLog`。本地可先写；**登录后必须跨设备同步，以服务端为准**（见下「跨设备同步」）。
 - **`src/pages/`**：Dashboard、Study、Papers、PapersRecite、Reader、Settings、TransMgr。
 - **开发**：`cd frontend && npm run dev`；生产：`npm run build` → `frontend/dist`。
 
@@ -94,6 +94,15 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- translate "The
   - 目录示例：`/home/orangepi/learning_web`，`image: ghcr.io/makima04/learning_web:latest`，端口 `8800:8000`。
   - 在板子上 `git pull` **不会**更新容器；必须 `docker pull` + `docker compose up -d app`。
   - 板子应 pull **`:latest`（multi-arch）**；若只跑了 CI、没跑 arm 脚本，`:latest` 不会更新，可临时 pin `:arm64-latest`。
+
+## 跨设备同步（硬约定）
+
+**任何用户学习/进度数据都必须可跨设备合并，且以服务端为权威**，不要只做本地-only 或 fire-and-forget 不拉回。
+
+- 写路径：本地即时更新 UX → 登录则入队 / 镜像 API（`syncQueue` 可重试）→ `syncAccountData` / 页面进入时 `syncFromServer` 拉取。
+- 读路径 / 冲突：以服务端快照为准覆盖本地缓存（如 `todayLog.syncFromServer` 拉 `/api/stats/today`）；允许「先推 pending 再拉」。
+- 新功能检查清单：是否有服务端表或 API？登录后是否入队？是否进 `accountSync`？多端打开是否一致？
+- 未登录访客可纯本地；一旦登录即纳入上述模型。
 
 ## 常量与约定
 

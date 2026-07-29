@@ -6,6 +6,7 @@ import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
 import { useMeta } from "@/stores/meta";
 import { useTheme } from "@/stores/theme";
+import { useTodayLog } from "@/stores/todayLog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -214,6 +215,7 @@ export function SettingsPage() {
     await useCards.getState().clearAll();
     useMeta.getState().reset();
     useJournal.getState().clearAll();
+    useTodayLog.getState().clear();
     setMsg(loggedIn ? "已重置本账号进度与学习日志" : "已重置本地进度与学习日志");
   }
 

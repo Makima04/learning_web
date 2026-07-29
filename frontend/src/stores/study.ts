@@ -1,13 +1,12 @@
 // study store —— 三个入口共用的「初轮评估 → 组内三轮重学」状态机。
 import { create } from "zustand";
-import * as api from "@/lib/api";
-import { dayKey } from "@/lib/day";
 import type { Card } from "@/lib/srs";
 import { answer, DAY, isMastered } from "@/lib/srs";
 import { getExamples, getWords } from "@/lib/words";
 import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
+import { useTodayLog } from "@/stores/todayLog";
 import type { PassageItem, PassageWord, WordEntry } from "@/types/words";
 
 export type StudyMode = "daily" | "passage" | "learn" | "review";
@@ -81,6 +80,10 @@ interface StudyState {
     total: number;
     newAvailable: number;
     unseen: number;
+    /** 词库里还有未学词，可继续学（不受今日计划硬截断） */
+    canLearn: boolean;
+    /** 还有到期卡，可继续复习（不受今日计划硬截断） */
+    canReview: boolean;
     newToday: number;
     reviewToday: number;
     learnToday: number;
@@ -158,20 +161,9 @@ function savePassedCard(idx: number, previous: Card): Card {
   }
   card.updatedAt = now;
   useCards.getState().save(idx, card);
-  // 登录后写入 study_events（fire-and-forget，供 /api/stats/*）
-  if (api.isLoggedIn()) {
-    void api
-      .postStudyEvent({
-        word_idx: idx,
-        event_type: wasLearned ? "review" : "new",
-        quality: "good",
-        day_key: dayKey(),
-      })
-      .catch((e: unknown) => {
-        const message = e instanceof Error ? e.message : String(e);
-        console.warn("postStudyEvent failed:", message);
-      });
-  }
+  // 今日词表：本地即时可见；登录时 record 内入队 study_events，sync 以服务端为准
+  const eventType = wasLearned ? "review" : "new";
+  useTodayLog.getState().record(idx, eventType);
   return card;
 }
 
@@ -213,11 +205,13 @@ export const useStudy = create<StudyState>((set, get) => ({
     const learning = allCards.filter((c) => c.state === "learn");
     const learnDue = learning.filter((c) => (c.due || 0) <= now).length;
     const masteredCount = learned.filter(isMastered).length;
+    // 今日计划剩余（软目标，用于进度文案）
     const newAvailable = Math.max(0, settings.dailyNew - meta.newToday);
     const reviewAvailable = Math.min(
       dueCards.length,
       Math.max(0, settings.dailyReview - meta.reviewToday)
     );
+    const unseen = allWords.length - learned.length;
     return {
       due: dueCards.length,
       reviewAvailable,
@@ -227,7 +221,9 @@ export const useStudy = create<StudyState>((set, get) => ({
       mastered: masteredCount,
       total: allWords.length,
       newAvailable,
-      unseen: allWords.length - learned.length,
+      unseen,
+      canLearn: unseen > 0,
+      canReview: dueCards.length > 0,
       newToday: meta.newToday,
       reviewToday: meta.reviewToday,
       learnToday: meta.learnToday,
@@ -244,13 +240,16 @@ export const useStudy = create<StudyState>((set, get) => ({
     let queue: QueueItem[] = [];
 
     if (mode !== "review") {
-      const limit = Math.max(0, settings.dailyNew - meta.newToday);
+      // 软目标：计划内取剩余；计划已满仍可按 dailyNew 再开一批
+      const planLeft = Math.max(0, settings.dailyNew - meta.newToday);
+      const limit = planLeft > 0 ? planLeft : Math.max(1, settings.dailyNew);
       queue = getWords()
         .filter((word) => !isLearned(cards[word[0]]))
         .slice(0, limit)
         .map((word) => ({ idx: word[0], card: cloneCard(cards[word[0]]), group: "new" }));
     } else {
-      const limit = Math.max(0, settings.dailyReview - meta.reviewToday);
+      const planLeft = Math.max(0, settings.dailyReview - meta.reviewToday);
+      const limit = planLeft > 0 ? planLeft : Math.max(1, settings.dailyReview);
       queue = Object.entries(cards)
         .filter(([, card]) => isDue(card, now))
         .sort(([, left], [, right]) => left.due - right.due)
@@ -493,7 +492,8 @@ export const useStudy = create<StudyState>((set, get) => ({
         });
         return;
       }
-      set({ uiPhase: state.qpos >= state.queue.length ? "done" : "group-done" });
+      // 始终先 group-done 回顾词表（含最后一组），再由 advanceToNextGroup 决定 done
+      set({ uiPhase: "group-done" });
       return;
     }
     if (state.qpos < state.groupEnd) {
@@ -501,7 +501,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       set({ uiPhase: phaseForRound(item.round || 1) });
       return;
     }
-    set({ uiPhase: state.qpos >= state.queue.length ? "done" : "group-done" });
+    set({ uiPhase: "group-done" });
   },
 
   setPassageReader: (reader) => set({ passageReader: reader }),

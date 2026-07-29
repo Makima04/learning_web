@@ -5,6 +5,7 @@ import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
+import { useTodayLog } from "@/stores/todayLog";
 
 /** 切换到指定用户（或 null=访客），并重载本地进度 */
 export function applyUserScope(userId: number | null) {
@@ -14,5 +15,6 @@ export function applyUserScope(userId: number | null) {
   useMeta.getState().rehydrate();
   useSettings.getState().load();
   useJournal.getState().rehydrate();
+  useTodayLog.getState().rehydrate();
   recomputePendingFromStorage();
 }

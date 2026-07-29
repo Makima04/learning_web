@@ -1,27 +1,42 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowUpRight,
   BookOpen,
   CalendarDays,
   Clock3,
+  ListChecks,
   NotebookPen,
   TrendingUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { TodayWordList } from "@/components/TodayWordList";
 import { Card, CardContent } from "@/components/ui/card";
 import { DAY, dayKey } from "@/lib/day";
 import { isDueOnOrBefore } from "@/lib/journal";
+import { resolveTodayWords } from "@/lib/todayWords";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/stores/auth";
 import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
+import { useSettings } from "@/stores/settings";
 import { useStudy } from "@/stores/study";
+import { useTodayLog } from "@/stores/todayLog";
 
-function tipFor(snapshot: { reviewAvailable: number; newAvailable: number; doneToday: number }): string {
+function tipFor(snapshot: {
+  reviewAvailable: number;
+  newAvailable: number;
+  doneToday: number;
+  canReview: boolean;
+  canLearn: boolean;
+}): string {
   if (snapshot.reviewAvailable > 0) return "先完成到期复习，再开始今天的新词。";
   if (snapshot.newAvailable > 0) return "复习已经清空，可以专心积累新词了。";
-  return snapshot.doneToday > 0 ? "今天的任务已经完成，去读一篇真题巩固一下。" : "今天没有待办，去真题里继续积累语感。";
+  if (snapshot.canReview) return "今日复习计划已完成，仍有到期词可继续刷。";
+  if (snapshot.canLearn) return "今日新词计划已完成，还可以继续多学。";
+  return snapshot.doneToday > 0
+    ? "今天的任务已经完成，去读一篇真题巩固一下。"
+    : "今天没有待办，去真题里继续积累语感。";
 }
 
 function StudyAction({
@@ -64,6 +79,8 @@ function StudyAction({
   );
 }
 
+const TODAY_PREVIEW = 6;
+
 export function DashboardPage() {
   const navigate = useNavigate();
   const snapshot = useStudy((state) => state.snapshot);
@@ -72,7 +89,18 @@ export function DashboardPage() {
   const cards = useCards((state) => state.cards);
   const journalEntries = useJournal((state) => state.entries);
   const user = useAuth((state) => state.user);
+  const loggedIn = useAuth((state) => state.loggedIn);
+  const rate = useSettings((s) => s.rate);
+  const todayItems = useTodayLog((s) => s.log.items);
+  const todayDayKey = useTodayLog((s) => s.log.dayKey);
+  const syncTodayLog = useTodayLog((s) => s.syncFromServer);
   const stats = snapshot();
+
+  // 首页预览：登录后拉服务端今日词表（与 accountSync 互补，打开即新）
+  useEffect(() => {
+    if (!loggedIn) return;
+    void syncTodayLog();
+  }, [loggedIn, syncTodayLog]);
   const journalDueCount = useMemo(() => {
     const today = dayKey();
     return journalEntries.filter((e) => isDueOnOrBefore(e, today)).length;
@@ -82,6 +110,27 @@ export function DashboardPage() {
   const progress = totalToday > 0 ? Math.min(1, done / totalToday) : done > 0 ? 1 : 0;
   const progressLabel = Math.round(progress * 100);
   const dateLabel = new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "short" }).format(new Date());
+
+  const todayPreview = useMemo(() => {
+    // 跨日时 store 可能仍挂着昨日 items，展示前以 dayKey 过滤
+    const today = dayKey();
+    const items = todayDayKey === today ? todayItems : [];
+    let newCount = 0;
+    let reviewCount = 0;
+    for (const it of items) {
+      if (it.type === "new") newCount++;
+      else reviewCount++;
+    }
+    const sorted = items.slice().sort((a, b) => b.at - a.at || a.wordIdx - b.wordIdx);
+    const preview = resolveTodayWords(sorted.slice(0, TODAY_PREVIEW));
+    return {
+      total: items.length,
+      newCount,
+      reviewCount,
+      preview,
+      hasMore: items.length > TODAY_PREVIEW,
+    };
+  }, [todayItems, todayDayKey]);
 
   const forecast = useMemo(() => {
     const today = new Date();
@@ -114,14 +163,19 @@ export function DashboardPage() {
     navigate("/study");
   }
 
-  const reviewIsPriority = stats.reviewAvailable > 0;
+  // 有到期复习优先；计划外也可继续刷
+  const reviewIsPriority = stats.canReview && (stats.reviewAvailable > 0 || !stats.canLearn);
   const reviewAction = {
     key: "review",
     icon: Clock3,
     title: "复习旧词",
-    description: reviewIsPriority ? `今天需复习 ${stats.reviewAvailable} 个` : "今天的复习已经完成",
+    description: !stats.canReview
+      ? "今天没有到期复习"
+      : stats.reviewAvailable > 0
+        ? `今天需复习 ${stats.reviewAvailable} 个`
+        : `计划已完成 · 还有 ${stats.due} 个可继续`,
     primary: reviewIsPriority,
-    disabled: !reviewIsPriority,
+    disabled: !stats.canReview,
     iconClassName: "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
     onClick: beginReview,
   };
@@ -129,8 +183,13 @@ export function DashboardPage() {
     key: "learn",
     icon: BookOpen,
     title: "学习新词",
-    description: stats.newAvailable > 0 ? `还有 ${stats.newAvailable} 个待学习` : "今天的新词已经完成",
+    description: !stats.canLearn
+      ? "词库新词已学完"
+      : stats.newAvailable > 0
+        ? `还有 ${stats.newAvailable} 个待学习`
+        : "计划已完成 · 可继续多学",
     primary: !reviewIsPriority,
+    disabled: !stats.canLearn,
     iconClassName: "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
     onClick: beginLearn,
   };
@@ -204,6 +263,52 @@ export function DashboardPage() {
               <span><b className="block text-base tnum">{stats.learn}</b><span className="text-xs text-muted-foreground">学习中</span></span>
               <span><b className="block text-base tnum">{stats.unseen}</b><span className="text-xs text-muted-foreground">未开始</span></span>
             </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mt-6">
+        <Card className="border-border/90 shadow-sm">
+          <CardContent className="p-0">
+            <div className="flex items-start justify-between gap-4 border-b p-5 md:p-6">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold">
+                  <ListChecks className="h-4 w-4 text-primary" />
+                  今日已学
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {todayPreview.total > 0
+                    ? `新学 ${todayPreview.newCount} · 复习 ${todayPreview.reviewCount} · 共 ${todayPreview.total} 词`
+                    : "学完后在这里快速扫一眼"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/today")}
+                className="shrink-0 text-sm text-primary hover:underline"
+              >
+                {todayPreview.total > 0 ? "查看全部" : "打开"}
+              </button>
+            </div>
+            {todayPreview.total > 0 ? (
+              <>
+                <TodayWordList words={todayPreview.preview} rate={rate} compact />
+                {todayPreview.hasMore ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/today")}
+                    className="flex w-full items-center justify-center gap-1 border-t py-3 text-sm text-muted-foreground hover:bg-muted/50 hover:text-primary"
+                  >
+                    查看全部 {todayPreview.total} 词
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
+              </>
+            ) : (
+              <div className="px-5 py-8 text-center text-sm text-muted-foreground md:px-6">
+                今天还没有学过词，完成学习后会自动出现在这里
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

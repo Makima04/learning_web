@@ -6,8 +6,10 @@ const apiMocks = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/api", () => apiMocks);
 
+import { dayKey } from "@/lib/day";
 import { DAY, newCard } from "@/lib/srs";
 import { setScopeUserId } from "@/lib/storageScope";
+import { flushPending } from "@/lib/syncQueue";
 import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
@@ -107,11 +109,12 @@ describe("relearning confirmation", () => {
     expect(apiMocks.postStudyEvent).not.toHaveBeenCalled();
   });
 
-  it("posts study event when logged in after pass", () => {
+  it("enqueues study event when logged in after pass", async () => {
     apiMocks.isLoggedIn.mockReturnValue(true);
     startRelearning(3);
     useStudy.getState().answerRelearning(true);
     useStudy.getState().confirmRelearning(true);
+    await flushPending();
     expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         word_idx: 42,
@@ -179,6 +182,45 @@ describe("review due filter + snapshot", () => {
     useStudy.getState().buildQueue("review");
     const idxs = useStudy.getState().queue.map((q) => q.idx);
     expect(idxs).toEqual([1]);
+  });
+
+  it("buildQueue continues after daily plan is full (soft cap)", () => {
+    const now = Date.now();
+    // 今日计划已满（dayKey 必须是今天，否则 meta.get 会跨日清零）
+    useMeta.setState({
+      meta: {
+        dayKey: dayKey(),
+        newToday: 20,
+        reviewToday: 100,
+        learnToday: 0,
+        doneToday: 120,
+        created: 0,
+      },
+    });
+    useSettings.setState({ dailyNew: 20, dailyReview: 100 });
+    useCards.setState({
+      cards: {
+        1: {
+          learned: true,
+          state: "review",
+          due: now - 1,
+          ivl: 1,
+          ease: 2.5,
+          reps: 1,
+          lapses: 0,
+          quiz: 0,
+          updatedAt: now,
+        },
+      },
+    });
+    // 复习：计划满仍可刷到期卡
+    useStudy.getState().buildQueue("review");
+    expect(useStudy.getState().queue.map((q) => q.idx)).toEqual([1]);
+
+    const snap = useStudy.getState().snapshot();
+    expect(snap.canReview).toBe(true);
+    expect(snap.reviewAvailable).toBe(0); // 计划剩余为 0
+    expect(snap.newAvailable).toBe(0);
   });
 
   it("snapshot counts due and mastered separately from reviewing", () => {
