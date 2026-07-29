@@ -1,6 +1,8 @@
 // llm helper —— 例句翻译：本地 trans 缓存 → 服务端共用 translations 表。
 // 仅例句（足够长、像句子）会触发 LLM；已译永不重翻。
+// 服务端：缓存可读；未命中缓存需登录才调 LLM。
 import * as api from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { useTrans } from "@/stores/trans";
 
 export function isConfigured(): boolean {
@@ -17,13 +19,20 @@ export async function translate(text: string): Promise<string> {
   }
   const cached = useTrans.getState().getTrans(text);
   if (cached !== undefined) return cached;
-  const r = await api.translateByText(text);
-  if (r && r.status === "ok" && r.zh) {
-    useTrans.getState().setTrans(text, r.zh);
-    return r.zh;
+  try {
+    const r = await api.translateByText(text);
+    if (r && r.status === "ok" && r.zh) {
+      useTrans.getState().setTrans(text, r.zh);
+      return r.zh;
+    }
+    if (r && r.status === "unconfigured") {
+      throw new Error("未配置 LLM(服务端)");
+    }
+    throw new Error((r && r.zh) || "翻译失败");
+  } catch (e: unknown) {
+    if (e instanceof ApiError && e.status === 401) {
+      throw new Error("请登录后翻译新例句（已缓存译文仍可匿名读取）");
+    }
+    throw e;
   }
-  if (r && r.status === "unconfigured") {
-    throw new Error("未配置 LLM(服务端)");
-  }
-  throw new Error((r && r.zh) || "翻译失败");
 }

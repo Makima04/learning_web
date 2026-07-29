@@ -1,4 +1,7 @@
-"""app.py — FastAPI 后端，所有 /api 路由集中在此文件。
+"""app.py — FastAPI 后端（DEPRECATED）。
+
+⚠️ 已弃用：生产与开发默认使用 Rust `backend/`（Axum + PostgreSQL）。
+本目录仅作历史对照，勿加新功能；见 server/DEPRECATED.md。
 
 静态挂 frontend/dist（React 构建产物）在根路径（同源，无 CORS）。启动时 init_db()。
 SPA fallback：未命中的路径返 index.html，支持客户端路由深链。

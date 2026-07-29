@@ -31,9 +31,9 @@ PR4 账号隔离（可与 PR3 并行，但建议在 PR1–3 之后，减少冲�
 | **PR2** | `savePassedCard` 接入间隔调度 | PR1（同文件） | [x] |
 | **PR3** | 清空进度同步服务端 | — | [x] |
 | **PR4** | localStorage 按用户隔离 | 建议 PR1–3 后 | [x] |
-| PR5 | study_events 接入或下线 | — | [ ] 本轮不做 |
-| PR6 | translate 公网加固 | — | [ ] 本轮不做 |
-| PR7 | 废弃 / 契约锁定 Python server | — | [ ] 本轮不做 |
+| **PR5** | study_events 接入 savePassedCard | — | [x] |
+| **PR6** | translate 未缓存 LLM 需登录 | — | [x] |
+| **PR7** | 废弃 Python server 文档标注 | — | [x] |
 
 ---
 
@@ -175,20 +175,28 @@ pending:  ew.sync.pending.cards.v1.uN 等
 
 ---
 
-## PR5–PR7（本轮不做，仅登记）
+## PR5 — study_events 接入
 
-### PR5 — study_events
+**状态：** [x] 完成（2026-07-29）
 
-- [ ] 在 `savePassedCard` 旁 fire-and-forget `postStudyEvent`，**或**  
-- [ ] 删除未用 API + 表，避免半成品
+- [x] `savePassedCard` 登录后 fire-and-forget `postStudyEvent`（`new`/`review` + `good`）
+- [x] 单测覆盖登录 / 未登录
 
-### PR6 — translate 公网
+## PR6 — translate 公网加固
 
-- [ ] 登录后才允许非缓存 LLM；或更严 IP 配额 / 全局日预算
+**状态：** [x] 完成（2026-07-29）
 
-### PR7 — Python server
+- [x] 缓存命中仍可匿名（IP 限流）
+- [x] 未命中需登录；用户级 LLM 桶 20/min
+- [x] 前端 401 友好提示
 
-- [ ] README 标明 deprecated；或 CI 契约测试；最终删除 `server/`
+## PR7 — Python server 弃用标注
+
+**状态：** [x] 完成（2026-07-29）
+
+- [x] `server/DEPRECATED.md` + `app.py` 头注释
+- [x] README / Agents.md / Claude.md 标明 DEPRECATED
+- [ ] 整目录删除：确认无依赖后再做
 
 ---
 
@@ -199,6 +207,8 @@ pending:  ew.sync.pending.cards.v1.uN 等
 - [ ] 手动：学一词 → 看 due/ivl → 次日或改时钟测复习队列  
 - [ ] 手动：双账号切换不串数据  
 - [ ] 手动：登录重置后另一设备/强制 sync 仍为空  
+- [ ] 手动：未登录翻译新句 → 401 提示；登录后可译  
+- [ ] 手动：登录学词后 `/api/stats/today` 有事件  
 
 ---
 
@@ -208,6 +218,7 @@ pending:  ew.sync.pending.cards.v1.uN 等
 |------|------|
 | 2026-07-29 | 创建本计划；开始 PR1–PR4 实现 |
 | 2026-07-29 | PR1–PR4 代码完成；单测/cargo check 通过；文档状态标 [x] |
+| 2026-07-29 | 提交 `4aa4caa`；实现 PR5–PR7（study_events / translate 登录 / server 弃用） |
 
 ---
 

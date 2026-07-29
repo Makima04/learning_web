@@ -161,7 +161,7 @@ export EW_DATABASE_URL=postgres://makima@localhost/english_web
 backend/             Rust Axum + sqlx + PostgreSQL
   src/routes/        /api/* 路由
   migrations/        001_init.sql
-server/              旧 FastAPI + SQLite（对照保留）
+server/              旧 FastAPI（**DEPRECATED**，见 server/DEPRECATED.md；默认用 backend/）
 frontend/            React（Vite/TS/Tailwind/Zustand）→ dist
 web/                 数据产物 only：data.js、papers.js
 scripts/             数据管线 + migrate_sqlite_to_pg.py + seed_sentences_pg.py

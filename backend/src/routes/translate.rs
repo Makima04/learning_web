@@ -1,8 +1,9 @@
 //! 例句翻译：全局共用 sentences + translations 缓存。
-//! - 命中 ok 缓存直接返回，绝不重翻
+//! - 命中 ok 缓存直接返回，绝不重翻（可匿名，IP 限流）
+//! - 未命中需登录再调 LLM（防刷 key / 灌 sentences）
 //! - 取消 retranslate
 //! - 仅接受「像例句」的文本（防单词语刷 LLM）
-//! - 限流：IP 级
+//! - 限流：IP 级 + 用户级 LLM 桶
 
 use axum::{
     extract::{Path, State},
@@ -13,7 +14,7 @@ use chrono::Utc;
 use serde::Deserialize;
 use serde_json::{json, Value};
 
-use crate::auth::AdminUser;
+use crate::auth::{self, AdminUser};
 use crate::db;
 use crate::error::{AppError, AppResult};
 use crate::llm;
@@ -77,7 +78,7 @@ async fn translate_text(
         ));
     }
 
-    // 共用保存：先查是否已有句子 + 成功译文
+    // 共用保存：先查是否已有句子 + 成功译文（匿名可读缓存）
     if let Some(id) = sqlx::query_scalar::<_, i64>("SELECT id FROM sentences WHERE text = $1")
         .bind(text)
         .fetch_optional(&state.pool)
@@ -96,11 +97,17 @@ async fn translate_text(
         }
     }
 
-    // 新译文：再限一次 LLM 专用桶
+    // 未命中缓存：必须登录，避免匿名刷 LLM / 灌 sentences
+    let user = auth::try_user(&state.pool, &headers).await.ok_or_else(|| {
+        AppError::Unauthorized("login required to translate new sentences".into())
+    })?;
     state.rate.check(&ip, "translate_llm", 15, 60)?;
+    state
+        .rate
+        .check(&format!("u{}", user.id), "translate_llm_user", 20, 60)?;
 
     let sid = db::ensure_sentence(&state.pool, text, None, None).await?;
-    do_translate(&state, sid, None).await
+    do_translate(&state, sid, Some(user.id)).await
 }
 
 async fn translate_sid(

@@ -1,5 +1,7 @@
 // study store —— 三个入口共用的「初轮评估 → 组内三轮重学」状态机。
 import { create } from "zustand";
+import * as api from "@/lib/api";
+import { dayKey } from "@/lib/day";
 import type { Card } from "@/lib/srs";
 import { answer, DAY, isMastered } from "@/lib/srs";
 import { getExamples, getWords } from "@/lib/words";
@@ -137,6 +139,7 @@ function cloneCard(card?: Card): Card {
  */
 function savePassedCard(idx: number, previous: Card): Card {
   const now = Date.now();
+  const wasLearned = !!previous.learned;
   const working = cloneCard(previous);
   // 已标记 learned 但 state 仍为 new 的脏数据：按 review 推进
   if (working.learned && working.state === "new") {
@@ -155,6 +158,20 @@ function savePassedCard(idx: number, previous: Card): Card {
   }
   card.updatedAt = now;
   useCards.getState().save(idx, card);
+  // 登录后写入 study_events（fire-and-forget，供 /api/stats/*）
+  if (api.isLoggedIn()) {
+    void api
+      .postStudyEvent({
+        word_idx: idx,
+        event_type: wasLearned ? "review" : "new",
+        quality: "good",
+        day_key: dayKey(),
+      })
+      .catch((e: unknown) => {
+        const message = e instanceof Error ? e.message : String(e);
+        console.warn("postStudyEvent failed:", message);
+      });
+  }
   return card;
 }
 

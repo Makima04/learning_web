@@ -133,8 +133,12 @@ pub async fn require_admin(pool: &PgPool, token: &str) -> AppResult<AuthUser> {
 }
 
 fn extract_bearer(parts: &Parts) -> AppResult<String> {
-    let auth = parts
-        .headers
+    bearer_from_headers(&parts.headers)
+}
+
+/// 从 HeaderMap 解析 Bearer token（无 / 非法 → Unauthorized）。
+pub fn bearer_from_headers(headers: &axum::http::HeaderMap) -> AppResult<String> {
+    let auth = headers
         .get(AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
@@ -146,6 +150,12 @@ fn extract_bearer(parts: &Parts) -> AppResult<String> {
         return Err(AppError::Unauthorized("empty token".into()));
     }
     Ok(token)
+}
+
+/// 可选登录：无 token 或无效 token → None（不报错）。
+pub async fn try_user(pool: &PgPool, headers: &axum::http::HeaderMap) -> Option<AuthUser> {
+    let token = bearer_from_headers(headers).ok()?;
+    require_user(pool, &token).await.ok()
 }
 
 impl FromRequestParts<AppState> for AuthUser {

@@ -1,4 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const apiMocks = vi.hoisted(() => ({
+  isLoggedIn: vi.fn(() => false),
+  postStudyEvent: vi.fn().mockResolvedValue({ ok: true }),
+}));
+vi.mock("@/lib/api", () => apiMocks);
+
 import { DAY, newCard } from "@/lib/srs";
 import { setScopeUserId } from "@/lib/storageScope";
 import { useCards } from "@/stores/cards";
@@ -43,6 +50,8 @@ describe("relearning confirmation", () => {
       clear: () => storage.clear(),
     });
     setScopeUserId(null);
+    apiMocks.isLoggedIn.mockReturnValue(false);
+    apiMocks.postStudyEvent.mockClear();
     useCards.setState({ cards: {} });
     useMeta.setState({
       meta: {
@@ -95,6 +104,21 @@ describe("relearning confirmation", () => {
     expect(saved.due).toBeGreaterThan(Date.now());
     expect(saved.due).toBeLessThanOrEqual(Date.now() + DAY + 1000);
     expect(useStudy.getState().sessionStats).toMatchObject({ studied: 1, newDone: 1 });
+    expect(apiMocks.postStudyEvent).not.toHaveBeenCalled();
+  });
+
+  it("posts study event when logged in after pass", () => {
+    apiMocks.isLoggedIn.mockReturnValue(true);
+    startRelearning(3);
+    useStudy.getState().answerRelearning(true);
+    useStudy.getState().confirmRelearning(true);
+    expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        word_idx: 42,
+        event_type: "new",
+        quality: "good",
+      })
+    );
   });
 });
 
@@ -108,6 +132,8 @@ describe("review due filter + snapshot", () => {
       clear: () => storage.clear(),
     });
     setScopeUserId(null);
+    apiMocks.isLoggedIn.mockReturnValue(false);
+    apiMocks.postStudyEvent.mockClear();
     useCards.setState({ cards: {} });
     useMeta.setState({
       meta: {
