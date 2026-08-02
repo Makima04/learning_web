@@ -28,11 +28,11 @@ describe("pickFromPool", () => {
 describe("pickDistractors / buildClozeOptions", () => {
   beforeEach(() => {
     const g = globalThis as typeof globalThis & {
-      window: typeof globalThis;
-      WORDS: unknown[];
-      PAPERS: unknown[];
+      WORDS?: unknown[];
+      PAPERS?: unknown[];
     };
-    g.window = g;
+    // vitest node 环境：挂 window 供 getWords() 读取
+    (globalThis as { window?: unknown }).window = globalThis;
     g.WORDS = [
       [1, "proportion", [["n.", "比例"]]],
       [2, "proposal", [["n.", "提议"]]],

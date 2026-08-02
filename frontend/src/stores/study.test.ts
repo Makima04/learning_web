@@ -71,11 +71,10 @@ describe("relearning confirmation", () => {
     });
     // 完型抽干扰项依赖词库（node 环境无 window，挂到 globalThis）
     const g = globalThis as typeof globalThis & {
-      window: typeof globalThis;
-      WORDS: unknown[];
-      PAPERS: unknown[];
+      WORDS?: unknown[];
+      PAPERS?: unknown[];
     };
-    g.window = g;
+    (globalThis as { window?: unknown }).window = globalThis;
     g.WORDS = [
       [42, "proportion", [["n.", "比例"]]],
       [2, "proposal", [["n.", "提议"]]],
