@@ -29,11 +29,21 @@ function tipFor(snapshot: {
   doneToday: number;
   canReview: boolean;
   canLearn: boolean;
+  newGoal: number;
+  reviewGoal: number;
 }): string {
-  if (snapshot.reviewAvailable > 0) return "先完成到期复习，再开始今天的新词。";
+  if (snapshot.reviewAvailable > 0) {
+    return snapshot.newAvailable > 0
+      ? "先完成到期复习，再开始今天的新词。"
+      : "今日新词计划已完成；优先清掉到期复习吧。";
+  }
   if (snapshot.newAvailable > 0) return "复习已经清空，可以专心积累新词了。";
   if (snapshot.canReview) return "今日复习计划已完成，仍有到期词可继续刷。";
-  if (snapshot.canLearn) return "今日新词计划已完成，还可以继续多学。";
+  if (snapshot.canLearn) {
+    return snapshot.newGoal > 0
+      ? `今日新词计划（${snapshot.newGoal} 个）已完成，还可以继续多学。`
+      : "还可以继续学新词。";
+  }
   return snapshot.doneToday > 0
     ? "今天的任务已经完成，去读一篇真题巩固一下。"
     : "今天没有待办，去真题里继续积累语感。";
@@ -105,9 +115,10 @@ export function DashboardPage() {
     const today = dayKey();
     return journalEntries.filter((e) => isDueOnOrBefore(e, today)).length;
   }, [journalEntries]);
+  // 用计划内完成量 / 固定今日目标，避免「剩余额度」当分母
   const totalToday = stats.todayPlan;
-  const done = stats.doneToday;
-  const progress = totalToday > 0 ? Math.min(1, done / totalToday) : done > 0 ? 1 : 0;
+  const done = stats.planDone;
+  const progress = totalToday > 0 ? Math.min(1, done / totalToday) : stats.doneToday > 0 ? 1 : 0;
   const progressLabel = Math.round(progress * 100);
   const dateLabel = new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "short" }).format(new Date());
 
@@ -172,8 +183,8 @@ export function DashboardPage() {
     description: !stats.canReview
       ? "今天没有到期复习"
       : stats.reviewAvailable > 0
-        ? `今天需复习 ${stats.reviewAvailable} 个`
-        : `计划已完成 · 还有 ${stats.due} 个可继续`,
+        ? `今日 ${stats.reviewToday}/${stats.reviewGoal} · 还剩 ${stats.reviewAvailable}`
+        : `今日 ${stats.reviewToday}/${stats.reviewGoal} 已完成 · 还有 ${stats.due} 个可继续`,
     primary: reviewIsPriority,
     disabled: !stats.canReview,
     iconClassName: "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
@@ -186,8 +197,10 @@ export function DashboardPage() {
     description: !stats.canLearn
       ? "词库新词已学完"
       : stats.newAvailable > 0
-        ? `还有 ${stats.newAvailable} 个待学习`
-        : "计划已完成 · 可继续多学",
+        ? `今日 ${stats.newToday}/${stats.newGoal} · 还剩 ${stats.newAvailable}`
+        : stats.newGoal > 0
+          ? `今日 ${stats.newToday}/${stats.newGoal} 已完成 · 可继续多学`
+          : "可继续学习新词",
     primary: !reviewIsPriority,
     disabled: !stats.canLearn,
     iconClassName: "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",

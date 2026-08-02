@@ -16,13 +16,21 @@ import { useSettings } from "@/stores/settings";
 import { useStudy } from "@/stores/study";
 import type { QueueItem } from "@/stores/study";
 
-function startRelearning(round: 1 | 2 | 3) {
+function phaseForTestRound(round: 1 | 2 | 3 | 4) {
+  if (round === 1) return "relearn-example" as const;
+  if (round === 2) return "relearn-word" as const;
+  if (round === 3) return "relearn-meaning" as const;
+  return "relearn-cloze" as const;
+}
+
+function startRelearning(round: 1 | 2 | 3 | 4) {
   const item: QueueItem = {
     idx: 42,
     card: newCard(),
     group: "new",
     round,
     needsRelearning: true,
+    entry: [42, "proportion", [["n.", "比例"]]],
   };
   useStudy.setState({
     mode: "learn",
@@ -36,7 +44,17 @@ function startRelearning(round: 1 | 2 | 3) {
     relearnPending: [],
     relearnReveal: null,
     relearnAnswerKnown: null,
-    uiPhase: round === 1 ? "relearn-example" : round === 2 ? "relearn-word" : "relearn-meaning",
+    currentExample: "The homeless make up a large proportion of the population.",
+    lastExampleByIdx: {},
+    cloze:
+      round === 4
+        ? {
+            sentence: "The homeless make up a large proportion of the population.",
+            options: ["proportion", "proposal", "property", "prospect"],
+            correct: "proportion",
+          }
+        : null,
+    uiPhase: phaseForTestRound(round),
     assessChoice: null,
     sessionStats: { studied: 0, newDone: 0, reviewDone: 0 },
   });
@@ -51,6 +69,24 @@ describe("relearning confirmation", () => {
       removeItem: (key: string) => storage.delete(key),
       clear: () => storage.clear(),
     });
+    // 完型抽干扰项依赖词库（node 环境无 window，挂到 globalThis）
+    const g = globalThis as typeof globalThis & {
+      window: typeof globalThis;
+      WORDS: unknown[];
+      PAPERS: unknown[];
+    };
+    g.window = g;
+    g.WORDS = [
+      [42, "proportion", [["n.", "比例"]]],
+      [2, "proposal", [["n.", "提议"]]],
+      [3, "property", [["n.", "财产"]]],
+      [4, "prospect", [["n.", "前景"]]],
+      [5, "provide", [["v.", "提供"]]],
+      [6, "abandon", [["v.", "放弃"]]],
+      [7, "ability", [["n.", "能力"]]],
+      [8, "absolute", [["adj.", "绝对的"]]],
+    ];
+    g.PAPERS = [];
     setScopeUserId(null);
     apiMocks.isLoggedIn.mockReturnValue(false);
     apiMocks.postStudyEvent.mockClear();
@@ -93,11 +129,31 @@ describe("relearning confirmation", () => {
     expect(useStudy.getState().queue[0].round).toBe(2);
   });
 
-  it("does not pass the third round until the user continues", () => {
+  it("third round advances to cloze round four instead of saving", () => {
     startRelearning(3);
 
     useStudy.getState().answerRelearning(true);
     expect(useCards.getState().cards[42]).toBeUndefined();
+    expect(useStudy.getState().sessionStats.studied).toBe(0);
+
+    useStudy.getState().confirmRelearning(true);
+    expect(useCards.getState().cards[42]).toBeUndefined();
+    expect(useStudy.getState().queue[0].round).toBe(4);
+    expect(useStudy.getState().uiPhase).toBe("relearn-cloze");
+    expect(useStudy.getState().cloze?.correct).toBe("proportion");
+    expect(useStudy.getState().cloze?.options).toHaveLength(4);
+    expect(useStudy.getState().cloze?.options).toContain("proportion");
+  });
+
+  it("does not pass the fourth cloze round until the user continues", () => {
+    startRelearning(4);
+
+    useStudy.getState().answerCloze("proportion");
+    expect(useCards.getState().cards[42]).toBeUndefined();
+    expect(useStudy.getState()).toMatchObject({
+      uiPhase: "relearn-reveal",
+      relearnAnswerKnown: true,
+    });
     expect(useStudy.getState().sessionStats.studied).toBe(0);
 
     useStudy.getState().confirmRelearning(true);
@@ -109,10 +165,20 @@ describe("relearning confirmation", () => {
     expect(apiMocks.postStudyEvent).not.toHaveBeenCalled();
   });
 
+  it("cloze wrong answer requeues the same round", () => {
+    startRelearning(4);
+    useStudy.getState().answerCloze("proposal");
+    expect(useStudy.getState().relearnAnswerKnown).toBe(false);
+    useStudy.getState().confirmRelearning(false);
+    expect(useCards.getState().cards[42]).toBeUndefined();
+    expect(useStudy.getState().queue[0].round).toBe(4);
+    expect(useStudy.getState().uiPhase).toBe("relearn-cloze");
+  });
+
   it("enqueues study event when logged in after pass", async () => {
     apiMocks.isLoggedIn.mockReturnValue(true);
-    startRelearning(3);
-    useStudy.getState().answerRelearning(true);
+    startRelearning(4);
+    useStudy.getState().answerCloze("proportion");
     useStudy.getState().confirmRelearning(true);
     await flushPending();
     expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
@@ -221,6 +287,52 @@ describe("review due filter + snapshot", () => {
     expect(snap.canReview).toBe(true);
     expect(snap.reviewAvailable).toBe(0); // 计划剩余为 0
     expect(snap.newAvailable).toBe(0);
+    // 固定分母：不因「剩余为 0」把 todayPlan 压成 0
+    expect(snap.newGoal).toBe(20);
+    expect(snap.reviewGoal).toBe(100);
+    expect(snap.todayPlan).toBe(120);
+    expect(snap.planDone).toBe(120);
+  });
+
+  it("snapshot keeps full daily plan when only review remains (not remaining-as-total)", () => {
+    const now = Date.now();
+    // 复现截图场景：新词 quota 已满并超学，复习一个没做，到期很多
+    useMeta.setState({
+      meta: {
+        dayKey: dayKey(),
+        newToday: 77,
+        reviewToday: 0,
+        learnToday: 0,
+        doneToday: 77,
+        created: 0,
+      },
+    });
+    useSettings.setState({ dailyNew: 20, dailyReview: 100 });
+    const cards: Record<number, ReturnType<typeof newCard> & { learned: boolean }> = {};
+    for (let i = 1; i <= 150; i++) {
+      cards[i] = {
+        learned: true,
+        state: "review",
+        due: now - 1,
+        ivl: 1,
+        ease: 2.5,
+        reps: 1,
+        lapses: 0,
+        quiz: 0,
+        updatedAt: now,
+      };
+    }
+    useCards.setState({ cards });
+
+    const snap = useStudy.getState().snapshot();
+    expect(snap.newAvailable).toBe(0);
+    expect(snap.reviewAvailable).toBe(100);
+    // 旧 bug：todayPlan = 0+100=100，doneToday=77 → 误显示 77/100 且「新词计划完成」像是指 100
+    expect(snap.newGoal).toBe(20);
+    expect(snap.reviewGoal).toBe(100);
+    expect(snap.todayPlan).toBe(120);
+    expect(snap.planDone).toBe(20); // 新词封顶 20 + 复习 0
+    expect(snap.doneToday).toBe(77);
   });
 
   it("snapshot counts due and mastered separately from reviewing", () => {

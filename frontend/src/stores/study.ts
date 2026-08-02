@@ -1,8 +1,14 @@
-// study store —— 三个入口共用的「初轮评估 → 组内三轮重学」状态机。
+// study store —— 三个入口共用的「初轮评估 → 组内四轮重学（末轮完型必过）」状态机。
 import { create } from "zustand";
 import type { Card } from "@/lib/srs";
 import { answer, DAY, isMastered } from "@/lib/srs";
-import { getExamples, getWords } from "@/lib/words";
+import {
+  buildClozeOptions,
+  examplePoolFor,
+  pickFromPool,
+  type ClozeQuiz,
+} from "@/lib/quiz";
+import { getWords } from "@/lib/words";
 import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
@@ -11,12 +17,14 @@ import type { PassageItem, PassageWord, WordEntry } from "@/types/words";
 
 export type StudyMode = "daily" | "passage" | "learn" | "review";
 export type Assessment = "known" | "uncertain" | "unknown";
+export type RelearnRound = 1 | 2 | 3 | 4;
 export type UiPhase =
   | "assess-front"
   | "assess-full"
   | "relearn-example"
   | "relearn-word"
   | "relearn-meaning"
+  | "relearn-cloze"
   | "relearn-reveal"
   | "done"
   | "group-done"
@@ -26,10 +34,12 @@ export interface QueueItem {
   idx: number;
   card: Card;
   group: "new" | "review";
-  round?: 1 | 2 | 3;
+  round?: RelearnRound;
   needsRelearning?: boolean;
   entry?: WordEntry & { sentences?: string[] };
 }
+
+export type { ClozeQuiz };
 
 export interface SessionStats {
   studied: number;
@@ -63,6 +73,12 @@ interface StudyState {
   relearnPending: QueueItem[];
   relearnReveal: QueueItem | null;
   relearnAnswerKnown: boolean | null;
+  /** 当前卡锁定的例句（轮换后钉住，避免 re-render 抖动） */
+  currentExample: string | null;
+  /** 词 idx → 上次例句，用于轮换避开 */
+  lastExampleByIdx: Record<number, string>;
+  /** 第 4 轮完型题（进入 relearn-cloze 时生成） */
+  cloze: ClozeQuiz | null;
   uiPhase: UiPhase;
   assessChoice: Assessment | null;
   sessionStats: SessionStats;
@@ -88,7 +104,14 @@ interface StudyState {
     reviewToday: number;
     learnToday: number;
     doneToday: number;
+    /** 今日新词计划上限（受设置与剩余未学词约束） */
+    newGoal: number;
+    /** 今日复习计划上限（受设置与到期量约束） */
+    reviewGoal: number;
+    /** 今日计划总量（固定分母，不随剩余变化） */
     todayPlan: number;
+    /** 今日计划内已完成量（封顶到各自 goal） */
+    planDone: number;
   };
   buildQueue: (mode: "learn" | "review" | "daily") => void;
   startLearn: () => boolean;
@@ -100,11 +123,15 @@ interface StudyState {
   advanceToNextGroup: () => void;
   currentItem: () => QueueItem | null;
   currentEntry: () => (WordEntry & { sentences?: string[] }) | null;
-  getExample: (item: QueueItem) => string | null;
+  getExample: (item?: QueueItem | null) => string | null;
+  /** 为当前卡刷新例句（池内轮换）；pin 到 currentExample */
+  refreshExample: (item?: QueueItem | null) => string | null;
   chooseAssessment: (choice: Assessment) => void;
   assessFullNext: () => void;
   assessFullMistake: () => void;
   answerRelearning: (known: boolean) => void;
+  /** 第 4 轮完型：点选英文选项 */
+  answerCloze: (selected: string) => void;
   confirmRelearning: (known: boolean) => void;
   advanceWithinGroup: () => void;
   setPassageReader: (reader: PassageReader | null) => void;
@@ -137,7 +164,7 @@ function cloneCard(card?: Card): Card {
 }
 
 /**
- * 评估通过 / 三轮重学完成 → 写入间隔。
+ * 评估通过 / 四轮重学完成 → 写入间隔。
  * UI 无四键，统一按 quality=good 调度；learned 始终置 true。
  */
 function savePassedCard(idx: number, previous: Card): Card {
@@ -167,10 +194,32 @@ function savePassedCard(idx: number, previous: Card): Card {
   return card;
 }
 
-function phaseForRound(round: 1 | 2 | 3): UiPhase {
+const RELEARN_ROUNDS = 4 as const;
+
+function phaseForRound(round: RelearnRound): UiPhase {
   if (round === 1) return "relearn-example";
   if (round === 2) return "relearn-word";
-  return "relearn-meaning";
+  if (round === 3) return "relearn-meaning";
+  return "relearn-cloze";
+}
+
+function entryEnglish(item: QueueItem): string {
+  if (item.entry?.[1]) return item.entry[1];
+  return getWords().find((w) => w[0] === item.idx)?.[1] || "";
+}
+
+function buildClozeQuiz(
+  item: QueueItem,
+  mode: StudyMode,
+  sentence: string | null,
+  preferIdxs: number[]
+): ClozeQuiz {
+  const correct = entryEnglish(item);
+  return {
+    sentence,
+    options: buildClozeOptions(item.idx, correct, preferIdxs),
+    correct,
+  };
 }
 
 export const useStudy = create<StudyState>((set, get) => ({
@@ -186,6 +235,9 @@ export const useStudy = create<StudyState>((set, get) => ({
   relearnPending: [],
   relearnReveal: null,
   relearnAnswerKnown: null,
+  currentExample: null,
+  lastExampleByIdx: {},
+  cloze: null,
   uiPhase: "idle",
   assessChoice: null,
   sessionStats: emptyStats(),
@@ -205,13 +257,24 @@ export const useStudy = create<StudyState>((set, get) => ({
     const learning = allCards.filter((c) => c.state === "learn");
     const learnDue = learning.filter((c) => (c.due || 0) <= now).length;
     const masteredCount = learned.filter(isMastered).length;
-    // 今日计划剩余（软目标，用于进度文案）
+    // 今日计划剩余（软目标，排队仍可超学）
     const newAvailable = Math.max(0, settings.dailyNew - meta.newToday);
     const reviewAvailable = Math.min(
       dueCards.length,
       Math.max(0, settings.dailyReview - meta.reviewToday)
     );
-    const unseen = allWords.length - learned.length;
+    const unseen = Math.max(0, allWords.length - learned.length);
+    // 固定分母：已学 + 仍可计入今日计划的量，避免「剩余当总量」导致进度/文案误导
+    // 例：新词 quota 已满后只剩 100 复习时，旧逻辑会把 todayPlan 变成 100，
+    // 再和 doneToday 混算，出现「没学满 100 新词却显示计划完成 + 77/100」。
+    // newGoal：设置上限，且不超过「今日已学新词 + 仍未学」（词库耗尽时缩 goal）
+    const newGoal = Math.min(settings.dailyNew, meta.newToday + unseen);
+    const reviewGoal = Math.min(
+      settings.dailyReview,
+      meta.reviewToday + dueCards.length
+    );
+    const planDone =
+      Math.min(meta.newToday, newGoal) + Math.min(meta.reviewToday, reviewGoal);
     return {
       due: dueCards.length,
       reviewAvailable,
@@ -228,7 +291,10 @@ export const useStudy = create<StudyState>((set, get) => ({
       reviewToday: meta.reviewToday,
       learnToday: meta.learnToday,
       doneToday: meta.doneToday,
-      todayPlan: newAvailable + reviewAvailable,
+      newGoal,
+      reviewGoal,
+      todayPlan: newGoal + reviewGoal,
+      planDone,
     };
   },
 
@@ -264,6 +330,8 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearnRoundEnd: 0,
       relearnReveal: null,
       relearnAnswerKnown: null,
+      currentExample: null,
+      cloze: null,
     });
   },
 
@@ -273,7 +341,13 @@ export const useStudy = create<StudyState>((set, get) => ({
       set({ mode: "learn", uiPhase: "done", sessionStats: emptyStats() });
       return false;
     }
-    set({ mode: "learn", sessionStats: emptyStats(), passageSkipped: 0, sessionId: get().sessionId + 1 });
+    set({
+      mode: "learn",
+      sessionStats: emptyStats(),
+      passageSkipped: 0,
+      sessionId: get().sessionId + 1,
+      lastExampleByIdx: {},
+    });
     get().advanceToNextGroup();
     return true;
   },
@@ -284,7 +358,13 @@ export const useStudy = create<StudyState>((set, get) => ({
       set({ mode: "review", uiPhase: "done", sessionStats: emptyStats() });
       return false;
     }
-    set({ mode: "review", sessionStats: emptyStats(), passageSkipped: 0, sessionId: get().sessionId + 1 });
+    set({
+      mode: "review",
+      sessionStats: emptyStats(),
+      passageSkipped: 0,
+      sessionId: get().sessionId + 1,
+      lastExampleByIdx: {},
+    });
     get().advanceToNextGroup();
     return true;
   },
@@ -313,6 +393,9 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearnRoundEnd: 0,
       relearnReveal: null,
       relearnAnswerKnown: null,
+      currentExample: null,
+      cloze: null,
+      lastExampleByIdx: {},
       passageSkipped: 0,
       reciteOrigin: origin,
       sessionStats: emptyStats(),
@@ -329,7 +412,7 @@ export const useStudy = create<StudyState>((set, get) => ({
   advanceToNextGroup: () => {
     const { qpos, queue } = get();
     if (qpos >= queue.length) {
-      set({ uiPhase: "done" });
+      set({ uiPhase: "done", currentExample: null, cloze: null });
       return;
     }
     const groupSize = useSettings.getState().groupSize || 20;
@@ -344,8 +427,10 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearnReveal: null,
       relearnAnswerKnown: null,
       assessChoice: null,
+      cloze: null,
       uiPhase: "assess-front",
     });
+    get().refreshExample(queue[qpos]);
   },
 
   currentItem: () => get().relearnReveal || get().queue[get().qpos] || null,
@@ -358,12 +443,31 @@ export const useStudy = create<StudyState>((set, get) => ({
   },
 
   getExample: (item) => {
-    // 真题记词：只用入口文章挂在 entry 上的例句，不回落到全局索引（避免串到别年别篇）
-    if (get().mode === "passage") {
-      return item.entry?.sentences?.[0] || null;
+    const state = get();
+    // 优先当前钉住的例句（与当前卡一致时）
+    const cur = item ?? state.currentItem();
+    if (cur && state.currentExample != null) {
+      const at = state.relearnReveal || state.queue[state.qpos];
+      if (at && at.idx === cur.idx) return state.currentExample;
     }
-    if (item.entry?.sentences?.[0]) return item.entry.sentences[0];
-    return getExamples(item.idx, 1)[0]?.sentence || null;
+    if (!cur) return null;
+    const pool = examplePoolFor(cur.idx, state.mode, cur.entry?.sentences);
+    return pickFromPool(pool, state.lastExampleByIdx[cur.idx]) || pool[0] || null;
+  },
+
+  refreshExample: (item) => {
+    const state = get();
+    const cur = item ?? state.currentItem();
+    if (!cur) {
+      set({ currentExample: null });
+      return null;
+    }
+    const pool = examplePoolFor(cur.idx, state.mode, cur.entry?.sentences);
+    const sentence = pickFromPool(pool, state.lastExampleByIdx[cur.idx]);
+    const lastExampleByIdx = { ...state.lastExampleByIdx };
+    if (sentence) lastExampleByIdx[cur.idx] = sentence;
+    set({ currentExample: sentence, lastExampleByIdx });
+    return sentence;
   },
 
   chooseAssessment: (choice) => {
@@ -411,7 +515,20 @@ export const useStudy = create<StudyState>((set, get) => ({
   answerRelearning: (known) => {
     const state = get();
     const item = state.currentItem();
-    if (!item || !item.round) return;
+    if (!item || !item.round || item.round === 4) return;
+    set({
+      relearnReveal: item,
+      relearnAnswerKnown: known,
+      uiPhase: "relearn-reveal",
+      cloze: null,
+    });
+  },
+
+  answerCloze: (selected) => {
+    const state = get();
+    const item = state.currentItem();
+    if (!item || item.round !== 4 || !state.cloze) return;
+    const known = selected.toLowerCase() === state.cloze.correct.toLowerCase();
     set({
       relearnReveal: item,
       relearnAnswerKnown: known,
@@ -431,18 +548,19 @@ export const useStudy = create<StudyState>((set, get) => ({
     let stats = state.sessionStats;
 
     if (!confirmedKnown) {
+      // 未过：同轮重插（含第 4 轮完型）
       queue.splice(relearnRoundEnd, 0, { ...item, card: cloneCard(item.card) });
       groupEnd++;
       relearnRoundEnd++;
-    } else if (item.round < 3) {
+    } else if (item.round < RELEARN_ROUNDS) {
       queue.splice(groupEnd, 0, {
         ...item,
         card: cloneCard(item.card),
-        round: (item.round + 1) as 2 | 3,
+        round: (item.round + 1) as RelearnRound,
       });
       groupEnd++;
     } else {
-      const card = savePassedCard(item.idx, item.card);
+      savePassedCard(item.idx, item.card);
       stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
       if (item.group === "new") {
         useMeta.getState().bump("newToday");
@@ -463,6 +581,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearnRoundEnd,
       relearnReveal: null,
       relearnAnswerKnown: null,
+      cloze: null,
       sessionStats: stats,
     });
     get().advanceWithinGroup();
@@ -471,7 +590,8 @@ export const useStudy = create<StudyState>((set, get) => ({
   advanceWithinGroup: () => {
     const state = get();
     if (state.qpos < state.groupInitialEnd) {
-      set({ uiPhase: "assess-front" });
+      set({ uiPhase: "assess-front", cloze: null });
+      get().refreshExample(state.queue[state.qpos]);
       return;
     }
     if (!state.relearningStarted) {
@@ -482,26 +602,47 @@ export const useStudy = create<StudyState>((set, get) => ({
           ...state.queue.slice(state.qpos),
         ];
         const first = state.relearnPending[0];
+        const round = (first.round || 1) as RelearnRound;
+        const phase = phaseForRound(round);
+        const preferIdxs = queue.map((q) => q.idx);
+        let cloze: ClozeQuiz | null = null;
+        const example = get().refreshExample(first);
+        if (round === 4) {
+          cloze = buildClozeQuiz(first, state.mode, example, preferIdxs);
+        }
         set({
           queue,
           groupEnd: state.qpos + state.relearnPending.length,
           relearningStarted: true,
           relearnRoundEnd: state.qpos + state.relearnPending.length,
           relearnPending: [],
-          uiPhase: phaseForRound(first.round || 1),
+          uiPhase: phase,
+          cloze,
         });
         return;
       }
       // 始终先 group-done 回顾词表（含最后一组），再由 advanceToNextGroup 决定 done
-      set({ uiPhase: "group-done" });
+      set({ uiPhase: "group-done", cloze: null, currentExample: null });
       return;
     }
     if (state.qpos < state.groupEnd) {
       const item = state.queue[state.qpos];
-      set({ uiPhase: phaseForRound(item.round || 1) });
+      const round = (item.round || 1) as RelearnRound;
+      const phase = phaseForRound(round);
+      const example = get().refreshExample(item);
+      let cloze: ClozeQuiz | null = null;
+      if (round === 4) {
+        cloze = buildClozeQuiz(
+          item,
+          state.mode,
+          example,
+          state.queue.map((q) => q.idx)
+        );
+      }
+      set({ uiPhase: phase, cloze });
       return;
     }
-    set({ uiPhase: "group-done" });
+    set({ uiPhase: "group-done", cloze: null, currentExample: null });
   },
 
   setPassageReader: (reader) => set({ passageReader: reader }),
@@ -519,6 +660,9 @@ export const useStudy = create<StudyState>((set, get) => ({
       relearnPending: [],
       relearnReveal: null,
       relearnAnswerKnown: null,
+      currentExample: null,
+      lastExampleByIdx: {},
+      cloze: null,
       uiPhase: "idle",
       assessChoice: null,
       sessionStats: emptyStats(),

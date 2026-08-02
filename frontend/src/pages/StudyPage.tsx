@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useStudy, type QueueItem } from "@/stores/study";
 import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
+import { blankTargetHtml } from "@/lib/quiz";
 import { getWordMap } from "@/lib/words";
 import { esc, cn } from "@/lib/utils";
 import { speakEnglish } from "@/lib/tts";
@@ -25,6 +26,7 @@ export function StudyPage() {
   const uiPhase = useStudy((state) => state.uiPhase);
   const assessChoice = useStudy((state) => state.assessChoice);
   const relearnAnswerKnown = useStudy((state) => state.relearnAnswerKnown);
+  const cloze = useStudy((state) => state.cloze);
   const sessionStats = useStudy((state) => state.sessionStats);
   const passageSkipped = useStudy((state) => state.passageSkipped);
   const currentItem = useStudy((state) => state.currentItem);
@@ -34,6 +36,7 @@ export function StudyPage() {
   const assessFullNext = useStudy((state) => state.assessFullNext);
   const assessFullMistake = useStudy((state) => state.assessFullMistake);
   const answerRelearning = useStudy((state) => state.answerRelearning);
+  const answerCloze = useStudy((state) => state.answerCloze);
   const confirmRelearning = useStudy((state) => state.confirmRelearning);
   const advanceToNextGroup = useStudy((state) => state.advanceToNextGroup);
   const resetSession = useStudy((state) => state.resetSession);
@@ -49,8 +52,11 @@ export function StudyPage() {
   const [isExampleTranslating, setIsExampleTranslating] = useState(false);
   const [exampleTranslationError, setExampleTranslationError] = useState("");
   const [showExampleHint, setShowExampleHint] = useState(false);
+  /** 完整卡上隐藏英文，只留中文以便回忆 */
+  const [hideEnglish, setHideEnglish] = useState(false);
 
   const isEnglishOnlyPhase = uiPhase === "assess-front" || uiPhase === "relearn-word";
+  const canHideEnglish = uiPhase === "assess-full" || uiPhase === "relearn-reveal";
 
   useEffect(() => {
     setPop(null);
@@ -58,6 +64,7 @@ export function StudyPage() {
     setIsExampleTranslating(false);
     setExampleTranslationError("");
     setShowExampleHint(false);
+    setHideEnglish(false);
   }, [entry?.[0], qpos, uiPhase]);
 
   // 仅英文卡片：数秒后显示例句提示（无例句则不触发）
@@ -71,9 +78,10 @@ export function StudyPage() {
     return () => window.clearTimeout(timer);
   }, [isEnglishOnlyPhase, example, entry?.[0], qpos, uiPhase]);
 
-  // 第 3 轮「看中文回忆英文」不自动读词，避免剧透答案
+  // 第 3 轮 cn→en、第 4 轮完型不自动读词，避免剧透
   useEffect(() => {
-    if (!settings.autoSpeak || !entry || uiPhase === "relearn-meaning") return;
+    if (!settings.autoSpeak || !entry) return;
+    if (uiPhase === "relearn-meaning" || uiPhase === "relearn-cloze") return;
     speakEnglish(entry[1], settings.rate);
   }, [entry?.[0], qpos, uiPhase, settings.autoSpeak, settings.rate]);
 
@@ -94,13 +102,19 @@ export function StudyPage() {
     (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
         return;
+      // H：完整展示卡藏/显英文
+      if ((event.key === "h" || event.key === "H") && canHideEnglish) {
+        event.preventDefault();
+        setHideEnglish((v) => !v);
+        return;
+      }
       if (event.key === " " || event.code === "Space") {
         const canShowTrans =
           uiPhase === "assess-full" ||
           uiPhase === "relearn-reveal" ||
           uiPhase === "relearn-example" ||
           (showExampleHint && isEnglishOnlyPhase);
-        if (canShowTrans) {
+        if (canShowTrans && !hideEnglish) {
           event.preventDefault();
           void showExampleTranslation();
         }
@@ -120,6 +134,10 @@ export function StudyPage() {
       ) {
         if (event.key === "1") answerRelearning(true);
         if (event.key === "2") answerRelearning(false);
+      } else if (uiPhase === "relearn-cloze" && cloze) {
+        const keys = ["1", "2", "3", "4"] as const;
+        const i = keys.indexOf(event.key as (typeof keys)[number]);
+        if (i >= 0 && cloze.options[i]) answerCloze(cloze.options[i]!);
       } else if (uiPhase === "relearn-reveal") {
         if (event.key === "1" && relearnAnswerKnown !== null) {
           confirmRelearning(relearnAnswerKnown);
@@ -128,12 +146,16 @@ export function StudyPage() {
       }
     },
     [
+      answerCloze,
       answerRelearning,
       assessChoice,
       assessFullMistake,
       assessFullNext,
+      canHideEnglish,
       chooseAssessment,
+      cloze,
       confirmRelearning,
+      hideEnglish,
       isEnglishOnlyPhase,
       relearnAnswerKnown,
       showExampleHint,
@@ -210,20 +232,54 @@ export function StudyPage() {
     .map((sense) => `<div class="flex gap-2 py-0.5"><span class="shrink-0 text-sm text-muted-foreground">${esc(sense[0])}</span><span>${esc(sense[1])}</span></div>`)
     .join("");
   const exampleHtml = example ? highlightTarget(example, entry[1], esc) : "";
+  const exampleBlankHtml = example ? blankTargetHtml(example, entry[1], esc) : "";
   const progress = queue.length ? (qpos / queue.length) * 100 : 0;
   const groupName = item.group === "review" ? "复习组" : "新词组";
 
   const fullCard = (
-    <div className="relative min-h-[360px] p-6 md:min-h-[460px] md:p-8" onClick={onCardClick}>
-      <CardHeader label={uiPhase === "relearn-reveal" ? `${groupName} · 答案确认` : groupName} word={entry[1]} onSpeak={() => speakEnglish(entry[1], settings.rate)} />
-      <div className="w-full text-left" dangerouslySetInnerHTML={{ __html: sensesHtml }} />
-      <ExampleBlock
-        html={exampleHtml}
-        onClick={onExampleWordClick}
-        translation={exampleTranslation}
-        translating={isExampleTranslating}
-        translationError={exampleTranslationError}
+    <div className="relative min-h-[360px] p-6 md:min-h-[460px] md:p-8" onClick={hideEnglish ? undefined : onCardClick}>
+      <CardHeader
+        label={
+          uiPhase === "relearn-reveal"
+            ? `${groupName} · 答案确认${relearnAnswerKnown === false ? " · 未通过" : relearnAnswerKnown ? " · 通过" : ""}`
+            : groupName
+        }
+        word={hideEnglish ? "······" : entry[1]}
+        onSpeak={hideEnglish ? undefined : () => speakEnglish(entry[1], settings.rate)}
+        hideSpeak={hideEnglish}
       />
+      {canHideEnglish ? (
+        <button
+          type="button"
+          className="absolute right-12 top-3 text-xs text-muted-foreground hover:text-foreground"
+          onClick={(e) => {
+            e.stopPropagation();
+            setHideEnglish((v) => !v);
+          }}
+          title="快捷键 H"
+        >
+          {hideEnglish ? "显示英文 H" : "藏英文 H"}
+        </button>
+      ) : null}
+      <div className="w-full text-left" dangerouslySetInnerHTML={{ __html: sensesHtml }} />
+      {!hideEnglish ? (
+        <ExampleBlock
+          html={exampleHtml}
+          onClick={onExampleWordClick}
+          translation={exampleTranslation}
+          translating={isExampleTranslating}
+          translationError={exampleTranslationError}
+        />
+      ) : exampleBlankHtml ? (
+        <ExampleBlock
+          html={exampleBlankHtml}
+          label="例句（目标词已遮）"
+          onClick={() => undefined}
+          translation=""
+          translating={false}
+          translationError=""
+        />
+      ) : null}
     </div>
   );
 
@@ -270,6 +326,7 @@ export function StudyPage() {
     );
   } else if (uiPhase === "relearn-reveal") {
     body = fullCard;
+    // 完型客观对错：对则可「记错了」纠偏；错则只能下一词重来
     controls = relearnAnswerKnown ? (
       <ActionRow columns="grid-cols-2" actions={[
         { key: "1", label: "下一词", onClick: () => confirmRelearning(true) },
@@ -279,6 +336,38 @@ export function StudyPage() {
       <ActionRow columns="grid-cols-1" actions={[
         { key: "1", label: "下一词", onClick: () => confirmRelearning(false) },
       ]} />
+    );
+  } else if (uiPhase === "relearn-cloze" && cloze) {
+    const stemHtml = cloze.sentence
+      ? blankTargetHtml(cloze.sentence, cloze.correct, esc)
+      : "";
+    body = (
+      <div className="relative flex min-h-[360px] flex-col items-center justify-center p-6 md:min-h-[460px] md:p-8">
+        <div className="mb-4 self-start text-xs text-muted-foreground">重学第 4 轮 · 完型填空（必过）</div>
+        {stemHtml ? (
+          <div
+            className="w-full text-left text-base leading-relaxed md:text-lg"
+            dangerouslySetInnerHTML={{ __html: stemHtml }}
+          />
+        ) : (
+          <div className="w-full text-center">
+            <div className="mb-2 text-xs text-muted-foreground">无例句 · 据释义选词</div>
+            <div className="text-xl">{chinese || "（无释义）"}</div>
+            <div className="mt-4 text-2xl font-semibold tracking-wider text-primary">______</div>
+          </div>
+        )}
+        <div className="mt-6 text-sm text-muted-foreground">选择填入空缺的英文单词</div>
+      </div>
+    );
+    controls = (
+      <ActionRow
+        columns="grid-cols-2"
+        actions={cloze.options.map((opt, i) => ({
+          key: String(i + 1),
+          label: opt,
+          onClick: () => answerCloze(opt),
+        }))}
+      />
     );
   } else {
     const relearn = relearnBody(
@@ -539,12 +628,30 @@ function SettleView({
   );
 }
 
-function CardHeader({ label, word, onSpeak }: { label: string; word: string; onSpeak: () => void }) {
-  return <>
-    <div className="mb-3 text-xs text-muted-foreground">{label}</div>
-    <button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={onSpeak}>🔊</button>
-    <div className="mb-3 text-3xl font-semibold">{word}</div>
-  </>;
+function CardHeader({
+  label,
+  word,
+  onSpeak,
+  hideSpeak,
+}: {
+  label: string;
+  word: string;
+  onSpeak?: () => void;
+  hideSpeak?: boolean;
+}) {
+  return (
+    <>
+      <div className="mb-3 text-xs text-muted-foreground">{label}</div>
+      {!hideSpeak && onSpeak ? (
+        <button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={onSpeak}>
+          🔊
+        </button>
+      ) : null}
+      <div className={cn("mb-3 text-3xl font-semibold", word === "······" && "tracking-widest text-muted-foreground")}>
+        {word}
+      </div>
+    </>
+  );
 }
 
 function ExampleBlock({
@@ -629,11 +736,19 @@ function relearnBody(
       </div>
     );
   }
+  if (phase === "relearn-meaning") {
+    return (
+      <div className={shared}>
+        <div className="mb-4 self-start text-xs text-muted-foreground">重学第 3 轮 · 看中文回忆英文单词</div>
+        <div className="text-xl text-center">{chinese}</div>
+        <div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div>
+      </div>
+    );
+  }
+  // relearn-cloze 由外层专门渲染；兜底
   return (
     <div className={shared}>
-      <div className="mb-4 self-start text-xs text-muted-foreground">重学第 3 轮 · 看中文回忆英文单词</div>
-      <div className="text-xl text-center">{chinese}</div>
-      <div className="mt-6 text-sm text-muted-foreground">请凭回忆选择</div>
+      <div className="mb-4 self-start text-xs text-muted-foreground">重学中…</div>
     </div>
   );
 }
