@@ -8,6 +8,7 @@ import {
   LibraryBig,
   Monitor,
   Moon,
+  Network,
   NotebookPen,
   PanelLeftClose,
   PanelLeftOpen,
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 
 const NAV = [
   { to: "/", label: "学习概览", icon: LayoutDashboard, end: true },
+  { to: "/kg", label: "知识图谱", icon: Network },
   { to: "/journal", label: "学习日志", icon: NotebookPen },
   { to: "/papers", label: "真题阅读", icon: FileText },
   { to: "/papers-recite", label: "真题记词", icon: LibraryBig },

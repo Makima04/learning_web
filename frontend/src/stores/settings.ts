@@ -7,6 +7,9 @@ import { enqueueSettings } from "@/lib/syncQueue";
 
 export type Direction = "en2cn" | "cn2en" | "random";
 
+/** 数学轨：数二界面只展示数二考点 */
+export type MathTrackSetting = "math1" | "math2";
+
 export interface Settings {
   dailyNew: number;
   dailyReview: number;
@@ -16,6 +19,12 @@ export interface Settings {
   rate: number;
   orderSeed: number;
   groupSize: number;
+  /** 数一 / 数二 */
+  mathTrack: MathTrackSetting;
+  /** 知识图谱入口是否显示 408 */
+  enableCs408: boolean;
+  /** 知识图谱入口是否显示数学 */
+  enableMath: boolean;
 }
 
 const KEY_BASE = "ew.set.v1";
@@ -33,6 +42,9 @@ export const DEFAULT_SETTINGS: Settings = {
   rate: 1.0,
   orderSeed: 0x9e3779b9,
   groupSize: 20,
+  mathTrack: "math1",
+  enableCs408: true,
+  enableMath: true,
 };
 
 function loadJSON<T>(key: string, fallback: T): T {

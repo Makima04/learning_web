@@ -2,6 +2,7 @@ import * as api from "@/lib/api";
 import { flushPending } from "@/lib/syncQueue";
 import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
+import { useKgProgress } from "@/stores/kgProgress";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
 import { useTodayLog } from "@/stores/todayLog";
@@ -20,6 +21,7 @@ export function syncAccountData(): Promise<void> {
       useMeta.getState().syncMeta(),
       useSettings.getState().syncFromServer(),
       useJournal.getState().syncFromServer(),
+      useKgProgress.getState().syncFromServer(),
       useTodayLog.getState().syncFromServer(),
     ]);
     await flushPending();

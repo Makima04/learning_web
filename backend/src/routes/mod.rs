@@ -1,6 +1,7 @@
 mod auth;
 mod cards;
 mod journal;
+mod kg;
 pub mod llm_cfg;
 mod meta;
 mod paper;
@@ -22,6 +23,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(meta::router())
         .merge(settings::router())
         .merge(journal::router())
+        .merge(kg::router())
         .merge(sentences::router())
         .merge(translate::router())
         .merge(parse::router())

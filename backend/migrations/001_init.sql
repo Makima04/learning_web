@@ -141,3 +141,10 @@ CREATE TABLE IF NOT EXISTS email_codes (
 );
 CREATE INDEX IF NOT EXISTS idx_email_codes_lookup
     ON email_codes (email, purpose, consumed, expires_at);
+
+-- 知识图谱进度（408/数学考点状态、题目标记、预测卷缓存）
+CREATE TABLE IF NOT EXISTS user_kg (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    payload JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ
+);

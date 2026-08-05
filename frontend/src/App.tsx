@@ -9,6 +9,10 @@ import { SettingsPage } from "@/pages/SettingsPage";
 import { TransMgrPage } from "@/pages/TransMgrPage";
 import { JournalPage } from "@/pages/JournalPage";
 import { TodayPage } from "@/pages/TodayPage";
+import { KgMapPage } from "@/pages/KgMapPage";
+import { KgModulePage } from "@/pages/KgModulePage";
+import { KgPredictPage } from "@/pages/KgPredictPage";
+import { KgExamsPage } from "@/pages/KgExamsPage";
 import { useAccountSync } from "@/hooks/useAccountSync";
 
 export default function App() {
@@ -21,6 +25,11 @@ export default function App() {
         <Route path="study" element={<StudyPage />} />
         <Route path="today" element={<TodayPage />} />
         <Route path="journal" element={<JournalPage />} />
+        <Route path="kg" element={<KgMapPage />} />
+        <Route path="kg/module/:bookId/:moduleId" element={<KgModulePage />} />
+        <Route path="kg/predict" element={<KgPredictPage />} />
+        <Route path="kg/exams" element={<KgExamsPage />} />
+        <Route path="kg/exams/:year" element={<KgExamsPage />} />
         <Route path="papers" element={<PapersPage />} />
         <Route path="papers-recite" element={<PapersRecitePage />} />
         <Route path="reader" element={<ReaderPage />} />

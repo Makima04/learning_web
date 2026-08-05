@@ -415,3 +415,52 @@ export async function getDaily(from: string, to: string): Promise<DailyAgg[]> {
 export async function getOverview(): Promise<Overview> {
   return req("/api/stats/overview");
 }
+
+// ---- 知识图谱进度 / 408 大题填空（需登录）----
+export async function getKg(): Promise<{ kg: Record<string, unknown> | null; updated_at: number }> {
+  return req("/api/kg");
+}
+
+export async function putKg(kg: Record<string, unknown> | object): Promise<{
+  ok: boolean;
+  skipped?: boolean;
+  reason?: string;
+  kg?: Record<string, unknown>;
+  updated_at: number;
+}> {
+  const updatedAt =
+    kg && typeof kg === "object" && "updatedAt" in kg
+      ? Number((kg as { updatedAt?: number }).updatedAt) || Date.now()
+      : Date.now();
+  return req("/api/kg", {
+    method: "PUT",
+    body: JSON.stringify({ kg, updated_at: updatedAt }),
+  });
+}
+
+export interface PredictFillSlot {
+  slot_id: string;
+  book_id: string;
+  primary_kp_id: string;
+  primary_kp_name: string;
+  secondary_kp_names: string[];
+  suggest_points: number;
+  difficulty: number;
+}
+
+export async function kgPredictFill(slots: PredictFillSlot[]): Promise<{
+  items: {
+    slot_id: string;
+    source: string;
+    stem?: string | null;
+    answer?: string | null;
+    solution?: string | null;
+    error?: string;
+  }[];
+  model?: string;
+}> {
+  return req("/api/kg/predict-fill", {
+    method: "POST",
+    body: JSON.stringify({ slots }),
+  });
+}

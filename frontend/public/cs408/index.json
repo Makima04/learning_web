@@ -1,0 +1,129 @@
+{
+  "subject": "cs408",
+  "years": [
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "paper_count": 15,
+  "papers": [
+    {
+      "year": 2012,
+      "file": "2012.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2013,
+      "file": "2013.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2014,
+      "file": "2014.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2015,
+      "file": "2015.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2016,
+      "file": "2016.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2017,
+      "file": "2017.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2018,
+      "file": "2018.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2019,
+      "file": "2019.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2020,
+      "file": "2020.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2021,
+      "file": "2021.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2022,
+      "file": "2022.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2023,
+      "file": "2023.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2024,
+      "file": "2024.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2025,
+      "file": "2025.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    },
+    {
+      "year": 2026,
+      "file": "2026.json",
+      "total": 47,
+      "mcq": 40,
+      "big": 7
+    }
+  ],
+  "notes": "由 scripts/gen_cs408_frontend.py 从 papers/cs408 生成；考点为 LLM 多标签。"
+}

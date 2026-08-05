@@ -167,6 +167,9 @@ export function SettingsPage() {
         rate: settings.rate,
         orderSeed: settings.orderSeed,
         groupSize: settings.groupSize,
+        mathTrack: settings.mathTrack,
+        enableCs408: settings.enableCs408,
+        enableMath: settings.enableMath,
       },
       journal,
       exportedAt: new Date().toISOString(),
@@ -313,6 +316,38 @@ export function SettingsPage() {
                     <option value="dark">深色</option>
                   </select>
                 </Field>
+                <div className="border-t pt-4 space-y-4">
+                  <p className="text-sm font-medium">考研科目（知识图谱）</p>
+                  <Field label="数学轨">
+                    <select
+                      className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                      value={settings.mathTrack}
+                      onChange={(e) =>
+                        setSettings({
+                          mathTrack: e.target.value as "math1" | "math2",
+                        })
+                      }
+                    >
+                      <option value="math1">数学一</option>
+                      <option value="math2">数学二</option>
+                    </select>
+                  </Field>
+                  <p className="text-xs text-muted-foreground -mt-2">
+                    选数二后，知识图谱数学区只显示数二考点（数一专有如曲面积分等会隐藏）。
+                  </p>
+                  <Field label="启用 408">
+                    <Switch
+                      checked={settings.enableCs408}
+                      onCheckedChange={(v) => setSettings({ enableCs408: v })}
+                    />
+                  </Field>
+                  <Field label="启用数学">
+                    <Switch
+                      checked={settings.enableMath}
+                      onCheckedChange={(v) => setSettings({ enableMath: v })}
+                    />
+                  </Field>
+                </div>
               </CardContent>
             </Card>
           )}

@@ -3,6 +3,7 @@ import { migrateAllUnscopedIfNeeded, setScopeUserId } from "@/lib/storageScope";
 import { recomputePendingFromStorage } from "@/lib/syncQueue";
 import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
+import { useKgProgress } from "@/stores/kgProgress";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
 import { useTodayLog } from "@/stores/todayLog";
@@ -15,6 +16,7 @@ export function applyUserScope(userId: number | null) {
   useMeta.getState().rehydrate();
   useSettings.getState().load();
   useJournal.getState().rehydrate();
+  useKgProgress.getState().load();
   useTodayLog.getState().rehydrate();
   recomputePendingFromStorage();
 }
