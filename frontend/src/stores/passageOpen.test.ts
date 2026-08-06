@@ -8,6 +8,7 @@ function word(idx: number, en = `w${idx}`): PassageWord {
     idx,
     english: en,
     senses: [["n.", "义"]],
+    count: 1,
     sentences: [`${en} is used here.`],
   };
 }
