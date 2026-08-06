@@ -63,6 +63,9 @@ export function KgModulePage() {
               {Math.round(prog.mastery * 100)}% · {prog.dueCount} 待复习
             </p>
           )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            标记已学后会进入「学习日志」复盘队列（明天起提醒）；在日志里复盘会提升掌握度
+          </p>
         </div>
         <div className="flex gap-2">
           <Button

@@ -27,8 +27,19 @@ import {
   type ReviewResult,
 } from "@/lib/journal";
 import { cn } from "@/lib/utils";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/stores/auth";
 import { useJournal } from "@/stores/journal";
+
+const JOURNAL_TABS = ["today", "create", "history", "week"] as const;
+type JournalTab = (typeof JOURNAL_TABS)[number];
+
+function normalizeJournalTab(raw: string | undefined): JournalTab {
+  if (raw && (JOURNAL_TABS as readonly string[]).includes(raw)) {
+    return raw as JournalTab;
+  }
+  return "today";
+}
 
 const KIND_LABEL: Record<JournalKind, string> = {
   learn: "学习",
@@ -71,6 +82,11 @@ function EntryMeta({
       >
         {KIND_LABEL[entry.kind]}
       </span>
+      {(entry.fromKg || entry.kpId) && (
+        <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300">
+          知识图谱
+        </span>
+      )}
       {entry.status === "archived" ? (
         <span className="rounded-full bg-muted px-2 py-0.5">已归档</span>
       ) : (
@@ -204,7 +220,13 @@ export function JournalPage() {
     [weeklies, weekKey]
   );
 
-  const [tab, setTab] = useState("today");
+  const { tab: tabParam } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+  const tab = normalizeJournalTab(tabParam);
+  const setTab = (next: string) => {
+    const t = normalizeJournalTab(next);
+    navigate(t === "today" ? "/journal" : `/journal/${t}`);
+  };
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");

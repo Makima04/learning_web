@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { parseImportData } from "@/lib/importData";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { applyUserScope } from "@/lib/accountScope";
 import { syncAccountData } from "@/lib/accountSync";
 import {
@@ -33,8 +33,18 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+function normalizeSettingsTab(raw: string | undefined): TabId {
+  if (raw && TABS.some((t) => t.id === raw)) return raw as TabId;
+  return "study";
+}
+
 export function SettingsPage() {
-  const [tab, setTab] = useState<TabId>("study");
+  const { tab: tabParam } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+  const tab = normalizeSettingsTab(tabParam);
+  const setTab = (next: TabId) => {
+    navigate(next === "study" ? "/settings" : `/settings/${next}`);
+  };
   const settings = useSettings();
   const setSettings = useSettings((s) => s.set);
   const auth = useAuth();

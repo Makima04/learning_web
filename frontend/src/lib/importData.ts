@@ -226,6 +226,12 @@ function journalEntry(value: unknown, index: number): JournalEntry {
   if (item.lastReviewedOn !== undefined) {
     result.lastReviewedOn = dayString(item.lastReviewedOn, `日志条目 ${index} 的上次复盘`);
   }
+  if (typeof item.kpId === "string" && item.kpId.trim()) {
+    result.kpId = item.kpId.trim();
+  }
+  if (item.fromKg === true) {
+    result.fromKg = true;
+  }
   return result;
 }
 

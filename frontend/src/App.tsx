@@ -25,15 +25,23 @@ export default function App() {
         <Route path="study" element={<StudyPage />} />
         <Route path="today" element={<TodayPage />} />
         <Route path="journal" element={<JournalPage />} />
+        <Route path="journal/:tab" element={<JournalPage />} />
         <Route path="kg" element={<KgMapPage />} />
         <Route path="kg/module/:bookId/:moduleId" element={<KgModulePage />} />
         <Route path="kg/predict" element={<KgPredictPage />} />
         <Route path="kg/exams" element={<KgExamsPage />} />
         <Route path="kg/exams/:year" element={<KgExamsPage />} />
         <Route path="papers" element={<PapersPage />} />
+        <Route path="papers/:variant" element={<PapersPage />} />
+        <Route path="papers/:variant/:year" element={<PapersPage />} />
         <Route path="papers-recite" element={<PapersRecitePage />} />
-        <Route path="reader" element={<ReaderPage />} />
+        <Route path="papers-recite/:variant" element={<PapersRecitePage />} />
+        <Route path="papers-recite/:variant/:year" element={<PapersRecitePage />} />
+        {/* 深链：/reader/en1/2006/Text%202 — 刷新可从 PAPERS 还原 */}
+        <Route path="reader/:variant/:year/:label" element={<ReaderPage />} />
+        <Route path="reader" element={<Navigate to="/papers/en1" replace />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="settings/:tab" element={<SettingsPage />} />
         <Route path="transmgr" element={<TransMgrPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

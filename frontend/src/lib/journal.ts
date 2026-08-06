@@ -31,6 +31,10 @@ export interface JournalEntry {
   lapses: number;
   lastReviewedOn?: string;
   updatedAt: number;
+  /** 关联知识图谱考点；有则复盘回写 KG 熟练度 */
+  kpId?: string;
+  /** 自动从图谱「已学」创建时为 true，便于 UI 标注 */
+  fromKg?: boolean;
 }
 
 export interface ReviewLog {
@@ -132,11 +136,13 @@ export function newEntryDefaults(
   partial: Pick<JournalEntry, "categoryId" | "title" | "body" | "kind"> & {
     id?: string;
     createdOn?: string;
+    kpId?: string;
+    fromKg?: boolean;
   }
 ): JournalEntry {
   const createdOn = partial.createdOn || dayKey();
   const now = Date.now();
-  return {
+  const entry: JournalEntry = {
     id: partial.id || `je-${now}-${Math.random().toString(36).slice(2, 8)}`,
     categoryId: partial.categoryId,
     title: partial.title.trim(),
@@ -149,6 +155,9 @@ export function newEntryDefaults(
     lapses: 0,
     updatedAt: now,
   };
+  if (partial.kpId) entry.kpId = partial.kpId;
+  if (partial.fromKg) entry.fromKg = true;
+  return entry;
 }
 
 /** 当周周一（本地）的 dayKey，用作周报主键。 */

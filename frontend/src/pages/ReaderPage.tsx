@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useStudy } from "@/stores/study";
 import { useSettings } from "@/stores/settings";
 import { lookupWord, restoreInflection } from "@/lib/lookup";
+import {
+  loadPassageReader,
+  parsePassageReaderParams,
+  passageReaderMatches,
+} from "@/lib/passageReader";
 import { esc, cn } from "@/lib/utils";
 import { translate } from "@/lib/llm";
 import { speakEnglish } from "@/lib/tts";
+import { useTrans } from "@/stores/trans";
 import { Button } from "@/components/ui/button";
 import { WordPopover } from "@/components/WordPopover";
 import type { PassageItem } from "@/types/words";
@@ -55,13 +61,67 @@ function splitSentences(body: string): string[] {
   return out.length ? out : [text];
 }
 
+/** 按空行/换行切段；无换行则整篇一段（卷面式连续段落） */
+function splitParagraphs(body: string): string[] {
+  const text = String(body || "").replace(/\r\n/g, "\n").trim();
+  if (!text) return [];
+  if (/\n\s*\n/.test(text)) {
+    return text
+      .split(/\n\s*\n+/)
+      .map((p) => p.replace(/[ \t\n]+/g, " ").trim())
+      .filter(Boolean);
+  }
+  if (/\n/.test(text)) {
+    return text
+      .split(/\n+/)
+      .map((p) => p.replace(/[ \t\n]+/g, " ").trim())
+      .filter(Boolean);
+  }
+  return [text.replace(/\s+/g, " ").trim()];
+}
+
+interface ParaSent {
+  text: string;
+  globalIndex: number;
+}
+
+/**
+ * 段 → 句；保留全局句下标供译句 / active。
+ * sentences 顺序与原先整篇分句一致（段内空白折叠后）。
+ */
+function buildParagraphs(body: string): {
+  paragraphs: ParaSent[][];
+  sentences: string[];
+} {
+  const paragraphs: ParaSent[][] = [];
+  const sentences: string[] = [];
+  let globalIndex = 0;
+  for (const para of splitParagraphs(body)) {
+    const sents = splitSentences(para);
+    const row: ParaSent[] = [];
+    for (const text of sents) {
+      row.push({ text, globalIndex });
+      sentences.push(text);
+      globalIndex++;
+    }
+    if (row.length) paragraphs.push(row);
+  }
+  return { paragraphs, sentences };
+}
+
+/**
+ * 词级下划线：目标词 + 词库可点词统一用 r-hl（仅 text-decoration，无虚线/底色）。
+ */
 function highlightBody(text: string, wordSet: Set<string>): string {
   return String(text).replace(/[A-Za-z][A-Za-z\-']*/g, (m) => {
     const low = m.toLowerCase();
     const restored = restoreInflection(low);
-    const hit = wordSet.has(low) || wordSet.has(restored) || !!lookupWord(low);
     const e = esc(m);
-    if (hit) return `<span class="r-hl c-word" data-w="${e}">${e}</span>`;
+    const isTarget =
+      wordSet.has(low) || wordSet.has(restored) || wordSet.has(restoreInflection(restored));
+    if (isTarget || lookupWord(low)) {
+      return `<span class="r-hl c-word" data-w="${e}">${e}</span>`;
+    }
     return e;
   });
 }
@@ -77,7 +137,9 @@ function cleanOptionText(s: string): string {
 type RightTab = "trans" | "explain";
 
 export function ReaderPage() {
+  const params = useParams<{ variant: string; year: string; label: string }>();
   const reader = useStudy((s) => s.passageReader);
+  const setPassageReader = useStudy((s) => s.setPassageReader);
   const navigate = useNavigate();
   const settings = useSettings();
   const [active, setActive] = useState(0);
@@ -90,10 +152,38 @@ export function ReaderPage() {
   const [pop, setPop] = useState<{ word: string; x: number; y: number } | null>(
     null
   );
+  const [hydrateFailed, setHydrateFailed] = useState(false);
   const translatingRef = useRef(false);
+  const transMapRef = useRef(transMap);
+  transMapRef.current = transMap;
 
-  const sentences = useMemo(
-    () => (reader ? splitSentences(reader.body) : []),
+  const routeKey = useMemo(
+    () => parsePassageReaderParams(params),
+    [params.variant, params.year, params.label]
+  );
+
+  // URL 深链：刷新后从 window.PAPERS 重建 passageReader
+  useEffect(() => {
+    if (!routeKey) {
+      navigate("/papers", { replace: true });
+      return;
+    }
+    if (passageReaderMatches(reader, routeKey)) {
+      setHydrateFailed(false);
+      return;
+    }
+    const loaded = loadPassageReader(routeKey);
+    if (loaded) {
+      setPassageReader(loaded);
+      setHydrateFailed(false);
+    } else {
+      setHydrateFailed(true);
+      navigate("/papers", { replace: true });
+    }
+  }, [routeKey, reader, setPassageReader, navigate]);
+
+  const { paragraphs, sentences } = useMemo(
+    () => (reader ? buildParagraphs(reader.body) : { paragraphs: [], sentences: [] }),
     [reader]
   );
   const wordSet = useMemo(() => {
@@ -109,10 +199,6 @@ export function ReaderPage() {
   const answers = reader?.answers || {};
   const hasMcq = items.length > 0;
 
-  useEffect(() => {
-    if (!reader) navigate("/papers", { replace: true });
-  }, [reader, navigate]);
-
   // 切换篇章时重置作答状态
   useEffect(() => {
     setActive(0);
@@ -122,7 +208,50 @@ export function ReaderPage() {
     setShowAllAnswers(false);
     setRightTab(hasMcq ? "explain" : "trans");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reader?.title, reader?.body]);
+  }, [reader?.title, reader?.body, routeKey?.year, routeKey?.label, routeKey?.variant]);
+
+  /**
+   * 切换当前句时自动拉译文：
+   * 1) 本地 trans 缓存瞬间显示
+   * 2) 否则请求服务端（库里已有则秒回 cached，无需再点「译本句」）
+   * 点按钮仍可手动触发；已译时变为「下一句」。
+   */
+  useEffect(() => {
+    const en = sentences[active];
+    if (!en) return;
+    const idx = active;
+    if (transMapRef.current[idx] != null) return;
+
+    const local = useTrans.getState().getTrans(en);
+    if (local !== undefined) {
+      setTransMap((m) => ({ ...m, [idx]: local }));
+      return;
+    }
+
+    let cancelled = false;
+    translatingRef.current = true;
+    setLoading(true);
+    void translate(en)
+      .then((zh) => {
+        if (cancelled) return;
+        setTransMap((m) => ({ ...m, [idx]: zh }));
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        const msg = e instanceof Error ? e.message : "翻译失败";
+        setTransMap((m) => ({ ...m, [idx]: msg }));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+          translatingRef.current = false;
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active, sentences]);
 
   const showCurrentTrans = useCallback(async () => {
     if (!sentences[active] || translatingRef.current) return;
@@ -209,7 +338,14 @@ export function ReaderPage() {
     return { correct, answered, total: items.length };
   }
 
-  if (!reader) return null;
+  if (!reader) {
+    if (hydrateFailed) return null;
+    return (
+      <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center text-sm text-muted-foreground">
+        正在载入篇章…
+      </div>
+    );
+  }
 
   const score = scoreSummary();
   const activeZh = transMap[active];
@@ -233,29 +369,34 @@ export function ReaderPage() {
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
         {/* 左：原文 + 选择题 */}
         <div className="flex-1 min-h-0 overflow-auto border-b lg:border-b-0 lg:border-r">
-          <div className="p-4 md:p-6 max-w-3xl mx-auto w-full">
+          <div className="p-4 md:p-8 max-w-3xl mx-auto w-full">
             <div
-              className="space-y-2 leading-8 text-base"
+              className="reader-body text-[1.08rem] leading-[1.95] tracking-[0.01em]"
               onClick={onWordClick}
             >
-              {sentences.map((s, i) => (
-                <div key={i}>
-                  <span
-                    className={cn(
-                      "r-sent rounded px-0.5 transition-colors cursor-pointer",
-                      i === active && "bg-primary/10 ring-1 ring-primary/30"
-                    )}
-                    data-i={i}
-                    data-en={s}
-                    dangerouslySetInnerHTML={{
-                      __html: highlightBody(s, wordSet),
-                    }}
-                    onClick={() => {
-                      setActive(i);
-                      setRightTab("trans");
-                    }}
-                  />
-                </div>
+              {paragraphs.map((para, pi) => (
+                <p key={pi} className="reader-para">
+                  {para.map((sent, si) => (
+                    <span key={sent.globalIndex}>
+                      {si > 0 ? " " : null}
+                      <span
+                        className={cn(
+                          "r-sent cursor-pointer rounded-sm transition-colors",
+                          sent.globalIndex === active && "r-sent-active"
+                        )}
+                        data-i={sent.globalIndex}
+                        data-en={sent.text}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightBody(sent.text, wordSet),
+                        }}
+                        onClick={() => {
+                          setActive(sent.globalIndex);
+                          setRightTab("trans");
+                        }}
+                      />
+                    </span>
+                  ))}
+                </p>
               ))}
             </div>
 
@@ -406,7 +547,7 @@ export function ReaderPage() {
               <>
                 <div className="text-xs text-muted-foreground">
                   第 {sentences.length ? active + 1 : 0} / {sentences.length} 句
-                  · 点左侧句子或空格译出
+                  · 点左侧句子自动出译 · 空格下一句
                 </div>
                 <div className="rounded-lg border bg-background p-3 text-sm leading-relaxed">
                   <div className="text-muted-foreground text-xs mb-2">原文</div>
@@ -438,34 +579,6 @@ export function ReaderPage() {
                     </p>
                   )}
                 </div>
-                {/* 已译句速览 */}
-                {Object.keys(transMap).length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium text-muted-foreground">
-                      已译句子
-                    </div>
-                    {sentences.map((s, i) =>
-                      transMap[i] != null ? (
-                        <button
-                          key={i}
-                          type="button"
-                          className={cn(
-                            "w-full text-left rounded-md border px-2.5 py-2 text-xs hover:bg-muted/50",
-                            i === active && "ring-1 ring-primary/40"
-                          )}
-                          onClick={() => setActive(i)}
-                        >
-                          <div className="text-muted-foreground tnum mb-0.5">
-                            #{i + 1}
-                          </div>
-                          <div className="line-clamp-2 text-foreground/90">
-                            {transMap[i]}
-                          </div>
-                        </button>
-                      ) : null
-                    )}
-                  </div>
-                )}
               </>
             )}
 

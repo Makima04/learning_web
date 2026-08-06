@@ -1,43 +1,70 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getPapers, SECTION_TYPE_LABEL } from "@/lib/words";
+import { useEffect, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { SECTION_TYPE_LABEL } from "@/lib/words";
+import {
+  getPaperByVariantYear,
+  listYearsForVariant,
+  normalizeVariant,
+  papersReciteListPath,
+  papersReciteYearPath,
+} from "@/lib/papersNav";
 import { useCards } from "@/stores/cards";
-import { useStudy } from "@/stores/study";
+import { summarizePassageWords, useStudy } from "@/stores/study";
 import type { PassageWord } from "@/types/words";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export function PapersRecitePage() {
-  const [variant, setVariant] = useState<"en1" | "en2">("en1");
-  const [paperIdx, setPaperIdx] = useState<number | null>(null);
-  const papers = getPapers();
-  const cards = useCards((s) => s.cards);
-  const startPassage = useStudy((s) => s.startPassage);
+  const { variant: variantParam, year: yearParam } = useParams<{
+    variant?: string;
+    year?: string;
+  }>();
   const navigate = useNavigate();
+  const cards = useCards((s) => s.cards);
+  const openPassageSection = useStudy((s) => s.openPassageSection);
 
-  const filtered = useMemo(() => {
-    const list = papers
-      .map((p, i) => ({ p, i }))
-      .filter(({ p }) => ((p as any).variant || "en1") === variant);
-    const seen = new Map<string, number>();
-    list.forEach(({ p, i }) => {
-      const key = String(p.year || "s" + i);
-      if (!seen.has(key)) seen.set(key, i);
-    });
-    return Array.from(seen.entries())
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([, i]) => ({ p: papers[i], i }));
-  }, [papers, variant]);
+  const variant = normalizeVariant(variantParam);
+  const yearNum = yearParam != null ? parseInt(yearParam, 10) : NaN;
+  const hasYear = Number.isFinite(yearNum);
+  const variantOk = variantParam === "en1" || variantParam === "en2";
 
-  function startSection(pIdx: number, type: string, words: PassageWord[]) {
-    startPassage(words, { paperIdx: pIdx, type });
+  const yearList = useMemo(() => listYearsForVariant(variant), [variant]);
+  const yearHit = useMemo(
+    () => (hasYear ? getPaperByVariantYear(variant, yearNum) : null),
+    [hasYear, variant, yearNum]
+  );
+
+  useEffect(() => {
+    if (!variantParam || !variantOk) {
+      navigate(papersReciteListPath("en1"), { replace: true });
+      return;
+    }
+    if (hasYear && !yearHit) {
+      navigate(papersReciteListPath(variant), { replace: true });
+    }
+  }, [variantParam, variantOk, hasYear, yearHit, variant, navigate]);
+
+  function openSection(pIdx: number, type: string, words: PassageWord[]) {
+    // 未学 → 学；全学完且有到期 → 只复习本篇；都无 → 词表
+    openPassageSection(words, { paperIdx: pIdx, type });
     navigate("/study");
   }
 
-  if (paperIdx != null) {
-    const p = papers[paperIdx];
-    if (!p) return null;
-    const vLabel = ((p as any).variant || "en1") === "en2" ? "英语二" : "英语一";
+  if (!variantParam || !variantOk) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">正在打开记词列表…</div>
+    );
+  }
+
+  if (hasYear) {
+    if (!yearHit) {
+      return (
+        <div className="p-6 text-sm text-muted-foreground">未找到该年真题…</div>
+      );
+    }
+    const { paper: p, index: paperIdx } = yearHit;
+    const vLabel = variant === "en2" ? "英语二" : "英语一";
     const typeCount = new Map<string, number>();
     p.sections.forEach((sec) => {
       typeCount.set(sec.type, (typeCount.get(sec.type) || 0) + sec.passages.length);
@@ -46,7 +73,11 @@ export function PapersRecitePage() {
     return (
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-3">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setPaperIdx(null)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(papersReciteListPath(variant))}
+          >
             ‹
           </Button>
           <h1 className="font-semibold">
@@ -68,16 +99,19 @@ export function PapersRecitePage() {
                 }
               });
               const words = Array.from(wordMap.values());
-              const learned = words.filter((w) => {
-                const c = cards[w.idx];
-                return !!(c && c.state === "review");
-              }).length;
+              const summary = summarizePassageWords(words, cards);
               const titleText = multi ? `${typeLabel} · ${psg.label}` : typeLabel;
+              const statusHint =
+                summary.kind === "learn"
+                  ? `待学 ${summary.unlearned}`
+                  : summary.kind === "review"
+                    ? `待复习 ${summary.due}`
+                    : "可查词表";
               return (
                 <Card
                   key={`${sec.type}-${pi}`}
                   className="cursor-pointer hover:bg-accent/40 transition-colors"
-                  onClick={() => startSection(paperIdx, sec.type, words)}
+                  onClick={() => openSection(paperIdx, sec.type, words)}
                 >
                   <CardContent className="p-4 flex items-center gap-3">
                     <span className="text-xs rounded bg-muted px-2 py-1 shrink-0">
@@ -86,7 +120,18 @@ export function PapersRecitePage() {
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{titleText}</div>
                       <div className="text-sm text-muted-foreground">
-                        命中 <b>{words.length}</b> 词 · 已背 <b>{learned}</b> ·{" "}
+                        命中 <b>{summary.total}</b> 词 · 已背 <b>{summary.learned}</b>
+                        {" · "}
+                        <span
+                          className={
+                            summary.kind === "list"
+                              ? "text-muted-foreground"
+                              : "text-primary"
+                          }
+                        >
+                          {statusHint}
+                        </span>
+                        {" · "}
                         {psg.itemCount || 0} 题 · {psg.body.length} 字
                       </div>
                     </div>
@@ -109,39 +154,46 @@ export function PapersRecitePage() {
             key={v}
             variant={variant === v ? "default" : "outline"}
             size="sm"
-            onClick={() => setVariant(v)}
+            onClick={() => navigate(papersReciteListPath(v))}
           >
             {v === "en1" ? "英语一" : "英语二"}
           </Button>
         ))}
       </div>
       <p className="text-sm text-muted-foreground">
-        选择年份 → 题型 → 背该题型真题里命中的红宝书词汇（与日常背词共用记忆曲线）。
+        选择年份 → 题型：先学未学词；学完后点进可只复习本篇到期词；都完成后可查看词表。
       </p>
       <div className="space-y-2">
-        {filtered.map(({ p, i }) => {
-          const uniq = new Set<number>();
-          p.sections.forEach((sec) =>
-            sec.passages.forEach((psg) => psg.words.forEach((w) => uniq.add(w.idx)))
+        {yearList.length === 0 && (
+          <p className="text-muted-foreground">暂无真题数据。</p>
+        )}
+        {yearList.map(({ year, paper: p }) => {
+          const totalWords = p.sections.reduce(
+            (s, sec) => s + sec.passages.reduce((t, ps) => t + ps.words.length, 0),
+            0
           );
           return (
             <Card
-              key={i}
+              key={`${variant}-${year}`}
               className="cursor-pointer hover:bg-accent/40 transition-colors"
-              onClick={() => setPaperIdx(i)}
+              onClick={() => navigate(papersReciteYearPath(variant, year))}
             >
               <CardContent className="p-4 flex items-center gap-4">
-                <div className="text-2xl font-bold tnum w-16 text-center text-primary">
-                  {p.year || "?"}
+                <div
+                  className={cn(
+                    "text-2xl font-bold tnum w-16 text-center text-primary"
+                  )}
+                >
+                  {year || "?"}
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">
-                    {p.year
-                      ? `${p.year} 年考研英语${variant === "en2" ? "二" : "一"}真题`
+                    {year
+                      ? `${year} 年考研英语${variant === "en2" ? "二" : "一"}真题`
                       : p.source}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {p.sections.length} 个题型 · 共 {uniq.size} 个红宝书词汇
+                    {p.sections.length} 个题型 · 共 {totalWords} 个红宝书词汇
                   </div>
                 </div>
                 <span className="text-muted-foreground">›</span>

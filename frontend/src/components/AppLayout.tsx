@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BookOpen,
   ChevronRight,
@@ -16,9 +16,10 @@ import {
   Sun,
   UserRound,
 } from "lucide-react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/stores/theme";
 import { useAuth } from "@/stores/auth";
+import { hrefForNavRoot, isNavSectionActive, rememberNavPath } from "@/lib/navMemory";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -32,30 +33,45 @@ const NAV = [
   { to: "/settings", label: "学习设置", icon: Settings },
 ];
 
+// 侧栏默认进一级时也可落到有意义的列表 URL（无记忆时）
+const NAV_DEFAULT_HREF: Record<string, string> = {
+  "/papers": "/papers/en1",
+  "/papers-recite": "/papers-recite/en1",
+};
+
 export function AppLayout() {
   const mode = useTheme((s) => s.mode);
   const cycle = useTheme((s) => s.cycle);
   const user = useAuth((s) => s.user);
   const navigate = useNavigate();
+  const location = useLocation();
   const [navCollapsed, setNavCollapsed] = useState(false);
+  // 路径变化时 bump，让 NavLink 的 to 读到最新 session 记忆
+  const [memTick, setMemTick] = useState(0);
   const ThemeIcon = mode === "dark" ? Moon : mode === "light" ? Sun : Monitor;
+
+  useEffect(() => {
+    rememberNavPath(location.pathname, location.search);
+    setMemTick((n) => n + 1);
+  }, [location.pathname, location.search]);
 
   return (
     <div className="min-h-screen bg-background text-foreground md:flex">
       <aside
         className={cn(
-          "hidden md:sticky md:top-0 md:flex h-screen shrink-0 flex-col border-r bg-card transition-[width] duration-200",
+          "hidden md:sticky md:top-0 md:flex h-screen shrink-0 flex-col border-r transition-[width] duration-200",
+          "bg-[hsl(var(--sidebar))]",
           navCollapsed ? "w-[76px]" : "w-[250px]"
         )}
       >
         <div className="flex h-20 items-center border-b px-4">
-          <NavLink to="/" className="flex min-w-0 items-center gap-3">
+          <NavLink to={hrefForNavRoot("/")} className="flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
               <BookOpen className="h-5 w-5" strokeWidth={2.4} />
             </span>
             {!navCollapsed && (
               <span className="min-w-0">
-                <span className="block text-sm font-semibold">红宝书</span>
+                <span className="block text-sm font-semibold tracking-tight">红宝书</span>
                 <span className="block text-xs text-muted-foreground">考研词汇 6550</span>
               </span>
             )}
@@ -66,19 +82,27 @@ export function AppLayout() {
           {!navCollapsed && <p className="px-3 py-2 text-xs font-medium text-muted-foreground">学习空间</p>}
           {NAV.map((item) => {
             const Icon = item.icon;
+            const remembered = hrefForNavRoot(item.to);
+            const href =
+              remembered === item.to && NAV_DEFAULT_HREF[item.to]
+                ? NAV_DEFAULT_HREF[item.to]
+                : remembered;
+            const active = isNavSectionActive(item.to, location.pathname);
+            // memTick：确保记忆更新后重新计算 href
+            void memTick;
             return (
               <NavLink
                 key={item.to}
-                to={item.to}
-                end={item.end}
+                to={href}
+                end={item.end && href === item.to}
                 title={item.label}
-                className={({ isActive }) =>
+                className={() =>
                   cn(
                     "group flex h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
                     navCollapsed && "justify-center px-0",
-                    isActive
-                      ? "bg-accent font-semibold text-accent-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    active
+                      ? "bg-primary/15 font-semibold text-primary"
+                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                   )
                 }
               >
@@ -138,15 +162,22 @@ export function AppLayout() {
       <nav className="fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-4 border-t bg-card md:hidden">
         {NAV.slice(0, 4).map((item) => {
           const Icon = item.icon;
+          const remembered = hrefForNavRoot(item.to);
+          const href =
+            remembered === item.to && NAV_DEFAULT_HREF[item.to]
+              ? NAV_DEFAULT_HREF[item.to]
+              : remembered;
+          const active = isNavSectionActive(item.to, location.pathname);
+          void memTick;
           return (
             <NavLink
               key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
+              to={href}
+              end={item.end && href === item.to}
+              className={() =>
                 cn(
                   "flex flex-col items-center justify-center gap-1 text-[11px]",
-                  isActive ? "font-semibold text-primary" : "text-muted-foreground"
+                  active ? "font-semibold text-primary" : "text-muted-foreground"
                 )
               }
             >

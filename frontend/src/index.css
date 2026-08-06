@@ -3,51 +3,71 @@
 @tailwind utilities;
 
 @layer base {
-  /* 中性纸白 + 红宝书红；避免页面长期学习时显得压迫。 */
+  /*
+   * 白 + 绿（参考 408os 真题系统）：
+   * - 页面近白 / 冷灰底，题目与正文近黑
+   * - 主色柔和翠绿：按钮、导航激活、强调
+   * - 卡片纯白，轻阴影感靠 border；阅读高亮用淡绿底，不改字色
+   */
   :root {
-    --background: 210 20% 98%;
-    --foreground: 222 18% 14%;
+    --background: 150 20% 97%;
+    --foreground: 160 12% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222 18% 14%;
+    --card-foreground: 160 12% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 18% 14%;
-    --primary: 356 74% 43%;
+    --popover-foreground: 160 12% 12%;
+    /* 翠绿主色（接近 408 的「查看答案」按钮） */
+    --primary: 152 48% 38%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 20% 94%;
-    --secondary-foreground: 222 18% 20%;
-    --muted: 210 18% 95%;
-    --muted-foreground: 218 10% 42%;
-    --accent: 356 65% 95%;
-    --accent-foreground: 356 60% 31%;
+    --secondary: 150 18% 94%;
+    --secondary-foreground: 160 12% 20%;
+    --muted: 150 14% 94%;
+    --muted-foreground: 160 8% 40%;
+    --accent: 152 40% 94%;
+    --accent-foreground: 152 48% 28%;
     --destructive: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 17% 88%;
-    --input: 214 17% 84%;
-    --ring: 356 74% 43%;
-    --radius: 0.5rem;
+    --border: 150 12% 88%;
+    --input: 150 12% 86%;
+    --ring: 152 48% 38%;
+    --radius: 0.75rem;
+    /* 阅读：淡绿底 + 深绿下划线，字仍近黑 */
+    --reader-hl: 152 45% 36%;
+    --reader-hl-bg: 152 42% 93%;
+    --reader-active: 152 36% 94%;
+    --reader-active-ring: 152 40% 70%;
+    --sidebar: 0 0% 100%;
+    /* 浅绿卡片面（统计块、标签等可用） */
+    --card-soft: 152 35% 96%;
   }
 
-  /* 深色模式以中性炭黑分层，不使用偏蓝背景。 */
   .dark {
-    --background: 220 8% 9%;
-    --foreground: 210 20% 94%;
-    --card: 220 7% 13%;
-    --card-foreground: 210 20% 94%;
-    --popover: 220 7% 15%;
-    --popover-foreground: 210 20% 94%;
-    --primary: 356 82% 67%;
-    --primary-foreground: 220 8% 9%;
-    --secondary: 220 7% 20%;
-    --secondary-foreground: 210 20% 94%;
-    --muted: 220 7% 17%;
-    --muted-foreground: 216 11% 66%;
-    --accent: 356 30% 20%;
-    --accent-foreground: 356 82% 76%;
-    --destructive: 0 76% 65%;
-    --destructive-foreground: 220 8% 9%;
-    --border: 220 7% 25%;
-    --input: 220 7% 29%;
-    --ring: 356 82% 67%;
+    /* 深绿夜色：仍以绿为强调，正文浅色 */
+    --background: 160 14% 9%;
+    --foreground: 150 12% 94%;
+    --card: 160 12% 12%;
+    --card-foreground: 150 12% 94%;
+    --popover: 160 12% 14%;
+    --popover-foreground: 150 12% 94%;
+    --primary: 152 48% 48%;
+    --primary-foreground: 160 20% 8%;
+    --secondary: 160 12% 17%;
+    --secondary-foreground: 150 12% 92%;
+    --muted: 160 10% 15%;
+    --muted-foreground: 150 8% 68%;
+    --accent: 152 22% 18%;
+    --accent-foreground: 152 50% 72%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 10% 20%;
+    --input: 160 10% 22%;
+    --ring: 152 48% 48%;
+    --reader-hl: 152 50% 52%;
+    --reader-hl-bg: 152 28% 16%;
+    --reader-active: 152 22% 16%;
+    --reader-active-ring: 152 35% 36%;
+    --sidebar: 160 14% 8%;
+    --card-soft: 152 16% 14%;
   }
 }
 
@@ -58,9 +78,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "tnum" 1;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    text-rendering: optimizeLegibility;
   }
-  /* 数字等宽（进度/计数） */
   .tnum {
     font-variant-numeric: tabular-nums;
   }
@@ -88,32 +109,79 @@
   transform: rotateY(180deg);
 }
 
-/* 阅读原文命中词高亮 */
-.r-hl {
-  color: hsl(var(--primary));
-  border-bottom: 1px dashed hsl(var(--primary) / 0.4);
-  cursor: pointer;
+/* —— 阅读原文：连续段落 + 首行缩进；词仅统一下划线 —— */
+.reader-body {
+  color: hsl(var(--foreground));
 }
 
-/* 例句目标词 / 可点词 */
-.c-target {
-  color: hsl(var(--primary));
-  font-weight: 600;
+.reader-para {
+  margin: 0 0 1.15em;
+  text-indent: 2em;
+  text-align: justify;
+  hyphens: auto;
 }
+.reader-para:last-child {
+  margin-bottom: 0;
+}
+
+/* 当前句：行内浅底，不打断段落流 */
+.r-sent {
+  display: inline;
+}
+.r-sent-active {
+  background: hsl(var(--reader-active));
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* 词级下划线：无虚线/实线边框、无底色，仅 text-decoration */
+.r-hl {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--reader-hl) / 0.55);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: text-decoration-color 0.12s ease;
+}
+.r-hl:hover {
+  text-decoration-color: hsl(var(--reader-hl));
+}
+
+.c-target {
+  color: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--reader-hl) / 0.65);
+  text-underline-offset: 0.18em;
+}
+
 .c-word {
   cursor: pointer;
-  border-bottom: 1px dashed hsl(var(--primary) / 0.35);
 }
-.c-word:hover {
-  background: hsl(var(--primary) / 0.08);
+/* 学习页例句等：可点但不强制下划线（有 r-hl 时由 r-hl 负责） */
+.c-word:not(.r-hl):hover {
+  background: hsl(var(--muted) / 0.8);
+  border-radius: 2px;
 }
 
-/* 滚动条美化 */
+/* 滚动条 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background: hsl(var(--primary) / 0.22);
   border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.35);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.22);
+  color: hsl(var(--foreground));
 }

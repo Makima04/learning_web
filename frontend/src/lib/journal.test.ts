@@ -24,6 +24,24 @@ describe("addDays / compareDay", () => {
   });
 });
 
+describe("newEntryDefaults", () => {
+  it("carries kpId and fromKg", () => {
+    const e = newEntryDefaults({
+      categoryId: "cat-408",
+      title: "二叉树遍历",
+      body: "来自知识图谱",
+      kind: "learn",
+      kpId: "ds.tree.traverse",
+      fromKg: true,
+      createdOn: "2026-08-06",
+    });
+    expect(e.kpId).toBe("ds.tree.traverse");
+    expect(e.fromKg).toBe(true);
+    expect(e.nextReviewOn).toBe("2026-08-07");
+    expect(e.step).toBe(1);
+  });
+});
+
 describe("scheduleAfterReview", () => {
   it("fail resets to 1-day", () => {
     const out = scheduleAfterReview({ step: 7, lapses: 0 }, "fail", "2026-07-17");

@@ -1,6 +1,17 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getPapers, SECTION_TYPE_LABEL } from "@/lib/words";
+import { useEffect, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { SECTION_TYPE_LABEL } from "@/lib/words";
+import {
+  buildPassageReader,
+  passageReaderPath,
+} from "@/lib/passageReader";
+import {
+  getPaperByVariantYear,
+  listYearsForVariant,
+  normalizeVariant,
+  papersListPath,
+  papersYearPath,
+} from "@/lib/papersNav";
 import { useCards } from "@/stores/cards";
 import { useStudy } from "@/stores/study";
 import { Button } from "@/components/ui/button";
@@ -8,35 +19,57 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export function PapersPage() {
-  const [variant, setVariant] = useState<"en1" | "en2">("en1");
-  const [paperIdx, setPaperIdx] = useState<number | null>(null);
-  const papers = getPapers();
+  const { variant: variantParam, year: yearParam } = useParams<{
+    variant?: string;
+    year?: string;
+  }>();
+  const navigate = useNavigate();
   const cards = useCards((s) => s.cards);
   const setPassageReader = useStudy((s) => s.setPassageReader);
-  const navigate = useNavigate();
 
-  const filtered = useMemo(() => {
-    const list = papers
-      .map((p, i) => ({ p, i }))
-      .filter(({ p }) => ((p as any).variant || "en1") === variant);
-    const seen = new Map<string, number>();
-    list.forEach(({ p, i }) => {
-      const key = String(p.year || "s" + i);
-      if (!seen.has(key)) seen.set(key, i);
-    });
-    return Array.from(seen.entries())
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([, i]) => ({ p: papers[i], i }));
-  }, [papers, variant]);
+  const variant = normalizeVariant(variantParam);
+  const yearNum = yearParam != null ? parseInt(yearParam, 10) : NaN;
+  const hasYear = Number.isFinite(yearNum);
+  const variantOk = variantParam === "en1" || variantParam === "en2";
 
-  if (paperIdx != null) {
-    const p = papers[paperIdx];
-    if (!p) return null;
-    const vLabel = ((p as any).variant || "en1") === "en2" ? "英语二" : "英语一";
+  const yearList = useMemo(() => listYearsForVariant(variant), [variant]);
+  const yearHit = useMemo(
+    () => (hasYear ? getPaperByVariantYear(variant, yearNum) : null),
+    [hasYear, variant, yearNum]
+  );
+
+  useEffect(() => {
+    if (!variantParam || !variantOk) {
+      navigate(papersListPath("en1"), { replace: true });
+      return;
+    }
+    if (hasYear && !yearHit) {
+      navigate(papersListPath(variant), { replace: true });
+    }
+  }, [variantParam, variantOk, hasYear, yearHit, variant, navigate]);
+
+  if (!variantParam || !variantOk) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">正在打开真题列表…</div>
+    );
+  }
+
+  if (hasYear) {
+    if (!yearHit) {
+      return (
+        <div className="p-6 text-sm text-muted-foreground">未找到该年真题…</div>
+      );
+    }
+    const { paper: p } = yearHit;
+    const vLabel = variant === "en2" ? "英语二" : "英语一";
     return (
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-3">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setPaperIdx(null)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(papersListPath(variant))}
+          >
             ‹
           </Button>
           <h1 className="font-semibold">
@@ -55,19 +88,15 @@ export function PapersPage() {
                   key={`${si}-${pi}`}
                   className="cursor-pointer hover:bg-accent/40 transition-colors"
                   onClick={() => {
-                    setPassageReader({
-                      title: `${p.year ? p.year + " 年 " : ""}${psg.label || ""}`,
-                      body: psg.body,
-                      words: psg.words.map((w) => w.english),
-                      year: p.year,
-                      variant: (p as any).variant || "en1",
-                      label: psg.label,
-                      items: psg.items || [],
-                      answers: psg.answers || {},
-                      sectionType: sec.type,
-                      wordsFull: psg.words,
-                    });
-                    navigate("/reader");
+                    const reader = buildPassageReader(p, sec, psg);
+                    setPassageReader(reader);
+                    navigate(
+                      passageReaderPath({
+                        variant: reader.variant || "en1",
+                        year: reader.year ?? 0,
+                        label: reader.label || psg.label || "passage",
+                      })
+                    );
                   }}
                 >
                   <CardContent className="p-4 flex items-center gap-3">
@@ -100,7 +129,7 @@ export function PapersPage() {
             key={v}
             variant={variant === v ? "default" : "outline"}
             size="sm"
-            onClick={() => setVariant(v)}
+            onClick={() => navigate(papersListPath(v))}
           >
             {v === "en1" ? "英语一" : "英语二"}
           </Button>
@@ -110,19 +139,19 @@ export function PapersPage() {
         选择年份与篇章：左侧原文与选择题，右侧译文与答案解析。
       </p>
       <div className="space-y-2">
-        {filtered.length === 0 && (
+        {yearList.length === 0 && (
           <p className="text-muted-foreground">暂无真题数据。</p>
         )}
-        {filtered.map(({ p, i }) => {
+        {yearList.map(({ year, paper: p }) => {
           const totalWords = p.sections.reduce(
             (s, sec) => s + sec.passages.reduce((t, ps) => t + ps.words.length, 0),
             0
           );
           return (
             <Card
-              key={i}
+              key={`${variant}-${year}`}
               className="cursor-pointer hover:bg-accent/40 transition-colors"
-              onClick={() => setPaperIdx(i)}
+              onClick={() => navigate(papersYearPath(variant, year))}
             >
               <CardContent className="p-4 flex items-center gap-4">
                 <div
@@ -130,12 +159,12 @@ export function PapersPage() {
                     "text-2xl font-bold tnum w-16 text-center text-primary"
                   )}
                 >
-                  {p.year || "?"}
+                  {year || "?"}
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">
-                    {p.year
-                      ? `${p.year} 年考研英语${variant === "en2" ? "二" : "一"}真题`
+                    {year
+                      ? `${year} 年考研英语${variant === "en2" ? "二" : "一"}真题`
                       : p.source}
                   </div>
                   <div className="text-sm text-muted-foreground">

@@ -18,7 +18,7 @@ import {
   type WeekStats,
   type WeeklySummary,
 } from "@/lib/journal";
-
+import { dayKeyToLocalMs, mapReviewToMark } from "@/lib/kg/journalBridge";
 import { scopedKey } from "@/lib/storageScope";
 
 const KEY_BASE = "ew.journal.v1";
@@ -141,6 +141,15 @@ interface JournalStore extends JournalSnapshot {
     title: string;
     body: string;
     kind?: JournalKind;
+    kpId?: string;
+    fromKg?: boolean;
+  }) => JournalEntry | null;
+  /** 图谱「已学」入队：同一 kpId 仅保留一条 active */
+  addEntryFromKg: (input: {
+    kpId: string;
+    title: string;
+    body: string;
+    categoryId: string;
   }) => JournalEntry | null;
   updateEntry: (
     id: string,
@@ -148,6 +157,8 @@ interface JournalStore extends JournalSnapshot {
   ) => void;
   deleteEntry: (id: string) => void;
   archiveEntry: (id: string) => void;
+  /** 归档某考点关联的全部 active 日志（取消已学） */
+  archiveEntriesByKpId: (kpId: string) => void;
   reviewEntry: (id: string, result: ReviewResult, note?: string) => void;
   dueEntries: (today?: string) => JournalEntry[];
   entriesByCategory: (categoryId: string | "all") => JournalEntry[];
@@ -271,15 +282,46 @@ export const useJournal = create<JournalStore>((set, get) => ({
   addEntry: (input) => {
     const title = input.title.trim();
     if (!title) return null;
-    if (!get().categories.some((c) => c.id === input.categoryId)) return null;
+    // 分类不存在时兜底：仍允许创建（图谱默认 cat-math/cat-408）
+    let categoryId = input.categoryId;
+    if (!get().categories.some((c) => c.id === categoryId)) {
+      if (get().categories[0]) categoryId = get().categories[0].id;
+      else return null;
+    }
     const entry = newEntryDefaults({
-      categoryId: input.categoryId,
+      categoryId,
       title,
       body: input.body || "",
       kind: input.kind || "learn",
+      kpId: input.kpId,
+      fromKg: input.fromKg,
     });
     applyLocal(set, get, { entries: [entry, ...get().entries] });
     return entry;
+  },
+
+  addEntryFromKg: (input) => {
+    const kpId = input.kpId.trim();
+    if (!kpId) return null;
+    const existing = get().entries.find(
+      (e) => e.kpId === kpId && e.status === "active"
+    );
+    if (existing) {
+      // 已在队列：轻触更新时间，不重复入队
+      const entries = get().entries.map((e) =>
+        e.id === existing.id ? { ...e, updatedAt: Date.now() } : e
+      );
+      applyLocal(set, get, { entries });
+      return existing;
+    }
+    return get().addEntry({
+      categoryId: input.categoryId,
+      title: input.title,
+      body: input.body,
+      kind: "learn",
+      kpId,
+      fromKg: true,
+    });
   },
 
   updateEntry: (id, patch) => {
@@ -312,6 +354,17 @@ export const useJournal = create<JournalStore>((set, get) => ({
     applyLocal(set, get, { entries });
   },
 
+  archiveEntriesByKpId: (kpId) => {
+    const now = Date.now();
+    let changed = false;
+    const entries = get().entries.map((e) => {
+      if (e.kpId !== kpId || e.status !== "active") return e;
+      changed = true;
+      return { ...e, status: "archived" as const, updatedAt: now };
+    });
+    if (changed) applyLocal(set, get, { entries });
+  },
+
   reviewEntry: (id, result, note) => {
     const today = dayKey();
     const entry = get().entries.find((e) => e.id === id);
@@ -339,6 +392,20 @@ export const useJournal = create<JournalStore>((set, get) => ({
       note: note?.trim() || undefined,
     };
     applyLocal(set, get, { entries, logs: [log, ...get().logs] });
+
+    // 关联考点：回写图谱熟练度，并用日志下次复盘日对齐 due
+    if (entry.kpId) {
+      const mark = mapReviewToMark(result);
+      const dueMs = dayKeyToLocalMs(outcome.nextReviewOn);
+      const kpId = entry.kpId;
+      // 动态 import 避免 journal ↔ kgProgress 模块循环
+      void import("@/stores/kgProgress").then(({ useKgProgress }) => {
+        useKgProgress.getState().applyExternalMark(kpId, mark, {
+          dueMs: dueMs > 0 ? dueMs : undefined,
+          ivl: outcome.step,
+        });
+      });
+    }
   },
 
   dueEntries: (today = dayKey()) => sortDueEntries(get().entries, today),

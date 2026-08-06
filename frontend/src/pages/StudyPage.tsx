@@ -6,6 +6,7 @@ import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
 import { blankTargetHtml } from "@/lib/quiz";
 import { getWordMap } from "@/lib/words";
+import { papersRecitePathFromPaperIdx } from "@/lib/papersNav";
 import { esc, cn } from "@/lib/utils";
 import { speakEnglish } from "@/lib/tts";
 import { translate } from "@/lib/llm";
@@ -43,6 +44,7 @@ export function StudyPage() {
   const startLearn = useStudy((state) => state.startLearn);
   const startReview = useStudy((state) => state.startReview);
   const snapshot = useStudy((state) => state.snapshot);
+  const reciteOrigin = useStudy((state) => state.reciteOrigin);
 
   const item = currentItem();
   const entry = currentEntry();
@@ -217,7 +219,10 @@ export function StudyPage() {
           resetSession();
           navigate("/today");
         }}
-        onPassageContinue={() => navigate("/papers-recite")}
+        onPassageContinue={() => {
+          resetSession();
+          navigate(papersRecitePathFromPaperIdx(reciteOrigin?.paperIdx));
+        }}
         canLearn={snapshot().canLearn}
         canReview={snapshot().canReview}
       />
@@ -495,9 +500,27 @@ function SettleView({
   const canContinueLearn = isSessionEnd && mode === "learn" && canLearn;
   const canContinueReview = isSessionEnd && mode === "review" && canReview;
   const hasPrimaryContinue = canContinueLearn || canContinueReview;
+  // 真题模块「可查词表」：未答题直接浏览本篇全部词
+  const isPassageBrowse =
+    isSessionEnd &&
+    mode === "passage" &&
+    sessionStats.studied === 0 &&
+    words.length > 0 &&
+    groupStart === 0 &&
+    groupInitialEnd >= queue.length &&
+    queue.length > 0;
 
-  const title = isSessionEnd ? "本轮学习完成" : "本组已通关";
-  const subtitle = isSessionEnd ? (
+  const title = isPassageBrowse
+    ? "本篇词表"
+    : isSessionEnd
+      ? "本轮学习完成"
+      : "本组已通关";
+  const subtitle = isPassageBrowse ? (
+    <>
+      共 <span className="tnum font-medium text-foreground">{words.length}</span> 词 ·
+      点英文可显示释义
+    </>
+  ) : isSessionEnd ? (
     <>
       通关 <span className="tnum font-medium text-foreground">{sessionStats.studied}</span> 词
       {sessionStats.newDone ? (
@@ -535,7 +558,7 @@ function SettleView({
     <div className="mx-auto flex h-[calc(100dvh-8rem)] w-full max-w-lg flex-col gap-3 p-4 md:h-[calc(100vh-4rem)] md:max-w-2xl md:gap-4 md:p-6">
       <div className="flex shrink-0 flex-col items-center gap-1 pt-1 text-center">
         <div className="text-3xl md:text-4xl" aria-hidden>
-          {isSessionEnd ? "🎉" : "✅"}
+          {isPassageBrowse ? "📖" : isSessionEnd ? "🎉" : "✅"}
         </div>
         <h2 className="text-xl font-semibold">{title}</h2>
         <p className="text-sm text-muted-foreground">{subtitle}</p>

@@ -7,7 +7,8 @@ const KEY = "ew.theme";
 function readStored(): ThemeMode {
   const v = localStorage.getItem(KEY);
   if (v === "dark" || v === "light" || v === "system") return v;
-  return "system";
+  // 未设置时默认浅色（白+绿），不跟系统深色
+  return "light";
 }
 
 function isDark(mode: ThemeMode): boolean {
@@ -30,7 +31,8 @@ export function applyTheme(mode: ThemeMode) {
     meta.setAttribute("name", "theme-color");
     document.head.appendChild(meta);
   }
-  meta.setAttribute("content", dark ? "#181719" : "#f9fafb");
+  // 与 index.css 白+绿 / 深绿夜 背景对齐
+  meta.setAttribute("content", dark ? "#141a17" : "#f4f8f6");
 }
 
 interface ThemeStore {

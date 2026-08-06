@@ -18,6 +18,8 @@ import type { PassageItem, PassageWord, WordEntry } from "@/types/words";
 export type StudyMode = "daily" | "passage" | "learn" | "review";
 export type Assessment = "known" | "uncertain" | "unknown";
 export type RelearnRound = 1 | 2 | 3 | 4;
+/** 真题模块点击后打开的类型 */
+export type PassageOpenKind = "learn" | "review" | "list";
 export type UiPhase =
   | "assess-front"
   | "assess-full"
@@ -120,6 +122,24 @@ interface StudyState {
     words: PassageWord[],
     origin?: { paperIdx: number; type: string } | null
   ) => boolean;
+  /**
+   * 真题模块入口：优先学未学词 → 到期复习本篇词 → 否则词表浏览。
+   * 返回实际打开的类型（供 UI 跳转 / 文案）。
+   */
+  openPassageSection: (
+    words: PassageWord[],
+    origin?: { paperIdx: number; type: string } | null
+  ) => PassageOpenKind;
+  /** 只复习本篇中到期的词（无到期则 false） */
+  startPassageReview: (
+    words: PassageWord[],
+    origin?: { paperIdx: number; type: string } | null
+  ) => boolean;
+  /** 本篇词表回顾（组结算同款列表，不进入答题） */
+  browsePassageWords: (
+    words: PassageWord[],
+    origin?: { paperIdx: number; type: string } | null
+  ) => void;
   advanceToNextGroup: () => void;
   currentItem: () => QueueItem | null;
   currentEntry: () => (WordEntry & { sentences?: string[] }) | null;
@@ -147,6 +167,43 @@ function isLearned(card: Card | undefined): boolean {
 /** 已学且到期（含 due=0 的遗留数据） */
 function isDue(card: Card | undefined, now: number = Date.now()): boolean {
   return isLearned(card) && (card!.due || 0) <= now;
+}
+
+function passageEntry(word: PassageWord): WordEntry & { sentences?: string[] } {
+  const entry = [word.idx, word.english, word.senses] as WordEntry & {
+    sentences?: string[];
+  };
+  entry.sentences = (word.sentences || []).slice(0, 5);
+  return entry;
+}
+
+/** 统计本篇：未学 / 到期复习 / 已学数（供列表卡文案） */
+export function summarizePassageWords(
+  words: PassageWord[],
+  cards: Record<number, Card | undefined>,
+  now: number = Date.now()
+): {
+  total: number;
+  learned: number;
+  unlearned: number;
+  due: number;
+  kind: PassageOpenKind;
+} {
+  let learned = 0;
+  let unlearned = 0;
+  let due = 0;
+  for (const w of words) {
+    const c = cards[w.idx];
+    if (!isLearned(c)) {
+      unlearned++;
+    } else {
+      learned++;
+      if (isDue(c, now)) due++;
+    }
+  }
+  const kind: PassageOpenKind =
+    unlearned > 0 ? "learn" : due > 0 ? "review" : "list";
+  return { total: words.length, learned, unlearned, due, kind };
 }
 
 function cloneCard(card?: Card): Card {
@@ -375,13 +432,11 @@ export const useStudy = create<StudyState>((set, get) => ({
     for (const word of words) {
       const card = cards[word.idx];
       if (isLearned(card)) continue;
-      const entry = [word.idx, word.english, word.senses] as WordEntry & { sentences?: string[] };
-      entry.sentences = (word.sentences || []).slice(0, 5);
       queue.push({
         idx: word.idx,
         card: cloneCard(card),
         group: "new",
-        entry,
+        entry: passageEntry(word),
       });
     }
     set({
@@ -407,6 +462,96 @@ export const useStudy = create<StudyState>((set, get) => ({
     }
     get().advanceToNextGroup();
     return true;
+  },
+
+  startPassageReview: (words, origin = null) => {
+    const cards = useCards.getState().cards;
+    const now = Date.now();
+    const queue: QueueItem[] = words
+      .filter((word) => isDue(cards[word.idx], now))
+      .sort(
+        (a, b) => (cards[a.idx]?.due || 0) - (cards[b.idx]?.due || 0)
+      )
+      .map((word) => ({
+        idx: word.idx,
+        card: cloneCard(cards[word.idx]),
+        group: "review" as const,
+        entry: passageEntry(word),
+      }));
+    set({
+      mode: "passage",
+      queue,
+      qpos: 0,
+      relearnPending: [],
+      relearningStarted: false,
+      relearnRoundEnd: 0,
+      relearnReveal: null,
+      relearnAnswerKnown: null,
+      currentExample: null,
+      cloze: null,
+      lastExampleByIdx: {},
+      passageSkipped: 0,
+      reciteOrigin: origin,
+      sessionStats: emptyStats(),
+      sessionId: get().sessionId + 1,
+    });
+    if (!queue.length) {
+      set({ uiPhase: "done" });
+      return false;
+    }
+    get().advanceToNextGroup();
+    return true;
+  },
+
+  browsePassageWords: (words, origin = null) => {
+    const cards = useCards.getState().cards;
+    const queue: QueueItem[] = words.map((word) => {
+      const card = cards[word.idx];
+      return {
+        idx: word.idx,
+        card: cloneCard(card),
+        group: (isLearned(card) ? "review" : "new") as "new" | "review",
+        entry: passageEntry(word),
+      };
+    });
+    // 直接进结算词表：qpos 置末 + group 覆盖全文，复用 SettleView
+    set({
+      mode: "passage",
+      queue,
+      qpos: queue.length,
+      groupStart: 0,
+      groupInitialEnd: queue.length,
+      groupEnd: queue.length,
+      relearnPending: [],
+      relearningStarted: false,
+      relearnRoundEnd: queue.length,
+      relearnReveal: null,
+      relearnAnswerKnown: null,
+      currentExample: null,
+      cloze: null,
+      lastExampleByIdx: {},
+      passageSkipped: 0,
+      reciteOrigin: origin,
+      sessionStats: emptyStats(),
+      sessionId: get().sessionId + 1,
+      assessChoice: null,
+      uiPhase: "done",
+    });
+  },
+
+  openPassageSection: (words, origin = null) => {
+    const cards = useCards.getState().cards;
+    const summary = summarizePassageWords(words, cards);
+    if (summary.kind === "learn") {
+      get().startPassage(words, origin);
+      return "learn";
+    }
+    if (summary.kind === "review") {
+      get().startPassageReview(words, origin);
+      return "review";
+    }
+    get().browsePassageWords(words, origin);
+    return "list";
   },
 
   advanceToNextGroup: () => {
@@ -667,6 +812,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       assessChoice: null,
       sessionStats: emptyStats(),
       passageSkipped: 0,
+      reciteOrigin: null,
       sessionId: get().sessionId + 1,
     }),
 }));
