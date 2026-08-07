@@ -100,7 +100,7 @@ describe("relearning confirmation", () => {
         created: 0,
       },
     });
-    useSettings.setState({ dailyNew: 20, dailyReview: 100 });
+    useSettings.setState({ dailyNew: 20, dailyReview: 100, enableCloze: false });
   });
 
   it("keeps a known answer provisional and allows correcting it", () => {
@@ -128,7 +128,20 @@ describe("relearning confirmation", () => {
     expect(useStudy.getState().queue[0].round).toBe(2);
   });
 
-  it("third round advances to cloze round four instead of saving", () => {
+  it("with cloze off, third round saves the card instead of advancing", () => {
+    startRelearning(3);
+
+    useStudy.getState().answerRelearning(true);
+    useStudy.getState().confirmRelearning(true);
+
+    const saved = useCards.getState().cards[42];
+    expect(saved).toMatchObject({ learned: true, state: "review", ivl: 1, reps: 1 });
+    expect(useStudy.getState().sessionStats).toMatchObject({ studied: 1, newDone: 1 });
+    expect(useStudy.getState().queue).toHaveLength(0);
+  });
+
+  it("with cloze on, third round advances to cloze round four instead of saving", () => {
+    useSettings.setState({ enableCloze: true });
     startRelearning(3);
 
     useStudy.getState().answerRelearning(true);
@@ -145,6 +158,7 @@ describe("relearning confirmation", () => {
   });
 
   it("does not pass the fourth cloze round until the user continues", () => {
+    useSettings.setState({ enableCloze: true });
     startRelearning(4);
 
     useStudy.getState().answerCloze("proportion");
@@ -165,6 +179,7 @@ describe("relearning confirmation", () => {
   });
 
   it("cloze wrong answer requeues the same round", () => {
+    useSettings.setState({ enableCloze: true });
     startRelearning(4);
     useStudy.getState().answerCloze("proposal");
     expect(useStudy.getState().relearnAnswerKnown).toBe(false);
@@ -176,6 +191,7 @@ describe("relearning confirmation", () => {
 
   it("enqueues study event when logged in after pass", async () => {
     apiMocks.isLoggedIn.mockReturnValue(true);
+    useSettings.setState({ enableCloze: true });
     startRelearning(4);
     useStudy.getState().answerCloze("proportion");
     useStudy.getState().confirmRelearning(true);

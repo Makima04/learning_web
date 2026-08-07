@@ -180,6 +180,7 @@ export function SettingsPage() {
         mathTrack: settings.mathTrack,
         enableCs408: settings.enableCs408,
         enableMath: settings.enableMath,
+        enableCloze: settings.enableCloze,
       },
       journal,
       exportedAt: new Date().toISOString(),
@@ -313,6 +314,15 @@ export function SettingsPage() {
                     <option value="random">随机</option>
                   </select>
                 </Field>
+                <Field label="重学完型填空">
+                  <Switch
+                    checked={settings.enableCloze}
+                    onCheckedChange={(v) => setSettings({ enableCloze: v })}
+                  />
+                </Field>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  默认关闭。关闭时重学三轮（例句 / 词形 / 释义）；开启后末轮增加例句挖空四选一。
+                </p>
                 <Field label="主题">
                   <select
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm"

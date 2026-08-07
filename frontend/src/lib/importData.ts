@@ -161,6 +161,9 @@ function settings(value: unknown): Partial<Settings> {
   if (source.groupSize !== undefined) {
     result.groupSize = number(source.groupSize, "每组词数", { integer: true, min: 5, max: 100 });
   }
+  if (source.enableCloze !== undefined) {
+    result.enableCloze = boolean(source.enableCloze, "重学完型填空");
+  }
   return result;
 }
 

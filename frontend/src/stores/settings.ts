@@ -25,6 +25,11 @@ export interface Settings {
   enableCs408: boolean;
   /** 知识图谱入口是否显示数学 */
   enableMath: boolean;
+  /**
+   * 重学是否启用第 4 轮完型填空（例句挖空四选一）。
+   * 默认关闭：只做例句 / 词形 / 释义三轮。
+   */
+  enableCloze: boolean;
 }
 
 const KEY_BASE = "ew.set.v1";
@@ -45,6 +50,7 @@ export const DEFAULT_SETTINGS: Settings = {
   mathTrack: "math1",
   enableCs408: true,
   enableMath: true,
+  enableCloze: false,
 };
 
 function loadJSON<T>(key: string, fallback: T): T {

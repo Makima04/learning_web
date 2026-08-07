@@ -1,4 +1,5 @@
-// study store —— 三个入口共用的「初轮评估 → 组内四轮重学（末轮完型必过）」状态机。
+// study store —— 三个入口共用的「初轮评估 → 组内重学」状态机。
+// 重学默认三轮（例句 / 词形 / 释义）；设置 enableCloze 后末轮加完型填空必过。
 import { create } from "zustand";
 import type { Card } from "@/lib/srs";
 import { answer, DAY, isMastered } from "@/lib/srs";
@@ -251,7 +252,10 @@ function savePassedCard(idx: number, previous: Card): Card {
   return card;
 }
 
-const RELEARN_ROUNDS = 4 as const;
+/** 开启完型时 4 轮，否则 3 轮（到释义结束即过关） */
+function maxRelearnRounds(): 3 | 4 {
+  return useSettings.getState().enableCloze ? 4 : 3;
+}
 
 function phaseForRound(round: RelearnRound): UiPhase {
   if (round === 1) return "relearn-example";
@@ -697,7 +701,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       queue.splice(relearnRoundEnd, 0, { ...item, card: cloneCard(item.card) });
       groupEnd++;
       relearnRoundEnd++;
-    } else if (item.round < RELEARN_ROUNDS) {
+    } else if (item.round < maxRelearnRounds()) {
       queue.splice(groupEnd, 0, {
         ...item,
         card: cloneCard(item.card),
