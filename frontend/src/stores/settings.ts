@@ -53,15 +53,6 @@ export const DEFAULT_SETTINGS: Settings = {
   enableCloze: false,
 };
 
-function loadJSON<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
 function saveJSON(key: string, val: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(val));
@@ -76,10 +67,39 @@ function stripLlm<T extends Record<string, any>>(s: T): T {
   return c;
 }
 
+const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[];
+
+/** 只取已写出的字段；没有 key / 空对象视为「用户没改过」，不能当成本地权威。 */
+function readPersistedPatch(): Partial<Settings> | null {
+  try {
+    const raw = localStorage.getItem(storageKey());
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const clean = stripLlm(parsed as Record<string, unknown>);
+    const patch: Partial<Settings> = {};
+    for (const k of SETTING_KEYS) {
+      if (clean[k] !== undefined) (patch as Record<string, unknown>)[k] = clean[k];
+    }
+    return Object.keys(patch).length > 0 ? patch : null;
+  } catch {
+    return null;
+  }
+}
+
+function asRemotePatch(remote: unknown): Partial<Settings> | null {
+  if (!remote || typeof remote !== "object" || Array.isArray(remote)) return null;
+  const clean = stripLlm(remote as Record<string, unknown>);
+  const patch: Partial<Settings> = {};
+  for (const k of SETTING_KEYS) {
+    if (clean[k] !== undefined) (patch as Record<string, unknown>)[k] = clean[k];
+  }
+  return Object.keys(patch).length > 0 ? patch : null;
+}
+
 export function getSettings(): Settings {
-  const raw = loadJSON<Partial<Settings>>(storageKey(), {});
-  const clean = stripLlm(raw);
-  return { ...DEFAULT_SETTINGS, ...clean };
+  const persisted = readPersistedPatch() || {};
+  return { ...DEFAULT_SETTINGS, ...persisted };
 }
 export function saveSettings(s: Settings) {
   const clean = stripLlm(s);
@@ -93,7 +113,7 @@ export function saveSettings(s: Settings) {
 interface SettingsStore extends Settings {
   set: (patch: Partial<Settings>) => void;
   load: () => void;
-  // 登录后从服务端拉取账号级设置覆盖本地（服务端权威，仅覆盖已持久化字段）
+  // 登录后以服务端为权威拉取账号级设置；未持久化的默认值不得覆盖远端，纯拉取不整包回写
   syncFromServer: () => Promise<void>;
 }
 
@@ -108,21 +128,49 @@ export const useSettings = create<SettingsStore>((set, get) => ({
   syncFromServer: async () => {
     try {
       const r = await api.getSettings();
-      const remote = r && r.settings;
-      const local = getSettings();
-      // 远端填默认缺口，本地当前值优先；再写回账号
-      const preferLocal = {
-        ...DEFAULT_SETTINGS,
-        ...(remote ? stripLlm(remote) : {}),
-        ...local,
-      };
-      saveJSON(storageKey(), stripLlm(preferLocal));
-      set(preferLocal);
-      enqueueSettings(stripLlm(preferLocal) as unknown as Record<string, unknown>);
+      const remotePatch = asRemotePatch(r && r.settings);
+      const localPatch = readPersistedPatch();
+
+      if (remotePatch) {
+        // 服务端权威：远端填默认缺口。未持久化的默认值不覆盖远端。
+        const next: Settings = { ...DEFAULT_SETTINGS, ...remotePatch };
+        const fill: Partial<Settings> = {};
+        if (localPatch) {
+          for (const k of SETTING_KEYS) {
+            if (remotePatch[k] === undefined && localPatch[k] !== undefined) {
+              (fill as Record<string, unknown>)[k] = localPatch[k];
+            }
+          }
+        }
+        const merged: Settings = { ...next, ...fill };
+        // 只持久化远端 + 本地补丁，不把默认值写进 storage 冒充「用户改过」
+        saveJSON(storageKey(), stripLlm({ ...remotePatch, ...fill }));
+        set(merged);
+        // 纯拉取不整包 enqueue；仅补远端缺字段时入队
+        if (Object.keys(fill).length > 0) {
+          enqueueSettings(stripLlm(merged) as unknown as Record<string, unknown>);
+        }
+        return;
+      }
+
+      if (localPatch) {
+        // 远端为空，本地确有用户持久化过的设置：补上去并入队
+        const next: Settings = { ...DEFAULT_SETTINGS, ...localPatch };
+        saveJSON(storageKey(), stripLlm(next));
+        set(next);
+        enqueueSettings(stripLlm(next) as unknown as Record<string, unknown>);
+        return;
+      }
+
+      // 两边都空：保持默认，不写 localStorage、不回写云端
+      set({ ...DEFAULT_SETTINGS });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       console.warn("getSettings sync failed:", message);
-      enqueueSettings(getSettings() as unknown as Record<string, unknown>);
+      // 拉取失败也不要把未持久化的默认值打到云端
+      if (readPersistedPatch()) {
+        enqueueSettings(getSettings() as unknown as Record<string, unknown>);
+      }
     }
   },
 }));

@@ -4,7 +4,7 @@ import * as api from "@/lib/api";
 import type { TodayItem } from "@/lib/api";
 import { dayKey } from "@/lib/day";
 import { scopedKey } from "@/lib/storageScope";
-import { enqueueStudyEvent, flushPending } from "@/lib/syncQueue";
+import { enqueueStudyEvent, flushPending, recomputePendingFromStorage } from "@/lib/syncQueue";
 
 const KEY_BASE = "ew.todayLog.v1";
 
@@ -179,6 +179,7 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
         event_type: type,
         quality: "good",
         day_key: log.dayKey,
+        client_at: now,
       });
     }
   },
@@ -192,6 +193,13 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
     const next = emptyLog();
     set({ log: next });
     saveLog(next);
+    // 丢掉未刷出的今日事件，避免重置后又被 flush 写回
+    try {
+      localStorage.removeItem(scopedKey("ew.sync.pending.studyEvents.v1"));
+    } catch {
+      /* ignore */
+    }
+    recomputePendingFromStorage();
   },
 
   rehydrate: () => set({ log: loadLog() }),

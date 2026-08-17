@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useStudy, type QueueItem } from "@/stores/study";
+import { sessionBar, useStudy, type QueueItem } from "@/stores/study";
 import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
 import { blankTargetHtml } from "@/lib/quiz";
@@ -29,6 +29,7 @@ export function StudyPage() {
   const relearnAnswerKnown = useStudy((state) => state.relearnAnswerKnown);
   const cloze = useStudy((state) => state.cloze);
   const sessionStats = useStudy((state) => state.sessionStats);
+  const sessionTotal = useStudy((state) => state.sessionTotal);
   const passageSkipped = useStudy((state) => state.passageSkipped);
   const currentItem = useStudy((state) => state.currentItem);
   const currentEntry = useStudy((state) => state.currentEntry);
@@ -238,7 +239,7 @@ export function StudyPage() {
     .join("");
   const exampleHtml = example ? highlightTarget(example, entry[1], esc) : "";
   const exampleBlankHtml = example ? blankTargetHtml(example, entry[1], esc) : "";
-  const progress = queue.length ? (qpos / queue.length) * 100 : 0;
+  const bar = sessionBar(sessionStats.studied, sessionTotal);
   const groupName = item.group === "review" ? "复习组" : "新词组";
 
   const fullCard = (
@@ -401,14 +402,23 @@ export function StudyPage() {
     <div className="flex h-[calc(100dvh-8rem)] flex-col overflow-hidden md:h-[calc(100vh-4rem)]">
       <header className="flex shrink-0 items-center gap-3 border-b px-3 py-2">
         <Button variant="ghost" size="icon" onClick={() => { resetSession(); navigate("/"); }}>‹</Button>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div>
-        <div className="shrink-0 text-sm text-muted-foreground">{qpos + 1} / {queue.length}</div>
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${bar.percent}%` }} /></div>
+        <div className="shrink-0 text-sm text-muted-foreground tnum">{bar.done} / {bar.total}</div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden p-4 md:justify-center md:p-8">
         <div className="min-h-0 max-h-full w-full max-w-lg overflow-y-auto overscroll-contain rounded-xl border bg-card shadow-sm md:max-w-2xl">{body}</div>
       </div>
       <div className="shrink-0 border-t bg-background p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">{controls}</div>
-      {pop && <WordPopover surface={pop.word} x={pop.x} y={pop.y} onClose={() => setPop(null)} />}
+      {pop && (
+        <WordPopover
+          key={`${pop.word}-${pop.x}-${pop.y}`}
+          surface={pop.word}
+          x={pop.x}
+          y={pop.y}
+          context={example || undefined}
+          onClose={() => setPop(null)}
+        />
+      )}
     </div>
   );
 }

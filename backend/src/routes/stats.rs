@@ -17,6 +17,8 @@ struct StudyEventBody {
     event_type: String,
     quality: Option<String>,
     day_key: String,
+    /// 客户端记录时间（毫秒）；缺省视为 0，重置后会被丢掉
+    client_at: Option<i64>,
 }
 
 #[derive(Deserialize)]
@@ -45,6 +47,11 @@ async fn post_event(
 ) -> AppResult<Json<Value>> {
     if body.day_key.is_empty() {
         return Err(AppError::BadRequest("day_key required".into()));
+    }
+    let reset_at_ms = super::cards::user_reset_at_ms(&state.pool, user.id).await?;
+    let client_at = body.client_at.unwrap_or(0);
+    if reset_at_ms > 0 && client_at < reset_at_ms {
+        return Ok(Json(json!({ "ok": true, "ignored": "stale_after_reset" })));
     }
     sqlx::query(
         r#"
@@ -112,7 +119,12 @@ async fn stats_today(
         })
         .collect();
 
-    Ok(Json(json!({ "items": items, "summary": summary })))
+    let reset_at = super::cards::user_reset_at(&state.pool, user.id).await?;
+    Ok(Json(json!({
+        "items": items,
+        "summary": summary,
+        "reset_at": reset_at.map(|t| t.to_rfc3339()),
+    })))
 }
 
 async fn stats_daily(

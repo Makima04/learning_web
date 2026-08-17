@@ -1,5 +1,6 @@
 // study store —— 三个入口共用的「初轮评估 → 组内重学」状态机。
 // 重学默认三轮（例句 / 词形 / 释义）；设置 enableCloze 后末轮加完型填空必过。
+// 一词必须按 1→2→3 做完才过关；词与词不同步，A 在第 1 测时 B 可以已在第 2/3 测。
 import { create } from "zustand";
 import type { Card } from "@/lib/srs";
 import { answer, DAY, isMastered } from "@/lib/srs";
@@ -85,6 +86,8 @@ interface StudyState {
   uiPhase: UiPhase;
   assessChoice: Assessment | null;
   sessionStats: SessionStats;
+  /** 本场评估词数（不含重学副本），顶栏进度分母 */
+  sessionTotal: number;
   passageSkipped: number;
   passageReader: PassageReader | null;
   reciteOrigin: { paperIdx: number; type: string } | null;
@@ -160,6 +163,17 @@ interface StudyState {
 }
 
 const emptyStats = (): SessionStats => ({ studied: 0, newDone: 0, reviewDone: 0 });
+
+/** 顶栏进度：只计已过关词，点「不认识」不 +1 */
+export function sessionBar(studied: number, total: number): {
+  done: number;
+  total: number;
+  percent: number;
+} {
+  const t = Math.max(0, total);
+  const d = Math.max(0, Math.min(studied, t || studied));
+  return { done: d, total: t, percent: t ? (d / t) * 100 : 0 };
+}
 
 function isLearned(card: Card | undefined): boolean {
   return !!card?.learned;
@@ -302,6 +316,7 @@ export const useStudy = create<StudyState>((set, get) => ({
   uiPhase: "idle",
   assessChoice: null,
   sessionStats: emptyStats(),
+  sessionTotal: 0,
   passageSkipped: 0,
   passageReader: null,
   reciteOrigin: null,
@@ -399,12 +414,13 @@ export const useStudy = create<StudyState>((set, get) => ({
   startLearn: () => {
     get().buildQueue("learn");
     if (!get().queue.length) {
-      set({ mode: "learn", uiPhase: "done", sessionStats: emptyStats() });
+      set({ mode: "learn", uiPhase: "done", sessionStats: emptyStats(), sessionTotal: 0 });
       return false;
     }
     set({
       mode: "learn",
       sessionStats: emptyStats(),
+      sessionTotal: get().queue.length,
       passageSkipped: 0,
       sessionId: get().sessionId + 1,
       lastExampleByIdx: {},
@@ -416,12 +432,13 @@ export const useStudy = create<StudyState>((set, get) => ({
   startReview: () => {
     get().buildQueue("review");
     if (!get().queue.length) {
-      set({ mode: "review", uiPhase: "done", sessionStats: emptyStats() });
+      set({ mode: "review", uiPhase: "done", sessionStats: emptyStats(), sessionTotal: 0 });
       return false;
     }
     set({
       mode: "review",
       sessionStats: emptyStats(),
+      sessionTotal: get().queue.length,
       passageSkipped: 0,
       sessionId: get().sessionId + 1,
       lastExampleByIdx: {},
@@ -458,6 +475,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       passageSkipped: 0,
       reciteOrigin: origin,
       sessionStats: emptyStats(),
+      sessionTotal: queue.length,
       sessionId: get().sessionId + 1,
     });
     if (!queue.length) {
@@ -497,6 +515,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       passageSkipped: 0,
       reciteOrigin: origin,
       sessionStats: emptyStats(),
+      sessionTotal: queue.length,
       sessionId: get().sessionId + 1,
     });
     if (!queue.length) {
@@ -537,6 +556,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       passageSkipped: 0,
       reciteOrigin: origin,
       sessionStats: emptyStats(),
+      sessionTotal: queue.length,
       sessionId: get().sessionId + 1,
       assessChoice: null,
       uiPhase: "done",
@@ -693,15 +713,14 @@ export const useStudy = create<StudyState>((set, get) => ({
     const queue = [...state.queue];
     queue.splice(state.qpos, 1);
     let groupEnd = state.groupEnd - 1;
-    let relearnRoundEnd = state.relearnRoundEnd - 1;
     let stats = state.sessionStats;
 
     if (!confirmedKnown) {
-      // 未过：同轮重插（含第 4 轮完型）
-      queue.splice(relearnRoundEnd, 0, { ...item, card: cloneCard(item.card) });
+      // 未过：同轮挂到本组重学队尾，不挡其他词升轮
+      queue.splice(groupEnd, 0, { ...item, card: cloneCard(item.card) });
       groupEnd++;
-      relearnRoundEnd++;
     } else if (item.round < maxRelearnRounds()) {
+      // 下一测挂队尾：该词必须 1→2→3，但不必等整组同轮结束
       queue.splice(groupEnd, 0, {
         ...item,
         card: cloneCard(item.card),
@@ -721,13 +740,10 @@ export const useStudy = create<StudyState>((set, get) => ({
       useMeta.getState().bump("doneToday");
     }
 
-    if (state.qpos === relearnRoundEnd && state.qpos < groupEnd) {
-      relearnRoundEnd = groupEnd;
-    }
     set({
       queue,
       groupEnd,
-      relearnRoundEnd,
+      relearnRoundEnd: groupEnd,
       relearnReveal: null,
       relearnAnswerKnown: null,
       cloze: null,
@@ -815,6 +831,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       uiPhase: "idle",
       assessChoice: null,
       sessionStats: emptyStats(),
+      sessionTotal: 0,
       passageSkipped: 0,
       reciteOrigin: null,
       sessionId: get().sessionId + 1,

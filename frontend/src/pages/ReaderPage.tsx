@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useStudy } from "@/stores/study";
 import { useSettings } from "@/stores/settings";
-import { lookupWord, restoreInflection } from "@/lib/lookup";
+import { isClickableSurface, lookupWord, restoreInflection } from "@/lib/lookup";
 import {
   loadPassageReader,
   parsePassageReaderParams,
@@ -110,7 +110,7 @@ function buildParagraphs(body: string): {
 }
 
 /**
- * 词级下划线：目标词 + 词库可点词统一用 r-hl（仅 text-decoration，无虚线/底色）。
+ * 词级高亮：篇章目标词用 r-hl；其余可点实词（词库 + 词库外 LLM）用 c-word。
  */
 function highlightBody(text: string, wordSet: Set<string>): string {
   return String(text).replace(/[A-Za-z][A-Za-z\-']*/g, (m) => {
@@ -119,8 +119,14 @@ function highlightBody(text: string, wordSet: Set<string>): string {
     const e = esc(m);
     const isTarget =
       wordSet.has(low) || wordSet.has(restored) || wordSet.has(restoreInflection(restored));
-    if (isTarget || lookupWord(low)) {
+    if (isTarget) {
       return `<span class="r-hl c-word" data-w="${e}">${e}</span>`;
+    }
+    if (lookupWord(low)) {
+      return `<span class="c-word" data-w="${e}">${e}</span>`;
+    }
+    if (isClickableSurface(m)) {
+      return `<span class="c-word c-word-oov" data-w="${e}">${e}</span>`;
     }
     return e;
   });
@@ -134,6 +140,60 @@ function cleanOptionText(s: string): string {
     .trim();
 }
 
+/** 译句请求世代：换句 / 新请求递增，stale 的 then/finally 不得写译文或清旗 */
+export type TransReqGate = { latest: number };
+
+export function startTransReq(gate: TransReqGate): number {
+  gate.latest += 1;
+  return gate.latest;
+}
+
+/** cleanup 作废本轮。仍是最新一轮时调用方必须复位 loading / translatingRef */
+export function invalidateTransReq(gate: TransReqGate, reqId: number): boolean {
+  if (gate.latest !== reqId) return false;
+  gate.latest += 1;
+  return true;
+}
+
+export function isCurrentTransReq(gate: TransReqGate, reqId: number): boolean {
+  return gate.latest === reqId;
+}
+
+/** 早退 / 换篇：作废一切 in-flight，调用方接着复位 loading 旗 */
+export function abandonTransReq(gate: TransReqGate): void {
+  gate.latest += 1;
+}
+
+export type ReaderTransAction = "busy" | "next" | "retry" | "translate";
+
+/** 失败不算已译：保持译本句 / 重试，空格再请求而不是跳下一句 */
+export function readerTransAction(
+  loading: boolean,
+  hasTrans: boolean,
+  hasErr: boolean
+): ReaderTransAction {
+  if (loading) return "busy";
+  if (hasTrans) return "next";
+  return hasErr ? "retry" : "translate";
+}
+
+const TRANS_BTN_LABEL: Record<ReaderTransAction, string> = {
+  busy: "翻译中…",
+  next: "下一句",
+  retry: "重试",
+  translate: "译本句",
+};
+
+function omitIdx(
+  prev: Record<number, string>,
+  idx: number
+): Record<number, string> {
+  if (prev[idx] == null) return prev;
+  const next = { ...prev };
+  delete next[idx];
+  return next;
+}
+
 type RightTab = "trans" | "explain";
 
 export function ReaderPage() {
@@ -144,18 +204,25 @@ export function ReaderPage() {
   const settings = useSettings();
   const [active, setActive] = useState(0);
   const [transMap, setTransMap] = useState<Record<number, string>>({});
+  const [transErr, setTransErr] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(false);
   const [rightTab, setRightTab] = useState<RightTab>("trans");
   const [picks, setPicks] = useState<Record<number, string>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   const [showAllAnswers, setShowAllAnswers] = useState(false);
-  const [pop, setPop] = useState<{ word: string; x: number; y: number } | null>(
+  const [pop, setPop] = useState<{
+    word: string;
+    x: number;
+    y: number;
+    context?: string;
+  } | null>(
     null
   );
   const [hydrateFailed, setHydrateFailed] = useState(false);
   const translatingRef = useRef(false);
   const transMapRef = useRef(transMap);
   transMapRef.current = transMap;
+  const transReqGateRef = useRef<TransReqGate>({ latest: 0 });
 
   const routeKey = useMemo(
     () => parsePassageReaderParams(params),
@@ -203,6 +270,10 @@ export function ReaderPage() {
   useEffect(() => {
     setActive(0);
     setTransMap({});
+    setTransErr({});
+    abandonTransReq(transReqGateRef.current);
+    setLoading(false);
+    translatingRef.current = false;
     setPicks({});
     setRevealed({});
     setShowAllAnswers(false);
@@ -215,61 +286,87 @@ export function ReaderPage() {
    * 1) 本地 trans 缓存瞬间显示
    * 2) 否则请求服务端（库里已有则秒回 cached，无需再点「译本句」）
    * 点按钮仍可手动触发；已译时变为「下一句」。
+   * 换句必须作废旧 req 并复位 loading，避免早退路径留下「翻译中…」。
    */
   useEffect(() => {
-    const en = sentences[active];
-    if (!en) return;
-    const idx = active;
-    if (transMapRef.current[idx] != null) return;
+    const gate = transReqGateRef.current;
+    const resetFlag = () => {
+      translatingRef.current = false;
+      setLoading(false);
+    };
 
-    const local = useTrans.getState().getTrans(en);
-    if (local !== undefined) {
-      setTransMap((m) => ({ ...m, [idx]: local }));
+    const en = sentences[active];
+    if (!en) {
+      abandonTransReq(gate);
+      resetFlag();
+      return;
+    }
+    const idx = active;
+    if (transMapRef.current[idx] != null) {
+      abandonTransReq(gate);
+      resetFlag();
       return;
     }
 
-    let cancelled = false;
+    const local = useTrans.getState().getTrans(en);
+    if (local !== undefined) {
+      abandonTransReq(gate);
+      setTransMap((m) => ({ ...m, [idx]: local }));
+      setTransErr((e) => omitIdx(e, idx));
+      resetFlag();
+      return;
+    }
+
+    const reqId = startTransReq(gate);
     translatingRef.current = true;
     setLoading(true);
     void translate(en)
       .then((zh) => {
-        if (cancelled) return;
+        if (!isCurrentTransReq(gate, reqId)) return;
         setTransMap((m) => ({ ...m, [idx]: zh }));
+        setTransErr((e) => omitIdx(e, idx));
       })
       .catch((e: unknown) => {
-        if (cancelled) return;
+        if (!isCurrentTransReq(gate, reqId)) return;
         const msg = e instanceof Error ? e.message : "翻译失败";
-        setTransMap((m) => ({ ...m, [idx]: msg }));
+        setTransErr((er) => ({ ...er, [idx]: msg }));
       })
       .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-          translatingRef.current = false;
-        }
+        // 只清自己的请求，慢回包不得清新句 loading
+        if (!isCurrentTransReq(gate, reqId)) return;
+        resetFlag();
       });
 
     return () => {
-      cancelled = true;
+      if (invalidateTransReq(gate, reqId)) resetFlag();
     };
   }, [active, sentences]);
 
   const showCurrentTrans = useCallback(async () => {
     if (!sentences[active] || translatingRef.current) return;
     const en = sentences[active];
-    if (transMap[active] == null) {
+    const idx = active;
+    if (transMap[idx] == null) {
+      const gate = transReqGateRef.current;
+      const reqId = startTransReq(gate);
       translatingRef.current = true;
       setLoading(true);
+      setRightTab("trans");
       try {
         const zh = await translate(en);
-        setTransMap((m) => ({ ...m, [active]: zh }));
+        if (!isCurrentTransReq(gate, reqId)) return;
+        setTransMap((m) => ({ ...m, [idx]: zh }));
+        setTransErr((e) => omitIdx(e, idx));
       } catch (e: unknown) {
+        if (!isCurrentTransReq(gate, reqId)) return;
         const msg = e instanceof Error ? e.message : "翻译失败";
-        setTransMap((m) => ({ ...m, [active]: msg }));
+        setTransErr((er) => ({ ...er, [idx]: msg }));
       } finally {
-        setLoading(false);
-        translatingRef.current = false;
+        if (isCurrentTransReq(gate, reqId)) {
+          setLoading(false);
+          translatingRef.current = false;
+        }
       }
-      setRightTab("trans");
       return;
     }
     if (active < sentences.length - 1) {
@@ -313,7 +410,15 @@ export function ReaderPage() {
     e.stopPropagation();
     const surface = w.getAttribute("data-w") || w.textContent || "";
     const rect = w.getBoundingClientRect();
-    setPop({ word: surface, x: rect.left + rect.width / 2, y: rect.bottom + 6 });
+    // 所在句子作 LLM 选义上下文
+    const sentEl = w.closest("[data-en]") as HTMLElement | null;
+    const context = sentEl?.getAttribute("data-en") || undefined;
+    setPop({
+      word: surface,
+      x: rect.left + rect.width / 2,
+      y: rect.bottom + 6,
+      context,
+    });
     if (settings.speakOnWordClick) speakEnglish(surface, settings.rate);
   }
 
@@ -349,6 +454,8 @@ export function ReaderPage() {
 
   const score = scoreSummary();
   const activeZh = transMap[active];
+  const activeErr = transErr[active];
+  const transAction = readerTransAction(loading, activeZh != null, activeErr != null);
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] min-h-0">
@@ -533,11 +640,7 @@ export function ReaderPage() {
                 onClick={() => void showCurrentTrans()}
                 disabled={loading || !sentences[active]}
               >
-                {loading
-                  ? "翻译中…"
-                  : activeZh != null
-                    ? "下一句"
-                    : "译本句"}
+                {TRANS_BTN_LABEL[transAction]}
               </Button>
             )}
           </div>
@@ -560,14 +663,10 @@ export function ReaderPage() {
                   {loading && activeZh == null ? (
                     <p className="text-muted-foreground">正在请求翻译…</p>
                   ) : activeZh != null ? (
-                    <p
-                      className={cn(
-                        "whitespace-pre-wrap",
-                        /503|失败|未配置|错误|gateway/i.test(activeZh) &&
-                          "text-destructive"
-                      )}
-                    >
-                      {activeZh}
+                    <p className="whitespace-pre-wrap">{activeZh}</p>
+                  ) : activeErr != null ? (
+                    <p className="whitespace-pre-wrap text-destructive">
+                      {activeErr}
                     </p>
                   ) : (
                     <p className="text-muted-foreground">
@@ -680,9 +779,11 @@ export function ReaderPage() {
 
       {pop && (
         <WordPopover
+          key={`${pop.word}-${pop.x}-${pop.y}`}
           surface={pop.word}
           x={pop.x}
           y={pop.y}
+          context={pop.context}
           onClose={() => setPop(null)}
         />
       )}

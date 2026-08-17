@@ -164,6 +164,12 @@
   background: hsl(var(--muted) / 0.8);
   border-radius: 2px;
 }
+/* 词库外可点词：略淡，仍可点开 LLM 释义 */
+.c-word-oov {
+  text-decoration: underline dotted;
+  text-decoration-color: hsl(var(--muted-foreground) / 0.45);
+  text-underline-offset: 0.15em;
+}
 
 /* 滚动条 */
 ::-webkit-scrollbar {

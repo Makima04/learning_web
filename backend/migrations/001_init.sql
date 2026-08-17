@@ -148,3 +148,22 @@ CREATE TABLE IF NOT EXISTS user_kg (
     payload JSONB NOT NULL DEFAULT '{}',
     updated_at TIMESTAMPTZ
 );
+
+-- 账号级权威清空时间戳：重置后远端空不再被过期本地数据救活
+CREATE TABLE IF NOT EXISTS progress_reset (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    reset_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    day_key TEXT NOT NULL DEFAULT ''
+);
+
+-- 词库外点查：LLM 释义缓存（全局共用，按 surface 小写主键）
+CREATE TABLE IF NOT EXISTS word_lookups (
+    word TEXT PRIMARY KEY,
+    lemma TEXT,
+    senses JSONB NOT NULL DEFAULT '[]',
+    phonetic TEXT,
+    status TEXT,
+    model TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
+);

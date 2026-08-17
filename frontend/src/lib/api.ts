@@ -59,6 +59,8 @@ export interface MetaDTO {
   review_today?: number;
   learn_today?: number;
   done_today?: number;
+  /** 客户端写入时间（毫秒）；重置后服务端用来丢掉过期 PUT */
+  client_at?: number;
 }
 
 export interface StudyEventBody {
@@ -66,6 +68,8 @@ export interface StudyEventBody {
   event_type: "new" | "review" | "learn";
   quality: "again" | "hard" | "good" | "easy";
   day_key: string;
+  /** 客户端记录时间（毫秒）；重置后服务端用来丢掉过期事件 */
+  client_at?: number;
 }
 
 export interface TodayItem {
@@ -78,6 +82,8 @@ export interface TodayItem {
 export interface TodayResp {
   items: TodayItem[];
   summary: { new: number; review: number; learn: number; done: number };
+  /** 账号最近一次权威重置；无则空 */
+  reset_at?: string | null;
 }
 export interface DailyAgg {
   day_key: string;
@@ -271,6 +277,27 @@ export async function translateByText(
     body: JSON.stringify({ text }),
   });
 }
+
+// ---- word lookup（词库外 LLM 释义，全局缓存）----
+export interface WordLookupResult {
+  word: string;
+  lemma: string;
+  senses: [string, string][];
+  phonetic?: string;
+  status: string;
+  source?: string;
+  cached?: boolean;
+  detail?: string;
+}
+export async function lookupWordRemote(
+  word: string,
+  context?: string
+): Promise<WordLookupResult> {
+  return req("/api/lookup", {
+    method: "POST",
+    body: JSON.stringify({ word, context: context || undefined }),
+  });
+}
 // 管理端点（需管理员）：仅补未译，不可 force 重翻
 export async function translateById(id: number) {
   return req<{ zh: string; status: string; cached?: boolean }>(`/api/translate/${id}`, {
@@ -322,7 +349,10 @@ export async function setLlmConfig(body: {
 }
 
 // ---- progress sync（需登录）----
-export async function getCards(): Promise<{ cards: Record<string, CardDTO> }> {
+export async function getCards(): Promise<{
+  cards: Record<string, CardDTO>;
+  reset_at?: string | null;
+}> {
   return req("/api/cards");
 }
 export async function putCard(idx: number, card: CardDTO) {
@@ -337,13 +367,17 @@ export async function bulkCards(cards: Record<string, CardDTO>) {
     body: JSON.stringify({ cards }),
   });
 }
-/** 删除当前用户全部卡片（清空进度） */
-export async function deleteAllCards() {
-  return req<{ ok: boolean; deleted?: number }>("/api/cards", {
+/** 权威清空：删卡片 + 学习事件 + 将当日 meta 置 0 */
+export async function deleteAllCards(day?: string) {
+  const q = day ? `?day=${encodeURIComponent(day)}` : "";
+  return req<{ ok: boolean; deleted?: number; reset_at?: string }>(`/api/cards${q}`, {
     method: "DELETE",
   });
 }
-export async function getMeta(day?: string): Promise<{ meta: MetaDTO }> {
+export async function getMeta(day?: string): Promise<{
+  meta: MetaDTO;
+  reset_at?: string | null;
+}> {
   // day：本地时区 YYYY-MM-DD，让服务端按客户端当天查，避免跨时区不对称
   const q = day ? `?day=${encodeURIComponent(day)}` : "";
   return req(`/api/meta${q}`);

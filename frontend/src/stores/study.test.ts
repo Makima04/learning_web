@@ -13,7 +13,7 @@ import { flushPending } from "@/lib/syncQueue";
 import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
-import { useStudy } from "@/stores/study";
+import { sessionBar, useStudy } from "@/stores/study";
 import type { QueueItem } from "@/stores/study";
 
 function phaseForTestRound(round: 1 | 2 | 3 | 4) {
@@ -203,6 +203,98 @@ describe("relearning confirmation", () => {
         quality: "good",
       })
     );
+  });
+
+  it("lets word B stay on round 1 after A advances to round 2", () => {
+    const a: QueueItem = {
+      idx: 1,
+      card: newCard(),
+      group: "new",
+      round: 1,
+      needsRelearning: true,
+      entry: [1, "alpha", [["n.", "甲"]]],
+    };
+    const b: QueueItem = {
+      idx: 2,
+      card: newCard(),
+      group: "new",
+      round: 1,
+      needsRelearning: true,
+      entry: [2, "beta", [["n.", "乙"]]],
+    };
+    useStudy.setState({
+      mode: "learn",
+      queue: [a, b],
+      qpos: 0,
+      groupStart: 0,
+      groupInitialEnd: 0,
+      groupEnd: 2,
+      relearningStarted: true,
+      relearnRoundEnd: 2,
+      relearnPending: [],
+      relearnReveal: null,
+      relearnAnswerKnown: null,
+      currentExample: "alpha sentence",
+      lastExampleByIdx: {},
+      cloze: null,
+      uiPhase: "relearn-example",
+      assessChoice: null,
+      sessionStats: { studied: 0, newDone: 0, reviewDone: 0 },
+      sessionTotal: 2,
+    });
+
+    useStudy.getState().answerRelearning(true);
+    useStudy.getState().confirmRelearning(true);
+
+    const s = useStudy.getState();
+    expect(s.queue.map((q) => [q.idx, q.round])).toEqual([
+      [2, 1],
+      [1, 2],
+    ]);
+    expect(s.uiPhase).toBe("relearn-example");
+    expect(s.currentItem()?.idx).toBe(2);
+    expect(s.sessionStats.studied).toBe(0);
+  });
+
+  it("does not count 不认识 as studied; sessionBar stays put", () => {
+    const item: QueueItem = {
+      idx: 8,
+      card: newCard(),
+      group: "new",
+      entry: [8, "absolute", [["adj.", "绝对的"]]],
+    };
+    useStudy.setState({
+      mode: "learn",
+      queue: [item],
+      qpos: 0,
+      groupStart: 0,
+      groupInitialEnd: 1,
+      groupEnd: 1,
+      relearningStarted: false,
+      relearnRoundEnd: 1,
+      relearnPending: [],
+      relearnReveal: null,
+      relearnAnswerKnown: null,
+      currentExample: null,
+      lastExampleByIdx: {},
+      cloze: null,
+      uiPhase: "assess-front",
+      assessChoice: null,
+      sessionStats: { studied: 0, newDone: 0, reviewDone: 0 },
+      sessionTotal: 1,
+    });
+    useStudy.getState().chooseAssessment("unknown");
+    useStudy.getState().assessFullNext();
+    const s = useStudy.getState();
+    expect(s.sessionStats.studied).toBe(0);
+    // 组评估结束会把 pending 倒进主队列，但未过关，studied 仍为 0
+    expect(s.relearningStarted).toBe(true);
+    expect(s.queue.some((q) => q.idx === 8 && q.round === 1)).toBe(true);
+    expect(sessionBar(s.sessionStats.studied, s.sessionTotal)).toEqual({
+      done: 0,
+      total: 1,
+      percent: 0,
+    });
   });
 });
 

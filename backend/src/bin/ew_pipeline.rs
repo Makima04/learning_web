@@ -370,6 +370,61 @@ fn value_array<'a>(value: &'a Value, key: &str) -> &'a [Value] {
         .unwrap_or_default()
 }
 
+/// 把完形正文里的空白题号（独立数字 token）替换为答案对应选项词，便于例句可读。
+/// 无答案或缺选项时保留原样。
+/// 守卫：数字后紧跟空格+常见量词/单位（如 "19 million"）视为正文真实数字，不替换。
+fn fill_cloze_blanks(passage: &str, items: &[Value], answers: &Map<String, Value>) -> String {
+    if passage.is_empty() || answers.is_empty() || items.is_empty() {
+        return passage.to_string();
+    }
+    let mut option_by_n: HashMap<i64, Map<String, Value>> = HashMap::new();
+    for item in items {
+        let n = item["n"].as_i64().unwrap_or(0);
+        if let Some(opts) = item["options"].as_object() {
+            option_by_n.insert(n, opts.clone());
+        }
+    }
+    // 空白题号是独立 token：两侧为空白/标点/边界，避免把 12-15 里的 12 误替换。
+    let re = Regex::new(
+        r#"(?P<pre>^|[\s,;:(\[{'"])(?P<n>[1-9]|1[0-9]|20)(?P<post>$|[\s,.;:)\]}'"])"#,
+    )
+    .unwrap();
+    re.replace_all(passage, |caps: &regex::Captures| {
+        let n: i64 = caps.name("n").unwrap().as_str().parse().unwrap_or(0);
+        // "19 million" / "1,932" 这类正文真实数字：post 组已消费数字后的空格/标点，
+        // 其后紧跟量词或数字时不替换（完形题号后不可能跟量词）。
+        let after = &passage[caps.get(0).unwrap().end()..];
+        let quantity = Regex::new(
+            r"^(?:million|billion|thousand|hundred|dozen|percent|years?|months?|days?|hours?|points?|times?|per\b|cent\b)\b|^\d",
+        )
+        .unwrap();
+        if quantity.is_match(after) {
+            return caps.get(0).unwrap().as_str().to_string();
+        }
+        let letter = answers
+            .get(&n.to_string())
+            .and_then(|v| v.as_str())
+            .map(|s| s.trim().to_uppercase())
+            .unwrap_or_default();
+        let word = option_by_n
+            .get(&n)
+            .and_then(|opts| opts.get(&letter).or_else(|| opts.get(&letter.to_lowercase())))
+            .and_then(|v| v.as_str())
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        match word {
+            Some(w) => format!(
+                "{}{}{}",
+                caps.name("pre").map(|m| m.as_str()).unwrap_or(""),
+                w,
+                caps.name("post").map(|m| m.as_str()).unwrap_or("")
+            ),
+            None => caps.get(0).map(|m| m.as_str().to_string()).unwrap_or_default(),
+        }
+    })
+    .into_owned()
+}
+
 fn match_paper(
     data: &Value,
     path: &Path,
@@ -397,7 +452,10 @@ fn match_paper(
         match section["type"].as_str().unwrap_or_default() {
             "use_of_english" => {
                 let items = compact_items(value_array(section, "items"));
-                passages.push(json!({"label":"完形填空", "body":section["passage"], "words":match_passage(section["passage"].as_str().unwrap_or_default(), lookup, word_map), "itemCount":items.len(), "items":items, "answers":answers_between(&answers, 1, 20)}));
+                let raw = section["passage"].as_str().unwrap_or_default();
+                let cloze_answers = answers_between(&answers, 1, 20);
+                let body = fill_cloze_blanks(raw, &items, &cloze_answers);
+                passages.push(json!({"label":"完形填空", "body":body, "words":match_passage(&body, lookup, word_map), "itemCount":items.len(), "items":items, "answers":cloze_answers}));
             }
             "reading_a" => {
                 for passage in value_array(section, "passages") {
@@ -770,4 +828,39 @@ async fn run_translate(cli: &Cli) -> Result<()> {
         started.elapsed().as_secs_f64()
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod fill_cloze_tests {
+    use super::*;
+    use serde_json::{json, Value};
+
+    fn items_for(entries: &[(&str, &[(&str, &str)])]) -> Vec<Value> {
+        entries
+            .iter()
+            .map(|(n, opts)| {
+                let mut options = serde_json::Map::new();
+                for (k, v) in *opts {
+                    options.insert(k.to_string(), Value::String(v.to_string()));
+                }
+                json!({"n": n.parse::<i64>().unwrap(), "options": options})
+            })
+            .collect()
+    }
+
+    #[test]
+    fn keeps_quantity_numbers() {
+        let items = items_for(&[("19", &[("A", "puts")])]);
+        let answers = serde_json::Map::from_iter([("19".to_string(), Value::String("A".into()))]);
+        let out = fill_cloze_blanks("reach nearly 19 million by the end", &items, &answers);
+        assert!(out.contains("19 million"), "got: {out}");
+    }
+
+    #[test]
+    fn fills_real_blanks() {
+        let items = items_for(&[("1", &[("A", "Indeed")])]);
+        let answers = serde_json::Map::from_iter([("1".to_string(), Value::String("A".into()))]);
+        let out = fill_cloze_blanks("population. 1 , homelessness", &items, &answers);
+        assert!(out.contains("Indeed"), "got: {out}");
+    }
 }

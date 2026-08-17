@@ -59,6 +59,47 @@ def cut_answer_key(text: str) -> str:
 
 
 # ============ 页面提取：词级坐标按 y 重建行（修复多列网格）============
+
+def _join_row_tokens(row) -> str:
+    """同一视觉行内按 x 拼接 tokens。
+    - 正常词间距 → 空格
+    - 极紧间距 + 词表可拼合（eli+tes）→ 无空格
+    - word + -renowned 类 → 无空格粘成 world-renowned
+    最终仍走 reflow/fix_split_words 二次校正。
+    """
+    if not row:
+        return ""
+    # 延迟加载词表，避免 import 时读文件
+    vocab = None
+    parts = [row[0][4]]
+    for i in range(1, len(row)):
+        prev, cur = row[i - 1], row[i]
+        gap = cur[0] - prev[2]
+        a, b = prev[4], cur[4]
+        glue = False
+        # 负 gap 多为重叠 glyph，谨慎处理
+        if gap < 0:
+            glue = False
+        elif re.fullmatch(r"[A-Za-z]+", a or "") and (b or "").startswith("-") and re.match(
+            r"-[A-Za-z]", b or ""
+        ):
+            # world + -renowned
+            if gap < 4.0:
+                glue = True
+        elif gap < 2.15 and re.fullmatch(r"[A-Za-z]{1,8}", a or ""):
+            b_core = re.match(r"([a-zA-Z]{1,8})", b or "")
+            if b_core:
+                if vocab is None:
+                    vocab = _load_vocab()
+                if _should_join_fragments(a, b_core.group(1), vocab):
+                    glue = True
+        if glue:
+            parts[-1] = parts[-1] + b
+        else:
+            parts.append(b)
+    return " ".join(parts)
+
+
 def words_to_lines(words, y_tol: float = 3.0):
     """把 PyMuPDF 的 words 按 y 坐标聚成视觉行，每行内按 x 排序。
     关键作用：完形选项若排成 4 列网格，get_text('text') 会按列读（全是 A 再全是 B…），
@@ -82,7 +123,7 @@ def words_to_lines(words, y_tol: float = 3.0):
     out = []
     for r in rows:
         r.sort(key=lambda w: w[0])
-        out.append(" ".join(x[4] for x in r))
+        out.append(_join_row_tokens(r))
     # 修复行内 "Text N" 标签：部分年份（如 2023）把 "Text 1" 当作侧栏标签
     # 贴在正文首行同一基线上，y 合并后正文与标签交错，如
     # "Communities ... England Text have 2 been ..." 或 "...recordkeepers Text of progress 4 in..."。
@@ -167,6 +208,294 @@ def join_pages(pages):
 # ---- 段落正规化：把被 PDF 折行拆断的句子重新拼起来 ----
 SENT_END = re.compile(r"[.!?]['\")\]]?\s*$")
 
+# 完整常用词：两端都属此集合时不粘合（避免 may be→maybe、a long→along）
+_COMPLETE_WORDS = {
+    "a", "an", "the", "and", "or", "but", "if", "as", "at", "by", "to", "of", "in", "on",
+    "is", "it", "its", "be", "am", "are", "was", "were", "been", "being", "do", "does",
+    "did", "done", "doing", "have", "has", "had", "having", "will", "would", "could",
+    "should", "may", "might", "must", "shall", "can", "need", "dare", "ought",
+    "i", "me", "my", "we", "us", "our", "you", "your", "he", "him", "his", "she",
+    "her", "they", "them", "their", "this", "that", "these", "those", "who", "whom",
+    "whose", "which", "what", "when", "where", "why", "how", "not", "no", "nor", "so",
+    "too", "very", "just", "only", "even", "also", "than", "then", "there", "here",
+    "all", "any", "each", "every", "both", "few", "more", "most", "other", "some",
+    "such", "own", "same", "into", "onto", "upon", "over", "under", "after", "before",
+    "about", "above", "below", "between", "through", "during", "without", "within",
+    "against", "among", "across", "along", "around", "behind", "beside", "beyond",
+    "from", "with", "for", "out", "up", "down", "off", "per", "via", "like", "unlike",
+    "once", "twice", "again", "ever", "never", "always", "often", "still", "yet",
+    "already", "almost", "rather", "quite", "much", "many", "little", "less", "least",
+    "well", "better", "best", "worse", "worst", "good", "bad", "new", "old", "long",
+    "short", "high", "low", "great", "small", "large", "big", "first", "last", "next",
+    "own", "same", "other", "another", "such", "one", "two", "three", "four", "five",
+    "man", "men", "woman", "women", "people", "person", "time", "way", "day", "year",
+    "life", "world", "work", "part", "place", "case", "point", "hand", "end", "home",
+    "go", "get", "make", "take", "come", "see", "know", "think", "look", "want",
+    "give", "use", "find", "tell", "ask", "work", "seem", "feel", "try", "leave",
+    "call", "keep", "let", "begin", "show", "hear", "play", "run", "move", "live",
+    "believe", "hold", "bring", "happen", "write", "provide", "sit", "stand", "lose",
+    "pay", "meet", "include", "continue", "set", "learn", "change", "lead", "understand",
+    "watch", "follow", "stop", "create", "speak", "read", "allow", "add", "spend",
+    "grow", "open", "walk", "win", "offer", "remember", "love", "consider", "appear",
+    "buy", "wait", "serve", "die", "send", "expect", "build", "stay", "fall", "cut",
+    "reach", "kill", "remain", "suggest", "raise", "pass", "sell", "require", "report",
+    "decide", "pull", "return", "explain", "hope", "develop", "carry", "break", "receive",
+    "agree", "support", "hit", "produce", "eat", "cover", "catch", "draw", "choose",
+    "human", "humans", "social", "public", "private", "national", "local", "general",
+    "important", "able", "available", "possible", "different", "same", "right", "left",
+    "cent", "percent", "ago", "far", "near", "early", "late", "hard", "easy", "true",
+    "real", "sure", "clear", "full", "free", "strong", "weak", "young", "old",
+}
+
+# 功能词（闭类）：仅这类 + 短碎词才粘（We+st）。与 _COMPLETE_WORDS 的实词部分区分。
+_FUNCTION_WORDS = {
+    "a", "an", "the", "and", "or", "but", "if", "as", "at", "by", "to", "of", "in", "on",
+    "is", "it", "its", "be", "am", "are", "was", "were", "been", "being", "do", "does",
+    "did", "done", "doing", "have", "has", "had", "having", "will", "would", "could",
+    "should", "may", "might", "must", "shall", "can", "need", "dare", "ought",
+    "i", "me", "my", "we", "us", "our", "you", "your", "he", "him", "his", "she",
+    "her", "they", "them", "their", "this", "that", "these", "those", "who", "whom",
+    "whose", "which", "what", "when", "where", "why", "how", "not", "no", "nor", "so",
+    "too", "very", "just", "only", "even", "also", "than", "then", "there", "here",
+    "all", "any", "each", "every", "both", "few", "more", "most", "other", "some",
+    "such", "own", "same", "into", "onto", "upon", "over", "under", "after", "before",
+    "about", "above", "below", "between", "through", "during", "without", "within",
+    "against", "among", "across", "along", "around", "behind", "beside", "beyond",
+    "from", "with", "for", "out", "up", "down", "off", "per", "via", "like", "unlike",
+    "once", "twice", "again", "ever", "never", "always", "often", "still", "yet",
+    "already", "almost", "rather", "quite", "much", "many", "little", "less", "least",
+}
+
+# 常见完整实词：即使较短或不在红宝书，也不当碎词去粘功能词
+_NOT_FRAGMENTS = {
+    "bout", "line", "tack", "pic", "mer", "formation",
+    "form", "ward", "gin", "ken", "vel", "bit", "lot", "set",
+    "age", "art", "mass", "band", "bond", "pace", "port", "term",
+    "test", "text", "role", "risk", "rate", "rise", "drop", "deal",
+    "host", "list", "side", "deed", "sight", "night", "body",
+}
+
+_REFLEXIVE_TAILS = frozenset({"self", "selves"})
+
+_VOCAB_CACHE: set[str] | None = None
+_VOCAB_PREFIXES: set[str] | None = None
+
+
+def _load_vocab() -> set[str]:
+    """红宝书词表 + 常见完整词，用于判定被 PDF 拆开的词是否应粘合。"""
+    global _VOCAB_CACHE, _VOCAB_PREFIXES
+    if _VOCAB_CACHE is not None:
+        return _VOCAB_CACHE
+    vocab = set(_COMPLETE_WORDS)
+    # 额外常见词（真题高频、粘合判定用）
+    vocab.update(
+        """
+        west elites including several scientists renowned natural selection process
+        without however therefore although though because while since until unless
+        whether either neither because between another important different government
+        development information environment particularly approximately according
+        although already always against among around before behind beyond during
+        address programs program needs homeless comprehensive something
+        everything anything nothing someone everyone anyone nobody somebody anybody
+        themselves ourselves yourselves himself herself itself myself yourself
+        although through throughout within without toward towards among across
+        """.split()
+    )
+    # words.json 与 scripts/ 同级或在仓库根
+    for candidate in (
+        Path(__file__).resolve().parent.parent / "words.json",
+        Path("words.json"),
+        Path(__file__).resolve().parent / "words.json",
+    ):
+        if not candidate.is_file():
+            continue
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+            if isinstance(data, list):
+                for w in data:
+                    if isinstance(w, dict):
+                        en = w.get("english") or w.get("en") or w.get("word")
+                        if en:
+                            vocab.add(str(en).lower())
+                    elif isinstance(w, (list, tuple)) and len(w) > 1:
+                        vocab.add(str(w[1]).lower())
+                    elif isinstance(w, str):
+                        vocab.add(w.lower())
+            break
+        except Exception:
+            pass
+    prefixes: set[str] = set()
+    for w in vocab:
+        for n in range(2, min(7, len(w) + 1)):
+            prefixes.add(w[:n])
+    _VOCAB_CACHE = vocab
+    _VOCAB_PREFIXES = prefixes
+    return vocab
+
+
+def _vocab_prefixes() -> set[str]:
+    if _VOCAB_PREFIXES is None:
+        _load_vocab()
+    return _VOCAB_PREFIXES or set()
+
+
+def _norm_lemma(s: str) -> str:
+    return re.sub(r"[^a-z]", "", s.lower())
+
+
+def _in_vocab(word: str, vocab: set[str]) -> bool:
+    w = _norm_lemma(word)
+    if not w:
+        return False
+    if w in vocab:
+        return True
+    # 简单词形：-s/-es/-ed/-ing
+    for cand in (
+        w[:-1] if w.endswith("s") and len(w) > 3 else None,
+        w[:-2] if w.endswith("es") and len(w) > 4 else None,
+        w[:-2] if w.endswith("ed") and len(w) > 4 else None,
+        w[:-1] + "e" if w.endswith("ed") and len(w) > 4 else None,
+        w[:-3] if w.endswith("ing") and len(w) > 5 else None,
+        w[:-3] + "e" if w.endswith("ing") and len(w) > 5 else None,
+        w[:-3] + "y" if w.endswith("ies") and len(w) > 4 else None,
+    ):
+        if cand and cand in vocab:
+            return True
+    return False
+
+
+def _is_short_fragment(w: str, vocab: set[str]) -> bool:
+    """短碎词：≤2，或 ≤3 且不在常用词/词表/非碎词集合。"""
+    if w in _NOT_FRAGMENTS or w in _COMPLETE_WORDS:
+        return False
+    if len(w) <= 2:
+        return True
+    if len(w) == 3 and not _in_vocab(w, vocab):
+        return True
+    return False
+
+
+def _looks_like_content_word(w: str, vocab: set[str]) -> bool:
+    """较长且本身像词（3–8）：不当碎词，不与功能/常用词粘。"""
+    if w in _NOT_FRAGMENTS:
+        return True
+    if len(w) < 3 or len(w) > 8:
+        return False
+    if w in _COMPLETE_WORDS or _in_vocab(w, vocab):
+        return True
+    return len(w) >= 4
+
+
+def _should_join_fragments(a: str, b: str, vocab: set[str]) -> bool:
+    """判定 A、B 是否为 PDF 拆词的两半。
+
+    - 两端都是完整常用词：不粘（may be、a long）。
+    - 一端常用词、另一端像完整实词（bout/line/tack）：不粘。
+    - 一端功能词、另一端短碎词：拼合在词表则粘（We+st）。
+    - 反身代词：功能词 + self/selves 可粘（them+selves）。
+    - 两端都不是常用词：拼合在词表则粘（eli+tes、inclu+ding）。
+    """
+    al, bl = a.lower(), b.lower()
+    if not al.isalpha() or not bl.isalpha():
+        return False
+    if len(al) > 8 or len(bl) > 8:
+        return False
+    if al in _COMPLETE_WORDS and bl in _COMPLETE_WORDS:
+        return False
+    joined = al + bl
+    if len(joined) < 2:
+        return False
+
+    a_complete = al in _COMPLETE_WORDS
+    b_complete = bl in _COMPLETE_WORDS
+    a_func = al in _FUNCTION_WORDS
+    b_func = bl in _FUNCTION_WORDS
+
+    # 反身代词：them+selves / him+self（selves 较长，不当碎词）
+    if al in _REFLEXIVE_TAILS or bl in _REFLEXIVE_TAILS:
+        if (a_func or b_func) and _in_vocab(joined, vocab):
+            return True
+
+    # 一端常用词、另一端像完整实词：不粘
+    if a_complete and _looks_like_content_word(bl, vocab):
+        return False
+    if b_complete and _looks_like_content_word(al, vocab):
+        return False
+
+    # 一端功能词、另一端短碎词：拼合在词表则粘
+    if a_func and _is_short_fragment(bl, vocab):
+        return _in_vocab(joined, vocab)
+    if b_func and _is_short_fragment(al, vocab):
+        return _in_vocab(joined, vocab)
+
+    # 两端都不是常用词：拼合在词表则粘；短前缀供连锁碎词
+    if not a_complete and not b_complete:
+        if _in_vocab(joined, vocab):
+            return True
+        if max(len(al), len(bl)) <= 3 and joined in _vocab_prefixes():
+            return len(joined) <= 6
+        return False
+
+    return False
+
+
+_SPLIT_PAIR_RE = re.compile(r"([A-Za-z]{1,8})\s+([a-z]{1,8})\b")
+_HYPHEN_GAP_RE = re.compile(r"([A-Za-z])\s+(-[A-Za-z])")
+
+
+def _join_case(a: str, b: str) -> str:
+    """按 a 的大小写风格拼接 a+b。"""
+    if a.isupper():
+        return (a + b).upper()
+    if a[0].isupper():
+        return a[0] + (a[1:] + b).lower() if len(a) > 1 else a + b
+    return a + b
+
+
+def fix_split_words(text: str) -> str:
+    """修复 PDF 抽取导致的词中空格：We st→West、eli tes→elites、world -renowned→world-renowned。
+
+    不粘合法二元组（a bout、on line、at tack）。见 _should_join_fragments。
+
+    策略：
+    1. 从左扫描「片段A + 空格 + 片段B」；可拼则输出拼接并跳过整对；不可拼则只输出 A
+       并仅前进 A 的长度（避免 their+eli 挡住 eli+tes）。
+    2. 多轮直到稳定（th e → the 等连锁碎词）。
+    3. 处理连字符前多余空格：world -renowned → world-renowned。
+    """
+    if not text:
+        return text
+    vocab = _load_vocab()
+
+    def pass_once(s: str) -> str:
+        out: list[str] = []
+        i = 0
+        n = len(s)
+        while i < n:
+            m = _SPLIT_PAIR_RE.match(s, i)
+            if m:
+                a, b = m.group(1), m.group(2)
+                if _should_join_fragments(a, b, vocab):
+                    out.append(_join_case(a, b))
+                    i = m.end()
+                    continue
+                # 不拼：只消费 A，让后续仍能以 A 的下一段作左端（eli tes）
+                out.append(a)
+                i += len(a)
+                continue
+            out.append(s[i])
+            i += 1
+        return "".join(out)
+
+    out = text
+    for _ in range(8):
+        nxt = pass_once(out)
+        if nxt == out:
+            break
+        out = nxt
+    out = _HYPHEN_GAP_RE.sub(r"\1\2", out)
+    return out
+
 
 def reflow(text: str) -> str:
     raw_lines = [l.rstrip() for l in text.splitlines() if l.strip() != ""]
@@ -177,12 +506,14 @@ def reflow(text: str) -> str:
         prev = merged[-1]
         if SENT_END.search(prev) or prev.endswith("-"):
             if prev.endswith("-"):
+                # 行尾连字符折行：natural- + selection → naturalselection（真连字符折行）
                 merged[-1] = prev[:-1] + line.lstrip()
             else:
                 merged.append(line)
             continue
+        # 无连字符折行：先空格拼接，再由 fix_split_words 用词表判断是否去空格（We + st → West）
         merged[-1] = prev + " " + line.lstrip()
-    return "\n".join(merged)
+    return fix_split_words("\n".join(merged))
 
 
 # ============ 区块切分 ============

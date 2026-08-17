@@ -3,6 +3,7 @@ mod cards;
 mod journal;
 mod kg;
 pub mod llm_cfg;
+mod lookup;
 mod meta;
 mod paper;
 mod parse;
@@ -26,6 +27,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(kg::router())
         .merge(sentences::router())
         .merge(translate::router())
+        .merge(lookup::router())
         .merge(parse::router())
         .merge(paper::router())
         .merge(llm_cfg::router())

@@ -223,14 +223,20 @@ export function SettingsPage() {
   async function resetAll() {
     const loggedIn = api.isLoggedIn();
     const tip = loggedIn
-      ? "确认清空本账号的学习进度与日志？将同时删除服务端卡片（不可恢复）。今日统计在多设备上可能仍取较大值。"
+      ? "确认清空本账号的学习进度与日志？将同时删除服务端卡片、学习记录与今日额度（不可恢复）。"
       : "确认清空本地进度与学习日志？不可恢复。";
     if (!confirm(tip)) return;
-    await useCards.getState().clearAll();
-    useMeta.getState().reset();
-    useJournal.getState().clearAll();
-    useTodayLog.getState().clear();
-    setMsg(loggedIn ? "已重置本账号进度与学习日志" : "已重置本地进度与学习日志");
+    try {
+      // 登录：先等服务端权威清空成功，再清本地；失败可见，不假装成功
+      await useCards.getState().clearAll();
+      useMeta.getState().reset({ skipMirror: loggedIn });
+      useJournal.getState().clearAll();
+      useTodayLog.getState().clear();
+      setMsg(loggedIn ? "已重置本账号进度与学习日志" : "已重置本地进度与学习日志");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setMsg("重置失败: " + message);
+    }
   }
 
   return (

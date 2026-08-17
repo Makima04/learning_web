@@ -3,12 +3,54 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
 import { scopedKey } from "@/lib/storageScope";
-import { enqueueMeta } from "@/lib/syncQueue";
+import { enqueueMeta, recomputePendingFromStorage } from "@/lib/syncQueue";
 
 const KEY_BASE = "ew.meta.v1";
+const RESET_AT_BASE = "ew.meta.resetAt.v1";
+const PENDING_META_BASE = "ew.sync.pending.meta.v1";
 
 function storageKey() {
   return scopedKey(KEY_BASE);
+}
+
+function resetAtKey() {
+  return scopedKey(RESET_AT_BASE);
+}
+
+function loadProgressResetAt(): number {
+  try {
+    const n = Number(localStorage.getItem(resetAtKey()) || "0");
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveProgressResetAt(ts: number) {
+  try {
+    if (ts > 0) localStorage.setItem(resetAtKey(), String(ts));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 服务端 progress_reset.reset_at → 毫秒；无则 0 */
+function parseResetAt(raw: unknown): number {
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) return raw;
+  if (typeof raw === "string" && raw) {
+    const n = Date.parse(raw);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return 0;
+}
+
+function clearPendingMeta() {
+  try {
+    localStorage.removeItem(scopedKey(PENDING_META_BASE));
+  } catch {
+    /* ignore */
+  }
+  recomputePendingFromStorage();
 }
 
 export interface Meta {
@@ -56,6 +98,7 @@ function mirrorMeta(meta: Meta) {
     review_today: meta.reviewToday,
     learn_today: meta.learnToday,
     done_today: meta.doneToday,
+    client_at: Date.now(),
   });
 }
 
@@ -64,7 +107,8 @@ interface MetaStore {
   get: () => Meta;
   bump: (field: "newToday" | "reviewToday" | "learnToday" | "doneToday", by?: number) => number;
   replace: (m: Meta) => void;
-  reset: () => void;
+  /** skipMirror：服务端已权威置 0，不再走 GREATEST 回写 */
+  reset: (opts?: { skipMirror?: boolean }) => void;
   rehydrate: () => void;
   syncMeta: () => Promise<void>;
 }
@@ -102,7 +146,7 @@ export const useMeta = create<MetaStore>((set, get) => ({
     saveMeta(m);
     if (api.isLoggedIn()) mirrorMeta(m);
   },
-  reset: () => {
+  reset: (opts) => {
     // 强制当日计数归零（loadMeta 同日会保留旧计数，不能用于清空）
     const today = dayKey();
     const prev = get().meta;
@@ -116,27 +160,53 @@ export const useMeta = create<MetaStore>((set, get) => ({
     };
     set({ meta: m });
     saveMeta(m);
+    clearPendingMeta();
+    if (opts?.skipMirror) {
+      // 服务端刚权威清空：记下时间，避免随后 GREATEST 把旧额度拉回
+      saveProgressResetAt(Date.now());
+      return;
+    }
     if (api.isLoggedIn()) mirrorMeta(m);
   },
   rehydrate: () => set({ meta: loadMeta() }),
   syncMeta: async () => {
     try {
       const localMeta = get().get();
-      // 先推本地（服务端 GREATEST 合并）
+      const today = dayKey();
+      // 先拉 reset_at：若刚被权威清空，采用远端 0，不要 PUT 旧计数（GREATEST 会救活额度）
+      const rm = await api.getMeta(today);
+      const resetAt = parseResetAt(rm.reset_at);
+      const seen = loadProgressResetAt();
+      if (resetAt > seen) {
+        saveProgressResetAt(resetAt);
+        const rmMeta = rm.meta;
+        const adopted: Meta = {
+          ...localMeta,
+          dayKey: (rmMeta && rmMeta.day_key) || today,
+          newToday: rmMeta?.new_today ?? 0,
+          reviewToday: rmMeta?.review_today ?? 0,
+          learnToday: rmMeta?.learn_today ?? 0,
+          doneToday: rmMeta?.done_today ?? 0,
+        };
+        set({ meta: adopted });
+        saveMeta(adopted);
+        return;
+      }
+      // 日常多端合并：先推本地（服务端 GREATEST），再拉回
       await api.putMeta({
         day_key: localMeta.dayKey,
         new_today: localMeta.newToday,
         review_today: localMeta.reviewToday,
         learn_today: localMeta.learnToday,
         done_today: localMeta.doneToday,
+        client_at: Date.now(),
       });
-      const rm = await api.getMeta(dayKey());
-      if (rm && rm.meta && rm.meta.day_key === localMeta.dayKey) {
-        const rmMeta = rm.meta;
+      const rm2 = await api.getMeta(today);
+      if (rm2 && rm2.meta && rm2.meta.day_key === localMeta.dayKey) {
+        const rmMeta = rm2.meta;
         const merged: Meta = {
           ...localMeta,
           dayKey: rmMeta.day_key!,
-          // 取较大值，与服务端 GREATEST 一致
           newToday: Math.max(localMeta.newToday, rmMeta.new_today ?? 0),
           reviewToday: Math.max(localMeta.reviewToday, rmMeta.review_today ?? 0),
           learnToday: Math.max(localMeta.learnToday, rmMeta.learn_today ?? 0),
