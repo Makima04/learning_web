@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { parseImportData } from "@/lib/importData";
+import { DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW } from "@/lib/journal";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { applyUserScope } from "@/lib/accountScope";
 import { syncAccountData } from "@/lib/accountSync";
@@ -182,6 +183,7 @@ export function SettingsPage() {
         enableCs408: settings.enableCs408,
         enableMath: settings.enableMath,
         enableCloze: settings.enableCloze,
+        journalDailyReviewLimits: settings.journalDailyReviewLimits,
       },
       journal,
       exportedAt: new Date().toISOString(),
@@ -376,6 +378,12 @@ export function SettingsPage() {
                     />
                   </Field>
                 </div>
+                <JournalDailyLimitsSection
+                  limits={settings.journalDailyReviewLimits}
+                  onChange={(journalDailyReviewLimits) =>
+                    setSettings({ journalDailyReviewLimits })
+                  }
+                />
               </CardContent>
             </Card>
           )}
@@ -753,6 +761,62 @@ export function SettingsPage() {
         红宝书 · 乱序 · 6550 词 · 版本：
         {typeof window !== "undefined" && window.EW_VERSION ? window.EW_VERSION : "dev"}
       </p>
+    </div>
+  );
+}
+
+function JournalDailyLimitsSection({
+  limits,
+  onChange,
+}: {
+  limits: Record<string, number>;
+  onChange: (next: Record<string, number>) => void;
+}) {
+  const categories = useJournal((s) => s.categories);
+  const sorted = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  return (
+    <div className="border-t pt-4 space-y-4">
+      <div>
+        <p className="text-sm font-medium">学习日志 · 分类每日复盘上限</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          每类每天最多复盘这么多张，超出的留在后续队列。新记的卡片次日优先进入额度。默认每类{" "}
+          {DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW} 张；设为 0 表示该类今日不排进队列。
+        </p>
+      </div>
+      {sorted.length === 0 ? (
+        <p className="text-sm text-muted-foreground">暂无分类，先到学习日志里添加。</p>
+      ) : (
+        sorted.map((cat) => {
+          const value =
+            typeof limits[cat.id] === "number"
+              ? limits[cat.id]
+              : DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW;
+          return (
+            <Field key={cat.id} label={cat.name}>
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: cat.color }}
+                  aria-hidden
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={value}
+                  onChange={(e) => {
+                    const n = Math.max(0, Math.min(100, Math.floor(+e.target.value || 0)));
+                    onChange({ ...limits, [cat.id]: n });
+                  }}
+                  className="w-24"
+                />
+                <span className="text-xs text-muted-foreground">张/天</span>
+              </div>
+            </Field>
+          );
+        })
+      )}
     </div>
   );
 }

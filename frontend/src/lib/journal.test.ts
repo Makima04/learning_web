@@ -7,6 +7,7 @@ import {
   mergeJournalSnapshots,
   newEntryDefaults,
   nextStepAfterPass,
+  planDueEntries,
   scheduleAfterReview,
   sortDueEntries,
   weekKeyOf,
@@ -97,7 +98,7 @@ describe("newEntryDefaults", () => {
 });
 
 describe("sortDueEntries", () => {
-  it("prioritizes mistakes and overdue", () => {
+  it("prioritizes first-review, then mistakes and overdue", () => {
     const base = {
       body: "",
       createdOn: "2026-07-10",
@@ -114,6 +115,7 @@ describe("sortDueEntries", () => {
         title: "learn today",
         kind: "learn",
         nextReviewOn: "2026-07-17",
+        lastReviewedOn: "2026-07-12",
       },
       {
         ...base,
@@ -122,6 +124,16 @@ describe("sortDueEntries", () => {
         title: "mistake overdue",
         kind: "mistake",
         nextReviewOn: "2026-07-15",
+        lastReviewedOn: "2026-07-14",
+      },
+      {
+        ...base,
+        id: "new",
+        categoryId: "c",
+        title: "brand new",
+        kind: "learn",
+        createdOn: "2026-07-16",
+        nextReviewOn: "2026-07-17",
       },
       {
         ...base,
@@ -133,7 +145,83 @@ describe("sortDueEntries", () => {
       },
     ];
     const due = sortDueEntries(entries, "2026-07-17");
-    expect(due.map((e) => e.id)).toEqual(["b", "a"]);
+    // 新卡（首次）优先，其后错题，再普通复盘
+    expect(due.map((e) => e.id)).toEqual(["new", "b", "a"]);
+  });
+
+  it("among first-reviews prefers newer createdOn", () => {
+    const mk = (id: string, createdOn: string): JournalEntry => ({
+      id,
+      categoryId: "cat-math",
+      title: id,
+      body: "",
+      kind: "learn",
+      createdOn,
+      nextReviewOn: "2026-07-17",
+      step: 1,
+      status: "active",
+      lapses: 0,
+      updatedAt: 1,
+    });
+    const due = sortDueEntries(
+      [mk("older", "2026-07-14"), mk("newer", "2026-07-16")],
+      "2026-07-17"
+    );
+    expect(due.map((e) => e.id)).toEqual(["newer", "older"]);
+  });
+});
+
+describe("planDueEntries", () => {
+  it("caps per category and defers the rest", () => {
+    const mk = (id: string, categoryId: string, createdOn: string): JournalEntry => ({
+      id,
+      categoryId,
+      title: id,
+      body: "",
+      kind: "learn",
+      createdOn,
+      nextReviewOn: "2026-07-17",
+      step: 1,
+      status: "active",
+      lapses: 0,
+      updatedAt: 1,
+    });
+    const entries = [
+      mk("m1", "cat-math", "2026-07-16"),
+      mk("m2", "cat-math", "2026-07-15"),
+      mk("m3", "cat-math", "2026-07-14"),
+      mk("m4", "cat-math", "2026-07-13"),
+      mk("e1", "cat-english", "2026-07-16"),
+      mk("e2", "cat-english", "2026-07-15"),
+    ];
+    const plan = planDueEntries(
+      entries,
+      { "cat-math": 3, "cat-english": 1 },
+      "2026-07-17"
+    );
+    // 同日新建按 id 稳定排序；各类各自截断后仍保持全局优先级
+    expect(plan.due.map((e) => e.id)).toEqual(["e1", "m1", "m2", "m3"]);
+    expect(plan.deferred.map((e) => e.id).sort()).toEqual(["e2", "m4"]);
+    expect(plan.deferredByCategory).toEqual({ "cat-math": 1, "cat-english": 1 });
+  });
+
+  it("uses default limit 3 when category unset", () => {
+    const entries: JournalEntry[] = Array.from({ length: 5 }, (_, i) => ({
+      id: `x${i}`,
+      categoryId: "cat-math",
+      title: `x${i}`,
+      body: "",
+      kind: "learn" as const,
+      createdOn: `2026-07-${10 + i}`,
+      nextReviewOn: "2026-07-17",
+      step: 1 as const,
+      status: "active" as const,
+      lapses: 0,
+      updatedAt: 1,
+    }));
+    const plan = planDueEntries(entries, {}, "2026-07-17");
+    expect(plan.due).toHaveLength(3);
+    expect(plan.deferred).toHaveLength(2);
   });
 });
 

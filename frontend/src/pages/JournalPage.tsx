@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dayKey } from "@/lib/day";
 import {
-  sortDueEntries,
+  planDueEntries,
   weekKeyOf,
   weekRangeLabel,
   computeWeekStats,
@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/stores/auth";
 import { useJournal } from "@/stores/journal";
+import { useSettings } from "@/stores/settings";
 
 const JOURNAL_TABS = ["today", "create", "history", "week"] as const;
 type JournalTab = (typeof JOURNAL_TABS)[number];
@@ -208,8 +209,14 @@ export function JournalPage() {
   const saveWeeklyNote = useJournal((s) => s.saveWeeklyNote);
   const exportSnapshot = useJournal((s) => s.exportSnapshot);
 
+  const journalDailyReviewLimits = useSettings((s) => s.journalDailyReviewLimits);
   const cats = useMemo(() => categoryMap(categories), [categories]);
-  const due = useMemo(() => sortDueEntries(entries), [entries]);
+  const duePlan = useMemo(
+    () => planDueEntries(entries, journalDailyReviewLimits),
+    [entries, journalDailyReviewLimits]
+  );
+  const due = duePlan.due;
+  const deferredCount = duePlan.deferred.length;
   const weekKey = weekKeyOf();
   const weeklyStats = useMemo(
     () => computeWeekStats(entries, logs, weekKey),
@@ -319,11 +326,16 @@ export function JournalPage() {
             <Download className="h-4 w-4" />
             导出
           </Button>
-          <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm">
-            <ClipboardList className="h-4 w-4 text-primary" />
-            <span>
-              今日待复盘 <strong className="text-foreground">{due.length}</strong>
-            </span>
+          <div className="flex flex-col items-end gap-0.5 rounded-lg border bg-card px-3 py-2 text-sm">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              <span>
+                今日待复盘 <strong className="text-foreground">{due.length}</strong>
+              </span>
+            </div>
+            {deferredCount > 0 && (
+              <span className="text-xs text-muted-foreground">另有 {deferredCount} 张顺延</span>
+            )}
           </div>
         </div>
       </div>
@@ -354,29 +366,46 @@ export function JournalPage() {
               <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
                 <Check className="h-8 w-8 text-emerald-500" />
                 <div>
-                  <p className="font-medium">今日没有到期复盘</p>
+                  <p className="font-medium">
+                    {deferredCount > 0 ? "今日复盘额度已排满" : "今日没有到期复盘"}
+                  </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    去「记一笔」写下今天学的内容，明天会提醒你
+                    {deferredCount > 0
+                      ? `另有 ${deferredCount} 张到期卡片已顺延到后续队列；可在设置里调整各类每日上限`
+                      : "去「记一笔」写下今天学的内容，明天会提醒你"}
                   </p>
                 </div>
-                <Button variant="outline" onClick={() => setTab("create")}>
-                  <Plus className="h-4 w-4" />
-                  记一笔
-                </Button>
+                {deferredCount === 0 ? (
+                  <Button variant="outline" onClick={() => setTab("create")}>
+                    <Plus className="h-4 w-4" />
+                    记一笔
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => navigate("/settings")}>
+                    调整每日上限
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
-            due.map((entry) => (
-              <EntryCard
-                key={entry.id}
-                entry={entry}
-                cat={cats.get(entry.categoryId)}
-                showReview
-                onReview={(result) => reviewEntry(entry.id, result)}
-                onArchive={() => archiveEntry(entry.id)}
-                onDelete={() => confirmDelete(entry.id, entry.title)}
-              />
-            ))
+            <>
+              {deferredCount > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  已按分类每日上限截取今日队列；另有 {deferredCount} 张顺延。新记的卡片次日优先进入队列。
+                </p>
+              )}
+              {due.map((entry) => (
+                <EntryCard
+                  key={entry.id}
+                  entry={entry}
+                  cat={cats.get(entry.categoryId)}
+                  showReview
+                  onReview={(result) => reviewEntry(entry.id, result)}
+                  onArchive={() => archiveEntry(entry.id)}
+                  onDelete={() => confirmDelete(entry.id, entry.title)}
+                />
+              ))}
+            </>
           )}
         </TabsContent>
 

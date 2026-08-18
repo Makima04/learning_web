@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { TodayWordList } from "@/components/TodayWordList";
 import { Card, CardContent } from "@/components/ui/card";
 import { DAY, dayKey } from "@/lib/day";
-import { isDueOnOrBefore } from "@/lib/journal";
+import { planDueEntries } from "@/lib/journal";
 import { resolveTodayWords } from "@/lib/todayWords";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/stores/auth";
@@ -101,6 +101,7 @@ export function DashboardPage() {
   const user = useAuth((state) => state.user);
   const loggedIn = useAuth((state) => state.loggedIn);
   const rate = useSettings((s) => s.rate);
+  const journalDailyReviewLimits = useSettings((s) => s.journalDailyReviewLimits);
   const todayItems = useTodayLog((s) => s.log.items);
   const todayDayKey = useTodayLog((s) => s.log.dayKey);
   const syncTodayLog = useTodayLog((s) => s.syncFromServer);
@@ -111,10 +112,12 @@ export function DashboardPage() {
     if (!loggedIn) return;
     void syncTodayLog();
   }, [loggedIn, syncTodayLog]);
-  const journalDueCount = useMemo(() => {
-    const today = dayKey();
-    return journalEntries.filter((e) => isDueOnOrBefore(e, today)).length;
-  }, [journalEntries]);
+  const journalPlan = useMemo(
+    () => planDueEntries(journalEntries, journalDailyReviewLimits),
+    [journalEntries, journalDailyReviewLimits]
+  );
+  const journalDueCount = journalPlan.due.length;
+  const journalDeferredCount = journalPlan.deferred.length;
   // 用计划内完成量 / 固定今日目标，避免「剩余额度」当分母
   const totalToday = stats.todayPlan;
   const done = stats.planDone;
@@ -244,8 +247,12 @@ export function DashboardPage() {
                   title="学习日志"
                   description={
                     journalDueCount > 0
-                      ? `今日待复盘 ${journalDueCount} 张（数学 / 408 / 英语…）`
-                      : "记录今日所学，明日自动提醒复盘"
+                      ? journalDeferredCount > 0
+                        ? `今日待复盘 ${journalDueCount} 张（另有 ${journalDeferredCount} 张顺延）`
+                        : `今日待复盘 ${journalDueCount} 张（数学 / 408 / 英语…）`
+                      : journalDeferredCount > 0
+                        ? `今日额度已满，另有 ${journalDeferredCount} 张顺延`
+                        : "记录今日所学，明日自动提醒复盘"
                   }
                   primary={false}
                   iconClassName="bg-violet-50 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300"

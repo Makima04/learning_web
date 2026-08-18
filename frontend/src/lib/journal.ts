@@ -281,15 +281,95 @@ export function mergeJournalSnapshots(local: JournalDoc, remote: JournalDoc): Jo
   };
 }
 
+/** 每类每日复盘默认上限；未在设置里单独配置时使用。 */
+export const DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW = 3;
+
+/** 是否尚未复盘过（含昨日新建、次日首次到期）。 */
+export function isFirstReview(entry: JournalEntry): boolean {
+  return !entry.lastReviewedOn;
+}
+
+/** 读取某分类的每日复盘上限；缺省为 DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW。 */
+export function journalCategoryDailyLimit(
+  categoryId: string,
+  limits?: Record<string, number> | null
+): number {
+  const raw = limits?.[categoryId];
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return Math.max(0, Math.min(100, Math.floor(raw)));
+  }
+  return DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW;
+}
+
 export function sortDueEntries(entries: JournalEntry[], today: string = dayKey()): JournalEntry[] {
   return [...entries]
     .filter((e) => isDueOnOrBefore(e, today))
     .sort((a, b) => {
-      // 错题优先 → 逾期更久优先 → 创建更早优先
+      // 首次复盘（新加次日到期）优先 → 错题优先 → 新卡按创建更晚优先，其余逾期更久 / 创建更早
+      const firstA = isFirstReview(a);
+      const firstB = isFirstReview(b);
+      if (firstA !== firstB) return firstA ? -1 : 1;
       if (a.kind !== b.kind) return a.kind === "mistake" ? -1 : 1;
-      const overdueA = compareDay(today, a.nextReviewOn);
-      const overdueB = compareDay(today, b.nextReviewOn);
-      if (overdueA !== overdueB) return overdueB - overdueA;
-      return compareDay(a.createdOn, b.createdOn);
+      if (firstA) {
+        const created = compareDay(b.createdOn, a.createdOn);
+        if (created !== 0) return created;
+      } else {
+        const overdueA = compareDay(today, a.nextReviewOn);
+        const overdueB = compareDay(today, b.nextReviewOn);
+        if (overdueA !== overdueB) return overdueB - overdueA;
+        const created = compareDay(a.createdOn, b.createdOn);
+        if (created !== 0) return created;
+      }
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
     });
+}
+
+export interface DuePlan {
+  /** 今日实际进入复盘队列的条目（已按分类上限截断） */
+  due: JournalEntry[];
+  /** 到期但因上限顺延的条目 */
+  deferred: JournalEntry[];
+  /** 各类顺延数量 */
+  deferredByCategory: Record<string, number>;
+}
+
+/**
+ * 按分类每日上限截断到期队列：超出部分保留 nextReviewOn，次日继续竞争。
+ * limits 缺省键用 DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW；上限 0 表示该类今日全顺延。
+ */
+export function planDueEntries(
+  entries: JournalEntry[],
+  limits?: Record<string, number> | null,
+  today: string = dayKey()
+): DuePlan {
+  const sorted = sortDueEntries(entries, today);
+  const byCat = new Map<string, JournalEntry[]>();
+  for (const e of sorted) {
+    const list = byCat.get(e.categoryId);
+    if (list) list.push(e);
+    else byCat.set(e.categoryId, [e]);
+  }
+
+  const due: JournalEntry[] = [];
+  const deferred: JournalEntry[] = [];
+  const deferredByCategory: Record<string, number> = {};
+
+  for (const [categoryId, list] of byCat) {
+    const limit = journalCategoryDailyLimit(categoryId, limits);
+    const take = limit <= 0 ? [] : list.slice(0, limit);
+    const rest = limit <= 0 ? list : list.slice(limit);
+    due.push(...take);
+    if (rest.length) {
+      deferred.push(...rest);
+      deferredByCategory[categoryId] = rest.length;
+    }
+  }
+
+  // 保持全局优先级顺序（跨分类仍按 sortDueEntries 规则）
+  const dueIds = new Set(due.map((e) => e.id));
+  return {
+    due: sorted.filter((e) => dueIds.has(e.id)),
+    deferred,
+    deferredByCategory,
+  };
 }

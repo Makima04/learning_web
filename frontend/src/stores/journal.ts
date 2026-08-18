@@ -9,6 +9,7 @@ import {
   mergeJournalSnapshots,
   newEntryDefaults,
   scheduleAfterReview,
+  planDueEntries,
   sortDueEntries,
   weekKeyOf,
   type JournalCategory,
@@ -159,7 +160,10 @@ interface JournalStore extends JournalSnapshot {
   /** 归档某考点关联的全部 active 日志（取消已学） */
   archiveEntriesByKpId: (kpId: string) => void;
   reviewEntry: (id: string, result: ReviewResult, note?: string) => void;
+  /** 全部到期（未截断）。需要按分类上限时用 planDue。 */
   dueEntries: (today?: string) => JournalEntry[];
+  /** 按分类每日上限截断后的今日队列。 */
+  planDue: (limits?: Record<string, number> | null, today?: string) => ReturnType<typeof planDueEntries>;
   entriesByCategory: (categoryId: string | "all") => JournalEntry[];
   getWeekly: (weekKey?: string) => {
     weekKey: string;
@@ -383,6 +387,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
   },
 
   dueEntries: (today = dayKey()) => sortDueEntries(get().entries, today),
+  planDue: (limits, today = dayKey()) => planDueEntries(get().entries, limits, today),
 
   entriesByCategory: (categoryId) => {
     const list = get().entries;

@@ -164,6 +164,19 @@ function settings(value: unknown): Partial<Settings> {
   if (source.enableCloze !== undefined) {
     result.enableCloze = boolean(source.enableCloze, "重学完型填空");
   }
+  if (source.journalDailyReviewLimits !== undefined) {
+    const limitsRaw = record(source.journalDailyReviewLimits, "学习日志分类每日上限");
+    const limits: Record<string, number> = {};
+    for (const [id, raw] of Object.entries(limitsRaw)) {
+      if (!id) continue;
+      limits[id] = number(raw, `学习日志分类 ${id} 每日上限`, {
+        integer: true,
+        min: 0,
+        max: 100,
+      });
+    }
+    result.journalDailyReviewLimits = limits;
+  }
   return result;
 }
 

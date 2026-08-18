@@ -30,6 +30,11 @@ export interface Settings {
    * 默认关闭：只做例句 / 词形 / 释义三轮。
    */
   enableCloze: boolean;
+  /**
+   * 学习日志：各分类每日复盘上限（张）。
+   * 未出现的分类键使用 DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW（3）。
+   */
+  journalDailyReviewLimits: Record<string, number>;
 }
 
 const KEY_BASE = "ew.set.v1";
@@ -51,6 +56,7 @@ export const DEFAULT_SETTINGS: Settings = {
   enableCs408: true,
   enableMath: true,
   enableCloze: false,
+  journalDailyReviewLimits: {},
 };
 
 function saveJSON(key: string, val: unknown) {
@@ -69,6 +75,22 @@ function stripLlm<T extends Record<string, any>>(s: T): T {
 
 const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[];
 
+/** 规范化分类每日上限表；非法项丢弃。 */
+function normalizeJournalLimits(value: unknown): Record<string, number> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const out: Record<string, number> = {};
+  for (const [id, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (!id || typeof raw !== "number" || !Number.isFinite(raw)) continue;
+    out[id] = Math.max(0, Math.min(100, Math.floor(raw)));
+  }
+  return out;
+}
+
+function pickSettingValue(key: keyof Settings, value: unknown): unknown {
+  if (key === "journalDailyReviewLimits") return normalizeJournalLimits(value);
+  return value;
+}
+
 /** 只取已写出的字段；没有 key / 空对象视为「用户没改过」，不能当成本地权威。 */
 function readPersistedPatch(): Partial<Settings> | null {
   try {
@@ -79,7 +101,9 @@ function readPersistedPatch(): Partial<Settings> | null {
     const clean = stripLlm(parsed as Record<string, unknown>);
     const patch: Partial<Settings> = {};
     for (const k of SETTING_KEYS) {
-      if (clean[k] !== undefined) (patch as Record<string, unknown>)[k] = clean[k];
+      if (clean[k] === undefined) continue;
+      const next = pickSettingValue(k, clean[k]);
+      if (next !== undefined) (patch as Record<string, unknown>)[k] = next;
     }
     return Object.keys(patch).length > 0 ? patch : null;
   } catch {
@@ -92,7 +116,9 @@ function asRemotePatch(remote: unknown): Partial<Settings> | null {
   const clean = stripLlm(remote as Record<string, unknown>);
   const patch: Partial<Settings> = {};
   for (const k of SETTING_KEYS) {
-    if (clean[k] !== undefined) (patch as Record<string, unknown>)[k] = clean[k];
+    if (clean[k] === undefined) continue;
+    const next = pickSettingValue(k, clean[k]);
+    if (next !== undefined) (patch as Record<string, unknown>)[k] = next;
   }
   return Object.keys(patch).length > 0 ? patch : null;
 }
