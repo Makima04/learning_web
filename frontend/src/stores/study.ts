@@ -326,6 +326,11 @@ export const useStudy = create<StudyState>((set, get) => ({
     const cards = useCards.getState().cards;
     const settings = useSettings.getState();
     const meta = useMeta.getState().get();
+    const logCounts = useTodayLog.getState().counts();
+    // 多端时 todayLog 是去重并集，meta 是 GREATEST；取较大值避免计划偏低
+    const newToday = Math.max(meta.newToday, logCounts.newCount);
+    const reviewToday = Math.max(meta.reviewToday, logCounts.reviewCount);
+    const doneToday = Math.max(meta.doneToday, logCounts.total);
     const allWords = getWords();
     const allCards = Object.values(cards);
     const learned = allCards.filter(isLearned);
@@ -334,23 +339,23 @@ export const useStudy = create<StudyState>((set, get) => ({
     const learnDue = learning.filter((c) => (c.due || 0) <= now).length;
     const masteredCount = learned.filter(isMastered).length;
     // 今日计划剩余（软目标，排队仍可超学）
-    const newAvailable = Math.max(0, settings.dailyNew - meta.newToday);
+    const newAvailable = Math.max(0, settings.dailyNew - newToday);
     const reviewAvailable = Math.min(
       dueCards.length,
-      Math.max(0, settings.dailyReview - meta.reviewToday)
+      Math.max(0, settings.dailyReview - reviewToday)
     );
     const unseen = Math.max(0, allWords.length - learned.length);
     // 固定分母：已学 + 仍可计入今日计划的量，避免「剩余当总量」导致进度/文案误导
     // 例：新词 quota 已满后只剩 100 复习时，旧逻辑会把 todayPlan 变成 100，
     // 再和 doneToday 混算，出现「没学满 100 新词却显示计划完成 + 77/100」。
     // newGoal：设置上限，且不超过「今日已学新词 + 仍未学」（词库耗尽时缩 goal）
-    const newGoal = Math.min(settings.dailyNew, meta.newToday + unseen);
+    const newGoal = Math.min(settings.dailyNew, newToday + unseen);
     const reviewGoal = Math.min(
       settings.dailyReview,
-      meta.reviewToday + dueCards.length
+      reviewToday + dueCards.length
     );
     const planDone =
-      Math.min(meta.newToday, newGoal) + Math.min(meta.reviewToday, reviewGoal);
+      Math.min(newToday, newGoal) + Math.min(reviewToday, reviewGoal);
     return {
       due: dueCards.length,
       reviewAvailable,
@@ -363,10 +368,10 @@ export const useStudy = create<StudyState>((set, get) => ({
       unseen,
       canLearn: unseen > 0,
       canReview: dueCards.length > 0,
-      newToday: meta.newToday,
-      reviewToday: meta.reviewToday,
+      newToday,
+      reviewToday,
       learnToday: meta.learnToday,
-      doneToday: meta.doneToday,
+      doneToday,
       newGoal,
       reviewGoal,
       todayPlan: newGoal + reviewGoal,

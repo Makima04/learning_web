@@ -61,6 +61,7 @@ export const SCOPED_BASES = [
   "ew.sync.pending.meta.v1",
   "ew.sync.pending.settings.v1",
   "ew.sync.pending.studyEvents.v1",
+  "ew.sync.pending.journal.v1",
   "ew.sync.status.v1",
 ] as const;
 

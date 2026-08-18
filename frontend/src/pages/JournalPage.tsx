@@ -272,8 +272,7 @@ export function JournalPage() {
     setTitle("");
     setBody("");
     setKind("learn");
-    setFormMsg(`已创建，将于 ${created.nextReviewOn} 提醒复盘`);
-    setTab("today");
+    setFormMsg(`已创建「${created.title}」，将于 ${created.nextReviewOn} 提醒复盘。可在「历史」中查看。`);
   }
 
   function handleAddCategory() {

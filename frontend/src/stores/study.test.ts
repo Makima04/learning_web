@@ -15,6 +15,7 @@ import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
 import { sessionBar, useStudy } from "@/stores/study";
 import type { QueueItem } from "@/stores/study";
+import { useTodayLog } from "@/stores/todayLog";
 
 function phaseForTestRound(round: 1 | 2 | 3 | 4) {
   if (round === 1) return "relearn-example" as const;
@@ -322,6 +323,7 @@ describe("review due filter + snapshot", () => {
       },
     });
     useSettings.setState({ dailyNew: 20, dailyReview: 100 });
+    useTodayLog.setState({ log: { dayKey: dayKey(), items: [] } });
   });
 
   it("buildQueue(review) only includes due learned cards", () => {
@@ -440,6 +442,40 @@ describe("review due filter + snapshot", () => {
     expect(snap.todayPlan).toBe(120);
     expect(snap.planDone).toBe(20); // 新词封顶 20 + 复习 0
     expect(snap.doneToday).toBe(77);
+  });
+
+  it("snapshot uses todayLog counts when they exceed meta GREATEST", () => {
+    useMeta.setState({
+      meta: {
+        dayKey: dayKey(),
+        newToday: 10,
+        reviewToday: 5,
+        learnToday: 0,
+        doneToday: 15,
+        created: 0,
+      },
+    });
+    useTodayLog.setState({
+      log: {
+        dayKey: dayKey(),
+        items: [
+          ...Array.from({ length: 12 }, (_, i) => ({
+            wordIdx: i + 1,
+            type: "new" as const,
+            at: i,
+          })),
+          ...Array.from({ length: 8 }, (_, i) => ({
+            wordIdx: i + 100,
+            type: "review" as const,
+            at: i,
+          })),
+        ],
+      },
+    });
+    const snap = useStudy.getState().snapshot();
+    expect(snap.newToday).toBe(12);
+    expect(snap.reviewToday).toBe(8);
+    expect(snap.doneToday).toBe(20);
   });
 
   it("snapshot counts due and mastered separately from reviewing", () => {

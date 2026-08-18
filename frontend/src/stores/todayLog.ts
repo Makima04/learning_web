@@ -124,6 +124,25 @@ export function logFromServerItems(day: string, serverItems: TodayItem[]): Today
   return { dayKey: day, items: Array.from(map.values()) };
 }
 
+/** 以服务端词表为底，补上本地有而服务端还没有的词（防刚过关被覆盖）。 */
+export function mergeTodayLogs(server: TodayLog, local: TodayLog): TodayLog {
+  if (local.dayKey !== server.dayKey) return server;
+  const map = new Map(server.items.map((it) => [it.wordIdx, it]));
+  for (const it of local.items) {
+    const prev = map.get(it.wordIdx);
+    if (!prev) {
+      map.set(it.wordIdx, it);
+      continue;
+    }
+    map.set(it.wordIdx, {
+      wordIdx: it.wordIdx,
+      type: prev.type === "new" || it.type === "new" ? "new" : "review",
+      at: Math.max(prev.at, it.at),
+    });
+  }
+  return { dayKey: server.dayKey, items: Array.from(map.values()) };
+}
+
 interface TodayLogStore {
   log: TodayLog;
   /** 当日词条（已保证 dayKey 为今天） */
@@ -136,8 +155,8 @@ interface TodayLogStore {
   clear: () => void;
   rehydrate: () => void;
   /**
-   * 跨设备同步：先刷出 pending study_events，再拉服务端今日事件，
-   * **以服务端为准**覆盖本地词表。
+   * 跨设备同步：先刷出 pending study_events，再拉服务端今日事件。
+   * 服务端为底，本地未入账的词保留；服务端为空时回放本地词。
    */
   syncFromServer: () => Promise<void>;
 }
@@ -208,12 +227,32 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
     if (!api.isLoggedIn()) return;
     const today = dayKey();
     try {
-      // 先把本机未推送的事件刷上，再拉权威数据
       await flushPending();
-      const resp = await api.getToday(today);
-      const serverLog = logFromServerItems(today, resp.items || []);
-      set({ log: serverLog });
-      saveLog(serverLog);
+      let resp = await api.getToday(today);
+      let serverItems = resp.items || [];
+      const local = ensureToday(get().log);
+      if (local !== get().log) set({ log: local });
+
+      // 访客期 / 从未入队：服务端今日为空时把本地词回放成事件
+      if (serverItems.length === 0 && local.items.length > 0) {
+        for (const it of local.items) {
+          enqueueStudyEvent({
+            word_idx: it.wordIdx,
+            event_type: it.type,
+            quality: "good",
+            day_key: today,
+            client_at: it.at,
+          });
+        }
+        await flushPending();
+        resp = await api.getToday(today);
+        serverItems = resp.items || [];
+      }
+
+      const serverLog = logFromServerItems(today, serverItems);
+      const merged = mergeTodayLogs(serverLog, local);
+      set({ log: merged });
+      saveLog(merged);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       console.warn("todayLog syncFromServer failed:", message);

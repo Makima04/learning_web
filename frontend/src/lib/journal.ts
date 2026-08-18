@@ -219,6 +219,68 @@ export function computeWeekStats(
   };
 }
 
+/** 学习日志整包：以较新快照为底，补上较旧快照里多出来的条目（防多端互踩）。 */
+export interface JournalDoc {
+  categories: JournalCategory[];
+  entries: JournalEntry[];
+  logs: ReviewLog[];
+  weeklies: WeeklySummary[];
+  updatedAt: number;
+}
+
+export function mergeJournalSnapshots(local: JournalDoc, remote: JournalDoc): JournalDoc {
+  const localTs = local.updatedAt || 0;
+  const remoteTs = remote.updatedAt || 0;
+  const base = localTs >= remoteTs ? local : remote;
+  const older = localTs >= remoteTs ? remote : local;
+
+  const entries = new Map(base.entries.map((e) => [e.id, e]));
+  let added = false;
+  for (const e of older.entries) {
+    if (!entries.has(e.id)) {
+      entries.set(e.id, e);
+      added = true;
+    }
+  }
+
+  const logs = new Map(base.logs.map((l) => [l.id, l]));
+  for (const l of older.logs) {
+    if (!logs.has(l.id)) {
+      logs.set(l.id, l);
+      added = true;
+    }
+  }
+
+  const weeklies = new Map(base.weeklies.map((w) => [w.weekKey, w]));
+  for (const w of older.weeklies) {
+    const prev = weeklies.get(w.weekKey);
+    if (!prev) {
+      weeklies.set(w.weekKey, w);
+      added = true;
+    } else if ((w.updatedAt || 0) > (prev.updatedAt || 0)) {
+      weeklies.set(w.weekKey, w);
+      added = true;
+    }
+  }
+
+  const categories = new Map(base.categories.map((c) => [c.id, c]));
+  for (const c of older.categories) {
+    if (!categories.has(c.id)) {
+      categories.set(c.id, c);
+      added = true;
+    }
+  }
+
+  const cats = [...categories.values()].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return {
+    categories: cats.length ? cats : DEFAULT_CATEGORIES.map((c) => ({ ...c })),
+    entries: [...entries.values()],
+    logs: [...logs.values()],
+    weeklies: [...weeklies.values()],
+    updatedAt: added ? Math.max(localTs, remoteTs, Date.now()) : Math.max(localTs, remoteTs),
+  };
+}
+
 export function sortDueEntries(entries: JournalEntry[], today: string = dayKey()): JournalEntry[] {
   return [...entries]
     .filter((e) => isDueOnOrBefore(e, today))

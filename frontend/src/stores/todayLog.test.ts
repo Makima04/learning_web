@@ -8,7 +8,7 @@ const apiMocks = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/api", () => apiMocks);
 
-import { logFromServerItems, useTodayLog } from "@/stores/todayLog";
+import { logFromServerItems, mergeTodayLogs, useTodayLog } from "@/stores/todayLog";
 
 describe("todayLog", () => {
   beforeEach(() => {
@@ -101,7 +101,18 @@ describe("todayLog", () => {
     expect(byIdx[3].type).toBe("review");
   });
 
-  it("syncFromServer replaces local with server (server wins)", async () => {
+  it("mergeTodayLogs keeps local-only words on top of server", () => {
+    const day = "2026-07-29";
+    const merged = mergeTodayLogs(
+      { dayKey: day, items: [{ wordIdx: 7, type: "review", at: 2 }] },
+      { dayKey: day, items: [{ wordIdx: 99, type: "new", at: 3 }] }
+    );
+    const byIdx = Object.fromEntries(merged.items.map((i) => [i.wordIdx, i.type]));
+    expect(byIdx[7]).toBe("review");
+    expect(byIdx[99]).toBe("new");
+  });
+
+  it("syncFromServer keeps local words that server has not returned yet", async () => {
     apiMocks.isLoggedIn.mockReturnValue(true);
     const today = dayKey();
     useTodayLog.getState().record(99, "new");
@@ -123,10 +134,26 @@ describe("todayLog", () => {
     await useTodayLog.getState().syncFromServer();
 
     const items = useTodayLog.getState().items();
-    expect(items).toHaveLength(1);
-    expect(items[0].wordIdx).toBe(7);
-    expect(items[0].type).toBe("review");
+    const byIdx = Object.fromEntries(items.map((i) => [i.wordIdx, i.type]));
+    expect(byIdx[7]).toBe("review");
+    expect(byIdx[99]).toBe("new");
     expect(useTodayLog.getState().log.dayKey).toBe(today);
     expect(apiMocks.getToday).toHaveBeenCalledWith(today);
+  });
+
+  it("syncFromServer replays local items when server today is empty", async () => {
+    apiMocks.isLoggedIn.mockReturnValue(true);
+    useTodayLog.getState().record(5, "new");
+    apiMocks.getToday.mockResolvedValue({
+      items: [],
+      summary: { new: 0, review: 0, learn: 0, done: 0 },
+    });
+
+    await useTodayLog.getState().syncFromServer();
+
+    expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ word_idx: 5, event_type: "new" })
+    );
+    expect(useTodayLog.getState().items().some((i) => i.wordIdx === 5)).toBe(true);
   });
 });

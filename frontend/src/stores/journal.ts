@@ -1,16 +1,18 @@
 // journal store —— 学习日志 / 复盘板。
-// 本地缓存 ew.journal.v1；登录后以服务端 user_journal 为个人权威数据（LWW by updatedAt）。
+// 本地缓存 ew.journal.v1；登录后与服务端按条目合并（较新快照为底，补上另一端多出的条目）。
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
 import {
   DEFAULT_CATEGORIES,
   computeWeekStats,
+  mergeJournalSnapshots,
   newEntryDefaults,
   scheduleAfterReview,
   sortDueEntries,
   weekKeyOf,
   type JournalCategory,
+  type JournalDoc,
   type JournalEntry,
   type JournalKind,
   type ReviewLog,
@@ -19,6 +21,7 @@ import {
   type WeeklySummary,
 } from "@/lib/journal";
 import { dayKeyToLocalMs, mapReviewToMark } from "@/lib/kg/journalBridge";
+import { enqueueJournal, setOnJournalSkipped } from "@/lib/syncQueue";
 import { scopedKey } from "@/lib/storageScope";
 
 const KEY_BASE = "ew.journal.v1";
@@ -100,22 +103,18 @@ function applyLocal(
   set(next);
   persist(next);
   if (options.mirror !== false && api.isLoggedIn()) {
-    void api
-      .putJournal(
-        {
-          categories: next.categories,
-          entries: next.entries,
-          logs: next.logs,
-          weeklies: next.weeklies,
-          updatedAt: next.updatedAt,
-        },
-        next.updatedAt
-      )
-      .catch((e: unknown) => {
-        const message = e instanceof Error ? e.message : String(e);
-        console.warn("mirror putJournal failed:", message);
-      });
+    enqueueJournal(payloadOf(next), next.updatedAt);
   }
+}
+
+function payloadOf(snap: JournalDoc): api.JournalPayload {
+  return {
+    categories: snap.categories,
+    entries: snap.entries,
+    logs: snap.logs,
+    weeklies: snap.weeklies,
+    updatedAt: snap.updatedAt,
+  };
 }
 
 function normalizeRemote(payload: api.JournalPayload | null | undefined): JournalSnapshot | null {
@@ -172,8 +171,8 @@ interface JournalStore extends JournalSnapshot {
   /** 用快照整体替换（导入用）；登录时会镜像到服务端 */
   replaceAll: (data: Partial<JournalSnapshot>, options?: { mirror?: boolean }) => void;
   exportSnapshot: () => JournalSnapshot;
-  clearAll: () => void;
-  /** 登录后：拉取服务端个人数据，LWW 合并，必要时上传本地 */
+  clearAll: () => Promise<void>;
+  /** 登录后：拉取服务端个人数据，与本地按条目合并，必要时上传 */
   syncFromServer: () => Promise<void>;
 }
 
@@ -203,45 +202,20 @@ export const useJournal = create<JournalStore>((set, get) => ({
     set(next);
     persist(next);
     if (options?.mirror !== false && api.isLoggedIn()) {
-      void api
-        .putJournal(
-          {
-            categories: next.categories,
-            entries: next.entries,
-            logs: next.logs,
-            weeklies: next.weeklies,
-            updatedAt: next.updatedAt,
-          },
-          next.updatedAt
-        )
-        .catch((e: unknown) => {
-          const message = e instanceof Error ? e.message : String(e);
-          console.warn("mirror putJournal failed:", message);
-        });
+      enqueueJournal(payloadOf(next), next.updatedAt);
     }
   },
 
-  clearAll: () => {
+  clearAll: async () => {
     const next = emptySnapshot();
     next.updatedAt = Date.now();
     set(next);
     persist(next);
     if (api.isLoggedIn()) {
-      void api
-        .putJournal(
-          {
-            categories: next.categories,
-            entries: [],
-            logs: [],
-            weeklies: [],
-            updatedAt: next.updatedAt,
-          },
-          next.updatedAt
-        )
-        .catch((e: unknown) => {
-          const message = e instanceof Error ? e.message : String(e);
-          console.warn("mirror putJournal failed:", message);
-        });
+      const res = await api.putJournal(payloadOf(next), next.updatedAt);
+      if (res.skipped) {
+        throw new Error("服务端日志较新，重置未写入");
+      }
     }
   },
 
@@ -472,40 +446,12 @@ export const useJournal = create<JournalStore>((set, get) => ({
       }
 
       const remoteTs = Math.max(remoteUpdated, remoteSnap.updatedAt || 0);
-      const localTs = local.updatedAt || 0;
-
-      if (remoteTs >= localTs) {
-        // 服务端更新：覆盖本地缓存
-        const next: JournalSnapshot = {
-          ...remoteSnap,
-          updatedAt: remoteTs,
-        };
-        set(next);
-        persist(next);
-        return;
-      }
-
-      // 本地更新：推到服务端
-      const res = await api.putJournal(
-        {
-          categories: local.categories,
-          entries: local.entries,
-          logs: local.logs,
-          weeklies: local.weeklies,
-          updatedAt: localTs,
-        },
-        localTs
-      );
-      if (res.skipped && res.journal) {
-        const forced = normalizeRemote(res.journal);
-        if (forced) {
-          const next: JournalSnapshot = {
-            ...forced,
-            updatedAt: res.updated_at || remoteTs,
-          };
-          set(next);
-          persist(next);
-        }
+      const remoteNorm: JournalSnapshot = { ...remoteSnap, updatedAt: remoteTs };
+      const merged = mergeJournalSnapshots(local, remoteNorm);
+      set(merged);
+      persist(merged);
+      if (merged.updatedAt > remoteTs) {
+        enqueueJournal(payloadOf(merged), merged.updatedAt);
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -513,3 +459,15 @@ export const useJournal = create<JournalStore>((set, get) => ({
     }
   },
 }));
+
+setOnJournalSkipped((remote, updatedAt) => {
+  const forced = normalizeRemote(remote);
+  if (!forced) return;
+  const local = snapshotOf(useJournal.getState);
+  const merged = mergeJournalSnapshots(local, { ...forced, updatedAt });
+  useJournal.setState(merged);
+  persist(merged);
+  if (merged.updatedAt > updatedAt) {
+    enqueueJournal(payloadOf(merged), merged.updatedAt);
+  }
+});

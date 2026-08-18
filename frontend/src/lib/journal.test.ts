@@ -4,11 +4,13 @@ import {
   compareDay,
   computeWeekStats,
   isDueOnOrBefore,
+  mergeJournalSnapshots,
   newEntryDefaults,
   nextStepAfterPass,
   scheduleAfterReview,
   sortDueEntries,
   weekKeyOf,
+  type JournalDoc,
   type JournalEntry,
   type ReviewLog,
 } from "./journal";
@@ -177,5 +179,64 @@ describe("weekKeyOf / computeWeekStats", () => {
     expect(stats.failed).toBe(1);
     expect(stats.byCategory["cat-math"]).toBe(1);
     expect(stats.topFailTitles[0]?.title).toBe("积分");
+  });
+});
+
+describe("mergeJournalSnapshots", () => {
+  const empty = (updatedAt: number): JournalDoc => ({
+    categories: [
+      { id: "cat-english", name: "英语", color: "#059669", order: 2 },
+    ],
+    entries: [],
+    logs: [],
+    weeklies: [],
+    updatedAt,
+  });
+
+  it("keeps unique entries from both devices", () => {
+    const a = empty(100);
+    a.entries = [
+      newEntryDefaults({
+        id: "je-a",
+        categoryId: "cat-english",
+        title: "手机记下",
+        body: "",
+        kind: "learn",
+        createdOn: "2026-08-16",
+      }),
+    ];
+    const b = empty(200);
+    b.entries = [
+      newEntryDefaults({
+        id: "je-b",
+        categoryId: "cat-english",
+        title: "电脑记下",
+        body: "",
+        kind: "mistake",
+        createdOn: "2026-08-16",
+      }),
+    ];
+    const merged = mergeJournalSnapshots(a, b);
+    const ids = merged.entries.map((e) => e.id).sort();
+    expect(ids).toEqual(["je-a", "je-b"]);
+    expect(merged.updatedAt).toBeGreaterThanOrEqual(200);
+  });
+
+  it("prefers not dropping an entry that only one device has", () => {
+    const older = empty(100);
+    older.entries = [
+      newEntryDefaults({
+        id: "only-old",
+        categoryId: "cat-english",
+        title: "旧端独有",
+        body: "",
+        kind: "learn",
+        createdOn: "2026-08-16",
+      }),
+    ];
+    const newer = empty(300);
+    newer.entries = [];
+    const merged = mergeJournalSnapshots(newer, older);
+    expect(merged.entries.map((e) => e.id)).toEqual(["only-old"]);
   });
 });
