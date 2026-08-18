@@ -130,7 +130,7 @@ async fn fetch_cached(pool: &sqlx::PgPool, word: &str) -> Result<Option<Value>, 
         return Ok(None);
     }
     // senses 应是非空数组
-    if !senses.as_array().is_some_and(|a| !a.is_empty()) {
+    if senses.as_array().is_none_or(|a| a.is_empty()) {
         return Ok(None);
     }
     Ok(Some(json!({
