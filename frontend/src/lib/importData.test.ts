@@ -37,6 +37,15 @@ describe("parseImportData", () => {
     expect(result.settings).toEqual({ rate: 1.2, direction: "random" });
   });
 
+  it("accepts journal kg chapter daily limit", () => {
+    const result = parseImportData(
+      JSON.stringify({
+        settings: { journalKgChapterDailyLimit: 5 },
+      })
+    );
+    expect(result.settings?.journalKgChapterDailyLimit).toBe(5);
+  });
+
   it("accepts journal export", () => {
     const result = parseImportData(
       JSON.stringify({

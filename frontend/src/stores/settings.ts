@@ -33,8 +33,11 @@ export interface Settings {
   /**
    * 学习日志：各分类每日复盘上限（张）。
    * 未出现的分类键使用 DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW（3）。
+   * 仅对手写卡片生效；图谱按 journalKgChapterDailyLimit 计章。
    */
   journalDailyReviewLimits: Record<string, number>;
+  /** 知识图谱每日章节大卡上限。默认 3。 */
+  journalKgChapterDailyLimit: number;
 }
 
 const KEY_BASE = "ew.set.v1";
@@ -57,6 +60,7 @@ export const DEFAULT_SETTINGS: Settings = {
   enableMath: true,
   enableCloze: false,
   journalDailyReviewLimits: {},
+  journalKgChapterDailyLimit: 3,
 };
 
 function saveJSON(key: string, val: unknown) {
@@ -88,6 +92,10 @@ function normalizeJournalLimits(value: unknown): Record<string, number> | undefi
 
 function pickSettingValue(key: keyof Settings, value: unknown): unknown {
   if (key === "journalDailyReviewLimits") return normalizeJournalLimits(value);
+  if (key === "journalKgChapterDailyLimit") {
+    if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+    return Math.max(0, Math.min(20, Math.floor(value)));
+  }
   return value;
 }
 

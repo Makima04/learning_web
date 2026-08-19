@@ -177,6 +177,13 @@ function settings(value: unknown): Partial<Settings> {
     }
     result.journalDailyReviewLimits = limits;
   }
+  if (source.journalKgChapterDailyLimit !== undefined) {
+    result.journalKgChapterDailyLimit = number(
+      source.journalKgChapterDailyLimit,
+      "知识图谱每日章节上限",
+      { integer: true, min: 0, max: 20 }
+    );
+  }
   return result;
 }
 

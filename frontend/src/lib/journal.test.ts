@@ -4,6 +4,7 @@ import {
   compareDay,
   computeWeekStats,
   isDueOnOrBefore,
+  isKgJournalEntry,
   mergeJournalSnapshots,
   newEntryDefaults,
   nextStepAfterPass,
@@ -222,6 +223,43 @@ describe("planDueEntries", () => {
     const plan = planDueEntries(entries, {}, "2026-07-17");
     expect(plan.due).toHaveLength(3);
     expect(plan.deferred).toHaveLength(2);
+  });
+
+  it("does not let kg cards occupy manual category slots", () => {
+    const mkManual = (id: string): JournalEntry => ({
+      id,
+      categoryId: "cat-math",
+      title: id,
+      body: "",
+      kind: "learn",
+      createdOn: "2026-07-16",
+      nextReviewOn: "2026-07-17",
+      step: 1,
+      status: "active",
+      lapses: 0,
+      updatedAt: 1,
+    });
+    const mkKg = (id: string, kpId: string): JournalEntry => ({
+      ...mkManual(id),
+      title: kpId,
+      kpId,
+      fromKg: true,
+    });
+    const entries = [
+      mkKg("k1", "calc.limit.def"),
+      mkKg("k2", "calc.limit.tech"),
+      mkKg("k3", "calc.limit.cont"),
+      mkKg("k4", "calc.limit.asymp"),
+      mkManual("m1"),
+      mkManual("m2"),
+      mkManual("m3"),
+      mkManual("m4"),
+    ];
+    const plan = planDueEntries(entries, { "cat-math": 3 }, "2026-07-17");
+    expect(plan.due.every((e) => !isKgJournalEntry(e))).toBe(true);
+    expect(plan.due).toHaveLength(3);
+    expect(plan.deferred).toHaveLength(1);
+    expect(plan.deferred[0]?.id).toBe("m4");
   });
 });
 

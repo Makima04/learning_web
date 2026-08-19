@@ -184,6 +184,7 @@ export function SettingsPage() {
         enableMath: settings.enableMath,
         enableCloze: settings.enableCloze,
         journalDailyReviewLimits: settings.journalDailyReviewLimits,
+        journalKgChapterDailyLimit: settings.journalKgChapterDailyLimit,
       },
       journal,
       exportedAt: new Date().toISOString(),
@@ -380,8 +381,12 @@ export function SettingsPage() {
                 </div>
                 <JournalDailyLimitsSection
                   limits={settings.journalDailyReviewLimits}
+                  kgChapterLimit={settings.journalKgChapterDailyLimit}
                   onChange={(journalDailyReviewLimits) =>
                     setSettings({ journalDailyReviewLimits })
+                  }
+                  onKgChapterLimitChange={(journalKgChapterDailyLimit) =>
+                    setSettings({ journalKgChapterDailyLimit })
                   }
                 />
               </CardContent>
@@ -767,10 +772,14 @@ export function SettingsPage() {
 
 function JournalDailyLimitsSection({
   limits,
+  kgChapterLimit,
   onChange,
+  onKgChapterLimitChange,
 }: {
   limits: Record<string, number>;
+  kgChapterLimit: number;
   onChange: (next: Record<string, number>) => void;
+  onKgChapterLimitChange: (next: number) => void;
 }) {
   const categories = useJournal((s) => s.categories);
   const sorted = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -778,7 +787,29 @@ function JournalDailyLimitsSection({
   return (
     <div className="border-t pt-4 space-y-4">
       <div>
-        <p className="text-sm font-medium">学习日志 · 分类每日复盘上限</p>
+        <p className="text-sm font-medium">学习日志 · 每日复盘上限</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          手写卡片和知识图谱分开排队，互不占用。图谱以章为大卡，每天最多这么多章，点进去复盘各知识点。
+        </p>
+      </div>
+      <Field label="知识图谱（章/天）">
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            min={0}
+            max={20}
+            value={kgChapterLimit}
+            onChange={(e) => {
+              const n = Math.max(0, Math.min(20, Math.floor(+e.target.value || 0)));
+              onKgChapterLimitChange(n);
+            }}
+            className="w-24"
+          />
+          <span className="text-xs text-muted-foreground">默认 3 章</span>
+        </div>
+      </Field>
+      <div>
+        <p className="text-sm font-medium">手写卡片 · 分类上限</p>
         <p className="mt-1 text-xs text-muted-foreground">
           每类每天最多复盘这么多张，超出的留在后续队列。新记的卡片次日优先进入额度。默认每类{" "}
           {DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW} 张；设为 0 表示该类今日不排进队列。

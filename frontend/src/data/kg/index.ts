@@ -65,6 +65,18 @@ export function getModule(
   return getBook(bookId)?.modules.find((m) => m.id === moduleId);
 }
 
+/** 按模块 id 反查书 + 章（日志章节大卡用） */
+export function findModule(moduleId: string): {
+  module: KgModule;
+  book: KgBook;
+} | null {
+  for (const book of ALL_BOOKS) {
+    const mod = book.modules.find((m) => m.id === moduleId);
+    if (mod) return { module: mod, book };
+  }
+  return null;
+}
+
 export function findKp(kpId: string): {
   kp: KnowledgePoint;
   module: KgModule;

@@ -5,6 +5,7 @@ import { getModule, findKp } from "@/data/kg";
 import { moduleProgress } from "@/lib/kg/progress";
 import type { BookId, MarkLevel } from "@/lib/kg/types";
 import { useKgProgress } from "@/stores/kgProgress";
+import { useSettings } from "@/stores/settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ export function KgModulePage() {
   const setCovered = useKgProgress((s) => s.setCovered);
   const setModuleCovered = useKgProgress((s) => s.setModuleCovered);
   const markItem = useKgProgress((s) => s.markItem);
+  const kgChapterLimit = useSettings((s) => s.journalKgChapterDailyLimit);
 
   useEffect(() => {
     load();
@@ -64,7 +66,7 @@ export function KgModulePage() {
             </p>
           )}
           <p className="mt-1 text-xs text-muted-foreground">
-            标记已学后会进入「学习日志」复盘队列（明天起提醒）；在日志里复盘会提升掌握度
+            {`标记已学后，本章会作为一张大卡片进入「学习日志」（明天起提醒，每天最多 ${kgChapterLimit} 章）；点进去复盘各知识点，会回写掌握度`}
           </p>
         </div>
         <div className="flex gap-2">

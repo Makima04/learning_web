@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  Archive,
   BookMarked,
   CalendarRange,
   Check,
   ClipboardList,
   Download,
-  HelpCircle,
   NotebookPen,
   Plus,
-  Trash2,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,19 +14,20 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dayKey } from "@/lib/day";
 import {
+  isKgJournalEntry,
   planDueEntries,
   weekKeyOf,
   weekRangeLabel,
   computeWeekStats,
-  type JournalEntry,
   type JournalKind,
-  type ReviewResult,
 } from "@/lib/journal";
+import { DEFAULT_KG_CHAPTER_DAILY_REVIEW, planKgChapterDue } from "@/lib/kg/journalBridge";
 import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/stores/auth";
 import { useJournal } from "@/stores/journal";
 import { useSettings } from "@/stores/settings";
+import { categoryMap, ChapterReviewCard, EntryCard, KIND_LABEL } from "@/pages/journalCards";
 
 const JOURNAL_TABS = ["today", "create", "history", "week"] as const;
 type JournalTab = (typeof JOURNAL_TABS)[number];
@@ -40,159 +37,6 @@ function normalizeJournalTab(raw: string | undefined): JournalTab {
     return raw as JournalTab;
   }
   return "today";
-}
-
-const KIND_LABEL: Record<JournalKind, string> = {
-  learn: "学习",
-  mistake: "错题",
-};
-
-function categoryMap(
-  categories: { id: string; name: string; color: string }[]
-): Map<string, { name: string; color: string }> {
-  return new Map(categories.map((c) => [c.id, { name: c.name, color: c.color }]));
-}
-
-function EntryMeta({
-  entry,
-  cat,
-}: {
-  entry: JournalEntry;
-  cat?: { name: string; color: string };
-}) {
-  const today = dayKey();
-  const overdue = entry.status === "active" && entry.nextReviewOn < today;
-  return (
-    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-      {cat && (
-        <span
-          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-foreground"
-          style={{ backgroundColor: `${cat.color}22` }}
-        >
-          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
-          {cat.name}
-        </span>
-      )}
-      <span
-        className={cn(
-          "rounded-full px-2 py-0.5",
-          entry.kind === "mistake"
-            ? "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300"
-            : "bg-sky-50 text-sky-700 dark:bg-sky-400/10 dark:text-sky-300"
-        )}
-      >
-        {KIND_LABEL[entry.kind]}
-      </span>
-      {(entry.fromKg || entry.kpId) && (
-        <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300">
-          知识图谱
-        </span>
-      )}
-      {entry.status === "archived" ? (
-        <span className="rounded-full bg-muted px-2 py-0.5">已归档</span>
-      ) : (
-        <>
-          <span>间隔 {entry.step} 天</span>
-          <span className={overdue ? "font-medium text-rose-600 dark:text-rose-400" : undefined}>
-            {overdue ? `逾期 · 应复 ${entry.nextReviewOn}` : `下次 ${entry.nextReviewOn}`}
-          </span>
-        </>
-      )}
-    </div>
-  );
-}
-
-function ReviewActions({
-  onReview,
-}: {
-  onReview: (result: ReviewResult) => void;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button size="sm" variant="default" onClick={() => onReview("pass")}>
-        <Check className="h-4 w-4" />
-        记得
-      </Button>
-      <Button size="sm" variant="secondary" onClick={() => onReview("hard")}>
-        <HelpCircle className="h-4 w-4" />
-        模糊
-      </Button>
-      <Button size="sm" variant="destructive" onClick={() => onReview("fail")}>
-        <X className="h-4 w-4" />
-        忘了
-      </Button>
-    </div>
-  );
-}
-
-function EntryCard({
-  entry,
-  cat,
-  showReview,
-  onReview,
-  onArchive,
-  onDelete,
-}: {
-  entry: JournalEntry;
-  cat?: { name: string; color: string };
-  showReview?: boolean;
-  onReview?: (result: ReviewResult) => void;
-  onArchive?: () => void;
-  onDelete?: () => void;
-}) {
-  return (
-    <Card>
-      <CardHeader className="space-y-3 pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-2">
-            <CardTitle className="text-base leading-snug">{entry.title}</CardTitle>
-            <EntryMeta entry={entry} cat={cat} />
-          </div>
-          <div className="flex shrink-0 gap-1">
-            {onArchive && entry.status === "active" && (
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                title="归档"
-                className="h-8 w-8 text-muted-foreground"
-                onClick={onArchive}
-              >
-                <Archive className="h-4 w-4" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                title="删除"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={onDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {entry.body ? (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-            {entry.body}
-          </p>
-        ) : (
-          <p className="text-sm italic text-muted-foreground">暂无详细说明</p>
-        )}
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>创建 {entry.createdOn}</span>
-          {entry.lastReviewedOn && <span>上次复盘 {entry.lastReviewedOn}</span>}
-          {entry.lapses > 0 && <span>回退 {entry.lapses} 次</span>}
-        </div>
-        {showReview && onReview && <ReviewActions onReview={onReview} />}
-      </CardContent>
-    </Card>
-  );
 }
 
 export function JournalPage() {
@@ -210,13 +54,23 @@ export function JournalPage() {
   const exportSnapshot = useJournal((s) => s.exportSnapshot);
 
   const journalDailyReviewLimits = useSettings((s) => s.journalDailyReviewLimits);
+  const journalKgChapterDailyLimit = useSettings((s) => s.journalKgChapterDailyLimit);
   const cats = useMemo(() => categoryMap(categories), [categories]);
   const duePlan = useMemo(
     () => planDueEntries(entries, journalDailyReviewLimits),
     [entries, journalDailyReviewLimits]
   );
+  const kgPlan = useMemo(
+    () => planKgChapterDue(entries, journalKgChapterDailyLimit),
+    [entries, journalKgChapterDailyLimit]
+  );
   const due = duePlan.due;
   const deferredCount = duePlan.deferred.length;
+  const kgDue = kgPlan.due;
+  const kgDeferredCount = kgPlan.deferred.length;
+  const kgChapterLimit = journalKgChapterDailyLimit ?? DEFAULT_KG_CHAPTER_DAILY_REVIEW;
+  const hasTodayWork = due.length > 0 || kgDue.length > 0;
+  const hasDeferred = deferredCount > 0 || kgDeferredCount > 0;
   const weekKey = weekKeyOf();
   const weeklyStats = useMemo(
     () => computeWeekStats(entries, logs, weekKey),
@@ -241,6 +95,7 @@ export function JournalPage() {
   const [formMsg, setFormMsg] = useState("");
   const [newCatName, setNewCatName] = useState("");
   const [historyFilter, setHistoryFilter] = useState<string>("all");
+  const [historySource, setHistorySource] = useState<"all" | "manual" | "kg">("all");
   const [historyStatus, setHistoryStatus] = useState<"active" | "all" | "archived">("active");
   const [weekNote, setWeekNote] = useState(weeklySummary?.note || "");
 
@@ -257,10 +112,12 @@ export function JournalPage() {
     if (historyFilter !== "all") {
       list = list.filter((e) => e.categoryId === historyFilter);
     }
+    if (historySource === "kg") list = list.filter(isKgJournalEntry);
+    if (historySource === "manual") list = list.filter((e) => !isKgJournalEntry(e));
     if (historyStatus === "active") list = list.filter((e) => e.status === "active");
     if (historyStatus === "archived") list = list.filter((e) => e.status === "archived");
     return list.sort((a, b) => b.updatedAt - a.updatedAt);
-  }, [entries, historyFilter, historyStatus]);
+  }, [entries, historyFilter, historySource, historyStatus]);
 
   const dateLabel = new Intl.DateTimeFormat("zh-CN", {
     month: "long",
@@ -330,11 +187,20 @@ export function JournalPage() {
             <div className="flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-primary" />
               <span>
-                今日待复盘 <strong className="text-foreground">{due.length}</strong>
+                今日待复盘{" "}
+                <strong className="text-foreground">
+                  图谱 {kgDue.length} 章 · 手写 {due.length} 张
+                </strong>
               </span>
             </div>
-            {deferredCount > 0 && (
-              <span className="text-xs text-muted-foreground">另有 {deferredCount} 张顺延</span>
+            {hasDeferred && (
+              <span className="text-xs text-muted-foreground">
+                另有
+                {kgDeferredCount > 0 ? `图谱 ${kgDeferredCount} 章` : ""}
+                {kgDeferredCount > 0 && deferredCount > 0 ? "、" : ""}
+                {deferredCount > 0 ? `手写 ${deferredCount} 张` : ""}
+                顺延
+              </span>
             )}
           </div>
         </div>
@@ -360,51 +226,93 @@ export function JournalPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="today" className="mt-4 space-y-3">
-          {due.length === 0 ? (
+        <TabsContent value="today" className="mt-4 space-y-6">
+          {!hasTodayWork ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
                 <Check className="h-8 w-8 text-emerald-500" />
                 <div>
                   <p className="font-medium">
-                    {deferredCount > 0 ? "今日复盘额度已排满" : "今日没有到期复盘"}
+                    {hasDeferred ? "今日复盘额度已排满" : "今日没有到期复盘"}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {deferredCount > 0
-                      ? `另有 ${deferredCount} 张到期卡片已顺延到后续队列；可在设置里调整各类每日上限`
-                      : "去「记一笔」写下今天学的内容，明天会提醒你"}
+                    {hasDeferred
+                      ? `另有${kgDeferredCount > 0 ? `图谱 ${kgDeferredCount} 章` : ""}${
+                          kgDeferredCount > 0 && deferredCount > 0 ? "、" : ""
+                        }${deferredCount > 0 ? `手写 ${deferredCount} 张` : ""}已顺延；可在设置里分别调整上限`
+                      : "去「记一笔」写下今天学的内容，或在知识图谱标记已学，明天会提醒你"}
                   </p>
                 </div>
-                {deferredCount === 0 ? (
+                {hasDeferred ? (
+                  <Button variant="outline" onClick={() => navigate("/settings")}>
+                    调整每日上限
+                  </Button>
+                ) : (
                   <Button variant="outline" onClick={() => setTab("create")}>
                     <Plus className="h-4 w-4" />
                     记一笔
-                  </Button>
-                ) : (
-                  <Button variant="outline" onClick={() => navigate("/settings")}>
-                    调整每日上限
                   </Button>
                 )}
               </CardContent>
             </Card>
           ) : (
             <>
-              {deferredCount > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  已按分类每日上限截取今日队列；另有 {deferredCount} 张顺延。新记的卡片次日优先进入队列。
-                </p>
+              {(kgDue.length > 0 || kgDeferredCount > 0) && (
+                <section className="space-y-3">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <h2 className="text-sm font-medium">知识图谱</h2>
+                    <p className="text-xs text-muted-foreground">
+                      今日 {kgDue.length}/{kgChapterLimit} 章
+                      {kgDeferredCount > 0 ? ` · 另有 ${kgDeferredCount} 章顺延` : ""}
+                    </p>
+                  </div>
+                  {kgDue.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      章节额度已满，顺延的章次日继续排队。
+                    </p>
+                  ) : (
+                    kgDue.map((chapter) => (
+                      <ChapterReviewCard
+                        key={chapter.moduleId}
+                        chapter={chapter}
+                        onOpen={() =>
+                          navigate(`/journal/chapter/${encodeURIComponent(chapter.moduleId)}`)
+                        }
+                      />
+                    ))
+                  )}
+                </section>
               )}
-              {due.map((entry) => (
-                <EntryCard
-                  key={entry.id}
-                  entry={entry}
-                  cat={cats.get(entry.categoryId)}
-                  showReview
-                  onReview={(result) => reviewEntry(entry.id, result)}
-                  onArchive={() => archiveEntry(entry.id)}
-                  onDelete={() => confirmDelete(entry.id, entry.title)}
-                />
-              ))}
+
+              {(due.length > 0 || deferredCount > 0) && (
+                <section className="space-y-3">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <h2 className="text-sm font-medium">我记的</h2>
+                    {deferredCount > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        按分类上限截取；另有 {deferredCount} 张顺延
+                      </p>
+                    )}
+                  </div>
+                  {due.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      手写额度已满，超出的卡片次日继续排队。
+                    </p>
+                  ) : (
+                    due.map((entry) => (
+                      <EntryCard
+                        key={entry.id}
+                        entry={entry}
+                        cat={cats.get(entry.categoryId)}
+                        showReview
+                        onReview={(result) => reviewEntry(entry.id, result)}
+                        onArchive={() => archiveEntry(entry.id)}
+                        onDelete={() => confirmDelete(entry.id, entry.title)}
+                      />
+                    ))
+                  )}
+                </section>
+              )}
             </>
           )}
         </TabsContent>
@@ -526,6 +434,17 @@ export function JournalPage() {
               ))}
             </select>
             <select
+              value={historySource}
+              onChange={(e) =>
+                setHistorySource(e.target.value as "all" | "manual" | "kg")
+              }
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="all">全部来源</option>
+              <option value="manual">我记的</option>
+              <option value="kg">知识图谱</option>
+            </select>
+            <select
               value={historyStatus}
               onChange={(e) =>
                 setHistoryStatus(e.target.value as "active" | "all" | "archived")
@@ -552,7 +471,9 @@ export function JournalPage() {
                   entry={entry}
                   cat={cats.get(entry.categoryId)}
                   showReview={
-                    entry.status === "active" && entry.nextReviewOn <= dayKey()
+                    entry.status === "active" &&
+                    entry.nextReviewOn <= dayKey() &&
+                    !isKgJournalEntry(entry)
                   }
                   onReview={(result) => reviewEntry(entry.id, result)}
                   onArchive={() => archiveEntry(entry.id)}

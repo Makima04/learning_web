@@ -281,8 +281,13 @@ export function mergeJournalSnapshots(local: JournalDoc, remote: JournalDoc): Jo
   };
 }
 
-/** 每类每日复盘默认上限；未在设置里单独配置时使用。 */
+/** 每类每日复盘默认上限；未在设置里单独配置时使用。仅对手写卡片生效。 */
 export const DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW = 3;
+
+/** 图谱「已学」入队或挂了考点的卡片：走章节大卡队列，不占手写分类额度。 */
+export function isKgJournalEntry(entry: JournalEntry): boolean {
+  return entry.fromKg === true || Boolean(entry.kpId);
+}
 
 /** 是否尚未复盘过（含昨日新建、次日首次到期）。 */
 export function isFirstReview(entry: JournalEntry): boolean {
@@ -335,6 +340,7 @@ export interface DuePlan {
 
 /**
  * 按分类每日上限截断到期队列：超出部分保留 nextReviewOn，次日继续竞争。
+ * 只排手写卡片；图谱卡由 planKgChapterDue 按章截断，互不占用。
  * limits 缺省键用 DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW；上限 0 表示该类今日全顺延。
  */
 export function planDueEntries(
@@ -342,7 +348,8 @@ export function planDueEntries(
   limits?: Record<string, number> | null,
   today: string = dayKey()
 ): DuePlan {
-  const sorted = sortDueEntries(entries, today);
+  const manual = entries.filter((e) => !isKgJournalEntry(e));
+  const sorted = sortDueEntries(manual, today);
   const byCat = new Map<string, JournalEntry[]>();
   for (const e of sorted) {
     const list = byCat.get(e.categoryId);

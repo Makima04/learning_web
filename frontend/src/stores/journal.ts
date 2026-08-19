@@ -162,7 +162,7 @@ interface JournalStore extends JournalSnapshot {
   reviewEntry: (id: string, result: ReviewResult, note?: string) => void;
   /** 全部到期（未截断）。需要按分类上限时用 planDue。 */
   dueEntries: (today?: string) => JournalEntry[];
-  /** 按分类每日上限截断后的今日队列。 */
+  /** 按分类每日上限截断后的手写今日队列（不含图谱卡）。 */
   planDue: (limits?: Record<string, number> | null, today?: string) => ReturnType<typeof planDueEntries>;
   entriesByCategory: (categoryId: string | "all") => JournalEntry[];
   getWeekly: (weekKey?: string) => {

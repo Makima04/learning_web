@@ -14,6 +14,7 @@ import { TodayWordList } from "@/components/TodayWordList";
 import { Card, CardContent } from "@/components/ui/card";
 import { DAY, dayKey } from "@/lib/day";
 import { planDueEntries } from "@/lib/journal";
+import { planKgChapterDue } from "@/lib/kg/journalBridge";
 import { resolveTodayWords } from "@/lib/todayWords";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/stores/auth";
@@ -102,6 +103,7 @@ export function DashboardPage() {
   const loggedIn = useAuth((state) => state.loggedIn);
   const rate = useSettings((s) => s.rate);
   const journalDailyReviewLimits = useSettings((s) => s.journalDailyReviewLimits);
+  const journalKgChapterDailyLimit = useSettings((s) => s.journalKgChapterDailyLimit);
   const todayItems = useTodayLog((s) => s.log.items);
   const todayDayKey = useTodayLog((s) => s.log.dayKey);
   const syncTodayLog = useTodayLog((s) => s.syncFromServer);
@@ -116,8 +118,14 @@ export function DashboardPage() {
     () => planDueEntries(journalEntries, journalDailyReviewLimits),
     [journalEntries, journalDailyReviewLimits]
   );
+  const kgPlan = useMemo(
+    () => planKgChapterDue(journalEntries, journalKgChapterDailyLimit),
+    [journalEntries, journalKgChapterDailyLimit]
+  );
   const journalDueCount = journalPlan.due.length;
   const journalDeferredCount = journalPlan.deferred.length;
+  const kgDueCount = kgPlan.due.length;
+  const kgDeferredCount = kgPlan.deferred.length;
   // 用计划内完成量 / 固定今日目标，避免「剩余额度」当分母
   const totalToday = stats.todayPlan;
   const done = stats.planDone;
@@ -246,12 +254,18 @@ export function DashboardPage() {
                   icon={NotebookPen}
                   title="学习日志"
                   description={
-                    journalDueCount > 0
-                      ? journalDeferredCount > 0
-                        ? `今日待复盘 ${journalDueCount} 张（另有 ${journalDeferredCount} 张顺延）`
-                        : `今日待复盘 ${journalDueCount} 张（数学 / 408 / 英语…）`
-                      : journalDeferredCount > 0
-                        ? `今日额度已满，另有 ${journalDeferredCount} 张顺延`
+                    journalDueCount > 0 || kgDueCount > 0
+                      ? `今日 图谱 ${kgDueCount} 章 · 手写 ${journalDueCount} 张${
+                          journalDeferredCount + kgDeferredCount > 0
+                            ? `（另有${kgDeferredCount > 0 ? `图谱 ${kgDeferredCount} 章` : ""}${
+                                kgDeferredCount > 0 && journalDeferredCount > 0 ? "、" : ""
+                              }${journalDeferredCount > 0 ? `手写 ${journalDeferredCount} 张` : ""}顺延）`
+                            : ""
+                        }`
+                      : journalDeferredCount + kgDeferredCount > 0
+                        ? `今日额度已满，另有${kgDeferredCount > 0 ? `图谱 ${kgDeferredCount} 章` : ""}${
+                            kgDeferredCount > 0 && journalDeferredCount > 0 ? "、" : ""
+                          }${journalDeferredCount > 0 ? `手写 ${journalDeferredCount} 张` : ""}顺延`
                         : "记录今日所学，明日自动提醒复盘"
                   }
                   primary={false}

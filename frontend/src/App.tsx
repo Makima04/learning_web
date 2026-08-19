@@ -8,6 +8,7 @@ import { ReaderPage } from "@/pages/ReaderPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TransMgrPage } from "@/pages/TransMgrPage";
 import { JournalPage } from "@/pages/JournalPage";
+import { JournalChapterPage } from "@/pages/JournalChapterPage";
 import { TodayPage } from "@/pages/TodayPage";
 import { KgMapPage } from "@/pages/KgMapPage";
 import { KgModulePage } from "@/pages/KgModulePage";
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="study" element={<StudyPage />} />
         <Route path="today" element={<TodayPage />} />
         <Route path="journal" element={<JournalPage />} />
+        <Route path="journal/chapter/:moduleId" element={<JournalChapterPage />} />
         <Route path="journal/:tab" element={<JournalPage />} />
         <Route path="kg" element={<KgMapPage />} />
         <Route path="kg/module/:bookId/:moduleId" element={<KgModulePage />} />
