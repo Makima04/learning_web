@@ -126,8 +126,8 @@ export function KgMapPage() {
         </p>
       )}
 
-      {/* 三入口 */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      {/* 四入口（图解演示为移动端进入 /viz 的主要路径） */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
             title: "模块学习",
@@ -147,6 +147,15 @@ export function KgMapPage() {
                 : "数学预测卷后续开放",
             to: subject === "cs408" ? "/kg/predict" : null,
           },
+          ...(settings.enableCs408
+            ? [
+                {
+                  title: "图解演示",
+                  desc: "数据结构动画：链表/排序/图论等",
+                  to: "/viz",
+                },
+              ]
+            : []),
         ].map((x) => (
           <Card key={x.title} className="border-dashed">
             <CardHeader className="pb-2">

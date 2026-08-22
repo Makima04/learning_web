@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   BookOpen,
   ChevronRight,
+  Clapperboard,
   FileText,
   Languages,
   LayoutDashboard,
@@ -19,13 +20,22 @@ import {
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/stores/theme";
 import { useAuth } from "@/stores/auth";
+import { useSettings } from "@/stores/settings";
 import { hrefForNavRoot, isNavSectionActive, rememberNavPath } from "@/lib/navMemory";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-const NAV = [
+const NAV: {
+  to: string;
+  label: string;
+  icon: typeof BookOpen;
+  end?: boolean;
+  /** true = 不占用移动端底部导航的 4 个名额 */
+  mobileHidden?: boolean;
+}[] = [
   { to: "/", label: "学习概览", icon: LayoutDashboard, end: true },
   { to: "/kg", label: "知识图谱", icon: Network },
+  { to: "/viz", label: "图解 408", icon: Clapperboard, mobileHidden: true },
   { to: "/journal", label: "学习日志", icon: NotebookPen },
   { to: "/papers", label: "真题阅读", icon: FileText },
   { to: "/papers-recite", label: "真题记词", icon: LibraryBig },
@@ -43,6 +53,7 @@ export function AppLayout() {
   const mode = useTheme((s) => s.mode);
   const cycle = useTheme((s) => s.cycle);
   const user = useAuth((s) => s.user);
+  const enableCs408 = useSettings((s) => s.enableCs408);
   const navigate = useNavigate();
   const location = useLocation();
   const [navCollapsed, setNavCollapsed] = useState(false);
@@ -80,7 +91,7 @@ export function AppLayout() {
 
         <nav className="flex-1 space-y-1 p-3">
           {!navCollapsed && <p className="px-3 py-2 text-xs font-medium text-muted-foreground">学习空间</p>}
-          {NAV.map((item) => {
+          {NAV.filter((item) => item.to !== "/viz" || enableCs408).map((item) => {
             const Icon = item.icon;
             const remembered = hrefForNavRoot(item.to);
             const href =
@@ -160,7 +171,10 @@ export function AppLayout() {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-4 border-t bg-card md:hidden">
-        {NAV.slice(0, 4).map((item) => {
+        {NAV.filter((item) => item.to !== "/viz" || enableCs408)
+          .filter((item) => !item.mobileHidden)
+          .slice(0, 4)
+          .map((item) => {
           const Icon = item.icon;
           const remembered = hrefForNavRoot(item.to);
           const href =

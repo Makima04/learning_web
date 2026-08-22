@@ -3,6 +3,7 @@ import { useEffect, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getModule, findKp } from "@/data/kg";
 import { moduleProgress } from "@/lib/kg/progress";
+import { vizFor } from "@/viz/registry";
 import type { BookId, MarkLevel } from "@/lib/kg/types";
 import { useKgProgress } from "@/stores/kgProgress";
 import { useSettings } from "@/stores/settings";
@@ -131,6 +132,11 @@ export function KgModulePage() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {vizFor(kp.id) && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={`/viz/${kp.id}`}>▶ 演示</Link>
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     variant={st?.covered ? "outline" : "secondary"}
