@@ -3,6 +3,7 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import type { TodayItem } from "@/lib/api";
 import { dayKey } from "@/lib/day";
+import { noteTodayCount } from "@/lib/dayCounts";
 import { scopedKey } from "@/lib/storageScope";
 import { enqueueStudyEvent, flushPending, recomputePendingFromStorage } from "@/lib/syncQueue";
 
@@ -191,6 +192,8 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
     log = { dayKey: log.dayKey, items };
     set({ log });
     saveLog(log);
+    // 同步一份当日计数，供热力图 / 连续天数使用
+    noteTodayCount(items.length);
     // 登录：入队镜像服务端（失败可重试）；本地先写，最终以 sync 拉回的服务端为准
     if (api.isLoggedIn()) {
       enqueueStudyEvent({
@@ -212,6 +215,13 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
     const next = emptyLog();
     set({ log: next });
     saveLog(next);
+    // 重置即清空整个逐日历史（热力图/连续天数），本地展示数据随进度一起归零，
+    // 否则「逐日取大」合并会把用户明确清空的记录又显示出来
+    try {
+      localStorage.removeItem(scopedKey("ew.dayCounts.v1"));
+    } catch {
+      /* ignore */
+    }
     // 丢掉未刷出的今日事件，避免重置后又被 flush 写回
     try {
       localStorage.removeItem(scopedKey("ew.sync.pending.studyEvents.v1"));
@@ -253,6 +263,7 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
       const merged = mergeTodayLogs(serverLog, local);
       set({ log: merged });
       saveLog(merged);
+      noteTodayCount(merged.items.length);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       console.warn("todayLog syncFromServer failed:", message);

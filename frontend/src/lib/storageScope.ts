@@ -57,12 +57,14 @@ export const SCOPED_BASES = [
   "ew.set.v1",
   "ew.journal.v1",
   "ew.todayLog.v1",
+  "ew.dayCounts.v1",
   "ew.sync.pending.cards.v1",
   "ew.sync.pending.meta.v1",
   "ew.sync.pending.settings.v1",
   "ew.sync.pending.studyEvents.v1",
   "ew.sync.pending.journal.v1",
   "ew.sync.status.v1",
+  "ew.reminder.firedDay",
 ] as const;
 
 export function migrateAllUnscopedIfNeeded() {

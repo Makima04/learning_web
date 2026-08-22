@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { parseImportData } from "@/lib/importData";
 import { DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW } from "@/lib/journal";
+import { requestReminderPermission, reminderSupported } from "@/lib/reminder";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { applyUserScope } from "@/lib/accountScope";
 import { syncAccountData } from "@/lib/accountSync";
@@ -68,6 +69,13 @@ export function SettingsPage() {
   const [llmConcurrency, setLlmConcurrency] = useState(4);
   const [llmSaving, setLlmSaving] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(getSyncStatus);
+  /** granted / denied / default / unsupported（ denied 时开启开关会提示去浏览器设置改） */
+  const [notifyPerm, setNotifyPerm] = useState<NotificationPermission | "unsupported">(() =>
+    reminderSupported() ? Notification.permission : "unsupported"
+  );
+  const [reminderMsg, setReminderMsg] = useState("");
+  // iOS 本地通知不可用（仅支持 Web Push），提前说明而不是让开关空转
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   useEffect(() => subscribeSyncStatus(setSyncStatus), []);
 
@@ -224,6 +232,27 @@ export function SettingsPage() {
     input.click();
   }
 
+  /** 开启提醒前先拿通知权限；被拒则不开，给出指引 */
+  async function toggleReminder(on: boolean) {
+    if (!on) {
+      setSettings({ reminderEnabled: false });
+      setReminderMsg("");
+      return;
+    }
+    if (!reminderSupported()) {
+      setReminderMsg("当前浏览器不支持通知");
+      return;
+    }
+    const perm = await requestReminderPermission();
+    setNotifyPerm(perm);
+    if (perm !== "granted") {
+      setReminderMsg("通知权限未授予：请在浏览器站点设置中允许通知后重开");
+      return;
+    }
+    setReminderMsg("");
+    setSettings({ reminderEnabled: true });
+  }
+
   async function resetAll() {
     const loggedIn = api.isLoggedIn();
     const tip = loggedIn
@@ -347,6 +376,30 @@ export function SettingsPage() {
                     <option value="dark">深色</option>
                   </select>
                 </Field>
+                <div className="border-t pt-4 space-y-4">
+                  <p className="text-sm font-medium">每日提醒</p>
+                  <Field label="背词提醒">
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="time"
+                        value={settings.reminderTime}
+                        disabled={!settings.reminderEnabled}
+                        onChange={(e) => setSettings({ reminderTime: e.target.value })}
+                        className="w-32"
+                      />
+                      <Switch
+                        checked={settings.reminderEnabled}
+                        onCheckedChange={(v) => void toggleReminder(v)}
+                      />
+                    </div>
+                  </Field>
+                  <p className="text-xs text-muted-foreground -mt-2">
+                    到点后浏览器弹通知（每天一次）。需保持页面或已安装的应用打开；跨设备同步该设置。
+                    {notifyPerm === "denied" && " 当前通知权限已被拒绝，请在浏览器站点设置中允许。"}
+                    {reminderMsg && ` ${reminderMsg}`}
+                    {isIOS && " iOS 不支持本地通知（需推送服务器），此项在 iPhone/iPad 上暂不生效。"}
+                  </p>
+                </div>
                 <div className="border-t pt-4 space-y-4">
                   <p className="text-sm font-medium">考研科目（知识图谱）</p>
                   <Field label="数学轨">

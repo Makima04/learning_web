@@ -10,6 +10,7 @@ import { useKgProgress } from "@/stores/kgProgress";
 import { useMeta } from "@/stores/meta";
 import { useTodayLog } from "@/stores/todayLog";
 import { useAuth } from "@/stores/auth";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 useTheme.getState().init();
 useSettings.getState().load();
@@ -21,8 +22,19 @@ useAuth.getState().refresh();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );
+
+// PWA：仅生产构建注册 service worker（dev 下 Vite 资源不缓存）
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch((e: unknown) => {
+      console.warn("sw register failed:", e);
+    });
+  });
+}

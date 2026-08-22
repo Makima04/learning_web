@@ -32,6 +32,13 @@ struct RangeQ {
     to: String,
 }
 
+#[derive(Deserialize)]
+struct OverviewQ {
+    /// 客户端时区偏移分钟（东八区 = 480）。day_key 全链路是本地时区，
+    /// streak 的「今天」必须与之间隔一致，否则凌晨背完词会被判断链。
+    tz: Option<i32>,
+}
+
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/study-events", post(post_event))
@@ -171,6 +178,7 @@ async fn stats_daily(
 async fn stats_overview(
     State(state): State<AppState>,
     user: AuthUser,
+    Query(q): Query<OverviewQ>,
 ) -> AppResult<Json<Value>> {
     let total_studied: i64 =
         sqlx::query_scalar("SELECT COUNT(DISTINCT word_idx) FROM cards WHERE user_id = $1")
@@ -197,7 +205,10 @@ async fn stats_overview(
     .fetch_all(&state.pool)
     .await?;
 
-    let (current_streak, longest_streak) = compute_streaks(&days);
+    // 「今天」按客户端时区换算，与本地时区 day_key 对齐；偏移限制在 ±24h 内
+    let tz = q.tz.unwrap_or(0).clamp(-24 * 60, 24 * 60) as i64;
+    let today = (Utc::now() + chrono::Duration::minutes(tz)).date_naive();
+    let (current_streak, longest_streak) = compute_streaks(&days, today);
 
     Ok(Json(json!({
         "total_studied": total_studied,
@@ -209,7 +220,7 @@ async fn stats_overview(
     })))
 }
 
-fn compute_streaks(days_desc: &[String]) -> (i64, i64) {
+fn compute_streaks(days_desc: &[String], today: chrono::NaiveDate) -> (i64, i64) {
     if days_desc.is_empty() {
         return (0, 0);
     }
@@ -232,7 +243,6 @@ fn compute_streaks(days_desc: &[String]) -> (i64, i64) {
         }
     }
 
-    let today = Utc::now().date_naive();
     let mut current = 0i64;
     let last = *dates.last().unwrap();
     // allow today or yesterday as streak head
@@ -249,4 +259,68 @@ fn compute_streaks(days_desc: &[String]) -> (i64, i64) {
     }
 
     (current, longest.max(current))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::compute_streaks;
+    use chrono::NaiveDate;
+
+    fn d(s: &str) -> NaiveDate {
+        NaiveDate::parse_from_str(s, "%Y-%m-%d").unwrap()
+    }
+
+    #[test]
+    fn empty_days_give_zero() {
+        let (cur, long) = compute_streaks(&[], d("2026-08-22"));
+        assert_eq!((cur, long), (0, 0));
+    }
+
+    #[test]
+    fn today_head_counts_through_today() {
+        let days = vec!["2026-08-20", "2026-08-21", "2026-08-22"];
+        let days: Vec<String> = days.iter().map(|s| s.to_string()).collect();
+        let (cur, long) = compute_streaks(&days, d("2026-08-22"));
+        assert_eq!((cur, long), (3, 3));
+    }
+
+    #[test]
+    fn yesterday_head_keeps_streak_alive_today() {
+        let days = vec!["2026-08-20", "2026-08-21"];
+        let days: Vec<String> = days.iter().map(|s| s.to_string()).collect();
+        let (cur, _) = compute_streaks(&days, d("2026-08-22"));
+        assert_eq!(cur, 2);
+    }
+
+    #[test]
+    fn gap_before_yesterday_breaks_current() {
+        let days = vec!["2026-08-20", "2026-08-19"];
+        let days: Vec<String> = days.iter().map(|s| s.to_string()).collect();
+        let (cur, _) = compute_streaks(&days, d("2026-08-22"));
+        assert_eq!(cur, 0);
+    }
+
+    #[test]
+    fn longest_may_differ_from_current() {
+        let days = vec![
+            "2026-07-01",
+            "2026-07-02",
+            "2026-07-03",
+            "2026-07-04",
+            "2026-08-21",
+            "2026-08-22",
+        ];
+        let days: Vec<String> = days.iter().map(|s| s.to_string()).collect();
+        let (cur, long) = compute_streaks(&days, d("2026-08-22"));
+        assert_eq!((cur, long), (2, 4));
+    }
+
+    #[test]
+    fn local_today_not_utc_today() {
+        // 本地（UTC+8）8/22 凌晨：UTC 还是 8/21。链头按传入的本地今天判断
+        let days = vec!["2026-08-21", "2026-08-22"];
+        let days: Vec<String> = days.iter().map(|s| s.to_string()).collect();
+        let (cur, _) = compute_streaks(&days, d("2026-08-22"));
+        assert_eq!(cur, 2);
+    }
 }

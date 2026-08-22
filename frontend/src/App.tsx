@@ -15,9 +15,11 @@ import { KgModulePage } from "@/pages/KgModulePage";
 import { KgPredictPage } from "@/pages/KgPredictPage";
 import { KgExamsPage } from "@/pages/KgExamsPage";
 import { useAccountSync } from "@/hooks/useAccountSync";
+import { useReminder } from "@/hooks/useReminder";
 
 export default function App() {
   useAccountSync();
+  useReminder();
 
   return (
     <Routes>

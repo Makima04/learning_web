@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TodayWordList } from "@/components/TodayWordList";
+import { StreakHeatmap } from "@/components/StreakHeatmap";
 import { Card, CardContent } from "@/components/ui/card";
 import { DAY, dayKey } from "@/lib/day";
 import { planDueEntries } from "@/lib/journal";
@@ -345,6 +346,10 @@ export function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </section>
+
+      <section className="mt-6">
+        <StreakHeatmap />
       </section>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(290px,0.8fr)]">

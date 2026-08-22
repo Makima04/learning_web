@@ -34,9 +34,10 @@ frontend/dist/
 # 构建缓存
 *.tsbuildinfo
 
-# Claude Code / Codegraph 工作目录
+# Claude Code / Codegraph / ZCode 工作目录
 .claude/
 .codegraph/
+.zcode/
 
 # Python test cache
 .pytest_cache/

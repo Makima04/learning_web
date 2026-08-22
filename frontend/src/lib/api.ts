@@ -446,8 +446,10 @@ export async function getDaily(from: string, to: string): Promise<DailyAgg[]> {
   const q = new URLSearchParams({ from, to });
   return req(`/api/stats/daily?${q.toString()}`);
 }
-export async function getOverview(): Promise<Overview> {
-  return req("/api/stats/overview");
+export async function getOverview(tzMinutes?: number): Promise<Overview> {
+  // tz：本地时区偏移分钟（如东八区 480），服务端据此判 streak 的「今天」，与本地 dayKey 对齐
+  const q = typeof tzMinutes === "number" ? `?tz=${Math.round(tzMinutes)}` : "";
+  return req(`/api/stats/overview${q}`);
 }
 
 // ---- 知识图谱进度 / 408 大题填空（需登录）----

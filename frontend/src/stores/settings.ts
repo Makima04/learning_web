@@ -38,6 +38,10 @@ export interface Settings {
   journalDailyReviewLimits: Record<string, number>;
   /** 知识图谱每日章节大卡上限。默认 3。 */
   journalKgChapterDailyLimit: number;
+  /** 每日背词提醒（浏览器通知，应用打开期间生效）。默认关闭。 */
+  reminderEnabled: boolean;
+  /** 提醒时间 HH:MM（本地时区）。默认 08:30。 */
+  reminderTime: string;
 }
 
 const KEY_BASE = "ew.set.v1";
@@ -61,6 +65,8 @@ export const DEFAULT_SETTINGS: Settings = {
   enableCloze: false,
   journalDailyReviewLimits: {},
   journalKgChapterDailyLimit: 3,
+  reminderEnabled: false,
+  reminderTime: "08:30",
 };
 
 function saveJSON(key: string, val: unknown) {
@@ -90,12 +96,23 @@ function normalizeJournalLimits(value: unknown): Record<string, number> | undefi
   return out;
 }
 
+const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** 规范化提醒时间；非法值回落 undefined（不覆盖默认）。 */
+function normalizeReminderTime(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const v = value.trim().slice(0, 5); // time input 偶尔带秒（HH:MM:SS）
+  return HHMM_RE.test(v) ? v : undefined;
+}
+
 function pickSettingValue(key: keyof Settings, value: unknown): unknown {
   if (key === "journalDailyReviewLimits") return normalizeJournalLimits(value);
   if (key === "journalKgChapterDailyLimit") {
     if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
     return Math.max(0, Math.min(20, Math.floor(value)));
   }
+  if (key === "reminderTime") return normalizeReminderTime(value);
+  if (key === "reminderEnabled") return typeof value === "boolean" ? value : undefined;
   return value;
 }
 
