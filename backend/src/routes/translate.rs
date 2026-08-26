@@ -52,7 +52,12 @@ fn looks_like_example(text: &str) -> bool {
     if t.contains(char::is_whitespace) {
         return true;
     }
-    t.chars().any(|c| matches!(c, ',' | '.' | ';' | ':' | '!' | '?' | '"' | '\'' | '—' | '–' | '(' | ')'))
+    t.chars().any(|c| {
+        matches!(
+            c,
+            ',' | '.' | ';' | ':' | '!' | '?' | '"' | '\'' | '—' | '–' | '(' | ')'
+        )
+    })
 }
 
 async fn translate_text(
@@ -185,11 +190,7 @@ async fn translate_batch(
 }
 
 /// 共用保存：status=ok 则直接返回，永不 force 重翻。
-async fn do_translate(
-    state: &AppState,
-    sid: i64,
-    user_id: Option<i64>,
-) -> AppResult<Json<Value>> {
+async fn do_translate(state: &AppState, sid: i64, user_id: Option<i64>) -> AppResult<Json<Value>> {
     let text: Option<String> = sqlx::query_scalar("SELECT text FROM sentences WHERE id = $1")
         .bind(sid)
         .fetch_optional(&state.pool)

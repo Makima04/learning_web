@@ -46,6 +46,11 @@ export const NAV_SECTIONS: NavSection[] = [
     match: (p) => p === "/papers-recite" || p.startsWith("/papers-recite/"),
   },
   {
+    id: "/politics",
+    root: "/politics",
+    match: (p) => p === "/politics" || p.startsWith("/politics/"),
+  },
+  {
     id: "/transmgr",
     root: "/transmgr",
     match: (p) => p === "/transmgr" || p.startsWith("/transmgr/"),

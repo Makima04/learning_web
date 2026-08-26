@@ -1,8 +1,4 @@
-use axum::{
-    extract::State,
-    routing::get,
-    Json, Router,
-};
+use axum::{extract::State, routing::get, Json, Router};
 use chrono::Utc;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -20,10 +16,7 @@ pub fn router() -> Router<AppState> {
     Router::new().route("/api/settings", get(get_settings).put(put_settings))
 }
 
-async fn get_settings(
-    State(state): State<AppState>,
-    user: AuthUser,
-) -> AppResult<Json<Value>> {
+async fn get_settings(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Value>> {
     let row: Option<Value> =
         sqlx::query_scalar("SELECT payload FROM user_settings WHERE user_id = $1")
             .bind(user.id)

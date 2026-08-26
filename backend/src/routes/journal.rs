@@ -1,9 +1,5 @@
 // 学习日志：按用户隔离的个人数据（JSONB 整包），需登录。
-use axum::{
-    extract::State,
-    routing::get,
-    Json, Router,
-};
+use axum::{extract::State, routing::get, Json, Router};
 use chrono::{TimeZone, Utc};
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -26,10 +22,7 @@ pub fn router() -> Router<AppState> {
     Router::new().route("/api/journal", get(get_journal).put(put_journal))
 }
 
-async fn get_journal(
-    State(state): State<AppState>,
-    user: AuthUser,
-) -> AppResult<Json<Value>> {
+async fn get_journal(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Value>> {
     let row: Option<(Value, Option<chrono::DateTime<Utc>>)> = sqlx::query_as(
         r#"
         SELECT payload, updated_at
@@ -43,9 +36,7 @@ async fn get_journal(
 
     match row {
         Some((payload, updated_at)) => {
-            let ms = updated_at
-                .map(|t| t.timestamp_millis())
-                .unwrap_or(0);
+            let ms = updated_at.map(|t| t.timestamp_millis()).unwrap_or(0);
             Ok(Json(json!({
                 "journal": payload,
                 "updated_at": ms,
@@ -76,7 +67,9 @@ async fn put_journal(
     // 基本字段形状校验（宽松：允许缺省，拒绝明显错误类型）
     validate_journal_shape(&payload)?;
 
-    let client_ms = body.updated_at.unwrap_or_else(|| Utc::now().timestamp_millis());
+    let client_ms = body
+        .updated_at
+        .unwrap_or_else(|| Utc::now().timestamp_millis());
     if client_ms < 0 {
         return Err(AppError::BadRequest("updated_at invalid".into()));
     }

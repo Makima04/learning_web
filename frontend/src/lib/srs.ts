@@ -54,6 +54,22 @@ export function isMastered(card: Card): boolean {
   return card.state === "review" && card.reps >= 4 && card.ivl >= 14;
 }
 
+/**
+ * 复习未一次过关：间隔打回 1 天，从记忆曲线第一天重走。
+ * 难度略降（与 again 遗忘一致），reps 记为新曲线的第 1 次成功复习。
+ */
+export function resetReviewToFirstDay(card: Card, now: number = Date.now()): Card {
+  card.state = "review";
+  card.quiz = 0;
+  card.learned = true;
+  card.lapses = (card.lapses || 0) + 1;
+  card.reps = 1;
+  card.ivl = 1;
+  card.ease = clampEase(card.ease - 0.2);
+  card.due = now + 1 * DAY;
+  return card;
+}
+
 function scheduleLearn(card: Card, quiz: number, now: number) {
   card.state = "learn";
   card.quiz = quiz;

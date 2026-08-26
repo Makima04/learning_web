@@ -33,6 +33,7 @@ describe("navMemory", () => {
     expect(sectionForPath("/kg")?.id).toBe("/kg");
     expect(sectionForPath("/kg/module/ds/tree")?.id).toBe("/kg");
     expect(sectionForPath("/kg/exams/2024")?.id).toBe("/kg");
+    expect(sectionForPath("/politics/q/2026-34")?.id).toBe("/politics");
     expect(sectionForPath("/reader")?.id).toBe("/papers");
     expect(sectionForPath("/reader/en1/2006/Text%202")?.id).toBe("/papers");
   });
@@ -55,5 +56,7 @@ describe("navMemory", () => {
     );
     expect(isNavSectionActive("/journal", "/journal/history")).toBe(true);
     expect(isNavSectionActive("/settings", "/settings/account")).toBe(true);
+    expect(isNavSectionActive("/politics", "/politics/q/2024-34")).toBe(true);
+    expect(isNavSectionActive("/politics", "/politics/method")).toBe(true);
   });
 });

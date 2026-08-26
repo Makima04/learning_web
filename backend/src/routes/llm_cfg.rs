@@ -1,8 +1,4 @@
-use axum::{
-    extract::State,
-    routing::get,
-    Json, Router,
-};
+use axum::{extract::State, routing::get, Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
@@ -47,10 +43,7 @@ fn mask_key(key: &str) -> String {
     format!("{head}…{tail}")
 }
 
-async fn get_config(
-    State(state): State<AppState>,
-    _admin: AdminUser,
-) -> AppResult<Json<Value>> {
+async fn get_config(State(state): State<AppState>, _admin: AdminUser) -> AppResult<Json<Value>> {
     let conf = state.llm_config().await;
     let model = llm::active_model(&state.pool, &state.config.llm_model).await;
     let concurrency = llm::active_concurrency(&state.pool).await;
@@ -65,10 +58,7 @@ async fn get_config(
     })))
 }
 
-async fn list_models(
-    State(state): State<AppState>,
-    _admin: AdminUser,
-) -> AppResult<Json<Value>> {
+async fn list_models(State(state): State<AppState>, _admin: AdminUser) -> AppResult<Json<Value>> {
     if !state.llm_configured().await {
         return Ok(Json(json!([])));
     }

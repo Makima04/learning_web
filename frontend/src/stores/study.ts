@@ -1,9 +1,10 @@
 // study store —— 三个入口共用的「初轮评估 → 组内重学」状态机。
 // 重学默认三轮（例句 / 词形 / 释义）；设置 enableCloze 后末轮加完型填空必过。
 // 一词必须按 1→2→3 做完才过关；词与词不同步，A 在第 1 测时 B 可以已在第 2/3 测。
+// 复习一次过关按 good 拉长间隔；未一次过关（进重学）完成后间隔打回 1 天。
 import { create } from "zustand";
 import type { Card } from "@/lib/srs";
-import { answer, DAY, isMastered } from "@/lib/srs";
+import { answer, DAY, isMastered, resetReviewToFirstDay } from "@/lib/srs";
 import {
   buildClozeOptions,
   examplePoolFor,
@@ -236,10 +237,12 @@ function cloneCard(card?: Card): Card {
 }
 
 /**
- * 评估通过 / 四轮重学完成 → 写入间隔。
- * UI 无四键，统一按 quality=good 调度；learned 始终置 true。
+ * 评估通过 / 重学完成 → 写入间隔。learned 始终置 true。
+ * - 一次过关：按 good 推进间隔。
+ * - 复习未一次过关：间隔打回 1 天，从记忆曲线第一天重走。
+ * - 新词未一次过关：仍按 good（新词本来就是第 1 天）。
  */
-function savePassedCard(idx: number, previous: Card): Card {
+function savePassedCard(idx: number, previous: Card, firstPass: boolean): Card {
   const now = Date.now();
   const wasLearned = !!previous.learned;
   const working = cloneCard(previous);
@@ -249,7 +252,10 @@ function savePassedCard(idx: number, previous: Card): Card {
     working.ivl = Math.max(1, working.ivl || 1);
     working.reps = Math.max(1, working.reps || 0);
   }
-  const { card } = answer(working, "good", now);
+  const card =
+    !firstPass && wasLearned
+      ? resetReviewToFirstDay(working, now)
+      : answer(working, "good", now).card;
   card.learned = true;
   // good 理论上毕业进 review；兜底避免落在 learn
   if (card.state !== "review") {
@@ -659,7 +665,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       const pending: QueueItem = { ...item, card: cloneCard(item.card), round: 1, needsRelearning: true };
       set({ relearnPending: [...state.relearnPending, pending] });
     } else {
-      const card = savePassedCard(item.idx, item.card);
+      const card = savePassedCard(item.idx, item.card, true);
       const stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
       if (item.group === "new") {
         useMeta.getState().bump("newToday");
@@ -733,7 +739,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       });
       groupEnd++;
     } else {
-      savePassedCard(item.idx, item.card);
+      savePassedCard(item.idx, item.card, false);
       stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
       if (item.group === "new") {
         useMeta.getState().bump("newToday");

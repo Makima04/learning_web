@@ -4,6 +4,7 @@ import { recomputePendingFromStorage } from "@/lib/syncQueue";
 import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
 import { useKgProgress } from "@/stores/kgProgress";
+import { usePolitics } from "@/stores/politics";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
 import { useTodayLog } from "@/stores/todayLog";
@@ -17,6 +18,7 @@ export function applyUserScope(userId: number | null) {
   useSettings.getState().load();
   useJournal.getState().rehydrate();
   useKgProgress.getState().load();
+  usePolitics.getState().load();
   useTodayLog.getState().rehydrate();
   recomputePendingFromStorage();
 }

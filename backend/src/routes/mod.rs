@@ -7,6 +7,7 @@ mod lookup;
 mod meta;
 mod paper;
 mod parse;
+mod politics;
 mod sentences;
 mod settings;
 mod spa;
@@ -30,6 +31,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(lookup::router())
         .merge(parse::router())
         .merge(paper::router())
+        .merge(politics::router())
         .merge(llm_cfg::router())
         .merge(stats::router())
 }

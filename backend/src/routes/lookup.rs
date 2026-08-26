@@ -87,9 +87,9 @@ async fn lookup_word(
     }
 
     // 未命中：登录 + 更严限流
-    let user = auth::try_user(&state.pool, &headers).await.ok_or_else(|| {
-        AppError::Unauthorized("login required to look up new words".into())
-    })?;
+    let user = auth::try_user(&state.pool, &headers)
+        .await
+        .ok_or_else(|| AppError::Unauthorized("login required to look up new words".into()))?;
     state.rate.check(&ip, "lookup_llm", 20, 60)?;
     state
         .rate
@@ -144,11 +144,7 @@ async fn fetch_cached(pool: &sqlx::PgPool, word: &str) -> Result<Option<Value>, 
     })))
 }
 
-async fn do_lookup(
-    state: &AppState,
-    word: &str,
-    context: Option<&str>,
-) -> AppResult<Json<Value>> {
+async fn do_lookup(state: &AppState, word: &str, context: Option<&str>) -> AppResult<Json<Value>> {
     // 双检缓存（竞态）
     if let Some(row) = fetch_cached(&state.pool, word).await? {
         return Ok(Json(row));
@@ -171,9 +167,7 @@ async fn do_lookup(
         None => format!("word: {word}"),
     };
 
-    match llm::chat_completion(&state.http, &llm_conf, &model, LOOKUP_SYS_PROMPT, &user_msg)
-        .await
-    {
+    match llm::chat_completion(&state.http, &llm_conf, &model, LOOKUP_SYS_PROMPT, &user_msg).await {
         Ok(raw) => {
             // 解析失败或义项空：返回 error，不写 word_lookups（勿把 raw 当正式义项）
             let Some((lemma, phonetic, senses)) = parsed_lookup(&raw, word) else {
@@ -297,10 +291,7 @@ fn normalize_senses(v: Value) -> Value {
                         let pos = pair[0].as_str().unwrap_or("").trim();
                         let cn = pair[1].as_str().unwrap_or("").trim();
                         if !cn.is_empty() {
-                            out.push(json!([
-                                if pos.is_empty() { "?" } else { pos },
-                                cn
-                            ]));
+                            out.push(json!([if pos.is_empty() { "?" } else { pos }, cn]));
                         }
                     }
                     Value::Object(map) => {

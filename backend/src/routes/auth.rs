@@ -138,14 +138,15 @@ async fn send_code(
     let email = normalize_email(&body.email)?;
     let purpose = body.purpose.trim().to_lowercase();
     if purpose != "register" && purpose != "login" {
-        return Err(AppError::BadRequest("purpose must be register or login".into()));
+        return Err(AppError::BadRequest(
+            "purpose must be register or login".into(),
+        ));
     }
 
-    let exists: Option<i64> =
-        sqlx::query_scalar("SELECT id FROM users WHERE email = $1")
-            .bind(&email)
-            .fetch_optional(&state.pool)
-            .await?;
+    let exists: Option<i64> = sqlx::query_scalar("SELECT id FROM users WHERE email = $1")
+        .bind(&email)
+        .fetch_optional(&state.pool)
+        .await?;
 
     if purpose == "register" && exists.is_some() {
         return Err(AppError::Conflict("email already registered".into()));
@@ -311,11 +312,10 @@ async fn register_email(
         } else {
             format!("{username}{i}")
         };
-        let taken: Option<i64> =
-            sqlx::query_scalar("SELECT id FROM users WHERE username = $1")
-                .bind(&candidate)
-                .fetch_optional(&mut *tx)
-                .await?;
+        let taken: Option<i64> = sqlx::query_scalar("SELECT id FROM users WHERE username = $1")
+            .bind(&candidate)
+            .fetch_optional(&mut *tx)
+            .await?;
         if taken.is_none() {
             final_username = candidate;
             break;
@@ -342,7 +342,9 @@ async fn register_email(
     {
         Ok(id) => id,
         Err(sqlx::Error::Database(db)) if db.constraint().is_some() => {
-            return Err(AppError::Conflict("email or username already exists".into()));
+            return Err(AppError::Conflict(
+                "email or username already exists".into(),
+            ));
         }
         Err(e) => return Err(e.into()),
     };
@@ -589,16 +591,12 @@ async fn logout(
     Ok(Json(json!({ "ok": true })))
 }
 
-async fn me(
-    State(state): State<AppState>,
-    user: AuthUser,
-) -> AppResult<Json<serde_json::Value>> {
-    let email: Option<String> =
-        sqlx::query_scalar("SELECT email FROM users WHERE id = $1")
-            .bind(user.id)
-            .fetch_optional(&state.pool)
-            .await?
-            .flatten();
+async fn me(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<serde_json::Value>> {
+    let email: Option<String> = sqlx::query_scalar("SELECT email FROM users WHERE id = $1")
+        .bind(user.id)
+        .fetch_optional(&state.pool)
+        .await?
+        .flatten();
     Ok(Json(json!({
         "user": {
             "id": user.id,

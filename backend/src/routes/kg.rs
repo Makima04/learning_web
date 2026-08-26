@@ -45,10 +45,7 @@ pub fn router() -> Router<AppState> {
         .route("/api/kg/predict-fill", post(predict_fill))
 }
 
-async fn get_kg(
-    State(state): State<AppState>,
-    user: AuthUser,
-) -> AppResult<Json<Value>> {
+async fn get_kg(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Value>> {
     let row: Option<(Value, Option<chrono::DateTime<Utc>>)> = sqlx::query_as(
         r#"
         SELECT payload, updated_at
@@ -100,12 +97,11 @@ async fn put_kg(
 
     if let Some(Some(server_ts)) = existing {
         if server_ts.timestamp_millis() > client_ms {
-            let row: (Value, Option<chrono::DateTime<Utc>>) = sqlx::query_as(
-                "SELECT payload, updated_at FROM user_kg WHERE user_id = $1",
-            )
-            .bind(user.id)
-            .fetch_one(&state.pool)
-            .await?;
+            let row: (Value, Option<chrono::DateTime<Utc>>) =
+                sqlx::query_as("SELECT payload, updated_at FROM user_kg WHERE user_id = $1")
+                    .bind(user.id)
+                    .fetch_one(&state.pool)
+                    .await?;
             return Ok(Json(json!({
                 "ok": true,
                 "skipped": true,

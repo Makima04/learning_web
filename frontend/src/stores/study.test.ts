@@ -547,4 +547,63 @@ describe("review due filter + snapshot", () => {
     expect(saved.due).toBeGreaterThanOrEqual(now + 5 * DAY - 2000);
     expect(saved.reps).toBe(3);
   });
+
+  it("review that needs relearning resets interval to 1 day", () => {
+    const now = Date.now();
+    const card = {
+      learned: true,
+      state: "review" as const,
+      due: now - 1,
+      ivl: 21,
+      ease: 2.5,
+      reps: 5,
+      lapses: 0,
+      quiz: 0,
+      updatedAt: now - 1000,
+    };
+    useCards.setState({ cards: { 9: card } });
+    useSettings.setState({ enableCloze: false });
+    const item: QueueItem = {
+      idx: 9,
+      card: { ...card },
+      group: "review",
+      round: 3,
+      needsRelearning: true,
+      entry: [9, "abandon", [["v.", "放弃"]]],
+    };
+    useStudy.setState({
+      mode: "review",
+      queue: [item],
+      qpos: 0,
+      groupStart: 0,
+      groupInitialEnd: 0,
+      groupEnd: 1,
+      relearningStarted: true,
+      relearnRoundEnd: 1,
+      relearnPending: [],
+      relearnReveal: null,
+      relearnAnswerKnown: null,
+      currentExample: "He had to abandon the plan.",
+      lastExampleByIdx: {},
+      cloze: null,
+      uiPhase: "relearn-meaning",
+      assessChoice: null,
+      sessionStats: { studied: 0, newDone: 0, reviewDone: 0 },
+    });
+    useStudy.getState().answerRelearning(true);
+    useStudy.getState().confirmRelearning(true);
+    const saved = useCards.getState().cards[9];
+    expect(saved).toMatchObject({
+      learned: true,
+      state: "review",
+      ivl: 1,
+      reps: 1,
+      lapses: 1,
+      ease: 2.3,
+      quiz: 0,
+    });
+    expect(saved.due).toBeGreaterThanOrEqual(now + DAY - 2000);
+    expect(saved.due).toBeLessThanOrEqual(now + DAY + 2000);
+    expect(useStudy.getState().sessionStats).toMatchObject({ studied: 1, reviewDone: 1 });
+  });
 });

@@ -209,5 +209,4 @@ mod tests {
         );
         assert_eq!(verify_password("wrong", SALT, CURRENT_HASH), None);
     }
-
 }

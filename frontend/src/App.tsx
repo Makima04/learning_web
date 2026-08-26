@@ -16,6 +16,7 @@ import { KgPredictPage } from "@/pages/KgPredictPage";
 import { KgExamsPage } from "@/pages/KgExamsPage";
 import { VizHomePage } from "@/pages/VizHomePage";
 import { VizKpPage } from "@/pages/VizKpPage";
+import { PoliticsPage } from "@/pages/PoliticsPage";
 import { useAccountSync } from "@/hooks/useAccountSync";
 import { useReminder } from "@/hooks/useReminder";
 
@@ -39,6 +40,9 @@ export default function App() {
         <Route path="kg/exams/:year" element={<KgExamsPage />} />
         <Route path="viz" element={<VizHomePage />} />
         <Route path="viz/:kpId" element={<VizKpPage />} />
+        <Route path="politics" element={<PoliticsPage />} />
+        <Route path="politics/q/:qid" element={<PoliticsPage />} />
+        <Route path="politics/:tab" element={<PoliticsPage />} />
         <Route path="papers" element={<PapersPage />} />
         <Route path="papers/:variant" element={<PapersPage />} />
         <Route path="papers/:variant/:year" element={<PapersPage />} />

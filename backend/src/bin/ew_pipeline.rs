@@ -385,10 +385,9 @@ fn fill_cloze_blanks(passage: &str, items: &[Value], answers: &Map<String, Value
         }
     }
     // 空白题号是独立 token：两侧为空白/标点/边界，避免把 12-15 里的 12 误替换。
-    let re = Regex::new(
-        r#"(?P<pre>^|[\s,;:(\[{'"])(?P<n>[1-9]|1[0-9]|20)(?P<post>$|[\s,.;:)\]}'"])"#,
-    )
-    .unwrap();
+    let re =
+        Regex::new(r#"(?P<pre>^|[\s,;:(\[{'"])(?P<n>[1-9]|1[0-9]|20)(?P<post>$|[\s,.;:)\]}'"])"#)
+            .unwrap();
     re.replace_all(passage, |caps: &regex::Captures| {
         let n: i64 = caps.name("n").unwrap().as_str().parse().unwrap_or(0);
         // "19 million" / "1,932" 这类正文真实数字：post 组已消费数字后的空格/标点，

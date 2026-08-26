@@ -457,6 +457,31 @@ export async function getKg(): Promise<{ kg: Record<string, unknown> | null; upd
   return req("/api/kg");
 }
 
+// ---- 考研政治主观题练习进度（需登录）----
+export async function getPolitics(): Promise<{
+  politics: Record<string, unknown> | null;
+  updated_at: number;
+}> {
+  return req("/api/politics");
+}
+
+export async function putPolitics(politics: Record<string, unknown> | object): Promise<{
+  ok: boolean;
+  skipped?: boolean;
+  reason?: string;
+  politics?: Record<string, unknown>;
+  updated_at: number;
+}> {
+  const updatedAt =
+    politics && typeof politics === "object" && "updatedAt" in politics
+      ? Number((politics as { updatedAt?: number }).updatedAt) || Date.now()
+      : Date.now();
+  return req("/api/politics", {
+    method: "PUT",
+    body: JSON.stringify({ politics, updated_at: updatedAt }),
+  });
+}
+
 export async function putKg(kg: Record<string, unknown> | object): Promise<{
   ok: boolean;
   skipped?: boolean;

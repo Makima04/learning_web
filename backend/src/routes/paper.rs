@@ -40,10 +40,7 @@ struct PostBody {
 }
 
 pub fn router() -> Router<AppState> {
-    Router::new().route(
-        "/api/paper-answers",
-        get(get_answers).post(post_answers),
-    )
+    Router::new().route("/api/paper-answers", get(get_answers).post(post_answers))
 }
 
 async fn get_answers(

@@ -5,6 +5,7 @@ import { useJournal } from "@/stores/journal";
 import { useKgProgress } from "@/stores/kgProgress";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
+import { usePolitics } from "@/stores/politics";
 import { useTodayLog } from "@/stores/todayLog";
 
 let syncInFlight: Promise<void> | null = null;
@@ -22,6 +23,7 @@ export function syncAccountData(): Promise<void> {
       useSettings.getState().syncFromServer(),
       useJournal.getState().syncFromServer(),
       useKgProgress.getState().syncFromServer(),
+      usePolitics.getState().syncFromServer(),
       useTodayLog.getState().syncFromServer(),
     ]);
     await flushPending();

@@ -253,11 +253,10 @@ async fn parse_batch(
     let mut results = Vec::new();
 
     for id in body.ids {
-        let text: Option<String> =
-            sqlx::query_scalar("SELECT text FROM sentences WHERE id = $1")
-                .bind(id)
-                .fetch_optional(&state.pool)
-                .await?;
+        let text: Option<String> = sqlx::query_scalar("SELECT text FROM sentences WHERE id = $1")
+            .bind(id)
+            .fetch_optional(&state.pool)
+            .await?;
         let Some(text) = text else {
             failed += 1;
             results.push(json!({"id": id, "status": "error", "error": "not found"}));
@@ -286,14 +285,8 @@ async fn parse_batch(
             continue;
         }
 
-        match llm::chat_completion(
-            &state.http,
-            &llm_conf,
-            &model,
-            llm::PARSE_SYS_PROMPT,
-            &text,
-        )
-        .await
+        match llm::chat_completion(&state.http, &llm_conf, &model, llm::PARSE_SYS_PROMPT, &text)
+            .await
         {
             Ok(content) => {
                 let now = Utc::now();
@@ -332,9 +325,7 @@ async fn parse_batch(
     })))
 }
 
-fn box_sse(
-    s: impl Stream<Item = Result<Event, Infallible>> + Send + 'static,
-) -> Sse<SseStream> {
+fn box_sse(s: impl Stream<Item = Result<Event, Infallible>> + Send + 'static) -> Sse<SseStream> {
     let _ = KeepAlive::default();
     Sse::new(Box::pin(s) as SseStream)
 }
@@ -349,14 +340,14 @@ fn sse_from_cached(content: String) -> Sse<SseStream> {
 
 fn sse_unconfigured() -> Sse<SseStream> {
     box_sse(stream::iter(vec![Ok(
-        Event::default().data(json!({"event":"unconfigured"}).to_string()),
+        Event::default().data(json!({"event":"unconfigured"}).to_string())
     )]))
 }
 
 fn sse_error(message: String) -> Sse<SseStream> {
-    box_sse(stream::iter(vec![Ok(
-        Event::default().data(json!({"event":"error","message": message}).to_string()),
-    )]))
+    box_sse(stream::iter(vec![Ok(Event::default().data(
+        json!({"event":"error","message": message}).to_string(),
+    ))]))
 }
 
 fn sse_from_llm_stream<F, Fut>(
@@ -388,8 +379,8 @@ where
                     if let Some(cb) = on_done.take() {
                         cb(full.clone()).await;
                     }
-                    let ev = Event::default()
-                        .data(json!({"event":"done","content": full}).to_string());
+                    let ev =
+                        Event::default().data(json!({"event":"done","content": full}).to_string());
                     Some((Ok(ev), (stream, full, None, true)))
                 }
             }

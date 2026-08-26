@@ -81,10 +81,7 @@ pub fn router() -> Router<AppState> {
         .route("/api/cards/bulk", post(bulk_cards))
 }
 
-async fn list_cards(
-    State(state): State<AppState>,
-    user: AuthUser,
-) -> AppResult<Json<Value>> {
+async fn list_cards(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Value>> {
     let rows = sqlx::query_as::<
         _,
         (
@@ -232,7 +229,9 @@ async fn upsert_card(
     c: &CardState,
     reset_at_ms: i64,
 ) -> AppResult<()> {
-    let updated_at = c.updated_at.unwrap_or_else(|| Utc::now().timestamp_millis());
+    let updated_at = c
+        .updated_at
+        .unwrap_or_else(|| Utc::now().timestamp_millis());
     // 重置前的卡不得 INSERT 复活
     if reset_at_ms > 0 && updated_at < reset_at_ms {
         return Ok(());

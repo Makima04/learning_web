@@ -56,6 +56,7 @@ export const SCOPED_BASES = [
   "ew.meta.v1",
   "ew.set.v1",
   "ew.journal.v1",
+  "ew.politics.v1",
   "ew.todayLog.v1",
   "ew.dayCounts.v1",
   "ew.sync.pending.cards.v1",

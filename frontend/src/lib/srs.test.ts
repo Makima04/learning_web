@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DAY, LEARN_STEPS, answer, isMastered, newCard } from "./srs";
+import { DAY, LEARN_STEPS, answer, isMastered, newCard, resetReviewToFirstDay } from "./srs";
 
 describe("SRS learning steps", () => {
   it("spreads an unknown new card across three timed learning steps", () => {
@@ -26,6 +26,31 @@ describe("SRS learning steps", () => {
 
     answer(card, "again", now);
     expect(card).toMatchObject({ state: "learn", quiz: 1, lapses: 1, due: now + LEARN_STEPS[0] });
+  });
+
+  it("resets a failed first-pass review to a 1-day interval", () => {
+    const now = 1_700_000_000_000;
+    const card = {
+      ...newCard(),
+      learned: true,
+      state: "review" as const,
+      due: now,
+      ivl: 21,
+      ease: 2.5,
+      reps: 5,
+    };
+
+    resetReviewToFirstDay(card, now);
+    expect(card).toMatchObject({
+      state: "review",
+      learned: true,
+      quiz: 0,
+      ivl: 1,
+      reps: 1,
+      lapses: 1,
+      ease: 2.3,
+      due: now + DAY,
+    });
   });
 
   it("only marks sufficiently stable review cards as mastered", () => {

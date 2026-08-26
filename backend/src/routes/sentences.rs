@@ -77,10 +77,11 @@ async fn list_sentences(
     )
     .fetch_one(&state.pool)
     .await?;
-    let parsed: i64 =
-        sqlx::query_scalar("SELECT COUNT(*) FROM parses WHERE status IS NOT NULL AND status != 'error'")
-            .fetch_one(&state.pool)
-            .await?;
+    let parsed: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM parses WHERE status IS NOT NULL AND status != 'error'",
+    )
+    .fetch_one(&state.pool)
+    .await?;
 
     // Filter via SQL fragments
     let like = if search.is_empty() {
@@ -131,21 +132,23 @@ async fn list_sentences(
 
     let items: Vec<Value> = rows
         .into_iter()
-        .map(|(id, text, year, label, zh, t_status, p_content, p_status)| {
-            let parse = match (p_content, p_status) {
-                (Some(c), Some(st)) => Some(json!({"content": c, "status": st})),
-                _ => None,
-            };
-            json!({
-                "id": id,
-                "text": text,
-                "zh": zh,
-                "status": t_status,
-                "year": year,
-                "label": label,
-                "parse": parse,
-            })
-        })
+        .map(
+            |(id, text, year, label, zh, t_status, p_content, p_status)| {
+                let parse = match (p_content, p_status) {
+                    (Some(c), Some(st)) => Some(json!({"content": c, "status": st})),
+                    _ => None,
+                };
+                json!({
+                    "id": id,
+                    "text": text,
+                    "zh": zh,
+                    "status": t_status,
+                    "year": year,
+                    "label": label,
+                    "parse": parse,
+                })
+            },
+        )
         .collect();
 
     Ok(Json(json!({

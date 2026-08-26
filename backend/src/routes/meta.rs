@@ -39,8 +39,7 @@ struct MetaFields {
 }
 
 pub fn router() -> Router<AppState> {
-    Router::new()
-        .route("/api/meta", get(get_meta).put(put_meta))
+    Router::new().route("/api/meta", get(get_meta).put(put_meta))
 }
 
 async fn get_meta(
@@ -48,8 +47,20 @@ async fn get_meta(
     user: AuthUser,
     Query(q): Query<MetaQuery>,
 ) -> AppResult<Json<Value>> {
-    let day = q.day.unwrap_or_else(|| Utc::now().format("%Y-%m-%d").to_string());
-    let row = sqlx::query_as::<_, (String, Option<i32>, Option<i32>, Option<i32>, Option<i32>, Option<String>)>(
+    let day = q
+        .day
+        .unwrap_or_else(|| Utc::now().format("%Y-%m-%d").to_string());
+    let row = sqlx::query_as::<
+        _,
+        (
+            String,
+            Option<i32>,
+            Option<i32>,
+            Option<i32>,
+            Option<i32>,
+            Option<String>,
+        ),
+    >(
         r#"
         SELECT day_key, new_today, review_today, learn_today, done_today, data_version
         FROM meta WHERE user_id = $1 AND day_key = $2

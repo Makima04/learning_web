@@ -13,6 +13,7 @@ import {
   NotebookPen,
   PanelLeftClose,
   PanelLeftOpen,
+  ScrollText,
   Settings,
   Sun,
   UserRound,
@@ -39,6 +40,7 @@ const NAV: {
   { to: "/journal", label: "学习日志", icon: NotebookPen },
   { to: "/papers", label: "真题阅读", icon: FileText },
   { to: "/papers-recite", label: "真题记词", icon: LibraryBig },
+  { to: "/politics", label: "考研政治", icon: ScrollText },
   { to: "/transmgr", label: "翻译管理", icon: Languages },
   { to: "/settings", label: "学习设置", icon: Settings },
 ];
