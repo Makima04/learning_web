@@ -1,20 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { sessionBar, useStudy, type QueueItem } from "@/stores/study";
+import { sessionBar, useStudy, type QueueItem, type UiPhase } from "@/stores/study";
 import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
 import { blankTargetHtml } from "@/lib/quiz";
 import { getWordMap } from "@/lib/words";
 import { papersRecitePathFromPaperIdx } from "@/lib/papersNav";
 import { esc, cn } from "@/lib/utils";
-import { speakEnglish } from "@/lib/tts";
+import { speakEnglish, stopSpeaking } from "@/lib/tts";
 import { translate } from "@/lib/llm";
 import { Button } from "@/components/ui/button";
 import { WordPopover } from "@/components/WordPopover";
 
 /** 仅英文测试卡：等待后显示真题例句作回忆提示 */
 const EXAMPLE_HINT_DELAY_MS = 3000;
+
+/** 自动读词：露出英文的相位才读；结算页 / 看中文选词 / 完型不读，避免误读下一词或剧透 */
+function canAutoSpeak(phase: UiPhase): boolean {
+  return (
+    phase === "assess-front" ||
+    phase === "assess-full" ||
+    phase === "relearn-example" ||
+    phase === "relearn-word" ||
+    phase === "relearn-reveal"
+  );
+}
 
 export function StudyPage() {
   const navigate = useNavigate();
@@ -60,6 +71,9 @@ export function StudyPage() {
 
   const isEnglishOnlyPhase = uiPhase === "assess-front" || uiPhase === "relearn-word";
   const canHideEnglish = uiPhase === "assess-full" || uiPhase === "relearn-reveal";
+  const spokenKeyRef = useRef("");
+  const wordIdx = entry?.[0];
+  const wordEn = entry?.[1];
 
   useEffect(() => {
     setPop(null);
@@ -81,12 +95,16 @@ export function StudyPage() {
     return () => window.clearTimeout(timer);
   }, [isEnglishOnlyPhase, example, entry?.[0], qpos, uiPhase]);
 
-  // 第 3 轮 cn→en、第 4 轮完型不自动读词，避免剧透
+  useEffect(() => () => stopSpeaking(), []);
+
+  // 同一张卡翻面不重读；从「看中文/完型」进揭示时还没读过，会读一次
   useEffect(() => {
-    if (!settings.autoSpeak || !entry) return;
-    if (uiPhase === "relearn-meaning" || uiPhase === "relearn-cloze") return;
-    speakEnglish(entry[1], settings.rate);
-  }, [entry?.[0], qpos, uiPhase, settings.autoSpeak, settings.rate]);
+    if (!settings.autoSpeak || wordIdx == null || !wordEn || !canAutoSpeak(uiPhase)) return;
+    const key = `${qpos}:${wordIdx}`;
+    if (spokenKeyRef.current === key) return;
+    spokenKeyRef.current = key;
+    speakEnglish(wordEn, settings.rate);
+  }, [wordIdx, wordEn, qpos, uiPhase, settings.autoSpeak, settings.rate]);
 
   const showExampleTranslation = useCallback(async () => {
     if (!example || isExampleTranslating || exampleTranslation) return;
@@ -736,6 +754,9 @@ function relearnBody(
     return (
       <div className={shared} onClick={onCardClick}>
         <div className="mb-4 self-start text-xs text-muted-foreground">重学第 1 轮 · 看例句回忆中文释义</div>
+        <button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={onSpeak}>
+          🔊
+        </button>
         <ExampleBlock
           html={exampleHtml}
           onClick={onExampleClick}

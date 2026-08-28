@@ -1,4 +1,5 @@
-// TTS —— 移植自 web/app.js speak/speakEntry。lang=en-US，rate 取 settings。
+// TTS —— 浏览器 speechSynthesis。lang=en-US，rate 取 settings。
+// Chrome：cancel 后立刻 speak 会哑火；Utterance 无引用会被 GC 导致播一半就停。
 const FEMALE_VOICE_PATTERNS = [
   /\bava(?:multilingual)?\b/i,
   /\baria\b/i,
@@ -26,8 +27,14 @@ const FEMALE_VOICE_PATTERNS = [
   /\bfemale\b/i,
 ] as const;
 
+/** Chromium：cancel() 后需隔一拍再 speak，否则常年排队失败 */
+const CANCEL_SPEAK_DELAY_MS = 50;
+
 let speechRequest = 0;
 let voicesLoading: Promise<SpeechSynthesisVoice[]> | null = null;
+let speakTimer = 0;
+/** 必须抓住当前 utterance，否则 Chrome 会把它 GC 掉 */
+let currentUtterance: SpeechSynthesisUtterance | null = null;
 
 function selectFemaleVoice(voices: SpeechSynthesisVoice[]) {
   const english = voices.filter((voice) => /^en(?:[-_]|$)/i.test(voice.lang));
@@ -64,6 +71,12 @@ function loadVoices(synthesis: SpeechSynthesis): Promise<SpeechSynthesisVoice[]>
   return voicesLoading;
 }
 
+function clearSpeakTimer() {
+  if (!speakTimer) return;
+  window.clearTimeout(speakTimer);
+  speakTimer = 0;
+}
+
 function play(
   synthesis: SpeechSynthesis,
   text: string,
@@ -74,29 +87,71 @@ function play(
 ) {
   if (request !== speechRequest) return;
   const utterance = new SpeechSynthesisUtterance(text);
+  currentUtterance = utterance;
   utterance.lang = "en-US";
   utterance.rate = rate || 1.0;
   utterance.pitch = 1;
   const voice = selectFemaleVoice(voices);
   if (voice) utterance.voice = voice;
-  if (onend) utterance.onend = onend;
-  synthesis.cancel();
+  utterance.onend = () => {
+    if (currentUtterance === utterance) currentUtterance = null;
+    if (request === speechRequest) onend?.();
+  };
+  utterance.onerror = () => {
+    if (currentUtterance === utterance) currentUtterance = null;
+  };
+  if (synthesis.paused) synthesis.resume();
   synthesis.speak(utterance);
+  if (synthesis.paused) synthesis.resume();
+}
+
+function queuePlay(
+  synthesis: SpeechSynthesis,
+  text: string,
+  rate: number,
+  onend: (() => void) | undefined,
+  request: number,
+  voices: SpeechSynthesisVoice[]
+) {
+  clearSpeakTimer();
+  speakTimer = window.setTimeout(() => {
+    speakTimer = 0;
+    play(synthesis, text, rate, onend, request, voices);
+  }, CANCEL_SPEAK_DELAY_MS);
+}
+
+export function stopSpeaking() {
+  speechRequest += 1;
+  clearSpeakTimer();
+  currentUtterance = null;
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+  } catch {
+    /* ignore */
+  }
 }
 
 export function speak(text: string, rate = 1.0, onend?: () => void) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  const trimmed = String(text || "").trim();
+  if (!trimmed) return;
   try {
     const synthesis = window.speechSynthesis;
     const request = ++speechRequest;
+    clearSpeakTimer();
     synthesis.cancel();
+    const start = (voices: SpeechSynthesisVoice[]) => {
+      queuePlay(synthesis, trimmed, rate, onend, request, voices);
+    };
     const voices = synthesis.getVoices();
     if (voices.length) {
-      play(synthesis, text, rate, onend, request, voices);
+      start(voices);
       return;
     }
     void loadVoices(synthesis).then((loaded) => {
-      play(synthesis, text, rate, onend, request, loaded);
+      if (request !== speechRequest) return;
+      start(loaded);
     });
   } catch {
     /* ignore */
