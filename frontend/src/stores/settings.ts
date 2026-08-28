@@ -2,7 +2,7 @@
 // 账号级设置（登录后 fire-and-forget 镜像 /api/settings）；llm 不在此——LLM 仅管理员服务端配置。
 import { create } from "zustand";
 import * as api from "@/lib/api";
-import { scopedKey } from "@/lib/storageScope";
+import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { enqueueSettings } from "@/lib/syncQueue";
 
 export type Direction = "en2cn" | "cn2en" | "random";
@@ -177,8 +177,10 @@ export const useSettings = create<SettingsStore>((set, get) => ({
   },
   load: () => set(getSettings()),
   syncFromServer: async () => {
+    const epoch = getScopeEpoch();
     try {
       const r = await api.getSettings();
+      if (!stillInScope(epoch)) return;
       const remotePatch = asRemotePatch(r && r.settings);
       const localPatch = readPersistedPatch();
 
@@ -219,7 +221,7 @@ export const useSettings = create<SettingsStore>((set, get) => ({
       const message = e instanceof Error ? e.message : String(e);
       console.warn("getSettings sync failed:", message);
       // 拉取失败也不要把未持久化的默认值打到云端
-      if (readPersistedPatch()) {
+      if (stillInScope(epoch) && readPersistedPatch()) {
         enqueueSettings(getSettings() as unknown as Record<string, unknown>);
       }
     }

@@ -69,6 +69,7 @@ export function SettingsPage() {
   const [llmConcurrency, setLlmConcurrency] = useState(4);
   const [llmSaving, setLlmSaving] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(getSyncStatus);
+  const [accountBusy, setAccountBusy] = useState<"sync" | "flush" | "logout" | null>(null);
   /** granted / denied / default / unsupported（ denied 时开启开关会提示去浏览器设置改） */
   const [notifyPerm, setNotifyPerm] = useState<NotificationPermission | "unsupported">(() =>
     reminderSupported() ? Notification.permission : "unsupported"
@@ -152,24 +153,60 @@ export function SettingsPage() {
   }
 
   async function doLogout() {
+    setAccountBusy("logout");
+    setMsg("登出中…");
     try {
-      await flushPending();
-    } catch {
-      /* ignore */
+      try {
+        await flushPending();
+      } catch {
+        /* ignore */
+      }
+      await api.logout();
+      applyUserScope(null);
+      auth.refresh();
+      setMsg("已登出");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setMsg(message || "登出失败");
+    } finally {
+      setAccountBusy(null);
     }
-    await api.logout();
-    applyUserScope(null);
-    auth.refresh();
-    setMsg("已登出");
   }
 
   async function forceSync() {
+    setAccountBusy("sync");
     setMsg("同步中…");
     try {
       await syncAccountData();
-      setMsg("同步完成");
-    } catch (e: any) {
-      setMsg(e?.message || "同步失败");
+      if (!api.isLoggedIn()) return;
+      const st = getSyncStatus();
+      if (st.lastError) setMsg("同步失败：" + st.lastError);
+      else if (st.pending) setMsg("同步完成，仍有待传");
+      else setMsg("同步完成");
+    } catch (e: unknown) {
+      if (!api.isLoggedIn()) return;
+      const message = e instanceof Error ? e.message : String(e);
+      setMsg(message || "同步失败");
+    } finally {
+      setAccountBusy((b) => (b === "sync" ? null : b));
+    }
+  }
+
+  async function retryUpload() {
+    setAccountBusy("flush");
+    setMsg("上传中…");
+    try {
+      const st = await flushPending();
+      if (!api.isLoggedIn()) return;
+      if (st.lastError) setMsg("上传失败：" + st.lastError);
+      else if (st.pending) setMsg("仍有待传，请稍后再试");
+      else setMsg("已上传完成");
+    } catch (e: unknown) {
+      if (!api.isLoggedIn()) return;
+      const message = e instanceof Error ? e.message : String(e);
+      setMsg(message || "上传失败");
+    } finally {
+      setAccountBusy((b) => (b === "flush" ? null : b));
     }
   }
 
@@ -652,17 +689,26 @@ export function SettingsPage() {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" onClick={() => void forceSync()}>
-                        立即同步
+                      <Button
+                        variant="outline"
+                        disabled={!!accountBusy}
+                        onClick={() => void forceSync()}
+                      >
+                        {accountBusy === "sync" ? "同步中…" : "立即同步"}
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => void flushPending().then(() => setMsg("已刷出待传队列"))}
+                        disabled={!!accountBusy}
+                        onClick={() => void retryUpload()}
                       >
-                        重试上传
+                        {accountBusy === "flush" ? "上传中…" : "重试上传"}
                       </Button>
-                      <Button variant="outline" onClick={() => void doLogout()}>
-                        登出
+                      <Button
+                        variant="outline"
+                        disabled={accountBusy === "logout"}
+                        onClick={() => void doLogout()}
+                      >
+                        {accountBusy === "logout" ? "登出中…" : "登出"}
                       </Button>
                     </div>
                   </>

@@ -3,7 +3,7 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
 import type { Card } from "@/lib/srs";
-import { scopedKey } from "@/lib/storageScope";
+import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { clearPendingCards, enqueueCard } from "@/lib/syncQueue";
 
 const KEY_BASE = "ew.cards.v1";
@@ -137,7 +137,9 @@ export const useCards = create<CardsStore>((set, get) => ({
   },
   rehydrate: () => set({ cards: loadAll() }),
   sync: async () => {
+    const epoch = getScopeEpoch();
     const remote = await api.getCards();
+    if (!stillInScope(epoch)) return { cards: Object.keys(get().cards).length };
     const remoteCards = (remote && remote.cards) || {};
     const localCards = get().cards;
     const remoteKeys = Object.keys(remoteCards);

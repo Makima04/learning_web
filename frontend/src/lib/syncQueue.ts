@@ -50,7 +50,7 @@ type Listener = (s: SyncStatus) => void;
 const listeners = new Set<Listener>();
 
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
-let flushInFlight: Promise<void> | null = null;
+let flushInFlight: Promise<SyncStatus> | null = null;
 let status: SyncStatus = loadStatus();
 let onJournalSkipped:
   | ((remote: JournalPayload, updatedAt: number) => void)
@@ -336,8 +336,8 @@ async function flushOnce(): Promise<void> {
 }
 
 /** 立即刷出待同步项（登录后 / 上线 / 定时）。并发调用共用同一次 flush。 */
-export function flushPending(): Promise<void> {
-  if (!api.isLoggedIn()) return Promise.resolve();
+export function flushPending(): Promise<SyncStatus> {
+  if (!api.isLoggedIn()) return Promise.resolve(getSyncStatus());
   if (flushInFlight) return flushInFlight;
 
   flushInFlight = (async () => {
@@ -346,6 +346,7 @@ export function flushPending(): Promise<void> {
     if (api.isLoggedIn() && getSyncStatus().pending && !getSyncStatus().lastError) {
       await flushOnce();
     }
+    return getSyncStatus();
   })().finally(() => {
     flushInFlight = null;
   });

@@ -23,7 +23,7 @@ import {
 } from "@/lib/journal";
 import { dayKeyToLocalMs, mapReviewToMark } from "@/lib/kg/journalBridge";
 import { enqueueJournal, setOnJournalSkipped } from "@/lib/syncQueue";
-import { scopedKey } from "@/lib/storageScope";
+import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 
 const KEY_BASE = "ew.journal.v1";
 
@@ -417,8 +417,10 @@ export const useJournal = create<JournalStore>((set, get) => ({
 
   syncFromServer: async () => {
     if (!api.isLoggedIn()) return;
+    const epoch = getScopeEpoch();
     try {
       const remote = await api.getJournal();
+      if (!stillInScope(epoch) || !api.isLoggedIn()) return;
       const remoteUpdated = remote.updated_at || 0;
       const remoteSnap = normalizeRemote(remote.journal);
       const local = snapshotOf(get);

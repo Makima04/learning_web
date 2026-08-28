@@ -4,7 +4,7 @@ import * as api from "@/lib/api";
 import { maxOfPart, scorePart } from "@/lib/politics/score";
 import { questionById } from "@/lib/politics/questions";
 import type { PoliticsDoc, QuestionAttempt, QuestionDraft } from "@/lib/politics/types";
-import { scopedKey } from "@/lib/storageScope";
+import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 
 const KEY_BASE = "ew.politics.v1";
 const MAX_ATTEMPTS = 80;
@@ -161,14 +161,17 @@ export const usePolitics = create<PoliticsStore>((set, get) => ({
 
   syncFromServer: async () => {
     if (!api.isLoggedIn()) return;
+    const epoch = getScopeEpoch();
     try {
       const r = await api.getPolitics();
+      if (!stillInScope(epoch) || !api.isLoggedIn()) return;
       const remote = normalizeDoc(r?.politics as Partial<PoliticsDoc> | null);
       const local = loadDoc();
       if (!remote.updatedAt) {
         if (local.updatedAt > 0) {
           await api.putPolitics(local);
         }
+        if (!stillInScope(epoch)) return;
         set(local);
         return;
       }
@@ -177,11 +180,12 @@ export const usePolitics = create<PoliticsStore>((set, get) => ({
         set(remote);
       } else {
         await api.putPolitics(local);
+        if (!stillInScope(epoch)) return;
         set(local);
       }
     } catch (e) {
       console.warn("politics sync failed:", e);
-      set(loadDoc());
+      if (stillInScope(epoch)) set(loadDoc());
     }
   },
 

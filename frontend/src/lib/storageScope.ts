@@ -5,6 +5,8 @@ const KEY_USER = "ew.user.v1";
 
 /** undefined = 尚未显式设置，回落到 localStorage 里的 user */
 let explicitUserId: number | null | undefined = undefined;
+/** 每次切换账号作用域 +1；异步拉取后用它丢弃过期写回 */
+let scopeEpoch = 0;
 
 function readUserIdFromStorage(): number | null {
   try {
@@ -25,6 +27,16 @@ export function currentScopeUserId(): number | null {
 
 export function setScopeUserId(id: number | null) {
   explicitUserId = id;
+  scopeEpoch += 1;
+}
+
+export function getScopeEpoch(): number {
+  return scopeEpoch;
+}
+
+/** 异步拉取后写回前：登出 / 换账号则放弃，避免把账号数据写进访客缓存 */
+export function stillInScope(epoch: number): boolean {
+  return scopeEpoch === epoch;
 }
 
 /** 生成当前作用域下的 storage key */
@@ -54,8 +66,10 @@ export function migrateUnscopedIfNeeded(base: string) {
 export const SCOPED_BASES = [
   "ew.cards.v1",
   "ew.meta.v1",
+  "ew.meta.resetAt.v1",
   "ew.set.v1",
   "ew.journal.v1",
+  "ew.kg.v1",
   "ew.politics.v1",
   "ew.todayLog.v1",
   "ew.dayCounts.v1",

@@ -1,7 +1,7 @@
 // 知识图谱用户进度：本地即时写 + 登录后镜像 /api/kg（服务端权威）
 import { create } from "zustand";
 import * as api from "@/lib/api";
-import { scopedKey } from "@/lib/storageScope";
+import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { applyItemMark, applyMarkToKp, markCovered } from "@/lib/kg/mark";
 import { journalCopyForKp } from "@/lib/kg/journalBridge";
 import type {
@@ -189,14 +189,17 @@ export const useKgProgress = create<KgStore>((set, get) => ({
 
   syncFromServer: async () => {
     if (!api.isLoggedIn()) return;
+    const epoch = getScopeEpoch();
     try {
       const r = await api.getKg();
+      if (!stillInScope(epoch) || !api.isLoggedIn()) return;
       const remote = r?.kg as KgDoc | null | undefined;
       const local = loadDoc();
       if (!remote || !remote.updatedAt) {
         if (local.updatedAt > 0) {
           await api.putKg(local);
         }
+        if (!stillInScope(epoch)) return;
         set(local);
         return;
       }
@@ -212,11 +215,12 @@ export const useKgProgress = create<KgStore>((set, get) => ({
         set(doc);
       } else {
         await api.putKg(local);
+        if (!stillInScope(epoch)) return;
         set(local);
       }
     } catch (e) {
       console.warn("kg sync failed:", e);
-      set(loadDoc());
+      if (stillInScope(epoch)) set(loadDoc());
     }
   },
 

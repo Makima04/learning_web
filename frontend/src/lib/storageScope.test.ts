@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   currentScopeUserId,
+  getScopeEpoch,
   migrateUnscopedIfNeeded,
+  SCOPED_BASES,
   scopedKey,
   setScopeUserId,
+  stillInScope,
 } from "@/lib/storageScope";
 
 describe("storageScope", () => {
@@ -37,5 +40,20 @@ describe("storageScope", () => {
     localStorage.setItem("ew.cards.v1", '{"3":{}}');
     migrateUnscopedIfNeeded("ew.cards.v1");
     expect(localStorage.getItem("ew.cards.v1.u7")).toBe('{"2":{}}');
+  });
+
+  it("bumps scope epoch on user switch so stale syncs can abort", () => {
+    const a = getScopeEpoch();
+    expect(stillInScope(a)).toBe(true);
+    setScopeUserId(3);
+    expect(stillInScope(a)).toBe(false);
+    const b = getScopeEpoch();
+    expect(b).toBeGreaterThan(a);
+    expect(stillInScope(b)).toBe(true);
+  });
+
+  it("includes kg and meta reset keys in scoped bases", () => {
+    expect(SCOPED_BASES).toContain("ew.kg.v1");
+    expect(SCOPED_BASES).toContain("ew.meta.resetAt.v1");
   });
 });

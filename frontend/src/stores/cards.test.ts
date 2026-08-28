@@ -11,6 +11,7 @@ const apiMocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/api", () => apiMocks);
 
+import { setScopeUserId } from "@/lib/storageScope";
 import { useCards } from "@/stores/cards";
 
 function card(updatedAt: number, learned = true): Card {
@@ -40,6 +41,7 @@ describe("cards sync", () => {
     apiMocks.getCards.mockReset();
     apiMocks.deleteAllCards.mockReset().mockResolvedValue({ ok: true, deleted: 0 });
     apiMocks.putCard.mockReset().mockResolvedValue({ ok: true });
+    setScopeUserId(null);
     useCards.setState({ cards: {} });
   });
 
@@ -93,5 +95,31 @@ describe("cards sync", () => {
     expect(apiMocks.bulkCards).toHaveBeenCalledWith({
       "7": expect.objectContaining({ updated_at: 700 }),
     });
+  });
+
+  it("does not apply remote cards after account scope switches", async () => {
+    setScopeUserId(1);
+    useCards.setState({ cards: { 1: card(100) } });
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    apiMocks.getCards.mockImplementation(async () => {
+      await gate;
+      return {
+        cards: {
+          "9": { ...card(500), updated_at: 500 },
+        },
+      };
+    });
+
+    const pending = useCards.getState().sync();
+    setScopeUserId(null);
+    release();
+    await pending;
+
+    expect(useCards.getState().cards[9]).toBeUndefined();
+    expect(useCards.getState().cards[1]).toMatchObject({ updatedAt: 100 });
+    expect(apiMocks.bulkCards).not.toHaveBeenCalled();
   });
 });

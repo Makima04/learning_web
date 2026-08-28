@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
-import { scopedKey } from "@/lib/storageScope";
+import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { enqueueMeta, recomputePendingFromStorage } from "@/lib/syncQueue";
 
 const KEY_BASE = "ew.meta.v1";
@@ -170,11 +170,13 @@ export const useMeta = create<MetaStore>((set, get) => ({
   },
   rehydrate: () => set({ meta: loadMeta() }),
   syncMeta: async () => {
+    const epoch = getScopeEpoch();
     try {
       const localMeta = get().get();
       const today = dayKey();
       // 先拉 reset_at：若刚被权威清空，采用远端 0，不要 PUT 旧计数（GREATEST 会救活额度）
       const rm = await api.getMeta(today);
+      if (!stillInScope(epoch)) return;
       const resetAt = parseResetAt(rm.reset_at);
       const seen = loadProgressResetAt();
       if (resetAt > seen) {
@@ -201,7 +203,9 @@ export const useMeta = create<MetaStore>((set, get) => ({
         done_today: localMeta.doneToday,
         client_at: Date.now(),
       });
+      if (!stillInScope(epoch)) return;
       const rm2 = await api.getMeta(today);
+      if (!stillInScope(epoch)) return;
       if (rm2 && rm2.meta && rm2.meta.day_key === localMeta.dayKey) {
         const rmMeta = rm2.meta;
         const merged: Meta = {
@@ -218,7 +222,7 @@ export const useMeta = create<MetaStore>((set, get) => ({
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       console.warn("getMeta sync failed:", message);
-      mirrorMeta(get().get());
+      if (stillInScope(epoch)) mirrorMeta(get().get());
     }
   },
 }));

@@ -12,6 +12,7 @@ vi.mock("@/lib/api", () => apiMocks);
 
 import { dayKey } from "@/lib/day";
 import {
+  enqueueCard,
   enqueueStudyEvent,
   flushPending,
   getSyncStatus,
@@ -28,6 +29,7 @@ describe("syncQueue flushPending", () => {
     });
     apiMocks.isLoggedIn.mockReturnValue(true);
     apiMocks.postStudyEvent.mockReset().mockResolvedValue({ ok: true });
+    apiMocks.bulkCards.mockReset().mockResolvedValue({ ok: true });
   });
 
   afterEach(() => {
@@ -118,5 +120,23 @@ describe("syncQueue flushPending", () => {
     expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
       expect.objectContaining({ word_idx: 8, event_type: "new", client_at: 20 })
     );
+  });
+
+  it("returns lastError when bulkCards fails instead of pretending success", async () => {
+    apiMocks.bulkCards.mockRejectedValueOnce(new Error("boom"));
+    enqueueCard(1, {
+      learned: true,
+      state: "review",
+      due: 1,
+      ivl: 1,
+      ease: 2.5,
+      reps: 1,
+      lapses: 0,
+      quiz: 0,
+      updated_at: 1,
+    });
+    const st = await flushPending();
+    expect(st.lastError).toMatch(/boom/);
+    expect(st.pending).toBe(true);
   });
 });

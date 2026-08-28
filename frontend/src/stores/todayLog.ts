@@ -4,7 +4,7 @@ import * as api from "@/lib/api";
 import type { TodayItem } from "@/lib/api";
 import { dayKey } from "@/lib/day";
 import { noteTodayCount } from "@/lib/dayCounts";
-import { scopedKey } from "@/lib/storageScope";
+import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { enqueueStudyEvent, flushPending, recomputePendingFromStorage } from "@/lib/syncQueue";
 
 const KEY_BASE = "ew.todayLog.v1";
@@ -235,10 +235,13 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
 
   syncFromServer: async () => {
     if (!api.isLoggedIn()) return;
+    const epoch = getScopeEpoch();
     const today = dayKey();
     try {
       await flushPending();
+      if (!stillInScope(epoch) || !api.isLoggedIn()) return;
       let resp = await api.getToday(today);
+      if (!stillInScope(epoch) || !api.isLoggedIn()) return;
       let serverItems = resp.items || [];
       const local = ensureToday(get().log);
       if (local !== get().log) set({ log: local });
@@ -255,7 +258,9 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
           });
         }
         await flushPending();
+        if (!stillInScope(epoch) || !api.isLoggedIn()) return;
         resp = await api.getToday(today);
+        if (!stillInScope(epoch) || !api.isLoggedIn()) return;
         serverItems = resp.items || [];
       }
 

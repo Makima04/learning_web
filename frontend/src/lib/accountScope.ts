@@ -7,6 +7,7 @@ import { useKgProgress } from "@/stores/kgProgress";
 import { usePolitics } from "@/stores/politics";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
+import { useStudy } from "@/stores/study";
 import { useTodayLog } from "@/stores/todayLog";
 
 /** 切换到指定用户（或 null=访客），并重载本地进度 */
@@ -20,5 +21,6 @@ export function applyUserScope(userId: number | null) {
   useKgProgress.getState().load();
   usePolitics.getState().load();
   useTodayLog.getState().rehydrate();
+  useStudy.getState().resetSession();
   recomputePendingFromStorage();
 }
