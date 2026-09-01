@@ -1003,6 +1003,18 @@ def main() -> int:
             if not q["options"]:
                 q.pop("options", None)
     all_q = classify(all_q)
+    prev_path = OUT_DIR / "questions.json"
+    if prev_path.exists():
+        old = json.loads(prev_path.read_text(encoding="utf-8"))
+        old_ans = {
+            (q.get("book"), q.get("kind"), str(q.get("section")), q.get("qno")): q.get("answer")
+            for q in old
+            if q.get("answer")
+        }
+        for q in all_q:
+            key = (q.get("book"), q.get("kind"), str(q.get("section")), q.get("qno"))
+            if key in old_ans and not q.get("answer"):
+                q["answer"] = old_ans[key]
     (OUT_DIR / "questions.json").write_text(
         json.dumps(all_q, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -1023,6 +1035,8 @@ def main() -> int:
         }
         if q.get("options"):
             row["options"] = q["options"]
+        if q.get("answer"):
+            row["answer"] = q["answer"]
         slim.append(row)
     PUBLIC_CATALOG.parent.mkdir(parents=True, exist_ok=True)
     PUBLIC_CATALOG.write_text(

@@ -34,3 +34,23 @@ export function kgKpPath(
   if (opts?.src) return `${base}?src=${encodeURIComponent(opts.src)}`;
   return base;
 }
+
+export function kgBookDrillPath(
+  bookId: string,
+  moduleId: string,
+  opts: {
+    subject?: SubjectId | null;
+    src: string;
+    part: string;
+    section: string;
+    facet?: string | null;
+  }
+): string {
+  const q = new URLSearchParams({
+    src: opts.src,
+    part: opts.part,
+    section: opts.section,
+  });
+  if (opts.facet) q.set("facet", opts.facet);
+  return `${kgModulePath(bookId, moduleId, opts.subject)}/book?${q.toString()}`;
+}

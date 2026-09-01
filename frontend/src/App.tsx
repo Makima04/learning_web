@@ -13,6 +13,7 @@ import { TodayPage } from "@/pages/TodayPage";
 import { KgMapPage } from "@/pages/KgMapPage";
 import { KgModulePage } from "@/pages/KgModulePage";
 import { KgKpPage } from "@/pages/KgKpPage";
+import { KgBookDrillPage } from "@/pages/KgBookDrillPage";
 import { KgPredictPage } from "@/pages/KgPredictPage";
 import { KgExamsPage } from "@/pages/KgExamsPage";
 import {
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="kg/kp/:kpId" element={<KgLegacyKpRedirect />} />
         <Route path="kg/:subject" element={<KgMapPage />} />
         <Route path="kg/:subject/module/:bookId/:moduleId" element={<KgModulePage />} />
+        <Route path="kg/:subject/module/:bookId/:moduleId/book" element={<KgBookDrillPage />} />
         <Route path="kg/:subject/kp/:kpId" element={<KgKpPage />} />
         <Route path="viz" element={<VizHomePage />} />
         <Route path="viz/:kpId" element={<VizKpPage />} />

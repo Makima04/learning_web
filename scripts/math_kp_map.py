@@ -1,6 +1,9 @@
 """李林 880 章 / 张宇 1000 章 → 图谱考点。大章跟 880，细点跟 1000。"""
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 # 880 章号 → 默认考点（关键词没命中时）
 LILIN_CHAPTER_DEFAULT: dict[int, str] = {
     1: "calc.limit.tech",
@@ -15,7 +18,7 @@ LILIN_CHAPTER_DEFAULT: dict[int, str] = {
     10: "la.det.compute",
     11: "la.mat.ops",
     12: "la.eq.vector",
-    13: "la.eq.gauss",
+    13: "la.eq.solvability",
     14: "la.eig.value",
     15: "la.eig.quad",
     16: "prob.base.axioms",
@@ -107,7 +110,7 @@ _zy("base", "la", {
     1: "la.det.compute",
     2: "la.mat.ops",
     3: "la.eq.vector",
-    4: "la.eq.gauss",
+    4: "la.eq.solvability",
     5: "la.eig.value",
     6: "la.eig.quad",
 })
@@ -116,7 +119,7 @@ _zy("hard", "la", {
     2: "la.det.cofactor",
     3: "la.mat.ops",
     4: "la.mat.rank",
-    5: "la.eq.gauss",
+    5: "la.eq.solvability",
     6: "la.eq.vector",
     7: "la.eig.value",
     8: "la.eig.similar",
@@ -225,11 +228,12 @@ LILIN_KEYWORDS: dict[int, list[tuple[list[str], str]]] = {
         (["线性相关", "线性无关", "极大无关", "秩"], "la.eq.vector"),
     ],
     13: [
-        (["解的结构", "基础解系", "通解", "齐次", "非齐次"], "la.eq.gauss"),
-        (["消元", "增广", "有解", "无解"], "la.eq.gauss"),
+        (["公共解", "同解"], "la.eq.common"),
+        (["基础解系", "解的结构", "通解"], "la.eq.structure"),
+        (["消元", "增广", "有解", "无解", "齐次", "非齐次"], "la.eq.solvability"),
     ],
     14: [
-        (["对角化", "可对角"], "la.eig.diag"),
+        (["对角化", "可对角", "正交对角", "P^{-1}AP", "P-1AP"], "la.eig.diag"),
         (["相似"], "la.eig.similar"),
         (["特征值", "特征向量"], "la.eig.value"),
     ],
@@ -298,3 +302,29 @@ def classify_zhangyu(part: str, subj: str, chapter: int, stem: str, extra: str =
                 return [kp]
     kp = ZHANGYU_CHAPTER.get((part, subj, chapter))
     return [kp] if kp else []
+
+
+_OVERLAY_PATH = Path(__file__).resolve().parent / "math_item_overlay.json"
+_OVERLAY: dict[str, dict] | None = None
+
+
+def item_overlay() -> dict[str, dict]:
+    global _OVERLAY
+    if _OVERLAY is None:
+        if _OVERLAY_PATH.exists():
+            _OVERLAY = json.loads(_OVERLAY_PATH.read_text(encoding="utf-8"))
+        else:
+            _OVERLAY = {}
+    return _OVERLAY
+
+
+def apply_overlay(q: dict) -> dict:
+    """人工细标覆盖关键词分类：kp_ids / facets。"""
+    ov = item_overlay().get(q.get("id") or "")
+    if not ov:
+        return q
+    if ov.get("kp_ids"):
+        q["kp_ids"] = list(ov["kp_ids"])
+    if ov.get("facets"):
+        q["facets"] = list(ov["facets"])
+    return q

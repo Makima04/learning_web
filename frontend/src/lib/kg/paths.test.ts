@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { kgKpPath, kgMapPath, kgModulePath, parseKgSubject, kgSubjectSlug } from "./paths";
+import { kgBookDrillPath, kgKpPath, kgMapPath, kgModulePath, parseKgSubject, kgSubjectSlug } from "./paths";
 
 describe("kg paths", () => {
   it("splits 408 and math map URLs", () => {
@@ -19,6 +19,14 @@ describe("kg paths", () => {
     expect(kgKpPath("ds.sort.insert", { subject: "cs408" })).toBe(
       "/kg/cs408/kp/ds.sort.insert"
     );
+    expect(
+      kgBookDrillPath("linear", "la-eq", {
+        subject: "math",
+        src: "lilin880",
+        part: "base",
+        section: "13",
+      })
+    ).toBe("/kg/math/module/linear/la-eq/book?src=lilin880&part=base&section=13");
   });
 
   it("parses slugs", () => {

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { findKp } from "@/data/kg";
 import { MATH_BOOKS } from "@/data/kg/math";
 import {
   itemsForSource,
+  MATH_FACETS,
   mathBookLabel,
+  mathFacetName,
   practiceKindLabel,
   practiceSourceLabel,
 } from "./mathPractice";
@@ -40,6 +43,16 @@ describe("MATH_BOOKS 880 chapters", () => {
       "参数估计",
       "假设检验",
     ]);
+  });
+
+  it("splits 线性方程组 into 有解判别 / 解的结构 / 公共解", () => {
+    const eq = MATH_BOOKS[1]?.modules.find((m) => m.id === "la-eq");
+    expect(eq?.kps.map((k) => k.id)).toEqual([
+      "la.eq.solvability",
+      "la.eq.structure",
+      "la.eq.common",
+    ]);
+    expect(findKp("la.eq.gauss")?.kp.id).toBe("la.eq.structure");
   });
 
   it("keeps split kps for 三重积分 / 曲线曲面 / 积分不等式", () => {
@@ -101,5 +114,42 @@ describe("practice labels", () => {
     expect(itemsForSource(pool, "lilin880").map((q) => q.id)).toEqual(["ll-1"]);
     expect(itemsForSource(pool, "zhangyu1000").map((q) => q.id)).toEqual(["zy-1"]);
     expect(itemsForSource(pool, null)).toHaveLength(2);
+  });
+
+  it("names 解析分类 facets in Chinese", () => {
+    expect(mathFacetName("common_same")).toBe("公共解/同解");
+    expect(mathFacetName("rank_adjoint")).toBe("伴随与秩");
+    expect(mathFacetName("diagonalize")).toBe("可对角化");
+    expect(mathFacetName("inertia")).toBe("惯性定理/规范形");
+    expect(mathFacetName("equiv_inf")).toBe("等价无穷小");
+    expect(mathFacetName("var_limit")).toBe("变限积分");
+    expect(mathFacetName("green")).toBe("格林公式");
+    expect(mathFacetName("bayes")).toBe("贝叶斯");
+    expect(mathFacetName("curvature")).toBe("曲率");
+  });
+
+  it("keeps facet ids unique", () => {
+    const ids = MATH_FACETS.map((f) => f.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe("张宇解析字段", () => {
+  it("keeps ans_img / answer on catalog items", () => {
+    const item: WangdaoItem = {
+      id: "zy-base-hs-0-1",
+      source: "zhangyu1000",
+      part: "base",
+      book: "calc",
+      kind: "mcq",
+      section: "hs-0",
+      qno: 1,
+      stem: "x",
+      kp_ids: ["calc.limit.fn"],
+      answer: "B",
+      ans_img: "/math/img/zy-ans/zy-base-hs-0-1.jpg",
+    };
+    expect(item.answer).toBe("B");
+    expect(item.ans_img).toContain("zy-ans");
   });
 });

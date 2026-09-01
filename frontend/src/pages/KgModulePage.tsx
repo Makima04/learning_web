@@ -3,9 +3,10 @@ import { useEffect, useMemo } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { getBook, getModule, findKp } from "@/data/kg";
 import { moduleProgress } from "@/lib/kg/progress";
-import { countKpDrill } from "@/lib/kg/wangdao408";
+import { countKpDrill, countPoolDrill } from "@/lib/kg/wangdao408";
 import { itemsForSource, MATH_BOOK_SOURCES, useDrillCatalog } from "@/lib/kg/mathPractice";
-import { kgKpPath, kgMapPath, kgModulePath, kgSubjectSlug, parseKgSubject } from "@/lib/kg/paths";
+import { bookDrillGroups, itemsForBookDrill } from "@/lib/kg/mathBookToc";
+import { kgBookDrillPath, kgKpPath, kgMapPath, kgModulePath, kgSubjectSlug, parseKgSubject } from "@/lib/kg/paths";
 import { vizFor } from "@/viz/registry";
 import type { BookId, MarkLevel } from "@/lib/kg/types";
 import { useJournal } from "@/stores/journal";
@@ -84,7 +85,9 @@ export function KgModulePage() {
           )}
           <p className="mt-1 text-xs text-muted-foreground">
             {hasDrill
-              ? "点进考点：新学是还没做过的题，复习是错题集里今天到期的。不会/模糊或收藏会进错题集，按 1/3/7/14 天提醒。"
+              ? isMath
+                ? "可以按 880/1000 原书顺序刷，也可以按考点刷。不会/模糊或收藏会进错题集，按 1/3/7/14 天提醒。"
+                : "点进考点：新学是还没做过的题，复习是错题集里今天到期的。不会/模糊或收藏会进错题集，按 1/3/7/14 天提醒。"
               : `标记已学后，本章会作为一张大卡片进入「学习日志」（明天起提醒，每天最多 ${kgChapterLimit} 章）；点进去复盘各知识点，会回写掌握度`}
           </p>
         </div>
@@ -110,7 +113,49 @@ export function KgModulePage() {
         <p className="text-sm text-muted-foreground">正在加载题量…</p>
       )}
 
+      {isMath && catalog && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold">按书顺序刷</h2>
+          {bookDrillGroups(mod.id).map((spec) => {
+            const pool = itemsForBookDrill(catalog, spec);
+            if (pool.length === 0) return null;
+            const drill = countPoolDrill(pool, itemMarks, journalEntries);
+            return (
+              <Card key={`${spec.source}-${spec.part}-${spec.section}`}>
+                <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{spec.bookLabel}</p>
+                    <p className="text-xs text-muted-foreground">{spec.chapterLabel}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      共 {drill.total} · 新学 {drill.learn} · 复习 {drill.review}
+                      {drill.waiting > 0 ? ` · 间隔中 ${drill.waiting}` : ""}
+                    </p>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link
+                      to={kgBookDrillPath(book.id, mod.id, {
+                        subject: book.subject,
+                        src: spec.source,
+                        part: spec.part,
+                        section: spec.section,
+                      })}
+                    >
+                      {drill.review > 0
+                        ? `复习 ${drill.review}`
+                        : drill.learn > 0
+                          ? `开始 ${drill.learn} 题`
+                          : "进入"}
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
       <div className="space-y-3">
+        {isMath && <h2 className="text-sm font-semibold">按考点刷</h2>}
         {mod.kps.map((kp) => {
           const st = states[kp.id];
           const drill = catalog

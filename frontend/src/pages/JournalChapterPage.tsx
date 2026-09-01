@@ -14,7 +14,7 @@ import type { MarkLevel } from "@/lib/kg/types";
 import { useJournal } from "@/stores/journal";
 import { cn } from "@/lib/utils";
 import { categoryMap, EntryCard } from "@/pages/journalCards";
-import { WangdaoStem } from "@/pages/wangdaoQuestion";
+import { QuestionKpLine, WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "pass", label: "会", cls: "bg-emerald-600 text-white" },
@@ -97,7 +97,9 @@ export function JournalChapterPage() {
                       {q.book_ans_page != null ? ` · 原书【P${q.book_ans_page}】` : ""}
                       {entry.nextReviewOn < today ? " · 逾期" : ""}
                     </p>
+                    <QuestionKpLine item={q} />
                     <WangdaoStem item={q} />
+                    <WangdaoAnalysis item={q} />
                     <div className="flex flex-wrap items-center gap-2">
                       {MARKS.map((m) => (
                         <button

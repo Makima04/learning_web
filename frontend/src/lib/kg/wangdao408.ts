@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { dayKey } from "@/lib/day";
 import { isDueOnOrBefore, type JournalEntry } from "@/lib/journal";
 import type { MarkLevel, UserItemMark } from "@/lib/kg/types";
+import { canonicalKpId } from "@/lib/kg/kpAlias";
 
 export type WangdaoKind = "mcq" | "big";
 
@@ -25,6 +26,12 @@ export interface WangdaoItem {
   part?: string;
   /** 原页裁图（数学公式用，优先于 stem 文本） */
   img?: string;
+  /** 张宇解析册裁图 */
+  ans_img?: string;
+  /** 选择题字母，或解析册【答案】里读到的 A-D */
+  answer?: string;
+  /** 题型细类（解析分类，不是图谱考点） */
+  facets?: string[];
 }
 
 export interface KpDrillCounts {
@@ -37,7 +44,7 @@ export interface KpDrillCounts {
   waiting: number;
 }
 
-const CATALOG_VER = "full-20260831c";
+const CATALOG_VER = "full-20260901a";
 const cache: {
   ver?: string;
   value?: WangdaoItem[];
@@ -105,8 +112,12 @@ export function wrongEntriesForKp(
   entries: JournalEntry[],
   kpId: string
 ): JournalEntry[] {
+  const want = canonicalKpId(kpId);
   return entries.filter(
-    (e) => e.status === "active" && e.kpId === kpId && Boolean(e.sourceItemId)
+    (e) =>
+      e.status === "active" &&
+      Boolean(e.sourceItemId) &&
+      canonicalKpId(e.kpId) === want
   );
 }
 
@@ -114,16 +125,17 @@ function isSkip(mark: MarkLevel | undefined): boolean {
   return !mark || mark === "skip";
 }
 
-export function countKpDrill(
-  items: WangdaoItem[],
-  kpId: string,
+export function countPoolDrill(
+  qs: WangdaoItem[],
   itemMarks: UserItemMark[],
   entries: JournalEntry[],
   today: string = dayKey()
 ): KpDrillCounts {
-  const qs = itemsForKp(items, kpId);
   const marks = markMapOf(itemMarks);
-  const wrong = wrongEntriesForKp(entries, kpId);
+  const ids = new Set(qs.map((q) => q.id));
+  const wrong = entries.filter(
+    (e) => e.status === "active" && e.sourceItemId && ids.has(e.sourceItemId)
+  );
   const wrongIds = new Set(wrong.map((e) => e.sourceItemId));
   const dueIds = new Set(
     wrong.filter((e) => isDueOnOrBefore(e, today)).map((e) => e.sourceItemId)
@@ -139,17 +151,58 @@ export function countKpDrill(
   return { total: qs.length, learn, review, waiting };
 }
 
+export function learnQueueFrom(
+  qs: WangdaoItem[],
+  itemMarks: UserItemMark[],
+  entries: JournalEntry[]
+): WangdaoItem[] {
+  const marks = markMapOf(itemMarks);
+  const ids = new Set(qs.map((q) => q.id));
+  const wrongIds = new Set(
+    entries
+      .filter((e) => e.status === "active" && e.sourceItemId && ids.has(e.sourceItemId))
+      .map((e) => e.sourceItemId)
+  );
+  return qs.filter((q) => !wrongIds.has(q.id) && isSkip(marks.get(q.id)));
+}
+
+export function reviewQueueFrom(
+  qs: WangdaoItem[],
+  entries: JournalEntry[],
+  today: string = dayKey()
+): WangdaoItem[] {
+  const ids = new Set(qs.map((q) => q.id));
+  const dueIds = new Set(
+    entries
+      .filter(
+        (e) =>
+          e.status === "active" &&
+          e.sourceItemId &&
+          ids.has(e.sourceItemId) &&
+          isDueOnOrBefore(e, today)
+      )
+      .map((e) => e.sourceItemId)
+  );
+  return qs.filter((q) => dueIds.has(q.id));
+}
+
+export function countKpDrill(
+  items: WangdaoItem[],
+  kpId: string,
+  itemMarks: UserItemMark[],
+  entries: JournalEntry[],
+  today: string = dayKey()
+): KpDrillCounts {
+  return countPoolDrill(itemsForKp(items, kpId), itemMarks, entries, today);
+}
+
 export function learnQueue(
   items: WangdaoItem[],
   kpId: string,
   itemMarks: UserItemMark[],
   entries: JournalEntry[]
 ): WangdaoItem[] {
-  const marks = markMapOf(itemMarks);
-  const wrongIds = new Set(wrongEntriesForKp(entries, kpId).map((e) => e.sourceItemId));
-  return itemsForKp(items, kpId).filter(
-    (q) => !wrongIds.has(q.id) && isSkip(marks.get(q.id))
-  );
+  return learnQueueFrom(itemsForKp(items, kpId), itemMarks, entries);
 }
 
 export function reviewQueue(

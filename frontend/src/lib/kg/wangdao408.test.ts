@@ -71,6 +71,19 @@ describe("countKpDrill", () => {
       "c",
     ]);
   });
+
+  it("treats retired la.eq.gauss journal rows as 解的结构", () => {
+    const qs: WangdaoItem[] = [
+      item({ id: "eq-1", kp_ids: ["la.eq.structure"] }),
+    ];
+    const entries = [
+      entry("eq-1", { kpId: "la.eq.gauss", nextReviewOn: "2026-08-31" }),
+    ];
+    expect(countKpDrill(qs, "la.eq.structure", [], entries, "2026-08-31").review).toBe(1);
+    expect(reviewQueue(qs, "la.eq.structure", entries, "2026-08-31").map((q) => q.id)).toEqual([
+      "eq-1",
+    ]);
+  });
 });
 
 describe("journalCopyForWangdao", () => {

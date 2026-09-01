@@ -129,7 +129,7 @@ export const MATH_BOOKS: KgBook[] = [
         order: 1,
         kps: [
           { id: "la.det.def", name: "行列式定义与性质", freq: 4, bigWeight: 0.35, scope: "both" },
-          { id: "la.det.compute", name: "计算与克拉默法则", freq: 4, bigWeight: 0.4, scope: "both" },
+          { id: "la.det.compute", name: "行列式的计算", freq: 4, bigWeight: 0.4, scope: "both" },
           { id: "la.det.cofactor", name: "余子式与代数余子式", freq: 3, bigWeight: 0.35, scope: "both" },
         ],
       },
@@ -139,7 +139,7 @@ export const MATH_BOOKS: KgBook[] = [
         order: 2,
         kps: [
           { id: "la.mat.ops", name: "矩阵运算与初等变换", freq: 5, bigWeight: 0.4, scope: "both" },
-          { id: "la.mat.inv", name: "逆矩阵与分块", freq: 4, bigWeight: 0.45, scope: "both" },
+          { id: "la.mat.inv", name: "逆矩阵、伴随与分块", freq: 4, bigWeight: 0.45, scope: "both" },
           { id: "la.mat.rank", name: "矩阵的秩", freq: 5, bigWeight: 0.55, scope: "both" },
         ],
       },
@@ -158,7 +158,9 @@ export const MATH_BOOKS: KgBook[] = [
         name: "线性方程组",
         order: 4,
         kps: [
-          { id: "la.eq.gauss", name: "高斯消元与解的结构", freq: 5, bigWeight: 0.6, scope: "both" },
+          { id: "la.eq.solvability", name: "有解判别与含参讨论", freq: 5, bigWeight: 0.5, scope: "both", prereqs: ["la.mat.rank"] },
+          { id: "la.eq.structure", name: "基础解系与解的结构", freq: 5, bigWeight: 0.7, scope: "both", prereqs: ["la.eq.solvability", "la.eq.vector"] },
+          { id: "la.eq.common", name: "公共解与同解", freq: 5, bigWeight: 0.65, scope: "both", prereqs: ["la.eq.structure"] },
         ],
       },
       {

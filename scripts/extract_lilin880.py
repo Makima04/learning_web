@@ -12,7 +12,7 @@ import fitz
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from math_img import render_clips
-from math_kp_map import LILIN_CHAPTER_NAME, classify_lilin
+from math_kp_map import LILIN_CHAPTER_NAME, apply_overlay, classify_lilin
 
 ROOT = Path("/Users/makima/program/web/english_web")
 DOWNLOADS = Path("/Users/makima/Downloads")
@@ -207,6 +207,7 @@ def flush_pending(pending: dict | None, out: list[dict]) -> None:
             pending.pop("options", None)
     extra = " ".join((pending.get("options") or {}).values())
     pending["kp_ids"] = classify_lilin(pending["chapter"], pending["stem"], extra)
+    apply_overlay(pending)
     pending["section_name"] = LILIN_CHAPTER_NAME.get(pending["chapter"], pending.get("section_name") or "")
     out.append(pending)
 
@@ -350,6 +351,7 @@ def write_images(doc: fitz.Document, questions: list[dict]) -> None:
 
 
 def slim_row(q: dict) -> dict:
+    q = apply_overlay(dict(q))
     row = {
         "id": q["id"],
         "source": "lilin880",
@@ -363,10 +365,16 @@ def slim_row(q: dict) -> dict:
         "kp_ids": q.get("kp_ids") or [],
         "part": q.get("part"),
     }
+    if q.get("facets"):
+        row["facets"] = q["facets"]
     if q.get("options"):
         row["options"] = q["options"]
     if q.get("img"):
         row["img"] = q["img"]
+    if q.get("ans_img"):
+        row["ans_img"] = q["ans_img"]
+    if q.get("answer"):
+        row["answer"] = q["answer"]
     return row
 
 

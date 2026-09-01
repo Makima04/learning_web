@@ -15,7 +15,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from math_img import pdf_y_from_norm_top, render_clips
-from math_kp_map import classify_zhangyu
+from math_kp_map import apply_overlay, classify_zhangyu
 
 ROOT = Path("/Users/makima/program/web/english_web")
 PDF = Path("/Users/makima/Downloads/27张宇1000题数一-试题册.pdf")
@@ -224,6 +224,7 @@ def flush(pending: dict | None, out: list[dict]) -> None:
     pending["kp_ids"] = classify_zhangyu(
         pending["part"], pending["subj"], pending["chapter"], pending["stem"], extra
     )
+    apply_overlay(pending)
     out.append(pending)
 
 
@@ -376,6 +377,7 @@ def write_images(doc: fitz.Document, questions: list[dict]) -> None:
 
 
 def slim_row(q: dict) -> dict:
+    q = apply_overlay(dict(q))
     row = {
         "id": q["id"],
         "source": "zhangyu1000",
@@ -389,10 +391,16 @@ def slim_row(q: dict) -> dict:
         "kp_ids": q.get("kp_ids") or [],
         "part": q.get("part"),
     }
+    if q.get("facets"):
+        row["facets"] = q["facets"]
     if q.get("options"):
         row["options"] = q["options"]
     if q.get("img"):
         row["img"] = q["img"]
+    if q.get("ans_img"):
+        row["ans_img"] = q["ans_img"]
+    if q.get("answer"):
+        row["answer"] = q["answer"]
     return row
 
 

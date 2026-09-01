@@ -9,6 +9,7 @@ import type {
   MathTrack,
   SubjectId,
 } from "@/lib/kg/types";
+import { canonicalKpId } from "@/lib/kg/kpAlias";
 
 export { MATH_BOOKS } from "./math";
 export {
@@ -82,9 +83,10 @@ export function findKp(kpId: string): {
   module: KgModule;
   book: KgBook;
 } | null {
+  const want = canonicalKpId(kpId);
   for (const book of ALL_BOOKS) {
     for (const mod of book.modules) {
-      const kp = mod.kps.find((k) => k.id === kpId);
+      const kp = mod.kps.find((k) => k.id === want);
       if (kp) return { kp, module: mod, book };
     }
   }
