@@ -3,6 +3,7 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { applyItemMark, applyMarkToKp, markCovered } from "@/lib/kg/mark";
+import { findKp } from "@/data/kg";
 import { journalCopyForKp } from "@/lib/kg/journalBridge";
 import type {
   MarkLevel,
@@ -94,6 +95,9 @@ interface KgStore extends KgDoc {
 
 /** 图谱已学 → 学习日志入队（动态 import 避免 store 循环） */
 function enqueueJournalForKp(kpId: string) {
+  // 408 / 数学复习只走错题集，不因「已学」再挂一张考点卡
+  const subj = findKp(kpId)?.book.subject;
+  if (subj === "cs408" || subj === "math") return;
   const copy = journalCopyForKp(kpId);
   if (!copy) return;
   void import("@/stores/journal").then(({ useJournal }) => {
@@ -158,7 +162,7 @@ export const useKgProgress = create<KgStore>((set, get) => ({
     const itemMarks = [
       ...get().itemMarks.filter((m) => m.itemId !== itemId),
       { itemId, mark, weakKpIds, ts: now },
-    ].slice(-500);
+    ].slice(-20000);
     const doc: KgDoc = { ...get(), states, itemMarks, updatedAt: now };
     persist(doc);
     set(doc);

@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { findKp } from "@/data/kg";
+import { kgModulePath } from "@/lib/kg/paths";
 import { vizFor } from "@/viz/registry";
 import type { MarkLevel } from "@/lib/kg/types";
 import { useKgProgress } from "@/stores/kgProgress";
@@ -53,7 +54,10 @@ export function VizKpPage() {
               图解
             </Link>
             <span>/</span>
-            <Link to={`/kg/module/${book.id}/${mod.id}`} className="hover:underline">
+            <Link
+              to={kgModulePath(book.id, mod.id, book.subject)}
+              className="hover:underline"
+            >
               {book.name} · {mod.name}
             </Link>
           </div>

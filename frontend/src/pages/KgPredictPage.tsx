@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { findKp } from "@/data/kg";
+import { kgMapPath } from "@/lib/kg/paths";
 import * as api from "@/lib/api";
 import {
   buildCs408BigBlueprint,
@@ -155,7 +156,7 @@ export function KgPredictPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-6">
       <div>
-        <Link to="/kg" className="text-xs text-muted-foreground hover:underline">
+        <Link to={kgMapPath("cs408")} className="text-xs text-muted-foreground hover:underline">
           ← 知识图谱
         </Link>
         <h1 className="mt-1 text-xl font-semibold">408 大题预测卷</h1>

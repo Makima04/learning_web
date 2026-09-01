@@ -44,6 +44,22 @@ describe("newEntryDefaults", () => {
     expect(e.nextReviewOn).toBe("2026-08-07");
     expect(e.step).toBe(1);
   });
+
+  it("carries sourceItemId for 错题集", () => {
+    const e = newEntryDefaults({
+      id: "je-wd-ds-mcq-2.2-1",
+      categoryId: "cat-408",
+      title: "§2.2 #1",
+      body: "stem",
+      kind: "mistake",
+      kpId: "ds.linear.seq",
+      fromKg: true,
+      sourceItemId: "ds-mcq-2.2-1",
+    });
+    expect(e.id).toBe("je-wd-ds-mcq-2.2-1");
+    expect(e.sourceItemId).toBe("ds-mcq-2.2-1");
+    expect(e.kind).toBe("mistake");
+  });
 });
 
 describe("scheduleAfterReview", () => {

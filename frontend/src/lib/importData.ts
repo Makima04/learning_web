@@ -255,6 +255,9 @@ function journalEntry(value: unknown, index: number): JournalEntry {
   if (item.fromKg === true) {
     result.fromKg = true;
   }
+  if (typeof item.sourceItemId === "string" && item.sourceItemId.trim()) {
+    result.sourceItemId = item.sourceItemId.trim();
+  }
   return result;
 }
 

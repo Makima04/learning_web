@@ -178,7 +178,11 @@ export function ChapterReviewCard({
                 <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300">
                   知识图谱
                 </span>
-                <span>{chapter.entries.length} 个知识点</span>
+                <span>
+                  {chapter.entries.some((e) => e.sourceItemId)
+                    ? `${chapter.entries.length} 道错题`
+                    : `${chapter.entries.length} 个知识点`}
+                </span>
                 {chapter.firstReviewCount > 0 && (
                   <span>首次 {chapter.firstReviewCount}</span>
                 )}

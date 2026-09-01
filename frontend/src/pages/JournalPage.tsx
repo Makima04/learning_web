@@ -240,7 +240,7 @@ export function JournalPage() {
                       ? `另有${kgDeferredCount > 0 ? `图谱 ${kgDeferredCount} 章` : ""}${
                           kgDeferredCount > 0 && deferredCount > 0 ? "、" : ""
                         }${deferredCount > 0 ? `手写 ${deferredCount} 张` : ""}已顺延；可在设置里分别调整上限`
-                      : "去「记一笔」写下今天学的内容，或在知识图谱标记已学，明天会提醒你"}
+                      : "去「记一笔」写下今天学的内容；408 在知识点里刷题，不会/模糊会进错题集，明天起按遗忘曲线提醒"}
                   </p>
                 </div>
                 {hasDeferred ? (

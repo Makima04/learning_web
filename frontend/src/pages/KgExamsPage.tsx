@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { findKp } from "@/data/kg";
+import { kgMapPath, kgModulePath } from "@/lib/kg/paths";
 import {
   examItemId,
   loadCs408ExamIndex,
@@ -53,7 +54,7 @@ function YearList({ index }: { index: ExamIndex }) {
   return (
     <div className="space-y-4">
       <div>
-        <Link to="/kg" className="text-xs text-muted-foreground hover:underline">
+        <Link to={kgMapPath("cs408")} className="text-xs text-muted-foreground hover:underline">
           ← 知识图谱
         </Link>
         <h1 className="mt-1 text-xl font-semibold">408 真题演练</h1>
@@ -72,7 +73,7 @@ function YearList({ index }: { index: ExamIndex }) {
             <Link to="/kg/predict">408 大题预测/诊断卷</Link>
           </Button>
           <Button asChild size="sm" variant="outline">
-            <Link to="/kg">按模块学习</Link>
+            <Link to={kgMapPath("cs408")}>按模块学习</Link>
           </Button>
         </CardContent>
       </Card>
@@ -319,8 +320,12 @@ function PaperView({ year }: { year: number }) {
                         <Link
                           to={
                             foundKp
-                              ? `/kg/module/${foundKp.book.id}/${foundKp.module.id}`
-                              : "/kg"
+                              ? kgModulePath(
+                                  foundKp.book.id,
+                                  foundKp.module.id,
+                                  foundKp.book.subject
+                                )
+                              : kgMapPath("cs408")
                           }
                           className="hover:underline"
                         >

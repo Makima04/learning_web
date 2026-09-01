@@ -5,6 +5,7 @@ import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
 import {
   DEFAULT_CATEGORIES,
+  addDays,
   computeWeekStats,
   mergeJournalSnapshots,
   newEntryDefaults,
@@ -137,13 +138,25 @@ interface JournalStore extends JournalSnapshot {
   renameCategory: (id: string, name: string) => void;
   removeCategory: (id: string) => boolean;
   addEntry: (input: {
+    id?: string;
     categoryId: string;
     title: string;
     body: string;
     kind?: JournalKind;
     kpId?: string;
     fromKg?: boolean;
+    sourceItemId?: string;
   }) => JournalEntry | null;
+  /** 错题集：同一 sourceItemId 仅一条 active */
+  collectWrongItem: (input: {
+    id?: string;
+    sourceItemId: string;
+    kpId: string;
+    title: string;
+    body: string;
+    categoryId: string;
+  }) => JournalEntry | null;
+  uncollectWrongItem: (sourceItemId: string) => void;
   /** 图谱「已学」入队：同一 kpId 仅保留一条 active */
   addEntryFromKg: (input: {
     kpId: string;
@@ -267,12 +280,14 @@ export const useJournal = create<JournalStore>((set, get) => ({
       else return null;
     }
     const entry = newEntryDefaults({
+      id: input.id,
       categoryId,
       title,
       body: input.body || "",
       kind: input.kind || "learn",
       kpId: input.kpId,
       fromKg: input.fromKg,
+      sourceItemId: input.sourceItemId,
     });
     applyLocal(set, get, { entries: [entry, ...get().entries] });
     return entry;
@@ -282,7 +297,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
     const kpId = input.kpId.trim();
     if (!kpId) return null;
     const existing = get().entries.find(
-      (e) => e.kpId === kpId && e.status === "active"
+      (e) => e.kpId === kpId && e.status === "active" && !e.sourceItemId
     );
     if (existing) {
       // 已在队列：轻触更新时间，不重复入队
@@ -300,6 +315,59 @@ export const useJournal = create<JournalStore>((set, get) => ({
       kpId,
       fromKg: true,
     });
+  },
+
+  collectWrongItem: (input) => {
+    const sourceItemId = input.sourceItemId.trim();
+    const kpId = input.kpId.trim();
+    if (!sourceItemId || !kpId) return null;
+    const existing = get().entries.find((e) => e.sourceItemId === sourceItemId);
+    if (existing?.status === "active") return existing;
+    if (existing) {
+      const today = dayKey();
+      const entries = get().entries.map((e) =>
+        e.id === existing.id
+          ? {
+              ...e,
+              status: "active" as const,
+              kind: "mistake" as const,
+              step: 1 as const,
+              nextReviewOn: addDays(today, 1),
+              kpId,
+              fromKg: true,
+              sourceItemId,
+              title: input.title.trim() || e.title,
+              body: input.body.trim(),
+              updatedAt: Date.now(),
+            }
+          : e
+      );
+      applyLocal(set, get, { entries });
+      return entries.find((e) => e.id === existing.id) || existing;
+    }
+    return get().addEntry({
+      id: input.id,
+      categoryId: input.categoryId,
+      title: input.title,
+      body: input.body,
+      kind: "mistake",
+      kpId,
+      fromKg: true,
+      sourceItemId,
+    });
+  },
+
+  uncollectWrongItem: (sourceItemId) => {
+    const id = sourceItemId.trim();
+    if (!id) return;
+    const now = Date.now();
+    let changed = false;
+    const entries = get().entries.map((e) => {
+      if (e.sourceItemId !== id || e.status !== "active") return e;
+      changed = true;
+      return { ...e, status: "archived" as const, updatedAt: now };
+    });
+    if (changed) applyLocal(set, get, { entries });
   },
 
   updateEntry: (id, patch) => {
@@ -337,6 +405,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
     let changed = false;
     const entries = get().entries.map((e) => {
       if (e.kpId !== kpId || e.status !== "active") return e;
+      if (e.sourceItemId) return e; // 错题集不随取消已学消失
       changed = true;
       return { ...e, status: "archived" as const, updatedAt: now };
     });

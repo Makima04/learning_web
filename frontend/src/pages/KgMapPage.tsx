@@ -1,12 +1,13 @@
 // 知识图谱作战地图：模块卡片 + 双层进度 + 三入口
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { Link, Navigate, useParams } from "react-router-dom";
 import {
   booksForSubject,
   filterMathBooks,
   findKp,
 } from "@/data/kg";
 import { dueKpIds, subjectProgress } from "@/lib/kg/progress";
+import { kgKpPath, kgMapPath, kgModulePath, parseKgSubject } from "@/lib/kg/paths";
 import type { BookId, SubjectId } from "@/lib/kg/types";
 import { useKgProgress } from "@/stores/kgProgress";
 import { useSettings } from "@/stores/settings";
@@ -30,12 +31,13 @@ function Bar({ value, className }: { value: number; className?: string }) {
 }
 
 export function KgMapPage() {
+  const { subject: rawSubject } = useParams();
   const settings = useSettings();
   const load = useKgProgress((s) => s.load);
   const states = useKgProgress((s) => s.states);
-  const [subject, setSubject] = useState<SubjectId>(() =>
-    settings.enableCs408 ? "cs408" : "math"
-  );
+  const parsed = parseKgSubject(rawSubject);
+  const fallback: SubjectId = settings.enableCs408 ? "cs408" : "math";
+  const subject: SubjectId = parsed ?? fallback;
 
   useEffect(() => {
     load();
@@ -75,6 +77,16 @@ export function KgMapPage() {
     },
   ];
 
+  if (!parsed) {
+    return <Navigate to={kgMapPath(fallback)} replace />;
+  }
+  if (subject === "cs408" && !settings.enableCs408 && settings.enableMath) {
+    return <Navigate to={kgMapPath("math")} replace />;
+  }
+  if (subject === "math" && !settings.enableMath && settings.enableCs408) {
+    return <Navigate to={kgMapPath("cs408")} replace />;
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -100,10 +112,9 @@ export function KgMapPage() {
         {tabs
           .filter((t) => t.show)
           .map((t) => (
-            <button
+            <Link
               key={t.id}
-              type="button"
-              onClick={() => setSubject(t.id)}
+              to={kgMapPath(t.id)}
               className={cn(
                 "rounded-lg px-4 py-2 text-sm",
                 subject === t.id
@@ -112,7 +123,7 @@ export function KgMapPage() {
               )}
             >
               {t.label}
-            </button>
+            </Link>
           ))}
       </div>
 
@@ -131,7 +142,9 @@ export function KgMapPage() {
         {[
           {
             title: "模块学习",
-            desc: "按章过知识点，标记已学（覆盖进度）",
+            desc: subject === "math"
+              ? "按 880 章进入考点，李林880 与 张宇1000 分开刷"
+              : "按章过知识点，刷王道题或标记已学",
             to: null as string | null,
           },
           {
@@ -184,7 +197,7 @@ export function KgMapPage() {
             {due.map((d) => (
               <Link
                 key={d.kp.id}
-                to={`/kg/module/${d.book.id}/${d.module.id}`}
+                to={kgKpPath(d.kp.id, { subject: d.book.subject })}
                 className="rounded-md border bg-card px-2 py-1 text-xs hover:bg-accent"
               >
                 {d.kp.name}
@@ -213,7 +226,7 @@ export function KgMapPage() {
                 return (
                   <Link
                     key={mod.id}
-                    to={`/kg/module/${book.id as BookId}/${mod.id}`}
+                    to={kgModulePath(book.id as BookId, mod.id, subject)}
                     className="group rounded-xl border bg-card p-4 shadow-sm transition hover:border-primary/40 hover:shadow"
                   >
                     <div className="mb-2 flex items-start justify-between gap-2">

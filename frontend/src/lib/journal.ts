@@ -35,6 +35,8 @@ export interface JournalEntry {
   kpId?: string;
   /** 自动从图谱「已学」创建时为 true，便于 UI 标注 */
   fromKg?: boolean;
+  /** 王道/题库题目 id；有则学习日志按题复盘（错题集） */
+  sourceItemId?: string;
 }
 
 export interface ReviewLog {
@@ -138,6 +140,7 @@ export function newEntryDefaults(
     createdOn?: string;
     kpId?: string;
     fromKg?: boolean;
+    sourceItemId?: string;
   }
 ): JournalEntry {
   const createdOn = partial.createdOn || dayKey();
@@ -157,6 +160,7 @@ export function newEntryDefaults(
   };
   if (partial.kpId) entry.kpId = partial.kpId;
   if (partial.fromKg) entry.fromKg = true;
+  if (partial.sourceItemId) entry.sourceItemId = partial.sourceItemId;
   return entry;
 }
 

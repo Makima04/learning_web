@@ -12,8 +12,14 @@ import { JournalChapterPage } from "@/pages/JournalChapterPage";
 import { TodayPage } from "@/pages/TodayPage";
 import { KgMapPage } from "@/pages/KgMapPage";
 import { KgModulePage } from "@/pages/KgModulePage";
+import { KgKpPage } from "@/pages/KgKpPage";
 import { KgPredictPage } from "@/pages/KgPredictPage";
 import { KgExamsPage } from "@/pages/KgExamsPage";
+import {
+  KgIndexRedirect,
+  KgLegacyKpRedirect,
+  KgLegacyModuleRedirect,
+} from "@/pages/kgRedirects";
 import { VizHomePage } from "@/pages/VizHomePage";
 import { VizKpPage } from "@/pages/VizKpPage";
 import { PoliticsPage } from "@/pages/PoliticsPage";
@@ -33,11 +39,15 @@ export default function App() {
         <Route path="journal" element={<JournalPage />} />
         <Route path="journal/chapter/:moduleId" element={<JournalChapterPage />} />
         <Route path="journal/:tab" element={<JournalPage />} />
-        <Route path="kg" element={<KgMapPage />} />
-        <Route path="kg/module/:bookId/:moduleId" element={<KgModulePage />} />
+        <Route path="kg" element={<KgIndexRedirect />} />
         <Route path="kg/predict" element={<KgPredictPage />} />
         <Route path="kg/exams" element={<KgExamsPage />} />
         <Route path="kg/exams/:year" element={<KgExamsPage />} />
+        <Route path="kg/module/:bookId/:moduleId" element={<KgLegacyModuleRedirect />} />
+        <Route path="kg/kp/:kpId" element={<KgLegacyKpRedirect />} />
+        <Route path="kg/:subject" element={<KgMapPage />} />
+        <Route path="kg/:subject/module/:bookId/:moduleId" element={<KgModulePage />} />
+        <Route path="kg/:subject/kp/:kpId" element={<KgKpPage />} />
         <Route path="viz" element={<VizHomePage />} />
         <Route path="viz/:kpId" element={<VizKpPage />} />
         <Route path="politics" element={<PoliticsPage />} />

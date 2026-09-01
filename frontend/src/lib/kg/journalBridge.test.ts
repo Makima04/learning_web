@@ -58,7 +58,7 @@ describe("journalCopyForKp", () => {
     const copy = journalCopyForKp("calc.limit.def");
     expect(copy?.title).toBe("极限定义与性质");
     expect(copy?.categoryId).toBe("cat-math");
-    expect(copy?.body).toContain("函数·极限·连续");
+    expect(copy?.body).toContain("函数、极限、连续");
   });
 });
 
@@ -91,17 +91,17 @@ describe("planKgChapterDue", () => {
   it("groups kps in the same module into one chapter card", () => {
     const plan = planKgChapterDue(
       [
-        kgEntry("a", "calc.limit.def"),
-        kgEntry("b", "calc.limit.tech"),
-        kgEntry("c", "calc.limit.cont"),
-        kgEntry("d", "calc.limit.asymp"),
+        kgEntry("a", "calc.limit.def", { sourceItemId: "ll-a" }),
+        kgEntry("b", "calc.limit.tech", { sourceItemId: "ll-b" }),
+        kgEntry("c", "calc.limit.cont", { sourceItemId: "ll-c" }),
+        kgEntry("d", "calc.limit.asymp", { sourceItemId: "ll-d" }),
       ],
       3,
       today
     );
     expect(plan.due).toHaveLength(1);
     expect(plan.due[0]?.moduleId).toBe("calc-limit");
-    expect(plan.due[0]?.moduleName).toBe("函数·极限·连续");
+    expect(plan.due[0]?.moduleName).toBe("函数、极限、连续");
     expect(plan.due[0]?.entries).toHaveLength(4);
     expect(plan.deferred).toHaveLength(0);
   });
@@ -109,10 +109,10 @@ describe("planKgChapterDue", () => {
   it("caps at 3 chapter cards and defers the rest", () => {
     const plan = planKgChapterDue(
       [
-        kgEntry("a", "calc.limit.def", { createdOn: "2026-08-18" }),
-        kgEntry("b", "calc.d1.def", { createdOn: "2026-08-17" }),
-        kgEntry("c", "calc.i1.indef", { createdOn: "2026-08-16" }),
-        kgEntry("d", "calc.ode.1st", { createdOn: "2026-08-15" }),
+        kgEntry("a", "calc.limit.def", { createdOn: "2026-08-18", sourceItemId: "ll-a" }),
+        kgEntry("b", "calc.d1.def", { createdOn: "2026-08-17", sourceItemId: "ll-b" }),
+        kgEntry("c", "calc.i1.indef", { createdOn: "2026-08-16", sourceItemId: "ll-c" }),
+        kgEntry("d", "calc.ode.1st", { createdOn: "2026-08-15", sourceItemId: "ll-d" }),
       ],
       3,
       today
@@ -140,7 +140,7 @@ describe("planKgChapterDue", () => {
       updatedAt: 1,
     };
     const plan = planKgChapterDue(
-      [manual, kgEntry("a", "ds.linear.seq")],
+      [manual, kgEntry("a", "ds.linear.seq", { sourceItemId: "ds-mcq-2.2-1", kind: "mistake" })],
       3,
       today
     );
@@ -149,8 +149,45 @@ describe("planKgChapterDue", () => {
     expect(plan.due[0]?.entries.every((e) => e.id !== "m1")).toBe(true);
   });
 
+  it("408 chapter queue only includes 错题, not bare 已学 cards", () => {
+    const plan = planKgChapterDue(
+      [
+        kgEntry("bare", "ds.linear.seq"),
+        kgEntry("wrong", "ds.linear.linked", {
+          sourceItemId: "ds-mcq-2.3-1",
+          kind: "mistake",
+        }),
+      ],
+      3,
+      today
+    );
+    expect(plan.due).toHaveLength(1);
+    expect(plan.due[0]?.entries.map((e) => e.id)).toEqual(["wrong"]);
+  });
+
+  it("math chapter queue only includes 错题, not bare 已学 cards", () => {
+    const plan = planKgChapterDue(
+      [
+        kgEntry("bare", "calc.limit.def"),
+        kgEntry("wrong", "calc.i1.ineq", {
+          sourceItemId: "ll-base-3-big-12",
+          kind: "mistake",
+        }),
+      ],
+      3,
+      today
+    );
+    expect(plan.due).toHaveLength(1);
+    expect(plan.due[0]?.entries.map((e) => e.id)).toEqual(["wrong"]);
+    expect(plan.due[0]?.moduleId).toBe("calc-int1");
+  });
+
   it("limit 0 defers every chapter", () => {
-    const plan = planKgChapterDue([kgEntry("a", "calc.limit.def")], 0, today);
+    const plan = planKgChapterDue(
+      [kgEntry("a", "calc.limit.def", { sourceItemId: "ll-a" })],
+      0,
+      today
+    );
     expect(plan.due).toHaveLength(0);
     expect(plan.deferred).toHaveLength(1);
   });

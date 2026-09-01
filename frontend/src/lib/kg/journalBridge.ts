@@ -11,6 +11,14 @@ import {
   type ReviewResult,
 } from "@/lib/journal";
 
+/**
+ * 章节大卡实际复盘的条目：408 / 数学都只复盘错题集（sourceItemId）。
+ */
+export function isKgChapterReviewEntry(entry: JournalEntry): boolean {
+  if (!isKgJournalEntry(entry)) return false;
+  return Boolean(entry.sourceItemId);
+}
+
 /** 图谱每日章节大卡默认上限（与手写分类额度独立）。 */
 export const DEFAULT_KG_CHAPTER_DAILY_REVIEW = 3;
 
@@ -123,7 +131,7 @@ export function planKgChapterDue(
   limit?: number | null,
   today: string = dayKey()
 ): KgChapterPlan {
-  const kgDue = sortDueEntries(entries.filter(isKgJournalEntry), today);
+  const kgDue = sortDueEntries(entries.filter(isKgChapterReviewEntry), today);
   const byModule = new Map<string, JournalEntry[]>();
   const order: string[] = [];
   for (const entry of kgDue) {
