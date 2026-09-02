@@ -4,11 +4,14 @@ import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { findKp } from "@/data/kg";
 import { kgKpPath, kgMapPath, kgModulePath, kgSubjectSlug, parseKgSubject } from "@/lib/kg/paths";
 import { vizFor } from "@/viz/registry";
+import { wdSetPath } from "@/data/kg/wdTaxonomy";
 import {
   countKpDrill,
+  itemsForKp,
   learnQueue,
   reviewQueue,
   type WangdaoItem,
+  type WangdaoKind,
 } from "@/lib/kg/wangdao408";
 import {
   itemsForSource,
@@ -27,6 +30,7 @@ import { useJournal } from "@/stores/journal";
 import { useKgProgress } from "@/stores/kgProgress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { LearnReviewButtons, PracticeQuestionCard } from "@/pages/practiceQuestion";
 
 type DrillMode = "learn" | "review";
@@ -46,6 +50,7 @@ export function KgKpPage() {
     load();
   }, [load]);
   const [mode, setMode] = useState<DrillMode | "idle">("idle");
+  const [kind, setKind] = useState<WangdaoKind>("mcq");
   const [queue, setQueue] = useState<WangdaoItem[]>([]);
   const [pos, setPos] = useState(0);
   const [tick, setTick] = useState(0);
@@ -69,10 +74,27 @@ export function KgKpPage() {
     });
   }, [items, queue.length]);
 
+  const kindPool = useMemo(() => {
+    if (!items || !kpId) return [] as WangdaoItem[];
+    const pool = itemsForKp(items, kpId);
+    if (isMath) return pool;
+    return pool.filter((q) => (q.kind === "big" ? "big" : "mcq") === kind);
+  }, [items, kpId, kind, isMath]);
+
   const counts = useMemo(() => {
     if (!items || !kpId) return { total: 0, learn: 0, review: 0, waiting: 0 };
-    return countKpDrill(items, kpId, itemMarks, entries);
-  }, [items, kpId, itemMarks, entries, tick]);
+    if (isMath) return countKpDrill(items, kpId, itemMarks, entries);
+    return countKpDrill(kindPool, kpId, itemMarks, entries);
+  }, [items, kpId, itemMarks, entries, tick, isMath, kindPool]);
+
+  const kindTotals = useMemo(() => {
+    if (!items || !kpId || isMath) return null;
+    const pool = itemsForKp(items, kpId);
+    return {
+      mcq: pool.filter((q) => q.kind !== "big").length,
+      big: pool.filter((q) => q.kind === "big").length,
+    };
+  }, [items, kpId, isMath]);
 
   const mathCounts = useMemo(() => {
     if (!items || !kpId || !isMath) return null;
@@ -90,7 +112,10 @@ export function KgKpPage() {
 
   function start(next: DrillMode, source?: MathBookSource) {
     if (!items || !kpId) return;
-    const pool = source ? itemsForSource(items, source) : items;
+    const base = source ? itemsForSource(items, source) : items;
+    const pool = isMath
+      ? base
+      : base.filter((q) => (q.kind === "big" ? "big" : "mcq") === kind);
     const q =
       next === "learn"
         ? learnQueue(pool, kpId, itemMarks, entries)
@@ -162,7 +187,7 @@ export function KgKpPage() {
             ? mode === "idle"
               ? "李林880 与 张宇1000 分开刷"
               : `${mathBookLabel(activeSource)} · ${mode === "learn" ? "学习新题" : "复习错题"}`
-            : `王道 ${counts.total} 题 · 新学 ${counts.learn} · 复习 ${counts.review}${
+            : `王道${kind === "big" ? "大题" : "选择"} ${counts.total} · 新学 ${counts.learn} · 复习 ${counts.review}${
                 counts.waiting > 0 ? ` · 间隔中 ${counts.waiting}` : ""
               }`}
         </p>
@@ -197,11 +222,42 @@ export function KgKpPage() {
       )}
 
       {items && mode === "idle" && !isMath && (
-        <LearnReviewButtons
-          learn={counts.learn}
-          review={counts.review}
-          onStart={(key) => start(key)}
-        />
+        <div className="space-y-3">
+          {kindTotals && (
+            <div className="flex flex-wrap gap-2">
+              {(["mcq", "big"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setKind(k)}
+                  className={cn(
+                    "rounded-md px-3 py-1 text-xs",
+                    kind === k
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {k === "big" ? "大题" : "选择题"} {k === "big" ? kindTotals.big : kindTotals.mcq}
+                </button>
+              ))}
+              <Link
+                to={wdSetPath({
+                  group: found?.module.id,
+                  kind,
+                  topic: kpId,
+                })}
+                className="rounded-md px-3 py-1 text-xs text-muted-foreground hover:underline"
+              >
+                在题集中看
+              </Link>
+            </div>
+          )}
+          <LearnReviewButtons
+            learn={counts.learn}
+            review={counts.review}
+            onStart={(key) => start(key)}
+          />
+        </div>
       )}
 
       {vizFor(kp.id) && mode === "idle" && (

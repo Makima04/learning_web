@@ -43,10 +43,10 @@ import { translate, emat } from "@/viz/components/VirtMemView";
 import { floatBits } from "@/viz/components/FloatView";
 import { pvSim, PV_N, PV_OPS } from "@/viz/components/PvView";
 import { rwSim, RW_EVENTS } from "@/viz/components/RwView";
-import { pageReplace, REF_STR } from "@/viz/components/PageReplaceView";
+import { pageReplace, replaceCount, clock2Victim, CLOCK2_ORDER, REF_STR, LRU2015_REF, LRU2019_REF, LRU2025_REF, LRU2025_INIT } from "@/viz/components/PageReplaceView";
 import { fcfs, sjf, rr, PROCS, RR_Q } from "@/viz/components/SchedView";
 import { bankerSafe, tryRequest, BK_AVAIL, BK_ALLOC, BK_MAX, BK_REQUEST } from "@/viz/components/BankerView";
-import { pagingTranslate, segTranslate, PG_VA, PG_PAGE_SIZE, PG_TABLE, SEG_TABLE } from "@/viz/components/PagingView";
+import { pagingTranslate, segTranslate, splitVa, walkTwoLevel, levelTableFrames, PG_VA, PG_PAGE_SIZE, PG_TABLE, SEG_TABLE } from "@/viz/components/PagingView";
 import { cwndTimeline } from "@/viz/components/CongView";
 import { dvRounds } from "@/viz/components/DvView";
 import { subnetInfo, aggregate } from "@/viz/components/IpView";
@@ -178,6 +178,23 @@ describe("演示组件烟测", () => {
       expect(html.length, `${kpId} 渲染过短`).toBeGreaterThan(400);
       expect(html, `${kpId} 渲染出 NaN`).not.toContain("NaN");
     }
+  });
+
+  it("内存管理四档图解默认渲染含题型 tab", () => {
+    const byKp = Object.fromEntries(VIZ_ENTRIES.map((e) => [e.kpId, e.Component]));
+    const alloc = renderToStaticMarkup(createElement(byKp["os.mem.alloc"]!));
+    expect(alloc).toContain("适应算法");
+    expect(alloc).toContain("回收合并");
+    expect(alloc).toContain("伙伴系统");
+    const page = renderToStaticMarkup(createElement(byKp["os.mem.page"]!));
+    expect(page).toContain("二级页表");
+    expect(page).toContain("三级页表");
+    const virt = renderToStaticMarkup(createElement(byKp["os.mem.virt"]!));
+    expect(virt).toContain("CLOCK");
+    expect(virt).toContain("2015 LRU");
+    const thrash = renderToStaticMarkup(createElement(byKp["os.mem.thrash"]!));
+    expect(thrash).toContain("408 时刻 t");
+    expect(thrash).toContain("缺页率因素");
   });
 });
 
@@ -530,6 +547,45 @@ describe("OS：页面置换", () => {
     expect(pageReplace(REF_STR, 3, "LRU").faults).toBe(10);
     expect(pageReplace(REF_STR, 3, "OPT").faults).toBe(7);
   });
+
+  it("2016 选择 26：改进 CLOCK 次序 (0,0)→(0,1)→(1,0)→(1,1)", () => {
+    expect(CLOCK2_ORDER).toEqual([
+      [0, 0],
+      [0, 1],
+      [1, 0],
+      [1, 1],
+    ]);
+  });
+
+  it("2015 选择 27：4 帧 LRU，下一页 7 淘汰页 2", () => {
+    const { steps } = pageReplace(LRU2015_REF, 4, "LRU");
+    const last = steps.at(-1)!;
+    expect(last.ref).toBe(7);
+    expect(last.hit).toBe(false);
+    expect(last.evicted).toBe(2);
+  });
+
+  it("2019 选择 29：4 帧 LRU 置换 5 次（空帧填入不算）", () => {
+    expect(pageReplace(LRU2019_REF, 4, "LRU").faults).toBe(9);
+    expect(replaceCount(LRU2019_REF, 4, "LRU")).toBe(5);
+  });
+
+  it("2025 选择 26：3 帧且 0/1/2 已在内存，缺页 6 次", () => {
+    expect(pageReplace(LRU2025_REF, 3, "LRU", LRU2025_INIT).faults).toBe(6);
+  });
+
+  it("改进 CLOCK：全是 (1,*) 时第一轮找不到，清 A 后第三轮淘汰", () => {
+    const r = clock2Victim(
+      [
+        { id: 3, a: 1, m: 0 },
+        { id: 4, a: 1, m: 1 },
+      ],
+      0
+    );
+    expect(r.scans).toBe(3);
+    expect(r.victimIndex).toBe(0);
+    expect(r.afterA).toEqual([0, 0]);
+  });
 });
 
 describe("OS：调度", () => {
@@ -562,6 +618,32 @@ describe("OS：分页/分段地址翻译", () => {
     expect(pagingTranslate(4096, PG_PAGE_SIZE, PG_TABLE).fault).toBe(true);
     expect(segTranslate(3, 500, SEG_TABLE)).toEqual({ pa: 160 * 1024 + 500, trap: false });
     expect(segTranslate(3, SEG_TABLE[3]!.limit, SEG_TABLE).trap).toBe(true);
+  });
+
+  it("2019 选择 31：VA 2050 1225H 按 10+10+12 拆成目录号 081H、页号 101H", () => {
+    expect(splitVa(0x20501225, [10, 10, 12])).toEqual([0x081, 0x101, 0x225]);
+  });
+
+  it("2020 大题 46：a[1][2] 走二级页表得到 PTE 物理地址 0030 1004H", () => {
+    const w = walkTwoLevel({
+      va: 0x10801008,
+      pdbr: 0x00201000,
+      dirFrame: 0x00301,
+      pageFrame: 0x00030,
+    });
+    expect(w.dir).toBe(0x42);
+    expect(w.pt).toBe(0x1);
+    expect(w.offset).toBe(0x008);
+    expect(w.pdePa).toBe(0x00201108);
+    expect(w.ptBase).toBe(0x00301000);
+    expect(w.ptePa).toBe(0x00301004);
+    expect(w.pa).toBe(0x00030008);
+  });
+
+  it("2026 选择 28：三级 9+9+9+12 满映射时 L3 占 256K 页框", () => {
+    expect(levelTableFrames([9, 9, 9], 12, 1)).toBe(1);
+    expect(levelTableFrames([9, 9, 9], 12, 2)).toBe(512);
+    expect(levelTableFrames([9, 9, 9], 12, 3)).toBe(256 * 1024);
   });
 });
 
@@ -630,8 +712,9 @@ import { ioCpuCost } from "@/viz/components/ChannelView";
 import { JOBS, batchTimeline } from "@/viz/components/BatchView";
 import { trapFlow, isPrivileged } from "@/viz/components/TrapView";
 import { procWalk } from "@/viz/components/ProcStateView";
-import { dynAlloc, INIT_PARTS, REQ as DA_REQ } from "@/viz/components/DynAllocView";
-import { WS_REF, thrashCurve, workingSet } from "@/viz/components/ThrashView";
+import { dynAlloc, INIT_PARTS, REQ as DA_REQ, coalesce, sortBestFit, buddyAlloc, buddyFree, COAL_INIT, COAL_REC } from "@/viz/components/DynAllocView";
+import { WS_REF, thrashCurve, workingSet, workingSetAt, T408_REF, T408_W } from "@/viz/components/ThrashView";
+import { OS_MEM_EXAMS, osMemExamsForKp } from "@/data/kg/osMemTopics";
 import { readCost, INDEX_TABLE } from "@/viz/components/FileStructView";
 import { resolvePath, hardLinkRef, FSDATA } from "@/viz/components/DirView";
 import { indexMax } from "@/viz/components/InodeView";
@@ -847,6 +930,22 @@ describe("OS：动态分区", () => {
     expect(dynAlloc(INIT_PARTS, DA_REQ, "best").remain).toBe(88);
     expect(dynAlloc(INIT_PARTS, DA_REQ, "worst").remain).toBe(388);
   });
+
+  it("2017 选择 25：回收 60K/140KB 后三段并成 380KB，最佳适应链头 500K/80KB", () => {
+    const merged = coalesce(COAL_INIT, COAL_REC);
+    expect(merged).toEqual([
+      { start: 20, size: 380 },
+      { start: 500, size: 80 },
+      { start: 1000, size: 100 },
+    ]);
+    expect(sortBestFit(merged)[0]).toEqual({ start: 500, size: 80 });
+  });
+
+  it("2024 选择 27：1024KB 申请 128KB 对半拆出 512/256/128；伙伴空闲才合并", () => {
+    expect(buddyAlloc(1024, 128)).toEqual({ splits: [512, 256, 128], block: 128 });
+    expect(buddyFree(128, true)).toEqual({ merged: 256 });
+    expect(buddyFree(128, false)).toEqual({ leftover: 128 });
+  });
 });
 
 describe("OS：抖动与工作集", () => {
@@ -854,6 +953,24 @@ describe("OS：抖动与工作集", () => {
     expect(thrashCurve(WS_REF, [5, 4, 3, 2])).toEqual([3, 3, 3, 18]);
     expect(workingSet(WS_REF, 3).total).toBe(3);
     expect(workingSet(WS_REF, 2).total).toBe(2);
+  });
+
+  it("时刻 t 的工作集 = 窗口内出现过的页", () => {
+    expect([...workingSetAt(T408_REF, T408_W, 8)].sort((a, b) => a - b)).toEqual([2, 3, 4, 5, 6]);
+    expect(workingSetAt(T408_REF, T408_W, 0)).toEqual(new Set([1]));
+    expect(workingSet(T408_REF, T408_W).sets[8]).toEqual(workingSetAt(T408_REF, T408_W, 8));
+  });
+});
+
+describe("OS：内存管理真题分类", () => {
+  it("2012–2026 共 44 道，四个考点都有题", () => {
+    expect(OS_MEM_EXAMS).toHaveLength(44);
+    expect(osMemExamsForKp("os.mem.alloc").length).toBe(3);
+    expect(osMemExamsForKp("os.mem.page").length).toBeGreaterThan(10);
+    expect(osMemExamsForKp("os.mem.virt").length).toBeGreaterThan(10);
+    expect(osMemExamsForKp("os.mem.thrash").length).toBeGreaterThanOrEqual(3);
+    const keys = new Set(OS_MEM_EXAMS.map((e) => `${e.year}-${e.n}`));
+    expect(keys.size).toBe(44);
   });
 });
 

@@ -7,6 +7,9 @@ import { countKpDrill, countPoolDrill } from "@/lib/kg/wangdao408";
 import { itemsForSource, MATH_BOOK_SOURCES, useDrillCatalog } from "@/lib/kg/mathPractice";
 import { bookDrillGroups, itemsForBookDrill } from "@/lib/kg/mathBookToc";
 import { kgBookDrillPath, kgKpPath, kgMapPath, kgModulePath, kgSubjectSlug, parseKgSubject } from "@/lib/kg/paths";
+import { osMemSetPath } from "@/data/kg/osMemTopics";
+import { wdCounts, wdSetPath } from "@/data/kg/wdTaxonomy";
+import { itemsForKp } from "@/lib/kg/wangdao408";
 import { vizFor } from "@/viz/registry";
 import type { BookId, MarkLevel } from "@/lib/kg/types";
 import { useJournal } from "@/stores/journal";
@@ -46,6 +49,10 @@ export function KgModulePage() {
   const prog = useMemo(
     () => moduleProgress(bookId as BookId, moduleId, states),
     [bookId, moduleId, states]
+  );
+  const wdMod = useMemo(
+    () => (catalog ? wdCounts(catalog, moduleId) : null),
+    [catalog, moduleId]
   );
 
   if (!book || !mod) {
@@ -108,6 +115,41 @@ export function KgModulePage() {
           </Button>
         </div>
       </div>
+
+      {book.subject === "cs408" && wdMod && wdMod.total > 0 && (
+        <Card className="border-primary/30">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">王道题集 · {mod.name}</p>
+              <p className="text-xs text-muted-foreground">
+                选择 {wdMod.mcq} · 大题 {wdMod.big}
+                {wdMod.exam > 0 ? ` · 真题 ${wdMod.exam}` : ""}
+                {" · 点开题目出小类，选择/大题分开校对"}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link to={wdSetPath({ group: mod.id, kind: "mcq", mode: "proof" })}>
+                  选择校对
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="secondary">
+                <Link to={wdSetPath({ group: mod.id, kind: "big", mode: "proof" })}>
+                  大题校对
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to={wdSetPath({ group: mod.id, kind: "mcq" })}>题集</Link>
+              </Button>
+              {mod.id === "os-mem" && (
+                <Button asChild size="sm" variant="ghost">
+                  <Link to={osMemSetPath()}>内存细分</Link>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {hasDrill && !catalog && (
         <p className="text-sm text-muted-foreground">正在加载题量…</p>
@@ -259,6 +301,16 @@ export function KgModulePage() {
                     <span className="rounded-md bg-muted px-2 py-0.5 text-muted-foreground">
                       共 {drill.total}
                     </span>
+                    {catalog && (() => {
+                      const pool = itemsForKp(catalog, kp.id);
+                      const mcqN = pool.filter((q) => q.kind !== "big").length;
+                      const bigN = pool.filter((q) => q.kind === "big").length;
+                      return (
+                        <span className="text-xs text-muted-foreground">
+                          选择 {mcqN} · 大题 {bigN}
+                        </span>
+                      );
+                    })()}
                     {drill.waiting > 0 && (
                       <span className="text-xs text-muted-foreground">
                         间隔中 {drill.waiting}

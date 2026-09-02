@@ -6,6 +6,9 @@ import {
   filterMathBooks,
   findKp,
 } from "@/data/kg";
+import { examSetPath } from "@/data/kg/examTaxonomy";
+import { wdCounts, wdSetPath } from "@/data/kg/wdTaxonomy";
+import { useWangdao408 } from "@/lib/kg/wangdao408";
 import { dueKpIds, subjectProgress } from "@/lib/kg/progress";
 import { kgKpPath, kgMapPath, kgModulePath, parseKgSubject } from "@/lib/kg/paths";
 import type { BookId, SubjectId } from "@/lib/kg/types";
@@ -35,6 +38,7 @@ export function KgMapPage() {
   const settings = useSettings();
   const load = useKgProgress((s) => s.load);
   const states = useKgProgress((s) => s.states);
+  const { items: wangdao } = useWangdao408();
   const parsed = parseKgSubject(rawSubject);
   const fallback: SubjectId = settings.enableCs408 ? "cs408" : "math";
   const subject: SubjectId = parsed ?? fallback;
@@ -48,6 +52,15 @@ export function KgMapPage() {
     if (subject === "math") return filterMathBooks(mathTrack);
     return booksForSubject("cs408");
   }, [subject, mathTrack]);
+
+  const wdByMod = useMemo(() => {
+    if (!wangdao || subject !== "cs408") return null;
+    const m = new Map<string, ReturnType<typeof wdCounts>>();
+    for (const b of books) {
+      for (const mod of b.modules) m.set(mod.id, wdCounts(wangdao, mod.id));
+    }
+    return m;
+  }, [wangdao, books, subject]);
 
   const progress = useMemo(
     () => subjectProgress(subject, states, mathTrack),
@@ -93,13 +106,20 @@ export function KgMapPage() {
         <div>
           <h1 className="text-xl font-semibold">知识图谱</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            模块卡片标记进度 · 真题/预测卷回写弱项 · 遗忘曲线提醒复习
+            {subject === "cs408"
+              ? "按大类（章）过图谱 · 王道选择/大题分开刷 · 点开题目出小类"
+              : "模块卡片标记进度 · 真题/预测卷回写弱项 · 遗忘曲线提醒复习"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {subject === "cs408" && (
             <Button asChild size="sm">
               <Link to="/kg/predict">408 大题预测卷</Link>
+            </Button>
+          )}
+          {subject === "cs408" && (
+            <Button asChild size="sm" variant="outline">
+              <Link to={wdSetPath()}>王道按大类</Link>
             </Button>
           )}
           <Button asChild size="sm" variant="outline">
@@ -149,8 +169,8 @@ export function KgMapPage() {
           },
           {
             title: "真题演练",
-            desc: "历年卷按题标 会/模糊/不会",
-            to: "/kg/exams",
+            desc: subject === "cs408" ? "王道选择/大题分开，按图谱大类校对，含夹带真题" : "历年卷按题标 会/模糊/不会",
+            to: subject === "cs408" ? wdSetPath() : "/kg/exams",
           },
           {
             title: "预测/诊断",
@@ -253,7 +273,12 @@ export function KgMapPage() {
                         <Bar value={mp?.mastery ?? 0} className="bg-emerald-500" />
                       </div>
                       <div className="flex justify-between pt-1">
-                        <span>{mod.kps.length} 个考点</span>
+                        <span>
+                          {mod.kps.length} 个考点
+                          {wdByMod
+                            ? ` · 选择 ${wdByMod.get(mod.id)?.mcq ?? 0} · 大题 ${wdByMod.get(mod.id)?.big ?? 0}`
+                            : ""}
+                        </span>
                         {(mp?.dueCount ?? 0) > 0 && (
                           <span className="text-amber-600 dark:text-amber-400">
                             {mp!.dueCount} 待复习

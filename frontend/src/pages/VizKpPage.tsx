@@ -9,6 +9,14 @@ import { useKgProgress } from "@/stores/kgProgress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  osMemExamKey,
+  osMemExamsForKp,
+  osMemGroupForKp,
+  osMemGroupForTopic,
+  osMemSetPath,
+  osMemTopicsForKp,
+} from "@/data/kg/osMemTopics";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
@@ -89,6 +97,68 @@ export function VizKpPage() {
           )}
         </CardContent>
       </Card>
+
+      {osMemTopicsForKp(kp.id).length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">408 真题按题型</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              2012–2026 共 {osMemExamsForKp(kp.id).length} 道挂在本考点。点进题集按卷序校对，点开题目才出小类。
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link
+                  to={osMemSetPath({
+                    group: osMemGroupForKp(kp.id)?.id,
+                    mode: "proof",
+                  })}
+                >
+                  快速校对
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to={osMemSetPath({ group: osMemGroupForKp(kp.id)?.id })}>
+                  进入题集
+                </Link>
+              </Button>
+            </div>
+            {osMemTopicsForKp(kp.id).map((t) => {
+              const exams = osMemExamsForKp(kp.id).filter((e) => e.topic === t.id);
+              if (exams.length === 0) return null;
+              const gid = osMemGroupForTopic(t.id)?.id;
+              return (
+                <div key={t.id}>
+                  <div className="mb-1 flex flex-wrap items-baseline gap-2">
+                    <span className="text-sm font-medium">{t.name}</span>
+                    <span className="text-[11px] text-muted-foreground">图解 · {t.vizHint}</span>
+                  </div>
+                  <ul className="space-y-1 text-xs leading-relaxed">
+                    {exams.map((e) => (
+                      <li key={`${e.year}-${e.n}`}>
+                        <Link
+                          to={osMemSetPath({
+                            group: gid,
+                            topic: t.id,
+                            mode: "proof",
+                            q: osMemExamKey(e.year, e.n),
+                          })}
+                          className="mr-1 font-mono text-primary hover:underline"
+                        >
+                          {e.year} {e.kind === "big" ? "大题" : "选择"}
+                          {e.n}
+                        </Link>
+                        {e.hook}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-2">

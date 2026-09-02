@@ -16,6 +16,9 @@ import { KgKpPage } from "@/pages/KgKpPage";
 import { KgBookDrillPage } from "@/pages/KgBookDrillPage";
 import { KgPredictPage } from "@/pages/KgPredictPage";
 import { KgExamsPage } from "@/pages/KgExamsPage";
+import { OsMemExamSetPage } from "@/pages/OsMemExamSetPage";
+import { ExamSetPage } from "@/pages/ExamSetPage";
+import { WdSetPage } from "@/pages/WdSetPage";
 import {
   KgIndexRedirect,
   KgLegacyKpRedirect,
@@ -43,6 +46,12 @@ export default function App() {
         <Route path="kg" element={<KgIndexRedirect />} />
         <Route path="kg/predict" element={<KgPredictPage />} />
         <Route path="kg/exams" element={<KgExamsPage />} />
+        <Route path="kg/wd" element={<WdSetPage />} />
+        <Route path="kg/wd/:group" element={<WdSetPage />} />
+        <Route path="kg/exams/set" element={<ExamSetPage />} />
+        <Route path="kg/exams/set/:group" element={<ExamSetPage />} />
+        <Route path="kg/exams/os-mem" element={<OsMemExamSetPage />} />
+        <Route path="kg/exams/os-mem/:group" element={<OsMemExamSetPage />} />
         <Route path="kg/exams/:year" element={<KgExamsPage />} />
         <Route path="kg/module/:bookId/:moduleId" element={<KgLegacyModuleRedirect />} />
         <Route path="kg/kp/:kpId" element={<KgLegacyKpRedirect />} />

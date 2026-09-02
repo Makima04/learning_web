@@ -19,6 +19,10 @@ import { useKgProgress } from "@/stores/kgProgress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { examSetPath } from "@/data/kg/examTaxonomy";
+import { wdSetPath } from "@/data/kg/wdTaxonomy";
+import { osMemSetPath } from "@/data/kg/osMemTopics";
+import { ExamTags } from "@/pages/examTags";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
@@ -75,6 +79,25 @@ function YearList({ index }: { index: ExamIndex }) {
           <Button asChild size="sm" variant="outline">
             <Link to={kgMapPath("cs408")}>按模块学习</Link>
           </Button>
+          <Button asChild size="sm">
+            <Link to={wdSetPath()}>王道按大类</Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link to={wdSetPath({ group: "all", kind: "mcq", mode: "proof" })}>
+              王道选择校对
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="secondary">
+            <Link to={wdSetPath({ group: "all", kind: "big", mode: "proof" })}>
+              王道大题校对
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to={examSetPath()}>历年卷分类</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to={osMemSetPath()}>OS 内存细分</Link>
+          </Button>
         </CardContent>
       </Card>
 
@@ -124,6 +147,8 @@ function PaperView({ year }: { year: number }) {
   const [book, setBook] = useState<BookFilter>("all");
   const [showAns, setShowAns] = useState<Record<string, boolean>>({});
   const [onlyUnmarked, setOnlyUnmarked] = useState(false);
+  const [expandAll, setExpandAll] = useState(false);
+  const [openNs, setOpenNs] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
     load();
@@ -133,6 +158,8 @@ function PaperView({ year }: { year: number }) {
     let cancelled = false;
     setPaper(null);
     setErr("");
+    setOpenNs(new Set());
+    setExpandAll(false);
     loadCs408ExamPaper(year)
       .then((p) => {
         if (!cancelled) setPaper(p);
@@ -144,6 +171,22 @@ function PaperView({ year }: { year: number }) {
       cancelled = true;
     };
   }, [year]);
+
+  useEffect(() => {
+    if (!paper) return;
+    const id = window.location.hash.replace(/^#/, "");
+    const m = /^q(\d+)$/.exec(id);
+    if (m) {
+      const n = Number(m[1]);
+      setOpenNs((prev) => {
+        if (prev.has(n)) return prev;
+        const next = new Set(prev);
+        next.add(n);
+        return next;
+      });
+    }
+    if (id) document.getElementById(id)?.scrollIntoView({ block: "start" });
+  }, [paper]);
 
   const markMap = useMemo(() => {
     const m = new Map<string, MarkLevel>();
@@ -288,6 +331,18 @@ function PaperView({ year }: { year: number }) {
         >
           只看未标
         </button>
+        <button
+          type="button"
+          onClick={() => setExpandAll((v) => !v)}
+          className={cn(
+            "rounded-md px-3 py-1 text-xs",
+            expandAll
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground"
+          )}
+        >
+          {expandAll ? "全部收起" : "全部展开"}
+        </button>
       </div>
 
       <div className="space-y-3">
@@ -297,17 +352,53 @@ function PaperView({ year }: { year: number }) {
           const pk = primaryKpId(it);
           const found = pk ? findKp(pk) : null;
           const secs = secondaryKpIds(it);
+          const open = expandAll || openNs.has(it.n);
+          const preview = it.stem.replace(/\s+/g, " ").slice(0, 72);
           return (
-            <Card key={id}>
+            <Card key={id} id={`q${it.n}`}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">
-                  第 {it.n} 题
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">
-                    {it.kind === "big" ? "大题" : "选择"} ·{" "}
-                    {it.book_name || BOOK_LABEL[it.book] || it.book}
-                    {it.points != null ? ` · ${it.points} 分` : ""}
-                  </span>
-                </CardTitle>
+                <button
+                  type="button"
+                  className="w-full text-left"
+                  onClick={() =>
+                    setOpenNs((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(it.n)) next.delete(it.n);
+                      else next.add(it.n);
+                      return next;
+                    })
+                  }
+                >
+                  <CardTitle className="text-sm">
+                    第 {it.n} 题
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                      {it.kind === "big" ? "大题" : "选择"} ·{" "}
+                      {it.book_name || BOOK_LABEL[it.book] || it.book}
+                      {it.points != null ? ` · ${it.points} 分` : ""}
+                    </span>
+                  </CardTitle>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <ExamTags year={year} n={it.n} showMinor={open} link={false} />
+                  </div>
+                  {!open && (
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{preview}</p>
+                  )}
+                </button>
+                {open && (
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <Link
+                      to={examSetPath({
+                        group: "all",
+                        mode: "proof",
+                        q: `${year}-${it.n}`,
+                      })}
+                      className="text-[11px] text-primary hover:underline"
+                    >
+                      在题集中校对
+                    </Link>
+                  </div>
+                )}
+                {open && (
                 <p className="text-xs text-muted-foreground">
                   考点：
                   {it.kps.length === 0 && "（未标注）"}
@@ -336,7 +427,9 @@ function PaperView({ year }: { year: number }) {
                     );
                   })}
                 </p>
+                )}
               </CardHeader>
+              {open && (
               <CardContent className="space-y-3">
                 <pre className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">
                   {it.stem}
@@ -407,6 +500,7 @@ function PaperView({ year }: { year: number }) {
                   </div>
                 )}
               </CardContent>
+              )}
             </Card>
           );
         })}

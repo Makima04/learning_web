@@ -36,6 +36,12 @@ describe("navMemory", () => {
     expect(sectionForPath("/kg/math/module/calc/calc-limit")?.id).toBe("/kg");
     expect(sectionForPath("/kg/cs408/kp/ds.sort.insert")?.id).toBe("/kg");
     expect(sectionForPath("/kg/exams/2024")?.id).toBe("/kg");
+    expect(sectionForPath("/kg/exams/os-mem")?.id).toBe("/kg");
+    expect(sectionForPath("/kg/exams/os-mem/all")?.id).toBe("/kg");
+    expect(sectionForPath("/kg/exams/set")?.id).toBe("/kg");
+    expect(sectionForPath("/kg/exams/set/ds-tree")?.id).toBe("/kg");
+    expect(sectionForPath("/kg/wd")?.id).toBe("/kg");
+    expect(sectionForPath("/kg/wd/ds-tree")?.id).toBe("/kg");
     expect(sectionForPath("/politics/q/2026-34")?.id).toBe("/politics");
     expect(sectionForPath("/reader")?.id).toBe("/papers");
     expect(sectionForPath("/reader/en1/2006/Text%202")?.id).toBe("/papers");

@@ -65,6 +65,10 @@ export function loadCs408ExamIndex(): Promise<ExamIndex> {
   return indexCache.promise;
 }
 
+export function loadCs408ExamPapers(years: number[]): Promise<ExamPaper[]> {
+  return Promise.all(years.map((y) => loadCs408ExamPaper(y)));
+}
+
 export function loadCs408ExamPaper(year: number): Promise<ExamPaper> {
   const cached = paperCache.get(year);
   if (cached) return Promise.resolve(cached);
