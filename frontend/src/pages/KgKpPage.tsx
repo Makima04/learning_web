@@ -13,6 +13,7 @@ import {
   type WangdaoItem,
   type WangdaoKind,
 } from "@/lib/kg/wangdao408";
+import { hydratePracticeItems } from "@/lib/kg/catalogLoad";
 import {
   itemsForSource,
   mathBookLabel,
@@ -39,11 +40,11 @@ export function KgKpPage() {
   const { subject: rawSubject, kpId = "" } = useParams();
   const [params] = useSearchParams();
   const found = findKp(kpId);
-  const { items, error } = useDrillCatalog();
+  const isMath = found?.book.subject === "math";
+  const { items, error } = useDrillCatalog(isMath ? "math" : "wangdao");
   const load = useKgProgress((s) => s.load);
   const itemMarks = useKgProgress((s) => s.itemMarks);
   const entries = useJournal((s) => s.entries);
-  const isMath = found?.book.subject === "math";
   const srcPref = params.get("src");
 
   useEffect(() => {
@@ -124,6 +125,7 @@ export function KgKpPage() {
     setMode(next);
     setQueue(q);
     setPos(0);
+    void hydratePracticeItems(q).then(setQueue).catch(() => {});
   }
 
   function onMark(item: WangdaoItem, mark: MarkLevel) {
@@ -270,6 +272,7 @@ export function KgKpPage() {
         <PracticeQuestionCard
           key={current.id}
           item={current}
+          nextItem={queue[pos + 1]}
           index={pos}
           total={queue.length}
           mark={markMap.get(current.id)}

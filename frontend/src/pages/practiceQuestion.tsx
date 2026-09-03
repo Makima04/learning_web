@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Bookmark, BookOpen, Clock3 } from "lucide-react";
+import { prefetchQuestionMedia } from "@/lib/kg/catalogLoad";
 import type { MarkLevel } from "@/lib/kg/types";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
 import { practiceKindLabel, practiceSourceLabel } from "@/lib/kg/mathPractice";
@@ -84,6 +86,7 @@ export function LearnReviewButtons({
 
 export function PracticeQuestionCard({
   item,
+  nextItem,
   index,
   total,
   mark,
@@ -93,6 +96,7 @@ export function PracticeQuestionCard({
   onExit,
 }: {
   item: WangdaoItem;
+  nextItem?: WangdaoItem;
   index: number;
   total: number;
   mark?: MarkLevel;
@@ -101,6 +105,10 @@ export function PracticeQuestionCard({
   onCollect: () => void;
   onExit: () => void;
 }) {
+  useEffect(() => {
+    prefetchQuestionMedia(item);
+    prefetchQuestionMedia(nextItem);
+  }, [item, nextItem]);
   const kind = practiceKindLabel(item.kind);
   return (
     <Card>

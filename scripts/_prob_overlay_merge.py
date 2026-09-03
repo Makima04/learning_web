@@ -109,6 +109,10 @@ def main() -> None:
     OVERLAY_PATH.write_text(json.dumps(overlay, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     n_ll = patch_catalog(PUB / "lilin880.json", rows)
     n_zy = patch_catalog(PUB / "zhangyu1000.json", rows)
+    from split_practice_catalogs import split_public_catalog
+
+    split_public_catalog(PUB / "lilin880.json")
+    split_public_catalog(PUB / "zhangyu1000.json")
     kp = Counter(v["kp_ids"][0] for v in rows.values())
     print(f"overlay {len(overlay)} (+{len(rows)} prob)")
     print(f"patched lilin {n_ll} zhangyu {n_zy}")

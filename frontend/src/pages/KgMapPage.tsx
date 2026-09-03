@@ -38,10 +38,10 @@ export function KgMapPage() {
   const settings = useSettings();
   const load = useKgProgress((s) => s.load);
   const states = useKgProgress((s) => s.states);
-  const { items: wangdao } = useWangdao408();
   const parsed = parseKgSubject(rawSubject);
   const fallback: SubjectId = settings.enableCs408 ? "cs408" : "math";
   const subject: SubjectId = parsed ?? fallback;
+  const { items: wangdao } = useWangdao408({ enabled: subject === "cs408" });
 
   useEffect(() => {
     load();

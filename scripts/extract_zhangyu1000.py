@@ -434,6 +434,9 @@ def main() -> int:
             by_kp[k] += 1
     print("top kp", sorted(by_kp.items(), key=lambda x: -x[1])[:15])
     print(f"wrote {PUBLIC_CATALOG}")
+    from split_practice_catalogs import split_public_catalog
+
+    split_public_catalog(PUBLIC_CATALOG)
     return 0
 
 

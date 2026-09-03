@@ -16,7 +16,7 @@ import {
   itemsWithFacet,
   matchBookDrill,
 } from "@/lib/kg/mathBookToc";
-import { mathFacetName, useDrillCatalog } from "@/lib/kg/mathPractice";
+import { mathFacetName, useMathChapter } from "@/lib/kg/mathPractice";
 import {
   countPoolDrill,
   learnQueueFrom,
@@ -52,7 +52,7 @@ export function KgBookDrillPage() {
     () => matchBookDrill(groups, src, part, section),
     [groups, src, part, section]
   );
-  const { items, error } = useDrillCatalog();
+  const { items, error } = useMathChapter(spec);
   const load = useKgProgress((s) => s.load);
   const itemMarks = useKgProgress((s) => s.itemMarks);
   const entries = useJournal((s) => s.entries);
@@ -212,6 +212,7 @@ export function KgBookDrillPage() {
         <PracticeQuestionCard
           key={current.id}
           item={current}
+          nextItem={queue[pos + 1]}
           index={pos}
           total={queue.length}
           mark={markMap.get(current.id)}

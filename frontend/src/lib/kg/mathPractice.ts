@@ -1,8 +1,15 @@
-// 李林 880 + 张宇 1000：静态 JSON，按图谱考点挂题（与王道目录同一套 PracticeItem）。
+// 李林 880 + 张宇 1000：index 计数，章节分片按需加载（与王道同一套 PracticeItem）。
 import { useEffect, useState } from "react";
+import {
+  loadCatalogIndex,
+  loadCatalogShard,
+  PRACTICE_CATALOG_VER,
+  type CatalogWhich,
+} from "@/lib/kg/catalogLoad";
 import { useWangdao408, type WangdaoItem } from "@/lib/kg/wangdao408";
+import type { BookDrillSpec } from "@/lib/kg/mathBookToc";
 
-export const MATH_CATALOG_VER = "math-20260901e";
+export const MATH_CATALOG_VER = PRACTICE_CATALOG_VER;
 
 const cache: {
   ver?: string;
@@ -10,42 +17,49 @@ const cache: {
   promise?: Promise<WangdaoItem[]>;
 } = {};
 
-function tag(list: WangdaoItem[], source: string): WangdaoItem[] {
-  return list.map((q) => ({ ...q, source: q.source || source }));
-}
-
-async function fetchJson(url: string): Promise<WangdaoItem[]> {
-  const r = await fetch(url, { cache: "no-store" });
-  if (r.status === 404) return [];
-  if (!r.ok) throw new Error(`加载数学题目录失败 (${r.status})`);
-  const raw = (await r.json()) as WangdaoItem[];
-  return Array.isArray(raw) ? raw : [];
-}
-
 export function loadMathPractice(): Promise<WangdaoItem[]> {
   if (cache.ver === MATH_CATALOG_VER && cache.value) return Promise.resolve(cache.value);
   if (cache.ver === MATH_CATALOG_VER && cache.promise) return cache.promise;
   cache.ver = MATH_CATALOG_VER;
   cache.value = undefined;
   cache.promise = Promise.all([
-    fetchJson(`/math/lilin880.json?v=${MATH_CATALOG_VER}`).then((xs) => tag(xs, "lilin880")),
-    fetchJson(`/math/zhangyu1000.json?v=${MATH_CATALOG_VER}`).then((xs) =>
-      tag(xs, "zhangyu1000")
-    ),
-  ]).then(([a, b]) => {
-    cache.value = [...a, ...b];
-    return cache.value;
-  });
+    loadCatalogIndex("lilin880"),
+    loadCatalogIndex("zhangyu1000"),
+  ])
+    .then(([a, b]) => {
+      cache.value = [...a, ...b];
+      return cache.value;
+    })
+    .catch((err) => {
+      cache.ver = undefined;
+      cache.promise = undefined;
+      throw err;
+    });
   return cache.promise;
 }
 
-/** 王道 + 880 + 1000 合并；考点互斥，按 kp_ids 过滤即可。 */
-export function useDrillCatalog(): {
+export async function loadMathChapter(spec: {
+  source: MathBookSource;
+  part: string;
+  section: string;
+}): Promise<WangdaoItem[]> {
+  const key = `${spec.part}-${spec.section}`;
+  const shard = await loadCatalogShard(spec.source, key);
+  if (shard.length) return shard;
+  const all = await loadCatalogIndex(spec.source);
+  return all.filter((q) => q.part === spec.part && String(q.section) === String(spec.section));
+}
+
+/** 按学科拉目录，避免刷数学还等王道整包。 */
+export function useDrillCatalog(which: CatalogWhich = "all"): {
   items: WangdaoItem[] | null;
   error: string;
 } {
-  const wd = useWangdao408();
-  const math = useMathPractice();
+  const wd = useWangdao408({ enabled: which === "wangdao" || which === "all" });
+  const math = useMathPractice({ enabled: which === "math" || which === "all" });
+  if (which === "none") return { items: [], error: "" };
+  if (which === "wangdao") return wd;
+  if (which === "math") return math;
   const ready = wd.items !== null && math.items !== null;
   return {
     items: ready ? [...(wd.items ?? []), ...(math.items ?? [])] : null,
@@ -53,13 +67,21 @@ export function useDrillCatalog(): {
   };
 }
 
-export function useMathPractice(): {
+export function useMathPractice(opts?: { enabled?: boolean }): {
   items: WangdaoItem[] | null;
   error: string;
 } {
-  const [items, setItems] = useState<WangdaoItem[] | null>(cache.value ?? null);
+  const enabled = opts?.enabled !== false;
+  const [items, setItems] = useState<WangdaoItem[] | null>(
+    enabled ? (cache.value ?? null) : []
+  );
   const [error, setError] = useState("");
   useEffect(() => {
+    if (!enabled) {
+      setItems([]);
+      setError("");
+      return;
+    }
     let cancelled = false;
     loadMathPractice()
       .then((list) => {
@@ -71,7 +93,34 @@ export function useMathPractice(): {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
+  return { items, error };
+}
+
+export function useMathChapter(spec: BookDrillSpec | undefined): {
+  items: WangdaoItem[] | null;
+  error: string;
+} {
+  const [items, setItems] = useState<WangdaoItem[] | null>(spec ? null : []);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (!spec) {
+      setItems([]);
+      return;
+    }
+    let cancelled = false;
+    setItems(null);
+    loadMathChapter(spec)
+      .then((list) => {
+        if (!cancelled) setItems(list);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "加载章节题目失败");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [spec?.source, spec?.part, spec?.section]);
   return { items, error };
 }
 

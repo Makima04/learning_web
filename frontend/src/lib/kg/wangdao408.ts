@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { dayKey } from "@/lib/day";
 import { isDueOnOrBefore, type JournalEntry } from "@/lib/journal";
+import { loadCatalogIndex, PRACTICE_CATALOG_VER } from "@/lib/kg/catalogLoad";
 import type { MarkLevel, UserItemMark } from "@/lib/kg/types";
 import { canonicalKpId } from "@/lib/kg/kpAlias";
 
@@ -17,7 +18,8 @@ export interface WangdaoItem {
   pdf_page?: number | null;
   book_ans_page?: number | null;
   year?: number | null;
-  stem: string;
+  /** index 分片未 hydrate 时可能为空；数学题优先用 img */
+  stem?: string;
   options?: Record<string, string>;
   kp_ids: string[];
   /** wangdao / lilin880 / zhangyu1000 */
@@ -44,7 +46,6 @@ export interface KpDrillCounts {
   waiting: number;
 }
 
-const CATALOG_VER = "full-20260901a";
 const cache: {
   ver?: string;
   value?: WangdaoItem[];
@@ -64,28 +65,38 @@ export function itemById(items: WangdaoItem[], id: string): WangdaoItem | undefi
 }
 
 export function loadWangdao408(): Promise<WangdaoItem[]> {
-  if (cache.ver === CATALOG_VER && cache.value) return Promise.resolve(cache.value);
-  if (cache.ver === CATALOG_VER && cache.promise) return cache.promise;
-  cache.ver = CATALOG_VER;
+  if (cache.ver === PRACTICE_CATALOG_VER && cache.value) return Promise.resolve(cache.value);
+  if (cache.ver === PRACTICE_CATALOG_VER && cache.promise) return cache.promise;
+  cache.ver = PRACTICE_CATALOG_VER;
   cache.value = undefined;
-  cache.promise = fetch(`/cs408/wangdao2027.json?v=${CATALOG_VER}`, {
-    cache: "no-store",
-  }).then(async (r) => {
-    if (!r.ok) throw new Error(`加载王道目录失败 (${r.status})`);
-    const raw = (await r.json()) as WangdaoItem[];
-    cache.value = Array.isArray(raw) ? raw : [];
-    return cache.value;
-  });
+  cache.promise = loadCatalogIndex("wangdao")
+    .then((list) => {
+      cache.value = list;
+      return list;
+    })
+    .catch((err) => {
+      cache.ver = undefined;
+      cache.promise = undefined;
+      throw err;
+    });
   return cache.promise;
 }
 
-export function useWangdao408(): {
+export function useWangdao408(opts?: { enabled?: boolean }): {
   items: WangdaoItem[] | null;
   error: string;
 } {
-  const [items, setItems] = useState<WangdaoItem[] | null>(cache.value ?? null);
+  const enabled = opts?.enabled !== false;
+  const [items, setItems] = useState<WangdaoItem[] | null>(
+    enabled ? (cache.value ?? null) : []
+  );
   const [error, setError] = useState("");
   useEffect(() => {
+    if (!enabled) {
+      setItems([]);
+      setError("");
+      return;
+    }
     let cancelled = false;
     loadWangdao408()
       .then((list) => {
@@ -97,7 +108,7 @@ export function useWangdao408(): {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
   return { items, error };
 }
 
@@ -247,7 +258,7 @@ export function journalCopyForWangdao(item: WangdaoItem): {
     item.source === "lilin880" ? "李林880" : item.source === "zhangyu1000" ? "张宇1000" : "";
   const title = item.img
     ? [srcLabel, `§${item.section} #${item.qno}`].filter(Boolean).join(" ")
-    : `§${item.section} #${item.qno} ${item.stem}`.trim();
+    : `§${item.section} #${item.qno} ${item.stem || ""}`.trim();
   return {
     kpId,
     categoryId: math ? "cat-math" : "cat-408",

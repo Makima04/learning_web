@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { findKp } from "@/data/kg";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
-import { MATH_CATALOG_VER, mathFacetLabels } from "@/lib/kg/mathPractice";
+import { mediaUrl } from "@/lib/kg/catalogLoad";
+import { mathFacetLabels } from "@/lib/kg/mathPractice";
 
 const OPT_KEYS = ["A", "B", "C", "D"] as const;
 
 export function WangdaoStem({ item }: { item: WangdaoItem }) {
   if (item.img) {
-    const src = item.img.includes("?") ? item.img : `${item.img}?v=${MATH_CATALOG_VER}`;
+    const src = mediaUrl(item.img)!;
     return (
       <div className="-mx-1 overflow-hidden rounded-md bg-white sm:mx-0">
         <img
@@ -66,11 +67,7 @@ export function WangdaoAnalysis({ item }: { item: WangdaoItem }) {
   const [open, setOpen] = useState(false);
   const labels = mathFacetLabels(item.facets);
   if (!item.ans_img && !item.answer && labels.length === 0) return null;
-  const src = item.ans_img
-    ? item.ans_img.includes("?")
-      ? item.ans_img
-      : `${item.ans_img}?v=${MATH_CATALOG_VER}`
-    : null;
+  const src = mediaUrl(item.ans_img);
   return (
     <div className="space-y-2">
       <button

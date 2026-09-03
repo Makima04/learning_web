@@ -36,13 +36,15 @@ export function KgModulePage() {
   const markItem = useKgProgress((s) => s.markItem);
   const kgChapterLimit = useSettings((s) => s.journalKgChapterDailyLimit);
   const journalEntries = useJournal((s) => s.entries);
-  const { items: catalog } = useDrillCatalog();
+  const book = getBook(bookId as BookId);
+  const which =
+    book?.subject === "math" ? "math" : book?.subject === "cs408" ? "wangdao" : "none";
+  const { items: catalog } = useDrillCatalog(which);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const book = getBook(bookId as BookId);
   const mod = getModule(bookId as BookId, moduleId);
   const hasDrill = book?.subject === "cs408" || book?.subject === "math";
   const isMath = book?.subject === "math";

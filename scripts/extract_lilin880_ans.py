@@ -397,6 +397,9 @@ def main() -> int:
     if stats["unmatched"]:
         print("unmatched", len(stats["unmatched"]), stats["unmatched"][:25])
     print(f"wrote {PUBLIC_CATALOG}")
+    from split_practice_catalogs import split_public_catalog
+
+    split_public_catalog(PUBLIC_CATALOG)
     return 0
 
 

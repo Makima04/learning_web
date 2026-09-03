@@ -433,6 +433,9 @@ def main() -> int:
     print("by chapter:", dict(sorted(by_ch.items())))
     print("by kp:", dict(sorted(by_kp.items(), key=lambda x: -x[1])[:20]))
     print(f"wrote {len(all_q)} -> {PUBLIC_CATALOG}")
+    from split_practice_catalogs import split_public_catalog
+
+    split_public_catalog(PUBLIC_CATALOG)
     return 0
 
 

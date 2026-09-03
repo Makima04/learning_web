@@ -1062,6 +1062,9 @@ def main() -> int:
     )
     print(f"wrote {len(all_q)} questions, {len(gaps)} sections with gaps -> {OUT_DIR}")
     print(f"frontend catalog -> {PUBLIC_CATALOG}")
+    from split_practice_catalogs import split_public_catalog
+
+    split_public_catalog(PUBLIC_CATALOG)
     return 0
 
 

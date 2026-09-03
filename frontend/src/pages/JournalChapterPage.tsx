@@ -7,6 +7,7 @@ import { findModule } from "@/data/kg";
 import { dayKey } from "@/lib/day";
 import { sortDueEntries } from "@/lib/journal";
 import { isKgChapterReviewEntry, moduleIdOfJournalEntry } from "@/lib/kg/journalBridge";
+import { useHydratedItems } from "@/lib/kg/catalogLoad";
 import { itemById } from "@/lib/kg/wangdao408";
 import { practiceKindLabel, practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
 import { applyWangdaoPractice, toggleWangdaoCollect } from "@/lib/kg/wangdaoPractice";
@@ -33,14 +34,24 @@ export function JournalChapterPage() {
   const deleteEntry = useJournal((s) => s.deleteEntry);
   const cats = useMemo(() => categoryMap(categories), [categories]);
   const today = dayKey();
-  const { items: catalog } = useDrillCatalog();
+  const loc = findModule(moduleId);
+  const which =
+    loc?.book.subject === "math" ? "math" : loc?.book.subject === "cs408" ? "wangdao" : "all";
+  const { items: catalog } = useDrillCatalog(which);
 
   const dueInChapter = useMemo(() => {
     const kgDue = sortDueEntries(entries.filter(isKgChapterReviewEntry), today);
     return kgDue.filter((e) => moduleIdOfJournalEntry(e) === moduleId);
   }, [entries, moduleId, today]);
 
-  const loc = findModule(moduleId);
+  const dueItems = useMemo(() => {
+    if (!catalog) return null;
+    const ids = new Set(
+      dueInChapter.map((e) => e.sourceItemId).filter((id): id is string => Boolean(id))
+    );
+    return catalog.filter((q) => ids.has(q.id));
+  }, [catalog, dueInChapter]);
+  const hydrated = useHydratedItems(dueItems);
   const isWrong = dueInChapter.some((e) => e.sourceItemId);
   const title = loc?.module.name || dueInChapter[0]?.title || "章节";
   const bookName = loc?.book.name || "知识图谱";
@@ -84,8 +95,8 @@ export function JournalChapterPage() {
         <div className="space-y-3">
           {dueInChapter.map((entry) => {
             const q =
-              entry.sourceItemId && catalog
-                ? itemById(catalog, entry.sourceItemId)
+              entry.sourceItemId && hydrated
+                ? itemById(hydrated, entry.sourceItemId)
                 : undefined;
             if (q) {
               return (

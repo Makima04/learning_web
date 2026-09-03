@@ -17,6 +17,7 @@ import {
 } from "@/data/kg/wdTaxonomy";
 import { osMemSetPath } from "@/data/kg/osMemTopics";
 import { kgKpPath } from "@/lib/kg/paths";
+import { useHydratedItems } from "@/lib/kg/catalogLoad";
 import {
   useWangdao408,
   type WangdaoItem,
@@ -169,7 +170,13 @@ function Hub() {
 function SetView({ group }: { group: string }) {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  const { items, error } = useWangdao408();
+  const { items: slim, error } = useWangdao408();
+  const needed = useMemo(() => {
+    if (!slim) return null;
+    if (group === "all") return slim;
+    return slim.filter((q) => wdClassOf(q).group.id === group);
+  }, [slim, group]);
+  const items = useHydratedItems(needed);
   const load = useKgProgress((s) => s.load);
   const itemMarks = useKgProgress((s) => s.itemMarks);
   const proof = params.get("mode") === "proof";
