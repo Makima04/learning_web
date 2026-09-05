@@ -525,3 +525,30 @@ export async function kgPredictFill(slots: PredictFillSlot[]): Promise<{
     body: JSON.stringify({ slots }),
   });
 }
+
+export interface KgExplainBody {
+  item_id: string;
+  stem: string;
+  book?: string;
+  section?: string;
+  qno?: number;
+  kind?: string;
+  kp_name?: string;
+}
+
+export interface KgExplainResult {
+  item_id: string;
+  answer: string;
+  solution: string;
+  status: "ok" | "unconfigured" | "error" | string;
+  model?: string;
+  cached?: boolean;
+  detail?: string;
+}
+
+export async function kgExplain(body: KgExplainBody): Promise<KgExplainResult> {
+  return req("/api/kg/explain", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}

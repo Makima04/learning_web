@@ -1,12 +1,26 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Bookmark, BookOpen, Clock3 } from "lucide-react";
 import { prefetchQuestionMedia } from "@/lib/kg/catalogLoad";
+import { canRevealAnswer } from "@/lib/kg/explain";
 import type { MarkLevel } from "@/lib/kg/types";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
 import { practiceKindLabel, practiceSourceLabel } from "@/lib/kg/mathPractice";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { QuestionKpLine, WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
+}
+
+function isInteractiveClick(e: React.MouseEvent): boolean {
+  const el = e.target;
+  return el instanceof Element && Boolean(el.closest("button, a, input, textarea, select, label"));
+}
 
 export const PRACTICE_MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "pass", label: "会", cls: "bg-emerald-600 text-white" },
@@ -105,13 +119,36 @@ export function PracticeQuestionCard({
   onCollect: () => void;
   onExit: () => void;
 }) {
+  const [revealedId, setRevealedId] = useState<string | null>(null);
+  const showAns = revealedId === item.id;
+  const canReveal = canRevealAnswer(item);
+
   useEffect(() => {
     prefetchQuestionMedia(item);
     prefetchQuestionMedia(nextItem);
   }, [item, nextItem]);
+
+  useEffect(() => {
+    if (!canReveal) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return;
+      if (event.key !== " " && event.code !== "Space") return;
+      event.preventDefault();
+      setRevealedId(item.id);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [canReveal, item.id]);
+
   const kind = practiceKindLabel(item.kind);
   return (
-    <Card>
+    <Card
+      className={cn(canReveal && !showAns && "cursor-pointer")}
+      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+        if (!canReveal || showAns || isInteractiveClick(e)) return;
+        setRevealedId(item.id);
+      }}
+    >
       <CardContent className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0 flex-1 text-xs text-muted-foreground">
@@ -131,7 +168,10 @@ export function PracticeQuestionCard({
         </div>
         <QuestionKpLine item={item} />
         <WangdaoStem item={item} />
-        <WangdaoAnalysis item={item} />
+        {canReveal && !showAns && (
+          <p className="text-[11px] text-muted-foreground">空格或点卡片空白处显示答案</p>
+        )}
+        <WangdaoAnalysis item={item} revealAnswer={showAns} />
         <div className="flex flex-wrap items-center gap-2">
           {PRACTICE_MARKS.map((m) => (
             <button

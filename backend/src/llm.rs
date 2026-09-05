@@ -189,9 +189,14 @@ pub async fn chat_completion(
 
     let status = resp.status();
     if !status.is_success() {
+        let code = status.as_u16();
+        let body = resp.text().await.unwrap_or_default();
+        let snippet: String = body.chars().take(180).collect();
+        if snippet.is_empty() {
+            return Err(anyhow::anyhow!("LLM gateway returned HTTP {code}"));
+        }
         return Err(anyhow::anyhow!(
-            "LLM gateway returned HTTP {}",
-            status.as_u16()
+            "LLM gateway returned HTTP {code}: {snippet}"
         ));
     }
 

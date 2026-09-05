@@ -174,3 +174,15 @@ CREATE TABLE IF NOT EXISTS word_lookups (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ
 );
+
+-- 王道/题库大题 LLM 解析：全局共用，按题目 id 主键；题干变了才重生成
+CREATE TABLE IF NOT EXISTS question_explanations (
+    item_id TEXT PRIMARY KEY,
+    stem TEXT NOT NULL,
+    answer TEXT,
+    solution TEXT,
+    status TEXT,
+    model TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
+);
