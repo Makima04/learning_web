@@ -37,6 +37,11 @@ describe("parseImportData", () => {
     expect(result.settings).toEqual({ rate: 1.2, direction: "random" });
   });
 
+  it("accepts srs max interval 15", () => {
+    const result = parseImportData(JSON.stringify({ settings: { srsMaxIvl: 15 } }));
+    expect(result.settings?.srsMaxIvl).toBe(15);
+  });
+
   it("accepts journal kg chapter daily limit", () => {
     const result = parseImportData(
       JSON.stringify({

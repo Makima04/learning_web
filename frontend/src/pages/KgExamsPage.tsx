@@ -23,6 +23,7 @@ import { examSetPath } from "@/data/kg/examTaxonomy";
 import { wdSetPath } from "@/data/kg/wdTaxonomy";
 import { osMemSetPath } from "@/data/kg/osMemTopics";
 import { ExamTags } from "@/pages/examTags";
+import { ItemNoteField } from "@/pages/itemNoteField";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
@@ -474,6 +475,7 @@ function PaperView({ year }: { year: number }) {
                     </Button>
                   )}
                 </div>
+                <ItemNoteField itemId={id} />
                 {showAns[id] && (
                   <div className="space-y-1 rounded-md border border-dashed p-3 text-sm">
                     {it.answer && (

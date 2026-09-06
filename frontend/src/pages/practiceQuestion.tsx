@@ -7,6 +7,7 @@ import type { WangdaoItem } from "@/lib/kg/wangdao408";
 import { practiceKindLabel, practiceSourceLabel } from "@/lib/kg/mathPractice";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
+import { ItemNoteField } from "@/pages/itemNoteField";
 import { QuestionKpLine, WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -172,6 +173,7 @@ export function PracticeQuestionCard({
           <p className="text-[11px] text-muted-foreground">空格或点卡片空白处显示答案</p>
         )}
         <WangdaoAnalysis item={item} revealAnswer={showAns} />
+        {(!canReveal || showAns) && <ItemNoteField key={item.id} itemId={item.id} />}
         <div className="flex flex-wrap items-center gap-2">
           {PRACTICE_MARKS.map((m) => (
             <button

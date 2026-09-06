@@ -11,6 +11,15 @@ export const EASE_MIN = 1.3;
 export const EASE_MAX = 3.0;
 export const EASE_INIT = 2.5;
 
+/** 英语复习间隔上限（天）。答对后 ivl 不超过此值。 */
+export const SRS_MAX_IVL_OPTIONS = [14, 15] as const;
+export type SrsMaxIvl = (typeof SRS_MAX_IVL_OPTIONS)[number];
+export const DEFAULT_SRS_MAX_IVL: SrsMaxIvl = 15;
+
+export function isSrsMaxIvl(value: number): value is SrsMaxIvl {
+  return (SRS_MAX_IVL_OPTIONS as readonly number[]).includes(value);
+}
+
 export type CardState = "new" | "learn" | "review";
 export type Quality = "again" | "hard" | "good" | "easy";
 
@@ -34,6 +43,12 @@ function clampEase(e: number): number {
 }
 function round(x: number): number {
   return Math.round(x);
+}
+
+export function clampIvl(ivl: number, maxIvl: number = DEFAULT_SRS_MAX_IVL): number {
+  const n = Math.max(1, round(ivl));
+  if (!maxIvl || maxIvl <= 0) return n;
+  return Math.min(maxIvl, n);
 }
 
 // 新建空卡。
@@ -81,7 +96,8 @@ function scheduleLearn(card: Card, quiz: number, now: number) {
 export function answer(
   card: Card,
   q: Quality,
-  now: number = Date.now()
+  now: number = Date.now(),
+  maxIvl: number = DEFAULT_SRS_MAX_IVL
 ): { card: Card; interval: string } {
   card = card || newCard();
 
@@ -148,7 +164,7 @@ export function answer(
         factor = card.ease * 1.3;
         card.ease = clampEase(card.ease + 0.15);
       }
-      card.ivl = Math.max(1, round(card.ivl * factor));
+      card.ivl = clampIvl(card.ivl * factor, maxIvl);
       card.reps++;
       card.quiz = 0;
       card.due = now + card.ivl * DAY;
@@ -180,9 +196,10 @@ export function describe(card: Card, now: number = Date.now()): string {
 export function preview(
   card: Card | null,
   q: Quality,
-  now: number = Date.now()
+  now: number = Date.now(),
+  maxIvl: number = DEFAULT_SRS_MAX_IVL
 ): string {
   const clone = JSON.parse(JSON.stringify(card || newCard())) as Card;
-  answer(clone, q, now);
+  answer(clone, q, now, maxIvl);
   return describe(clone, now);
 }

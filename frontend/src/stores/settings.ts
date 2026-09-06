@@ -4,6 +4,11 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { enqueueSettings } from "@/lib/syncQueue";
+import {
+  DEFAULT_SRS_MAX_IVL,
+  isSrsMaxIvl,
+  type SrsMaxIvl,
+} from "@/lib/srs";
 
 export type Direction = "en2cn" | "cn2en" | "random";
 
@@ -30,6 +35,8 @@ export interface Settings {
    * 默认关闭：只做例句 / 词形 / 释义三轮。
    */
   enableCloze: boolean;
+  /** 英语复习间隔上限（天）：14 或 15。答对后不再拉更长。 */
+  srsMaxIvl: SrsMaxIvl;
   /**
    * 学习日志：各分类每日复盘上限（张）。
    * 未出现的分类键使用 DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW（3）。
@@ -63,6 +70,7 @@ export const DEFAULT_SETTINGS: Settings = {
   enableCs408: true,
   enableMath: true,
   enableCloze: false,
+  srsMaxIvl: DEFAULT_SRS_MAX_IVL,
   journalDailyReviewLimits: {},
   journalKgChapterDailyLimit: 3,
   reminderEnabled: false,
@@ -113,6 +121,11 @@ function pickSettingValue(key: keyof Settings, value: unknown): unknown {
   }
   if (key === "reminderTime") return normalizeReminderTime(value);
   if (key === "reminderEnabled") return typeof value === "boolean" ? value : undefined;
+  if (key === "srsMaxIvl") {
+    if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+    const n = Math.floor(value);
+    return isSrsMaxIvl(n) ? n : undefined;
+  }
   return value;
 }
 

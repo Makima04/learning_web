@@ -29,6 +29,7 @@ import { useKgProgress } from "@/stores/kgProgress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ItemNoteField } from "@/pages/itemNoteField";
 import { WdTags } from "@/pages/wdTags";
 import { WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
 import { vizFor } from "@/viz/registry";
@@ -465,6 +466,7 @@ function QRow({
           </p>
           <WangdaoStem item={item} />
           <WangdaoAnalysis item={item} />
+          <ItemNoteField itemId={item.id} />
           <div className="flex flex-wrap gap-2">
             {MARKS.map((m) => (
               <button

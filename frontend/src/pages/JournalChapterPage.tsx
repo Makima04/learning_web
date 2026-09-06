@@ -15,6 +15,7 @@ import type { MarkLevel } from "@/lib/kg/types";
 import { useJournal } from "@/stores/journal";
 import { cn } from "@/lib/utils";
 import { categoryMap, EntryCard } from "@/pages/journalCards";
+import { ItemNoteField } from "@/pages/itemNoteField";
 import { QuestionKpLine, WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
@@ -111,6 +112,7 @@ export function JournalChapterPage() {
                     <QuestionKpLine item={q} />
                     <WangdaoStem item={q} />
                     <WangdaoAnalysis item={q} />
+                    <ItemNoteField itemId={q.id} />
                     <div className="flex flex-wrap items-center gap-2">
                       {MARKS.map((m) => (
                         <button

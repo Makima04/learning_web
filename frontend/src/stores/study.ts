@@ -255,7 +255,7 @@ function savePassedCard(idx: number, previous: Card, firstPass: boolean): Card {
   const card =
     !firstPass && wasLearned
       ? resetReviewToFirstDay(working, now)
-      : answer(working, "good", now).card;
+      : answer(working, "good", now, useSettings.getState().srsMaxIvl).card;
   card.learned = true;
   // good 理论上毕业进 review；兜底避免落在 learn
   if (card.state !== "review") {

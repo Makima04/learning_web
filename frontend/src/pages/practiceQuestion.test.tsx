@@ -28,5 +28,30 @@ describe("PracticeQuestionCard", () => {
       })
     );
     expect(html).toContain("空格或点卡片空白处显示答案");
+    expect(html).not.toContain("写思路备注");
+  });
+
+  it("无答案可揭时直接给出思路备注入口", () => {
+    const mcq: WangdaoItem = {
+      id: "ds-mcq-1.1-1",
+      book: "ds",
+      kind: "mcq",
+      section: "1.1",
+      qno: 1,
+      stem: "顺序表",
+      kp_ids: ["ds.linear.seq"],
+    };
+    const html = renderToStaticMarkup(
+      createElement(PracticeQuestionCard, {
+        item: mcq,
+        index: 0,
+        total: 1,
+        collected: false,
+        onMark: () => {},
+        onCollect: () => {},
+        onExit: () => {},
+      })
+    );
+    expect(html).toContain("写思路备注");
   });
 });

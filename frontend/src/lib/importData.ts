@@ -9,6 +9,7 @@ import type {
   WeeklySummary,
 } from "@/lib/journal";
 import type { Meta } from "@/stores/meta";
+import { isSrsMaxIvl } from "@/lib/srs";
 import type { Direction, Settings } from "@/stores/settings";
 
 export interface JournalImport {
@@ -163,6 +164,15 @@ function settings(value: unknown): Partial<Settings> {
   }
   if (source.enableCloze !== undefined) {
     result.enableCloze = boolean(source.enableCloze, "重学完型填空");
+  }
+  if (source.srsMaxIvl !== undefined) {
+    const maxIvl = number(source.srsMaxIvl, "遗忘曲线天数上限", {
+      integer: true,
+      min: 14,
+      max: 15,
+    });
+    if (!isSrsMaxIvl(maxIvl)) throw new Error("遗忘曲线天数上限无效");
+    result.srsMaxIvl = maxIvl;
   }
   if (source.journalDailyReviewLimits !== undefined) {
     const limitsRaw = record(source.journalDailyReviewLimits, "学习日志分类每日上限");

@@ -5,6 +5,7 @@ import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { applyItemMark, applyMarkToKp, markCovered } from "@/lib/kg/mark";
 import { findKp } from "@/data/kg";
 import { journalCopyForKp } from "@/lib/kg/journalBridge";
+import { upsertItemNotes } from "@/lib/kg/itemNote";
 import type {
   MarkLevel,
   PredictPaper,
@@ -21,13 +22,25 @@ function storageKey() {
 export interface KgDoc {
   states: Record<string, UserKpState>;
   itemMarks: UserItemMark[];
+  /** 题目思路备注（itemId → 文本），与会/模糊/不会独立 */
+  itemNotes: Record<string, string>;
   papers: PredictPaper[];
   /** 文档版本 ms */
   updatedAt: number;
 }
 
 function emptyDoc(): KgDoc {
-  return { states: {}, itemMarks: [], papers: [], updatedAt: 0 };
+  return { states: {}, itemMarks: [], itemNotes: {}, papers: [], updatedAt: 0 };
+}
+
+function toPayload(doc: KgDoc): KgDoc {
+  return {
+    states: doc.states,
+    itemMarks: doc.itemMarks,
+    itemNotes: doc.itemNotes ?? {},
+    papers: doc.papers,
+    updatedAt: doc.updatedAt,
+  };
 }
 
 function loadJSON<T>(key: string, fallback: T): T {
@@ -53,18 +66,32 @@ function loadDoc(): KgDoc {
   return {
     states: raw.states ?? {},
     itemMarks: raw.itemMarks ?? [],
+    itemNotes: raw.itemNotes ?? {},
     papers: raw.papers ?? [],
     updatedAt: raw.updatedAt ?? 0,
   };
 }
 
-function persist(doc: KgDoc) {
-  saveJSON(storageKey(), doc);
-  if (api.isLoggedIn()) {
-    void api.putKg(doc).catch((e) => {
+let putTimer: ReturnType<typeof setTimeout> | null = null;
+
+function persist(doc: KgDoc, flush = true) {
+  const payload = toPayload(doc);
+  saveJSON(storageKey(), payload);
+  if (!api.isLoggedIn()) return;
+  if (putTimer) {
+    clearTimeout(putTimer);
+    putTimer = null;
+  }
+  const send = () => {
+    void api.putKg(loadDoc()).catch((e) => {
       console.warn("putKg failed:", e);
     });
+  };
+  if (flush) {
+    send();
+    return;
   }
+  putTimer = setTimeout(send, 800);
 }
 
 interface KgStore extends KgDoc {
@@ -78,6 +105,8 @@ interface KgStore extends KgDoc {
     secondaryKpIds?: string[];
     weakKpIds?: string[];
   }) => void;
+  /** 思路备注：不改变掌握度，空文本则删除 */
+  saveItemNote: (itemId: string, note: string) => void;
   /**
    * 外部（学习日志复盘）回写考点：applyMarkToKp + 可选对齐 due/ivl。
    * 与 markItem 共用同一套熟练度增量。
@@ -168,6 +197,15 @@ export const useKgProgress = create<KgStore>((set, get) => ({
     set(doc);
   },
 
+  saveItemNote: (itemId, note) => {
+    const itemNotes = upsertItemNotes(get().itemNotes ?? {}, itemId, note);
+    if (itemNotes === get().itemNotes) return;
+    const now = Date.now();
+    const doc: KgDoc = { ...get(), itemNotes, updatedAt: now };
+    persist(doc, false);
+    set(doc);
+  },
+
   applyExternalMark: (kpId, mark, opts = {}) => {
     const now = opts.now ?? Date.now();
     let next = applyMarkToKp(get().states[kpId], mark, {
@@ -212,6 +250,7 @@ export const useKgProgress = create<KgStore>((set, get) => ({
         const doc: KgDoc = {
           states: remote.states ?? {},
           itemMarks: remote.itemMarks ?? [],
+          itemNotes: remote.itemNotes ?? {},
           papers: remote.papers ?? [],
           updatedAt: remote.updatedAt ?? 0,
         };
@@ -229,7 +268,12 @@ export const useKgProgress = create<KgStore>((set, get) => ({
   },
 
   replaceAll: (doc) => {
-    const next = { ...emptyDoc(), ...doc, updatedAt: Date.now() };
+    const next: KgDoc = {
+      ...emptyDoc(),
+      ...doc,
+      itemNotes: doc.itemNotes ?? {},
+      updatedAt: Date.now(),
+    };
     persist(next);
     set(next);
   },

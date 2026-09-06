@@ -57,4 +57,32 @@ describe("SRS learning steps", () => {
     expect(isMastered({ ...newCard(), state: "review", ivl: 7, reps: 4 })).toBe(false);
     expect(isMastered({ ...newCard(), state: "review", ivl: 14, reps: 4 })).toBe(true);
   });
+
+  it("caps review interval at maxIvl", () => {
+    const now = 1_700_000_000_000;
+    const card = {
+      ...newCard(),
+      learned: true,
+      state: "review" as const,
+      due: now,
+      ivl: 10,
+      ease: 2.5,
+      reps: 3,
+    };
+    answer(card, "good", now, 15);
+    expect(card.ivl).toBe(15);
+    expect(card.due).toBe(now + 15 * DAY);
+
+    const uncapped = {
+      ...newCard(),
+      learned: true,
+      state: "review" as const,
+      due: now,
+      ivl: 10,
+      ease: 2.5,
+      reps: 3,
+    };
+    answer(uncapped, "good", now, 0);
+    expect(uncapped.ivl).toBe(25);
+  });
 });

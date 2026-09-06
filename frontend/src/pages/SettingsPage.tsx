@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { parseImportData } from "@/lib/importData";
 import { DEFAULT_JOURNAL_CATEGORY_DAILY_REVIEW } from "@/lib/journal";
+import { SRS_MAX_IVL_OPTIONS, type SrsMaxIvl } from "@/lib/srs";
 import { requestReminderPermission, reminderSupported } from "@/lib/reminder";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { applyUserScope } from "@/lib/accountScope";
@@ -378,6 +379,24 @@ export function SettingsPage() {
                     className="w-28"
                   />
                 </Field>
+                <Field label="遗忘曲线天数上限">
+                  <select
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    value={settings.srsMaxIvl}
+                    onChange={(e) =>
+                      setSettings({ srsMaxIvl: Number(e.target.value) as SrsMaxIvl })
+                    }
+                  >
+                    {SRS_MAX_IVL_OPTIONS.map((d) => (
+                      <option key={d} value={d}>
+                        {d} 天
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  英语复习答对后间隔最长不超过此天数，到期仍会再出现。
+                </p>
                 <Field label="记忆方向">
                   <select
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm"

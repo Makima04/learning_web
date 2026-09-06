@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ExamTags } from "@/pages/examTags";
+import { ItemNoteField } from "@/pages/itemNoteField";
 import { vizFor } from "@/viz/registry";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
@@ -451,6 +452,7 @@ function QRow({
               {item.answer}
             </p>
           )}
+          <ItemNoteField itemId={examItemId(ref.year, ref.n)} />
           <div className="flex flex-wrap gap-2">
             {MARKS.map((m) => (
               <button
