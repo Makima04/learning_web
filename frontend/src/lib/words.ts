@@ -19,6 +19,13 @@ export function getWordMap(): Map<number, WordEntry> {
   return WORD_MAP;
 }
 
+/** 词条第 4 栏音标；真题拼的 entry 可能没有，回退词库。 */
+export function getPhonetic(entry: WordEntry | null | undefined): string {
+  if (!entry) return "";
+  if (entry[3]) return entry[3];
+  return getWordMap().get(entry[0])?.[3] || "";
+}
+
 // 按 english 小写建反查（用于真题匹配回查）
 const WORD_BY_EN: Map<string, WordEntry> = new Map();
 let enMapBuilt = false;

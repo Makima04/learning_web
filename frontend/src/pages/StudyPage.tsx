@@ -5,7 +5,7 @@ import { sessionBar, useStudy, type QueueItem, type UiPhase } from "@/stores/stu
 import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
 import { blankTargetHtml } from "@/lib/quiz";
-import { getWordMap } from "@/lib/words";
+import { getPhonetic, getWordMap } from "@/lib/words";
 import { papersRecitePathFromPaperIdx } from "@/lib/papersNav";
 import { esc, cn } from "@/lib/utils";
 import { speakEnglish, stopSpeaking } from "@/lib/tts";
@@ -251,6 +251,7 @@ export function StudyPage() {
   if (!item || !entry) return <EmptyState onBack={() => navigate("/")} />;
 
   const senses = entry[2] || [];
+  const phonetic = getPhonetic(entry);
   const chinese = senses.map((sense) => sense[1]).join("；");
   const sensesHtml = senses
     .map((sense) => `<div class="flex gap-2 py-0.5"><span class="shrink-0 text-sm text-muted-foreground">${esc(sense[0])}</span><span>${esc(sense[1])}</span></div>`)
@@ -269,6 +270,7 @@ export function StudyPage() {
             : groupName
         }
         word={hideEnglish ? "······" : entry[1]}
+        phonetic={hideEnglish ? undefined : phonetic}
         onSpeak={hideEnglish ? undefined : () => speakEnglish(entry[1], settings.rate)}
         hideSpeak={hideEnglish}
       />
@@ -317,7 +319,10 @@ export function StudyPage() {
       >
         <div className="mb-4 self-start text-xs text-muted-foreground">{groupName} · 初轮判断</div>
         <button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={() => speakEnglish(entry[1], settings.rate)}>🔊</button>
-        <div className="text-3xl font-semibold tracking-wide md:text-4xl">{entry[1]}</div>
+        <div className="text-center">
+          <div className="text-3xl font-semibold tracking-wide md:text-4xl">{entry[1]}</div>
+          <PhoneticLine value={phonetic} className="mt-2" />
+        </div>
         {showExampleHint && exampleHtml ? (
           <ExampleBlock
             html={exampleHtml}
@@ -397,6 +402,7 @@ export function StudyPage() {
     const relearn = relearnBody(
       uiPhase,
       entry[1],
+      phonetic,
       chinese,
       exampleHtml,
       onExampleWordClick,
@@ -679,14 +685,21 @@ function SettleView({
   );
 }
 
+function PhoneticLine({ value, className }: { value?: string; className?: string }) {
+  if (!value) return null;
+  return <div className={cn("text-base text-muted-foreground tracking-wide", className)}>{value}</div>;
+}
+
 function CardHeader({
   label,
   word,
+  phonetic,
   onSpeak,
   hideSpeak,
 }: {
   label: string;
   word: string;
+  phonetic?: string;
   onSpeak?: () => void;
   hideSpeak?: boolean;
 }) {
@@ -698,8 +711,11 @@ function CardHeader({
           🔊
         </button>
       ) : null}
-      <div className={cn("mb-3 text-3xl font-semibold", word === "······" && "tracking-widest text-muted-foreground")}>
-        {word}
+      <div className="mb-3">
+        <div className={cn("text-3xl font-semibold", word === "······" && "tracking-widest text-muted-foreground")}>
+          {word}
+        </div>
+        {word !== "······" ? <PhoneticLine value={phonetic} className="mt-1" /> : null}
       </div>
     </>
   );
@@ -739,6 +755,7 @@ function ExampleBlock({
 function relearnBody(
   phase: string,
   word: string,
+  phonetic: string,
   chinese: string,
   exampleHtml: string,
   onExampleClick: (event: MouseEvent<HTMLDivElement>) => void,
@@ -775,7 +792,10 @@ function relearnBody(
         <button type="button" className="absolute right-3 top-3 text-lg opacity-70 hover:opacity-100" onClick={onSpeak}>
           🔊
         </button>
-        <div className="text-3xl font-semibold">{word}</div>
+        <div className="text-center">
+          <div className="text-3xl font-semibold">{word}</div>
+          <PhoneticLine value={phonetic} className="mt-2" />
+        </div>
         {showExampleHint && exampleHtml ? (
           <ExampleBlock
             html={exampleHtml}

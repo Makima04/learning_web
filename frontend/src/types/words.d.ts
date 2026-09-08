@@ -1,6 +1,6 @@
 type Pos = string;
 export type Sense = [Pos, string]; // [pos, cn]
-export type WordEntry = [number, string, Sense[]]; // [index, english, senses]
+export type WordEntry = [number, string, Sense[], string?]; // [index, english, senses, phonetic?]
 
 export interface PassageWord {
   idx: number;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { lookupWord } from "@/lib/lookup";
+import { getPhonetic } from "@/lib/words";
 import { lookupWordRemote, type WordLookupResult } from "@/lib/api";
 import { ApiError } from "@/lib/api";
 import { speakEnglish } from "@/lib/tts";
@@ -119,6 +120,7 @@ export function WordPopover({
   const top = Math.min(y, window.innerHeight - 220);
 
   if (entry) {
+    const phonetic = getPhonetic(entry);
     return (
       <div
         className="fixed z-50 w-72 rounded-lg border bg-popover text-popover-foreground shadow-lg p-3"
@@ -131,6 +133,9 @@ export function WordPopover({
             {surface.toLowerCase() !== entry[1].toLowerCase() && (
               <div className="text-xs text-muted-foreground">← {surface}</div>
             )}
+            {phonetic ? (
+              <div className="text-xs text-muted-foreground mt-0.5">{phonetic}</div>
+            ) : null}
           </div>
           <Button
             variant="ghost"

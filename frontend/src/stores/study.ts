@@ -11,7 +11,7 @@ import {
   pickFromPool,
   type ClozeQuiz,
 } from "@/lib/quiz";
-import { getWords } from "@/lib/words";
+import { getPhonetic, getWords } from "@/lib/words";
 import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
@@ -186,9 +186,12 @@ function isDue(card: Card | undefined, now: number = Date.now()): boolean {
 }
 
 function passageEntry(word: PassageWord): WordEntry & { sentences?: string[] } {
-  const entry = [word.idx, word.english, word.senses] as WordEntry & {
-    sentences?: string[];
-  };
+  const phonetic = getPhonetic([word.idx, word.english, word.senses]);
+  const entry = (
+    phonetic
+      ? [word.idx, word.english, word.senses, phonetic]
+      : [word.idx, word.english, word.senses]
+  ) as WordEntry & { sentences?: string[] };
   entry.sentences = (word.sentences || []).slice(0, 5);
   return entry;
 }
