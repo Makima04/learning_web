@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api";
 import { speakEnglish } from "@/lib/tts";
 import { useSettings } from "@/stores/settings";
 import { Button } from "@/components/ui/button";
+import { WordListToggle } from "@/components/WordListToggle";
 
 type Sense = [string, string];
 
@@ -117,7 +118,7 @@ export function WordPopover({
   }, [entry, key, surface, context]);
 
   const left = Math.min(Math.max(12, x - 140), window.innerWidth - 292);
-  const top = Math.min(y, window.innerHeight - 220);
+  const top = Math.min(y, window.innerHeight - 260);
 
   if (entry) {
     const phonetic = getPhonetic(entry);
@@ -153,6 +154,9 @@ export function WordPopover({
               <span>{s[1]}</span>
             </div>
           ))}
+        </div>
+        <div className="mt-3 border-t pt-2">
+          <WordListToggle idx={entry[0]} />
         </div>
       </div>
     );

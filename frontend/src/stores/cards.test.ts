@@ -122,4 +122,43 @@ describe("cards sync", () => {
     expect(useCards.getState().cards[1]).toMatchObject({ updatedAt: 100 });
     expect(apiMocks.bulkCards).not.toHaveBeenCalled();
   });
+
+  it("partial empty delta does not treat remote as empty", async () => {
+    setScopeUserId(1);
+    useCards.setState({ cards: { 1: card(100) } });
+    localStorage.setItem(
+      "ew.cards.syncCursor.v1.u1",
+      JSON.stringify({ since: 100, resetAt: 0 })
+    );
+    apiMocks.getCards.mockResolvedValue({ cards: {}, partial: true });
+
+    await useCards.getState().sync();
+
+    expect(useCards.getState().cards[1]).toMatchObject({ updatedAt: 100 });
+    expect(apiMocks.bulkCards).not.toHaveBeenCalled();
+    expect(apiMocks.getCards).toHaveBeenCalledWith(100);
+  });
+
+  it("partial delta merges remote and pushes only dirty local cards", async () => {
+    setScopeUserId(1);
+    useCards.setState({ cards: { 1: card(100), 2: card(400) } });
+    localStorage.setItem(
+      "ew.cards.syncCursor.v1.u1",
+      JSON.stringify({ since: 100, resetAt: 0 })
+    );
+    apiMocks.getCards.mockResolvedValue({
+      cards: {
+        "1": { ...card(300), updated_at: 300 },
+      },
+      partial: true,
+    });
+
+    await useCards.getState().sync();
+
+    expect(useCards.getState().cards[1]).toMatchObject({ updatedAt: 300 });
+    expect(useCards.getState().cards[2]).toMatchObject({ updatedAt: 400 });
+    expect(apiMocks.bulkCards).toHaveBeenCalledWith({
+      "2": expect.objectContaining({ updated_at: 400 }),
+    });
+  });
 });

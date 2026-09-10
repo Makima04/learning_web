@@ -8,6 +8,7 @@ import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
 import { usePolitics } from "@/stores/politics";
 import { useTodayLog } from "@/stores/todayLog";
+import { useWordLists } from "@/stores/wordLists";
 
 let syncInFlight: Promise<void> | null = null;
 
@@ -27,7 +28,8 @@ export function syncAccountData(): Promise<void> {
       useJournal.getState().syncFromServer(),
       useKgProgress.getState().syncFromServer(),
       usePolitics.getState().syncFromServer(),
-      useTodayLog.getState().syncFromServer(),
+      useTodayLog.getState().syncFromServer({ skipFlush: true }),
+      useWordLists.getState().syncFromServer(),
     ]);
     if (!api.isLoggedIn() || !stillInScope(epoch)) return;
     await flushPending();

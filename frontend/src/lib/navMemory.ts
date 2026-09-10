@@ -16,6 +16,11 @@ export const NAV_SECTIONS: NavSection[] = [
     match: (p) => p === "/" || p === "/study" || p === "/today",
   },
   {
+    id: "/lists",
+    root: "/lists",
+    match: (p) => p === "/lists" || p.startsWith("/lists/"),
+  },
+  {
     id: "/kg",
     root: "/kg",
     match: (p) => p === "/kg" || p.startsWith("/kg/"),

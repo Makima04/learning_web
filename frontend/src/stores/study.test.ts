@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const apiMocks = vi.hoisted(() => ({
   isLoggedIn: vi.fn(() => false),
   postStudyEvent: vi.fn().mockResolvedValue({ ok: true }),
+  postStudyEventsBulk: vi.fn().mockResolvedValue({ ok: true }),
 }));
 vi.mock("@/lib/api", () => apiMocks);
 
@@ -16,6 +17,7 @@ import { useSettings } from "@/stores/settings";
 import { sessionBar, useStudy } from "@/stores/study";
 import type { QueueItem } from "@/stores/study";
 import { useTodayLog } from "@/stores/todayLog";
+import { useWordLists } from "@/stores/wordLists";
 
 function phaseForTestRound(round: 1 | 2 | 3 | 4) {
   if (round === 1) return "relearn-example" as const;
@@ -90,6 +92,7 @@ describe("relearning confirmation", () => {
     setScopeUserId(null);
     apiMocks.isLoggedIn.mockReturnValue(false);
     apiMocks.postStudyEvent.mockClear();
+    apiMocks.postStudyEventsBulk.mockClear();
     useCards.setState({ cards: {} });
     useMeta.setState({
       meta: {
@@ -102,6 +105,7 @@ describe("relearning confirmation", () => {
       },
     });
     useSettings.setState({ dailyNew: 20, dailyReview: 100, enableCloze: false });
+    useWordLists.setState({ entries: {}, resetAt: 0 });
   });
 
   it("keeps a known answer provisional and allows correcting it", () => {
@@ -197,13 +201,13 @@ describe("relearning confirmation", () => {
     useStudy.getState().answerCloze("proportion");
     useStudy.getState().confirmRelearning(true);
     await flushPending();
-    expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
+    expect(apiMocks.postStudyEventsBulk).toHaveBeenCalledWith([
       expect.objectContaining({
         word_idx: 42,
         event_type: "new",
         quality: "good",
-      })
-    );
+      }),
+    ]);
   });
 
   it("lets word B stay on round 1 after A advances to round 2", () => {
@@ -311,6 +315,7 @@ describe("review due filter + snapshot", () => {
     setScopeUserId(null);
     apiMocks.isLoggedIn.mockReturnValue(false);
     apiMocks.postStudyEvent.mockClear();
+    apiMocks.postStudyEventsBulk.mockClear();
     useCards.setState({ cards: {} });
     useMeta.setState({
       meta: {
@@ -324,6 +329,7 @@ describe("review due filter + snapshot", () => {
     });
     useSettings.setState({ dailyNew: 20, dailyReview: 100 });
     useTodayLog.setState({ log: { dayKey: dayKey(), items: [] } });
+    useWordLists.setState({ entries: {}, resetAt: 0 });
   });
 
   it("buildQueue(review) only includes due learned cards", () => {
@@ -357,6 +363,77 @@ describe("review due filter + snapshot", () => {
     useStudy.getState().buildQueue("review");
     const idxs = useStudy.getState().queue.map((q) => q.idx);
     expect(idxs).toEqual([1]);
+  });
+
+  it("excludes 熟词 from learn and review queues", () => {
+    const now = Date.now();
+    (globalThis as { window?: unknown }).window = globalThis;
+    const g = globalThis as typeof globalThis & { WORDS?: unknown[] };
+    g.WORDS = [
+      [1, "alpha", [["n.", "甲"]]],
+      [3, "gamma", [["n.", "丙"]]],
+    ];
+    useWordLists.setState({
+      entries: { 1: { kind: "known", updatedAt: now } },
+      resetAt: 0,
+    });
+    useCards.setState({
+      cards: {
+        2: {
+          learned: true,
+          state: "review",
+          due: now - 1,
+          ivl: 1,
+          ease: 2.5,
+          reps: 1,
+          lapses: 0,
+          quiz: 0,
+          updatedAt: now,
+        },
+      },
+    });
+    useStudy.getState().buildQueue("learn");
+    expect(useStudy.getState().queue.map((q) => q.idx)).toEqual([3]);
+
+    useStudy.getState().buildQueue("review");
+    expect(useStudy.getState().queue.map((q) => q.idx)).toEqual([2]);
+  });
+
+  it("always includes 生词 in review even if not due", () => {
+    const now = Date.now();
+    useWordLists.setState({
+      entries: { 9: { kind: "new", updatedAt: now } },
+      resetAt: 0,
+    });
+    useCards.setState({
+      cards: {
+        1: {
+          learned: true,
+          state: "review",
+          due: now - 1,
+          ivl: 1,
+          ease: 2.5,
+          reps: 1,
+          lapses: 0,
+          quiz: 0,
+          updatedAt: now,
+        },
+        9: {
+          learned: true,
+          state: "review",
+          due: now + 7 * DAY,
+          ivl: 7,
+          ease: 2.5,
+          reps: 2,
+          lapses: 0,
+          quiz: 0,
+          updatedAt: now,
+        },
+      },
+    });
+    useStudy.getState().buildQueue("review");
+    expect(useStudy.getState().queue.map((q) => q.idx).sort((a, b) => a - b)).toEqual([1, 9]);
+    expect(useStudy.getState().snapshot().canReview).toBe(true);
   });
 
   it("buildQueue continues after daily plan is full (soft cap)", () => {

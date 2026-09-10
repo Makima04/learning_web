@@ -58,6 +58,19 @@ pub fn verify_password(pw: &str, salt: &str, pw_hash: &str) -> Option<PasswordHa
     }
 }
 
+/// PBKDF2 很重，放到 blocking 线程，避免占住 tokio worker。
+pub async fn hash_password_async(pw: String, salt: String) -> AppResult<String> {
+    Ok(tokio::task::spawn_blocking(move || hash_password(&pw, &salt)).await?)
+}
+
+pub async fn verify_password_async(
+    pw: String,
+    salt: String,
+    pw_hash: String,
+) -> AppResult<Option<PasswordHashVersion>> {
+    Ok(tokio::task::spawn_blocking(move || verify_password(&pw, &salt, &pw_hash)).await?)
+}
+
 fn constant_eq(a: &str, b: &str) -> bool {
     if a.len() != b.len() {
         return false;

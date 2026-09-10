@@ -5,6 +5,7 @@ const apiMocks = vi.hoisted(() => ({
   isLoggedIn: vi.fn(() => false),
   getToday: vi.fn(),
   postStudyEvent: vi.fn().mockResolvedValue({ ok: true }),
+  postStudyEventsBulk: vi.fn().mockResolvedValue({ ok: true }),
 }));
 vi.mock("@/lib/api", () => apiMocks);
 
@@ -22,6 +23,7 @@ describe("todayLog", () => {
     apiMocks.isLoggedIn.mockReturnValue(false);
     apiMocks.getToday.mockReset();
     apiMocks.postStudyEvent.mockClear();
+    apiMocks.postStudyEventsBulk.mockClear();
     useTodayLog.setState({ log: { dayKey: dayKey(), items: [] } });
   });
 
@@ -151,9 +153,9 @@ describe("todayLog", () => {
 
     await useTodayLog.getState().syncFromServer();
 
-    expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ word_idx: 5, event_type: "new" })
-    );
+    expect(apiMocks.postStudyEventsBulk).toHaveBeenCalledWith([
+      expect.objectContaining({ word_idx: 5, event_type: "new" }),
+    ]);
     expect(useTodayLog.getState().items().some((i) => i.wordIdx === 5)).toBe(true);
   });
 });

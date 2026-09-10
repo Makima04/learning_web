@@ -12,6 +12,7 @@ import { speakEnglish, stopSpeaking } from "@/lib/tts";
 import { translate } from "@/lib/llm";
 import { Button } from "@/components/ui/button";
 import { WordPopover } from "@/components/WordPopover";
+import { WordListToggle } from "@/components/WordListToggle";
 
 /** 仅英文测试卡：等待后显示真题例句作回忆提示 */
 const EXAMPLE_HINT_DELAY_MS = 3000;
@@ -427,6 +428,7 @@ export function StudyPage() {
       <header className="flex shrink-0 items-center gap-3 border-b px-3 py-2">
         <Button variant="ghost" size="icon" onClick={() => { resetSession(); navigate("/"); }}>‹</Button>
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${bar.percent}%` }} /></div>
+        {wordIdx != null ? <WordListToggle idx={wordIdx} /> : null}
         <div className="shrink-0 text-sm text-muted-foreground tnum">{bar.done} / {bar.total}</div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden p-4 md:justify-center md:p-8">

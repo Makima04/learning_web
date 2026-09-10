@@ -22,6 +22,13 @@ struct StudyEventBody {
 }
 
 #[derive(Deserialize)]
+struct BulkStudyEventsBody {
+    events: Vec<StudyEventBody>,
+}
+
+const MAX_BULK_EVENTS: usize = 200;
+
+#[derive(Deserialize)]
 struct DayQ {
     day: Option<String>,
 }
@@ -42,9 +49,49 @@ struct OverviewQ {
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/study-events", post(post_event))
+        .route("/api/study-events/bulk", post(post_events_bulk))
         .route("/api/stats/today", get(stats_today))
         .route("/api/stats/daily", get(stats_daily))
         .route("/api/stats/overview", get(stats_overview))
+}
+
+fn event_client_at(body: &StudyEventBody) -> i64 {
+    body.client_at.filter(|n| *n > 0).unwrap_or(0)
+}
+
+async fn insert_study_event(
+    executor: impl sqlx::Executor<'_, Database = sqlx::Postgres>,
+    user_id: i64,
+    body: &StudyEventBody,
+    reset_at_ms: i64,
+) -> AppResult<&'static str> {
+    if body.day_key.is_empty() {
+        return Err(AppError::BadRequest("day_key required".into()));
+    }
+    let client_at = event_client_at(body);
+    if reset_at_ms > 0 && client_at < reset_at_ms {
+        return Ok("stale");
+    }
+    let client_at_db: Option<i64> = if client_at > 0 { Some(client_at) } else { None };
+    sqlx::query(
+        r#"
+        INSERT INTO study_events (user_id, word_idx, event_type, quality, day_key, studied_at, client_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (user_id, day_key, word_idx, client_at)
+            WHERE client_at IS NOT NULL AND client_at > 0
+        DO NOTHING
+        "#,
+    )
+    .bind(user_id)
+    .bind(body.word_idx)
+    .bind(&body.event_type)
+    .bind(&body.quality)
+    .bind(&body.day_key)
+    .bind(Utc::now())
+    .bind(client_at_db)
+    .execute(executor)
+    .await?;
+    Ok("ok")
 }
 
 async fn post_event(
@@ -52,29 +99,45 @@ async fn post_event(
     user: AuthUser,
     Json(body): Json<StudyEventBody>,
 ) -> AppResult<Json<Value>> {
-    if body.day_key.is_empty() {
-        return Err(AppError::BadRequest("day_key required".into()));
-    }
     let reset_at_ms = super::cards::user_reset_at_ms(&state.pool, user.id).await?;
-    let client_at = body.client_at.unwrap_or(0);
-    if reset_at_ms > 0 && client_at < reset_at_ms {
+    let outcome = insert_study_event(&state.pool, user.id, &body, reset_at_ms).await?;
+    if outcome == "stale" {
         return Ok(Json(json!({ "ok": true, "ignored": "stale_after_reset" })));
     }
-    sqlx::query(
-        r#"
-        INSERT INTO study_events (user_id, word_idx, event_type, quality, day_key, studied_at)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        "#,
-    )
-    .bind(user.id)
-    .bind(body.word_idx)
-    .bind(&body.event_type)
-    .bind(&body.quality)
-    .bind(&body.day_key)
-    .bind(Utc::now())
-    .execute(&state.pool)
-    .await?;
     Ok(Json(json!({ "ok": true })))
+}
+
+async fn post_events_bulk(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(body): Json<BulkStudyEventsBody>,
+) -> AppResult<Json<Value>> {
+    if body.events.len() > MAX_BULK_EVENTS {
+        return Err(AppError::BadRequest(format!(
+            "too many events (max {MAX_BULK_EVENTS})"
+        )));
+    }
+    if body.events.is_empty() {
+        return Ok(Json(json!({ "ok": true, "inserted": 0, "ignored": 0 })));
+    }
+    let reset_at_ms = super::cards::user_reset_at_ms(&state.pool, user.id).await?;
+    let mut inserted = 0i64;
+    let mut ignored = 0i64;
+    let mut tx = state.pool.begin().await?;
+    for event in &body.events {
+        let outcome = insert_study_event(&mut *tx, user.id, event, reset_at_ms).await?;
+        if outcome == "stale" {
+            ignored += 1;
+        } else {
+            inserted += 1;
+        }
+    }
+    tx.commit().await?;
+    Ok(Json(json!({
+        "ok": true,
+        "inserted": inserted,
+        "ignored": ignored,
+    })))
 }
 
 async fn stats_today(

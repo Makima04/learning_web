@@ -158,8 +158,9 @@ interface TodayLogStore {
   /**
    * 跨设备同步：先刷出 pending study_events，再拉服务端今日事件。
    * 服务端为底，本地未入账的词保留；服务端为空时回放本地词。
+   * skipFlush：外层 accountSync 已经 flush 过时避免嵌套等待。
    */
-  syncFromServer: () => Promise<void>;
+  syncFromServer: (opts?: { skipFlush?: boolean }) => Promise<void>;
 }
 
 export const useTodayLog = create<TodayLogStore>((set, get) => ({
@@ -233,13 +234,16 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
 
   rehydrate: () => set({ log: loadLog() }),
 
-  syncFromServer: async () => {
+  syncFromServer: async (opts) => {
     if (!api.isLoggedIn()) return;
     const epoch = getScopeEpoch();
     const today = dayKey();
+    const skipFlush = !!opts?.skipFlush;
     try {
-      await flushPending();
-      if (!stillInScope(epoch) || !api.isLoggedIn()) return;
+      if (!skipFlush) {
+        await flushPending();
+        if (!stillInScope(epoch) || !api.isLoggedIn()) return;
+      }
       let resp = await api.getToday(today);
       if (!stillInScope(epoch) || !api.isLoggedIn()) return;
       let serverItems = resp.items || [];
@@ -257,11 +261,13 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
             client_at: it.at,
           });
         }
-        await flushPending();
-        if (!stillInScope(epoch) || !api.isLoggedIn()) return;
-        resp = await api.getToday(today);
-        if (!stillInScope(epoch) || !api.isLoggedIn()) return;
-        serverItems = resp.items || [];
+        if (!skipFlush) {
+          await flushPending();
+          if (!stillInScope(epoch) || !api.isLoggedIn()) return;
+          resp = await api.getToday(today);
+          if (!stillInScope(epoch) || !api.isLoggedIn()) return;
+          serverItems = resp.items || [];
+        }
       }
 
       const serverLog = logFromServerItems(today, serverItems);

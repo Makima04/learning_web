@@ -10,6 +10,7 @@ import { TransMgrPage } from "@/pages/TransMgrPage";
 import { JournalPage } from "@/pages/JournalPage";
 import { JournalChapterPage } from "@/pages/JournalChapterPage";
 import { TodayPage } from "@/pages/TodayPage";
+import { WordListsPage } from "@/pages/WordListsPage";
 import { KgMapPage } from "@/pages/KgMapPage";
 import { KgModulePage } from "@/pages/KgModulePage";
 import { KgKpPage } from "@/pages/KgKpPage";
@@ -40,6 +41,7 @@ export default function App() {
         <Route index element={<DashboardPage />} />
         <Route path="study" element={<StudyPage />} />
         <Route path="today" element={<TodayPage />} />
+        <Route path="lists" element={<WordListsPage />} />
         <Route path="journal" element={<JournalPage />} />
         <Route path="journal/chapter/:moduleId" element={<JournalChapterPage />} />
         <Route path="journal/:tab" element={<JournalPage />} />

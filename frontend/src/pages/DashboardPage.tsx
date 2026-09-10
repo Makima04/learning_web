@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowUpRight,
+  Bookmark,
   BookOpen,
   CalendarDays,
   Clock3,
@@ -24,6 +25,7 @@ import { useJournal } from "@/stores/journal";
 import { useSettings } from "@/stores/settings";
 import { useStudy } from "@/stores/study";
 import { useTodayLog } from "@/stores/todayLog";
+import { useWordLists } from "@/stores/wordLists";
 
 function tipFor(snapshot: {
   reviewAvailable: number;
@@ -105,6 +107,7 @@ export function DashboardPage() {
   const rate = useSettings((s) => s.rate);
   const journalDailyReviewLimits = useSettings((s) => s.journalDailyReviewLimits);
   const journalKgChapterDailyLimit = useSettings((s) => s.journalKgChapterDailyLimit);
+  const listEntries = useWordLists((s) => s.entries);
   const todayItems = useTodayLog((s) => s.log.items);
   const todayDayKey = useTodayLog((s) => s.log.dayKey);
   const syncTodayLog = useTodayLog((s) => s.syncFromServer);
@@ -162,11 +165,12 @@ export function DashboardPage() {
     for (const key in cards) {
       const card = cards[Number(key)];
       if (!card || card.state !== "review") continue;
+      if (listEntries[Number(key)]?.kind === "known") continue;
       const day = Math.floor((card.due - today.getTime()) / DAY);
       if (day >= 0 && day < buckets.length) buckets[day] += 1;
     }
     return buckets;
-  }, [cards]);
+  }, [cards, listEntries]);
 
   const maxForecast = Math.max(1, ...forecast);
   const labels = ["今天", "明天", "周+2", "周+3", "周+4", "周+5", "周+6"];
@@ -250,6 +254,28 @@ export function DashboardPage() {
             </div>
             <div className="grid gap-3 p-5 md:grid-cols-2 md:p-6">
               {studyActions.map(({ key, ...action }) => <StudyAction key={key} {...action} />)}
+              <div className="md:col-span-2">
+                <StudyAction
+                  icon={Bookmark}
+                  title="生词 / 熟词"
+                  description={
+                    (() => {
+                      let n = 0;
+                      let k = 0;
+                      for (const e of Object.values(listEntries)) {
+                        if (e.kind === "new") n++;
+                        else if (e.kind === "known") k++;
+                      }
+                      return n + k > 0
+                        ? `生词 ${n} · 熟词 ${k}`
+                        : "收藏生词会一直复习，熟词不再出现在学习和复习中";
+                    })()
+                  }
+                  primary={false}
+                  iconClassName="bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
+                  onClick={() => navigate("/lists")}
+                />
+              </div>
               <div className="md:col-span-2">
                 <StudyAction
                   icon={NotebookPen}
@@ -379,6 +405,7 @@ export function DashboardPage() {
           <CardContent className="p-5 md:p-6">
             <p className="text-sm font-semibold">学习资源</p>
             <div className="mt-3 divide-y">
+              <button type="button" onClick={() => navigate("/lists")} className="flex w-full items-center justify-between py-3 text-left text-sm hover:text-primary"><span>生词 / 熟词</span><ArrowUpRight className="h-4 w-4" /></button>
               <button type="button" onClick={() => navigate("/papers")} className="flex w-full items-center justify-between py-3 text-left text-sm hover:text-primary"><span>真题阅读</span><ArrowUpRight className="h-4 w-4" /></button>
               <button type="button" onClick={() => navigate("/papers-recite")} className="flex w-full items-center justify-between py-3 text-left text-sm hover:text-primary"><span>按篇记词</span><ArrowUpRight className="h-4 w-4" /></button>
               <button type="button" onClick={() => navigate("/settings")} className="flex w-full items-center justify-between py-3 text-left text-sm hover:text-primary"><span>调整学习计划</span><ArrowUpRight className="h-4 w-4" /></button>

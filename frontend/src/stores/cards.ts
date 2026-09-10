@@ -7,9 +7,44 @@ import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { clearPendingCards, enqueueCard } from "@/lib/syncQueue";
 
 const KEY_BASE = "ew.cards.v1";
+const KEY_CURSOR = "ew.cards.syncCursor.v1";
 
 function storageKey() {
   return scopedKey(KEY_BASE);
+}
+
+function cursorKey() {
+  return scopedKey(KEY_CURSOR);
+}
+
+function loadCursor(): { since: number; resetAt: number } {
+  try {
+    const raw = localStorage.getItem(cursorKey());
+    if (!raw) return { since: 0, resetAt: 0 };
+    const o = JSON.parse(raw) as { since?: number; resetAt?: number };
+    return {
+      since: typeof o.since === "number" && o.since > 0 ? o.since : 0,
+      resetAt: typeof o.resetAt === "number" && o.resetAt > 0 ? o.resetAt : 0,
+    };
+  } catch {
+    return { since: 0, resetAt: 0 };
+  }
+}
+
+function saveCursor(since: number, resetAt: number) {
+  try {
+    localStorage.setItem(cursorKey(), JSON.stringify({ since, resetAt }));
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearCursor() {
+  try {
+    localStorage.removeItem(cursorKey());
+  } catch {
+    /* ignore */
+  }
 }
 
 function loadAll(): Record<number, Card> {
@@ -133,21 +168,79 @@ export const useCards = create<CardsStore>((set, get) => ({
     } catch {
       /* ignore */
     }
+    clearCursor();
     clearPendingCards();
   },
   rehydrate: () => set({ cards: loadAll() }),
   sync: async () => {
     const epoch = getScopeEpoch();
-    const remote = await api.getCards();
+    const stored = loadCursor();
+    let since = stored.since > 0 ? stored.since : 0;
+    let remote = await api.getCards(since > 0 ? since : undefined);
     if (!stillInScope(epoch)) return { cards: Object.keys(get().cards).length };
+
+    const resetAt = parseResetAt(remote.reset_at);
+    // 权威重置后游标失效，必须拉全量，否则会把空增量当成「远端没卡」
+    if (resetAt > stored.resetAt && remote.partial) {
+      remote = await api.getCards();
+      if (!stillInScope(epoch)) return { cards: Object.keys(get().cards).length };
+    }
+
     const remoteCards = (remote && remote.cards) || {};
     const localCards = get().cards;
     const remoteKeys = Object.keys(remoteCards);
-    const resetAt = parseResetAt(remote.reset_at);
     const remoteNum: Record<number, Card> = {};
     for (const k of remoteKeys) remoteNum[+k] = fromDto(remoteCards[k]);
-
     const newerThanReset = (card: Card) => (card.updatedAt ?? 0) > resetAt;
+    const partial = !!remote.partial && resetAt <= stored.resetAt;
+
+    const pushLocal = async (toPush: Record<string, api.CardDTO>) => {
+      if (Object.keys(toPush).length === 0) return;
+      try {
+        await api.bulkCards(toPush);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e);
+        console.warn("bulkCards push failed:", message);
+        for (const [idx, card] of Object.entries(toPush)) {
+          enqueueCard(+idx, card);
+        }
+      }
+    };
+
+    if (partial) {
+      const merged = { ...localCards };
+      if (resetAt > 0) {
+        for (const [idx, card] of Object.entries(merged)) {
+          if (!newerThanReset(card)) delete merged[+idx];
+        }
+      }
+      const localNewer: Record<string, api.CardDTO> = {};
+      for (const [idx, remoteCard] of Object.entries(remoteNum)) {
+        const localCard = localCards[+idx];
+        if ((localCard?.updatedAt ?? 0) > (remoteCard.updatedAt ?? 0)) {
+          localNewer[idx] = toDto(localCard!);
+        } else {
+          merged[+idx] = remoteCard;
+        }
+      }
+      for (const [idx, localCard] of Object.entries(localCards)) {
+        if (remoteCards[idx]) continue;
+        if (resetAt > 0 && !newerThanReset(localCard)) continue;
+        if ((localCard.updatedAt ?? 0) > since) {
+          localNewer[idx] = toDto(localCard);
+        }
+      }
+      if (!stillInScope(epoch)) return { cards: Object.keys(get().cards).length };
+      set({ cards: merged });
+      saveAll(merged);
+      await pushLocal(localNewer);
+      let newSince = since;
+      for (const card of Object.values(remoteNum)) {
+        newSince = Math.max(newSince, card.updatedAt ?? 0);
+      }
+      if (stillInScope(epoch)) saveCursor(newSince, resetAt);
+      return { cards: Object.keys(get().cards).length };
+    }
 
     if (remoteKeys.length === 0) {
       // 远端空 + 从未权威清空：首次登录 / 访客迁移，整包上传
@@ -164,22 +257,10 @@ export const useCards = create<CardsStore>((set, get) => ({
         }
         toPush = kept;
       }
-      if (Object.keys(toPush).length > 0) {
-        try {
-          await api.bulkCards(
-            Object.fromEntries(
-              Object.entries(toPush).map(([idx, card]) => [idx, toDto(card)])
-            )
-          );
-        } catch (e: unknown) {
-          const message = e instanceof Error ? e.message : String(e);
-          console.warn("bulkCards push failed:", message);
-          for (const [idx, card] of Object.entries(toPush)) {
-            enqueueCard(+idx, toDto(card));
-          }
-        }
-      }
-    } else if (remoteKeys.length > 0) {
+      await pushLocal(
+        Object.fromEntries(Object.entries(toPush).map(([idx, card]) => [idx, toDto(card)]))
+      );
+    } else {
       const merged = { ...localCards };
       const localNewer: Record<string, api.CardDTO> = {};
       for (const [idx, localCard] of Object.entries(localCards)) {
@@ -199,20 +280,17 @@ export const useCards = create<CardsStore>((set, get) => ({
           merged[+idx] = remoteCard;
         }
       }
+      if (!stillInScope(epoch)) return { cards: Object.keys(get().cards).length };
       set({ cards: merged });
       saveAll(merged);
-      if (Object.keys(localNewer).length > 0) {
-        try {
-          await api.bulkCards(localNewer);
-        } catch (e: unknown) {
-          const message = e instanceof Error ? e.message : String(e);
-          console.warn("bulkCards merge failed:", message);
-          for (const [idx, card] of Object.entries(localNewer)) {
-            enqueueCard(+idx, card);
-          }
-        }
-      }
+      await pushLocal(localNewer);
     }
+
+    let newSince = 0;
+    for (const card of Object.values(remoteNum)) {
+      newSince = Math.max(newSince, card.updatedAt ?? 0);
+    }
+    if (stillInScope(epoch)) saveCursor(newSince, resetAt);
     return { cards: Object.keys(get().cards).length };
   },
 }));

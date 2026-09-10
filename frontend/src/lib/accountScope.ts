@@ -9,6 +9,7 @@ import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
 import { useStudy } from "@/stores/study";
 import { useTodayLog } from "@/stores/todayLog";
+import { useWordLists } from "@/stores/wordLists";
 
 /** 切换到指定用户（或 null=访客），并重载本地进度 */
 export function applyUserScope(userId: number | null) {
@@ -21,6 +22,7 @@ export function applyUserScope(userId: number | null) {
   useKgProgress.getState().load();
   usePolitics.getState().load();
   useTodayLog.getState().rehydrate();
+  useWordLists.getState().rehydrate();
   useStudy.getState().resetSession();
   recomputePendingFromStorage();
 }

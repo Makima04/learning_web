@@ -4,6 +4,11 @@
 const BASE = ""; // 同源
 const KEY_TOKEN = "ew.token.v1";
 const KEY_USER = "ew.user.v1";
+const DEFAULT_TIMEOUT_MS = 12_000;
+const LONG_TIMEOUT_MS = 60_000;
+const AUTH_TIMEOUT_MS = 30_000;
+
+type ReqOpts = RequestInit & { timeoutMs?: number };
 
 export interface User {
   id: number;
@@ -140,21 +145,36 @@ export function isAdmin(): boolean {
 }
 
 // ---- 统一请求 ----
-async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const headers: Record<string, string> = { ...(opts.headers as any) };
+async function req<T>(path: string, opts: ReqOpts = {}): Promise<T> {
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, signal, headers: optHeaders, ...rest } = opts;
+  const headers: Record<string, string> = { ...((optHeaders as Record<string, string>) || {}) };
   const t = getToken();
   if (t) headers["Authorization"] = "Bearer " + t;
-  if (opts.body && !headers["Content-Type"])
+  if (rest.body && !headers["Content-Type"])
     headers["Content-Type"] = "application/json";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const onAbort = () => controller.abort();
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener("abort", onAbort);
+  }
   let res: Response;
   try {
     res = await fetch(BASE + path, {
-      method: opts.method || "GET",
+      method: rest.method || "GET",
       headers,
-      body: opts.body,
+      body: rest.body,
+      signal: controller.signal,
     });
   } catch (e: any) {
+    if (e?.name === "AbortError" || controller.signal.aborted) {
+      throw new ApiError("请求超时", 0, null);
+    }
     throw new ApiError("网络错误:" + (e?.message || e), 0, null);
+  } finally {
+    clearTimeout(timer);
+    if (signal) signal.removeEventListener("abort", onAbort);
   }
   const text = await res.text();
   let data: any = null;
@@ -181,6 +201,7 @@ export async function register(username: string, password: string) {
   const d = await req<{ token: string; user: User }>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({ username, password }),
+    timeoutMs: AUTH_TIMEOUT_MS,
   });
   setToken(d.token);
   setUser(d.user);
@@ -190,6 +211,7 @@ export async function login(username: string, password: string) {
   const d = await req<{ token: string; user: User }>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ username, password }),
+    timeoutMs: AUTH_TIMEOUT_MS,
   });
   setToken(d.token);
   setUser(d.user);
@@ -216,6 +238,7 @@ export async function registerWithEmail(opts: {
   const d = await req<{ token: string; user: User }>("/api/auth/email/register", {
     method: "POST",
     body: JSON.stringify(opts),
+    timeoutMs: AUTH_TIMEOUT_MS,
   });
   setToken(d.token);
   setUser(d.user);
@@ -226,6 +249,7 @@ export async function loginWithEmail(email: string, code: string) {
   const d = await req<{ token: string; user: User }>("/api/auth/email/login", {
     method: "POST",
     body: JSON.stringify({ email, code }),
+    timeoutMs: AUTH_TIMEOUT_MS,
   });
   setToken(d.token);
   setUser(d.user);
@@ -233,13 +257,19 @@ export async function loginWithEmail(email: string, code: string) {
 }
 
 export async function logout() {
+  const token = getToken();
+  setToken(null);
+  setUser(null);
+  if (!token) return;
   try {
-    await req("/api/auth/logout", { method: "POST" });
+    await req("/api/auth/logout", {
+      method: "POST",
+      timeoutMs: 2500,
+      headers: { Authorization: "Bearer " + token },
+    });
   } catch {
     /* ignore */
   }
-  setToken(null);
-  setUser(null);
 }
 export async function me() {
   return req<{ user: User }>("/api/auth/me");
@@ -275,6 +305,7 @@ export async function translateByText(
   return req("/api/translate", {
     method: "POST",
     body: JSON.stringify({ text }),
+    timeoutMs: LONG_TIMEOUT_MS,
   });
 }
 
@@ -296,12 +327,14 @@ export async function lookupWordRemote(
   return req("/api/lookup", {
     method: "POST",
     body: JSON.stringify({ word, context: context || undefined }),
+    timeoutMs: LONG_TIMEOUT_MS,
   });
 }
 // 管理端点（需管理员）：仅补未译，不可 force 重翻
 export async function translateById(id: number) {
   return req<{ zh: string; status: string; cached?: boolean }>(`/api/translate/${id}`, {
     method: "POST",
+    timeoutMs: LONG_TIMEOUT_MS,
   });
 }
 export async function batchTranslate(ids: number[]) {
@@ -313,6 +346,7 @@ export async function batchTranslate(ids: number[]) {
   }>("/api/translate/batch", {
     method: "POST",
     body: JSON.stringify({ ids }),
+    timeoutMs: LONG_TIMEOUT_MS,
   });
 }
 
@@ -349,11 +383,14 @@ export async function setLlmConfig(body: {
 }
 
 // ---- progress sync（需登录）----
-export async function getCards(): Promise<{
+export async function getCards(since?: number): Promise<{
   cards: Record<string, CardDTO>;
   reset_at?: string | null;
+  partial?: boolean;
+  server_ms?: number;
 }> {
-  return req("/api/cards");
+  const q = since && since > 0 ? `?since=${encodeURIComponent(String(since))}` : "";
+  return req("/api/cards" + q);
 }
 export async function putCard(idx: number, card: CardDTO) {
   return req(`/api/cards/${idx}`, {
@@ -367,6 +404,34 @@ export async function bulkCards(cards: Record<string, CardDTO>) {
     body: JSON.stringify({ cards }),
   });
 }
+export type WordListKind = "new" | "known" | "none";
+
+export interface WordListItemDTO {
+  kind: WordListKind;
+  updated_at: number;
+}
+
+export async function getWordLists(): Promise<{
+  items: Record<string, WordListItemDTO>;
+  reset_at?: number | string | null;
+  server_ms?: number;
+}> {
+  return req("/api/word-lists");
+}
+
+export async function bulkWordLists(items: Record<string, WordListItemDTO>) {
+  return req("/api/word-lists/bulk", {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+}
+
+export async function deleteWordLists() {
+  return req<{ ok: boolean; deleted?: number }>("/api/word-lists", {
+    method: "DELETE",
+  });
+}
+
 /** 权威清空：删卡片 + 学习事件 + 将当日 meta 置 0 */
 export async function deleteAllCards(day?: string) {
   const q = day ? `?day=${encodeURIComponent(day)}` : "";
@@ -437,6 +502,12 @@ export async function postStudyEvent(body: StudyEventBody) {
   return req<{ ok: boolean }>("/api/study-events", {
     method: "POST",
     body: JSON.stringify(body),
+  });
+}
+export async function postStudyEventsBulk(events: StudyEventBody[]) {
+  return req<{ ok: boolean; inserted?: number; ignored?: number }>("/api/study-events/bulk", {
+    method: "POST",
+    body: JSON.stringify({ events }),
   });
 }
 export async function getToday(day: string): Promise<TodayResp> {
@@ -523,6 +594,7 @@ export async function kgPredictFill(slots: PredictFillSlot[]): Promise<{
   return req("/api/kg/predict-fill", {
     method: "POST",
     body: JSON.stringify({ slots }),
+    timeoutMs: LONG_TIMEOUT_MS,
   });
 }
 
@@ -550,5 +622,6 @@ export async function kgExplain(body: KgExplainBody): Promise<KgExplainResult> {
   return req("/api/kg/explain", {
     method: "POST",
     body: JSON.stringify(body),
+    timeoutMs: LONG_TIMEOUT_MS,
   });
 }

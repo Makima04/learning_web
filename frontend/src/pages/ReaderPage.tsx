@@ -405,6 +405,7 @@ export function ReaderPage() {
 
   function onWordClick(e: React.MouseEvent) {
     const t = e.target as HTMLElement;
+    if (t.closest(".no-word-lookup")) return;
     const w = t.closest(".c-word") as HTMLElement | null;
     if (!w) return;
     e.stopPropagation();
@@ -508,7 +509,10 @@ export function ReaderPage() {
             </div>
 
             {hasMcq && (
-              <div className="mt-8 space-y-5 border-t pt-6">
+              <div
+                className="no-word-lookup mt-8 space-y-5 border-t pt-6"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="font-semibold text-sm tracking-wide text-muted-foreground">
                     选择题 · 共 {items.length} 题

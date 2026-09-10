@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Card } from "@/lib/srs";
 import { summarizePassageWords } from "@/stores/study";
+import { useWordLists } from "@/stores/wordLists";
 import type { PassageWord } from "@/types/words";
 
 function word(idx: number, en = `w${idx}`): PassageWord {
@@ -31,6 +32,10 @@ function card(partial: Partial<Card>): Card {
 describe("summarizePassageWords", () => {
   const now = 1_700_000_000_000;
 
+  beforeEach(() => {
+    useWordLists.setState({ entries: {}, resetAt: 0 });
+  });
+
   it("优先判为 learn（有未学）", () => {
     const words = [word(1), word(2), word(3)];
     const cards = {
@@ -55,6 +60,22 @@ describe("summarizePassageWords", () => {
     expect(s.due).toBe(1);
     expect(s.unlearned).toBe(0);
     expect(s.learned).toBe(2);
+  });
+
+  it("熟词不计入未学/到期", () => {
+    const words = [word(1), word(2)];
+    const cards = {
+      1: card({ learned: false }),
+      2: card({ learned: true, state: "review", due: now - 1 }),
+    };
+    useWordLists.setState({
+      entries: { 1: { kind: "known", updatedAt: now } },
+      resetAt: 0,
+    });
+    const s = summarizePassageWords(words, cards, now);
+    expect(s.unlearned).toBe(0);
+    expect(s.due).toBe(1);
+    expect(s.kind).toBe("review");
   });
 
   it("学完且无到期 → list", () => {

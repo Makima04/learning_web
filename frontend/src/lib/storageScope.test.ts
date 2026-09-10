@@ -55,5 +55,7 @@ describe("storageScope", () => {
   it("includes kg and meta reset keys in scoped bases", () => {
     expect(SCOPED_BASES).toContain("ew.kg.v1");
     expect(SCOPED_BASES).toContain("ew.meta.resetAt.v1");
+    expect(SCOPED_BASES).toContain("ew.wordLists.v1");
+    expect(SCOPED_BASES).toContain("ew.sync.pending.wordLists.v1");
   });
 });

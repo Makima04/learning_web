@@ -1,5 +1,5 @@
 mod auth;
-mod cards;
+pub(crate) mod cards;
 mod journal;
 mod kg;
 pub mod llm_cfg;
@@ -13,6 +13,7 @@ mod settings;
 mod spa;
 mod stats;
 mod translate;
+mod word_lists;
 
 use axum::Router;
 
@@ -34,6 +35,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(politics::router())
         .merge(llm_cfg::router())
         .merge(stats::router())
+        .merge(word_lists::router())
 }
 
 pub fn spa_router() -> Router<AppState> {

@@ -5,6 +5,7 @@ import { useAuth } from "@/stores/auth";
 
 const SYNC_COOLDOWN = 10_000;
 const SYNC_INTERVAL = 5 * 60_000;
+const SYNC_JITTER = 40_000;
 const FLUSH_INTERVAL = 30_000;
 
 export function useAccountSync() {
@@ -38,7 +39,10 @@ export function useAccountSync() {
     window.addEventListener("focus", sync);
     window.addEventListener("online", onOnline);
     document.addEventListener("visibilitychange", syncWhenVisible);
-    const intervalId = window.setInterval(sync, SYNC_INTERVAL);
+    const intervalId = window.setInterval(
+      sync,
+      SYNC_INTERVAL + Math.floor(Math.random() * SYNC_JITTER)
+    );
     const flushId = window.setInterval(() => {
       void flushPending();
     }, FLUSH_INTERVAL);

@@ -16,6 +16,7 @@ import { useCards } from "@/stores/cards";
 import { useMeta } from "@/stores/meta";
 import { useSettings } from "@/stores/settings";
 import { useTodayLog } from "@/stores/todayLog";
+import { useWordLists } from "@/stores/wordLists";
 import type { PassageItem, PassageWord, WordEntry } from "@/types/words";
 
 export type StudyMode = "daily" | "passage" | "learn" | "review";
@@ -123,6 +124,8 @@ interface StudyState {
   buildQueue: (mode: "learn" | "review" | "daily") => void;
   startLearn: () => boolean;
   startReview: () => boolean;
+  /** 只复习生词表（不受到期约束） */
+  startNewListReview: () => boolean;
   startPassage: (
     words: PassageWord[],
     origin?: { paperIdx: number; type: string } | null
@@ -196,6 +199,10 @@ function passageEntry(word: PassageWord): WordEntry & { sentences?: string[] } {
   return entry;
 }
 
+function listSets(): { known: Set<number>; newbie: Set<number> } {
+  return useWordLists.getState().sets();
+}
+
 /** 统计本篇：未学 / 到期复习 / 已学数（供列表卡文案） */
 export function summarizePassageWords(
   words: PassageWord[],
@@ -208,16 +215,18 @@ export function summarizePassageWords(
   due: number;
   kind: PassageOpenKind;
 } {
+  const { known, newbie } = listSets();
   let learned = 0;
   let unlearned = 0;
   let due = 0;
   for (const w of words) {
+    if (known.has(w.idx)) continue;
     const c = cards[w.idx];
     if (!isLearned(c)) {
       unlearned++;
     } else {
       learned++;
-      if (isDue(c, now)) due++;
+      if (isDue(c, now) || newbie.has(w.idx)) due++;
     }
   }
   const kind: PassageOpenKind =
@@ -340,20 +349,31 @@ export const useStudy = create<StudyState>((set, get) => ({
     const newToday = Math.max(meta.newToday, logCounts.newCount);
     const reviewToday = Math.max(meta.reviewToday, logCounts.reviewCount);
     const doneToday = Math.max(meta.doneToday, logCounts.total);
+    const { known, newbie } = listSets();
     const allWords = getWords();
     const allCards = Object.values(cards);
     const learned = allCards.filter(isLearned);
-    const dueCards = learned.filter((c) => isDue(c, now));
+    const dueIdxs = new Set<number>();
+    for (const [idx, card] of Object.entries(cards)) {
+      if (known.has(+idx)) continue;
+      if (isDue(card, now)) dueIdxs.add(+idx);
+    }
+    for (const idx of newbie) {
+      if (!known.has(idx)) dueIdxs.add(idx);
+    }
+    const dueCardsCount = dueIdxs.size;
     const learning = allCards.filter((c) => c.state === "learn");
     const learnDue = learning.filter((c) => (c.due || 0) <= now).length;
     const masteredCount = learned.filter(isMastered).length;
     // 今日计划剩余（软目标，排队仍可超学）
     const newAvailable = Math.max(0, settings.dailyNew - newToday);
     const reviewAvailable = Math.min(
-      dueCards.length,
+      dueCardsCount,
       Math.max(0, settings.dailyReview - reviewToday)
     );
-    const unseen = Math.max(0, allWords.length - learned.length);
+    const unseen = allWords.filter(
+      (word) => !isLearned(cards[word[0]]) && !known.has(word[0])
+    ).length;
     // 固定分母：已学 + 仍可计入今日计划的量，避免「剩余当总量」导致进度/文案误导
     // 例：新词 quota 已满后只剩 100 复习时，旧逻辑会把 todayPlan 变成 100，
     // 再和 doneToday 混算，出现「没学满 100 新词却显示计划完成 + 77/100」。
@@ -361,12 +381,12 @@ export const useStudy = create<StudyState>((set, get) => ({
     const newGoal = Math.min(settings.dailyNew, newToday + unseen);
     const reviewGoal = Math.min(
       settings.dailyReview,
-      reviewToday + dueCards.length
+      reviewToday + dueCardsCount
     );
     const planDone =
       Math.min(newToday, newGoal) + Math.min(reviewToday, reviewGoal);
     return {
-      due: dueCards.length,
+      due: dueCardsCount,
       reviewAvailable,
       learnDue,
       learn: learning.length,
@@ -376,7 +396,7 @@ export const useStudy = create<StudyState>((set, get) => ({
       newAvailable,
       unseen,
       canLearn: unseen > 0,
-      canReview: dueCards.length > 0,
+      canReview: dueCardsCount > 0,
       newToday,
       reviewToday,
       learnToday: meta.learnToday,
@@ -393,6 +413,7 @@ export const useStudy = create<StudyState>((set, get) => ({
     const cards = useCards.getState().cards;
     const settings = useSettings.getState();
     const meta = useMeta.getState().get();
+    const { known, newbie } = listSets();
     let queue: QueueItem[] = [];
 
     if (mode !== "review") {
@@ -400,17 +421,30 @@ export const useStudy = create<StudyState>((set, get) => ({
       const planLeft = Math.max(0, settings.dailyNew - meta.newToday);
       const limit = planLeft > 0 ? planLeft : Math.max(1, settings.dailyNew);
       queue = getWords()
-        .filter((word) => !isLearned(cards[word[0]]))
+        .filter((word) => !isLearned(cards[word[0]]) && !known.has(word[0]))
         .slice(0, limit)
         .map((word) => ({ idx: word[0], card: cloneCard(cards[word[0]]), group: "new" }));
     } else {
       const planLeft = Math.max(0, settings.dailyReview - meta.reviewToday);
       const limit = planLeft > 0 ? planLeft : Math.max(1, settings.dailyReview);
-      queue = Object.entries(cards)
-        .filter(([, card]) => isDue(card, now))
-        .sort(([, left], [, right]) => left.due - right.due)
-        .slice(0, limit)
-        .map(([idx, card]) => ({ idx: +idx, card: cloneCard(card), group: "review" }));
+      const dueItems = Object.entries(cards)
+        .filter(([idx, card]) => isDue(card, now) && !known.has(+idx))
+        .sort(([, left], [, right]) => left.due - right.due);
+      const dueIdxs = new Set(dueItems.map(([idx]) => +idx));
+      // 生词表始终进入复习，不受到期与今日上限截断
+      const newItems: QueueItem[] = [];
+      for (const idx of newbie) {
+        if (known.has(idx) || dueIdxs.has(idx)) continue;
+        newItems.push({ idx, card: cloneCard(cards[idx]), group: "review" });
+      }
+      queue = [
+        ...newItems,
+        ...dueItems.slice(0, limit).map(([idx, card]) => ({
+          idx: +idx,
+          card: cloneCard(card),
+          group: "review" as const,
+        })),
+      ];
     }
     set({
       queue,
@@ -461,12 +495,46 @@ export const useStudy = create<StudyState>((set, get) => ({
     return true;
   },
 
+  startNewListReview: () => {
+    const cards = useCards.getState().cards;
+    const { known, newbie } = listSets();
+    const queue: QueueItem[] = [];
+    for (const idx of newbie) {
+      if (known.has(idx)) continue;
+      queue.push({ idx, card: cloneCard(cards[idx]), group: "review" });
+    }
+    if (!queue.length) {
+      set({ mode: "review", uiPhase: "done", sessionStats: emptyStats(), sessionTotal: 0 });
+      return false;
+    }
+    set({
+      queue,
+      qpos: 0,
+      relearnPending: [],
+      relearningStarted: false,
+      relearnRoundEnd: 0,
+      relearnReveal: null,
+      relearnAnswerKnown: null,
+      currentExample: null,
+      cloze: null,
+      mode: "review",
+      sessionStats: emptyStats(),
+      sessionTotal: queue.length,
+      passageSkipped: 0,
+      sessionId: get().sessionId + 1,
+      lastExampleByIdx: {},
+    });
+    get().advanceToNextGroup();
+    return true;
+  },
+
   startPassage: (words, origin = null) => {
     const cards = useCards.getState().cards;
+    const { known } = listSets();
     const queue: QueueItem[] = [];
     for (const word of words) {
       const card = cards[word.idx];
-      if (isLearned(card)) continue;
+      if (known.has(word.idx) || isLearned(card)) continue;
       queue.push({
         idx: word.idx,
         card: cloneCard(card),
@@ -503,8 +571,12 @@ export const useStudy = create<StudyState>((set, get) => ({
   startPassageReview: (words, origin = null) => {
     const cards = useCards.getState().cards;
     const now = Date.now();
+    const { known, newbie } = listSets();
     const queue: QueueItem[] = words
-      .filter((word) => isDue(cards[word.idx], now))
+      .filter(
+        (word) =>
+          !known.has(word.idx) && (isDue(cards[word.idx], now) || newbie.has(word.idx))
+      )
       .sort(
         (a, b) => (cards[a.idx]?.due || 0) - (cards[b.idx]?.due || 0)
       )

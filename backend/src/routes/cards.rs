@@ -52,6 +52,12 @@ struct DeleteAllQuery {
     day: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct ListCardsQuery {
+    /// 只返回 updated_at > since（毫秒）的卡；缺省为全量
+    since: Option<i64>,
+}
+
 /// 该账号最近一次权威重置的毫秒时间戳；从未重置则为 0。
 pub(crate) async fn user_reset_at_ms(pool: &sqlx::PgPool, user_id: i64) -> AppResult<i64> {
     let ts: Option<chrono::DateTime<Utc>> =
@@ -81,7 +87,12 @@ pub fn router() -> Router<AppState> {
         .route("/api/cards/bulk", post(bulk_cards))
 }
 
-async fn list_cards(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Value>> {
+async fn list_cards(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<ListCardsQuery>,
+) -> AppResult<Json<Value>> {
+    let since = q.since.filter(|n| *n > 0);
     let rows = sqlx::query_as::<
         _,
         (
@@ -101,10 +112,13 @@ async fn list_cards(State(state): State<AppState>, user: AuthUser) -> AppResult<
         r#"
         SELECT word_idx, learned, state, due, ivl, ease, reps, lapses, step, quiz,
                (EXTRACT(EPOCH FROM updated_at) * 1000)::BIGINT
-        FROM cards WHERE user_id = $1
+        FROM cards
+        WHERE user_id = $1
+          AND ($2::BIGINT IS NULL OR (EXTRACT(EPOCH FROM updated_at) * 1000)::BIGINT > $2)
         "#,
     )
     .bind(user.id)
+    .bind(since)
     .fetch_all(&state.pool)
     .await?;
 
@@ -130,6 +144,8 @@ async fn list_cards(State(state): State<AppState>, user: AuthUser) -> AppResult<
     Ok(Json(json!({
         "cards": cards,
         "reset_at": reset_at.map(|t| t.to_rfc3339()),
+        "partial": since.is_some(),
+        "server_ms": Utc::now().timestamp_millis(),
     })))
 }
 

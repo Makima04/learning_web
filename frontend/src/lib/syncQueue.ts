@@ -2,19 +2,24 @@
 // cards 走 bulk；meta / settings / journal 走各自 PUT；study_events 按词入队后 POST。
 
 import * as api from "@/lib/api";
-import type { CardDTO, JournalPayload, StudyEventBody } from "@/lib/api";
-import { scopedKey } from "@/lib/storageScope";
+import type { CardDTO, JournalPayload, StudyEventBody, WordListItemDTO } from "@/lib/api";
+import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
+
+const STUDY_EVENT_CHUNK = 200;
+const WORD_LIST_CHUNK = 500;
 
 type PendingCards = Record<string, CardDTO>;
 /** day_key:word_idx → 事件（同词同日覆盖，避免重复刷库） */
 type PendingStudyEvents = Record<string, StudyEventBody>;
 type PendingJournal = { journal: JournalPayload; updated_at: number };
+type PendingWordLists = Record<string, WordListItemDTO>;
 
 const BASE_CARDS = "ew.sync.pending.cards.v1";
 const BASE_META = "ew.sync.pending.meta.v1";
 const BASE_SETTINGS = "ew.sync.pending.settings.v1";
 const BASE_STUDY_EVENTS = "ew.sync.pending.studyEvents.v1";
 const BASE_JOURNAL = "ew.sync.pending.journal.v1";
+const BASE_WORD_LISTS = "ew.sync.pending.wordLists.v1";
 const BASE_STATUS = "ew.sync.status.v1";
 
 function keyCards() {
@@ -31,6 +36,9 @@ function keyStudyEvents() {
 }
 function keyJournal() {
   return scopedKey(BASE_JOURNAL);
+}
+function keyWordLists() {
+  return scopedKey(BASE_WORD_LISTS);
 }
 function keyStatus() {
   return scopedKey(BASE_STATUS);
@@ -110,12 +118,14 @@ function recomputePending() {
   const settings = loadJSON<Record<string, unknown> | null>(keySettings(), null);
   const studyEvents = loadJSON<PendingStudyEvents>(keyStudyEvents(), {});
   const journal = loadJSON<PendingJournal | null>(keyJournal(), null);
+  const wordLists = loadJSON<PendingWordLists>(keyWordLists(), {});
   const pending =
     Object.keys(cards).length > 0 ||
     meta != null ||
     settings != null ||
     Object.keys(studyEvents).length > 0 ||
-    journal != null;
+    journal != null ||
+    Object.keys(wordLists).length > 0;
   setStatus({ pending });
 }
 
@@ -181,6 +191,31 @@ export function enqueueStudyEvent(body: StudyEventBody) {
 }
 
 /** 学习日志整包入队；失败可重试。同账号只保留最新一版。 */
+export function enqueueWordListItem(idx: number, item: WordListItemDTO) {
+  enqueueWordLists({ [String(idx)]: item });
+}
+
+export function enqueueWordLists(items: Record<string, WordListItemDTO>) {
+  if (!api.isLoggedIn()) return;
+  const all = loadJSON<PendingWordLists>(keyWordLists(), {});
+  for (const [k, v] of Object.entries(items)) {
+    const prev = all[k];
+    if (!prev || (v.updated_at || 0) >= (prev.updated_at || 0)) all[k] = v;
+  }
+  saveJSON(keyWordLists(), all);
+  recomputePending();
+  scheduleFlush();
+}
+
+export function clearPendingWordLists() {
+  try {
+    localStorage.removeItem(keyWordLists());
+  } catch {
+    /* ignore */
+  }
+  recomputePending();
+}
+
 export function enqueueJournal(journal: JournalPayload, updatedAt: number) {
   if (!api.isLoggedIn()) return;
   const prev = loadJSON<PendingJournal | null>(keyJournal(), null);
@@ -208,63 +243,72 @@ function sameJson(a: unknown, b: unknown): boolean {
 
 async function flushOnce(): Promise<void> {
   let error: string | null = null;
+  const epoch = getScopeEpoch();
+  // 登出会切作用域：读写都钉在本轮开始时的 key 上，避免写进访客缓存
+  const cardsKey = keyCards();
+  const metaKey = keyMeta();
+  const settingsKey = keySettings();
+  const journalKey = keyJournal();
+  const eventsKey = keyStudyEvents();
+  const wordListsKey = keyWordLists();
+  const statusKey = keyStatus();
 
-  const cards = loadJSON<PendingCards>(keyCards(), {});
+  const cards = loadJSON<PendingCards>(cardsKey, {});
   if (Object.keys(cards).length > 0) {
     try {
       await api.bulkCards(cards);
-      const current = loadJSON<PendingCards>(keyCards(), {});
+      const current = loadJSON<PendingCards>(cardsKey, {});
       const leftover: PendingCards = {};
       for (const [k, v] of Object.entries(current)) {
         const sent = cards[k];
         if (!sent || (v.updated_at || 0) > (sent.updated_at || 0)) leftover[k] = v;
       }
-      if (Object.keys(leftover).length === 0) localStorage.removeItem(keyCards());
-      else saveJSON(keyCards(), leftover);
+      if (Object.keys(leftover).length === 0) localStorage.removeItem(cardsKey);
+      else saveJSON(cardsKey, leftover);
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : String(e);
     }
   }
 
-  const meta = loadJSON<api.MetaDTO | null>(keyMeta(), null);
+  const meta = loadJSON<api.MetaDTO | null>(metaKey, null);
   if (meta) {
     try {
       await api.putMeta(meta);
-      const current = loadJSON<api.MetaDTO | null>(keyMeta(), null);
-      if (!current || sameJson(current, meta)) localStorage.removeItem(keyMeta());
+      const current = loadJSON<api.MetaDTO | null>(metaKey, null);
+      if (!current || sameJson(current, meta)) localStorage.removeItem(metaKey);
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : String(e);
     }
   }
 
-  const settings = loadJSON<Record<string, unknown> | null>(keySettings(), null);
+  const settings = loadJSON<Record<string, unknown> | null>(settingsKey, null);
   if (settings) {
     try {
       await api.putSettings(settings);
-      const current = loadJSON<Record<string, unknown> | null>(keySettings(), null);
-      if (!current || sameJson(current, settings)) localStorage.removeItem(keySettings());
+      const current = loadJSON<Record<string, unknown> | null>(settingsKey, null);
+      if (!current || sameJson(current, settings)) localStorage.removeItem(settingsKey);
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : String(e);
     }
   }
 
-  const journal = loadJSON<PendingJournal | null>(keyJournal(), null);
+  const journal = loadJSON<PendingJournal | null>(journalKey, null);
   if (journal) {
     try {
       const res = await api.putJournal(journal.journal, journal.updated_at);
-      const current = loadJSON<PendingJournal | null>(keyJournal(), null);
+      const current = loadJSON<PendingJournal | null>(journalKey, null);
       if (current && (current.updated_at || 0) > journal.updated_at) {
         // flush 期间又写入了更新的本地快照，留给下一轮
       } else if (res.skipped && res.journal) {
         try {
-          localStorage.removeItem(keyJournal());
+          localStorage.removeItem(journalKey);
         } catch {
           /* ignore */
         }
-        onJournalSkipped?.(res.journal, res.updated_at);
+        if (stillInScope(epoch)) onJournalSkipped?.(res.journal, res.updated_at);
       } else {
         try {
-          localStorage.removeItem(keyJournal());
+          localStorage.removeItem(journalKey);
         } catch {
           /* ignore */
         }
@@ -274,20 +318,22 @@ async function flushOnce(): Promise<void> {
     }
   }
 
-  const studyEvents = loadJSON<PendingStudyEvents>(keyStudyEvents(), {});
+  const studyEvents = loadJSON<PendingStudyEvents>(eventsKey, {});
   const eventKeys = Object.keys(studyEvents);
   if (eventKeys.length > 0) {
     const postedOk = new Set<string>();
-    for (const k of eventKeys) {
-      const body = studyEvents[k];
+    for (let i = 0; i < eventKeys.length; i += STUDY_EVENT_CHUNK) {
+      const chunkKeys = eventKeys.slice(i, i + STUDY_EVENT_CHUNK);
+      const chunk = chunkKeys.map((k) => studyEvents[k]);
       try {
-        await api.postStudyEvent(body);
-        postedOk.add(k);
+        await api.postStudyEventsBulk(chunk);
+        for (const k of chunkKeys) postedOk.add(k);
       } catch (e: unknown) {
         error = e instanceof Error ? e.message : String(e);
+        break;
       }
     }
-    const current = loadJSON<PendingStudyEvents>(keyStudyEvents(), {});
+    const current = loadJSON<PendingStudyEvents>(eventsKey, {});
     const remaining: PendingStudyEvents = {};
     for (const [k, now] of Object.entries(current)) {
       if (!postedOk.has(k)) {
@@ -307,32 +353,74 @@ async function flushOnce(): Promise<void> {
     }
     if (Object.keys(remaining).length === 0) {
       try {
-        localStorage.removeItem(keyStudyEvents());
+        localStorage.removeItem(eventsKey);
       } catch {
         /* ignore */
       }
     } else {
-      saveJSON(keyStudyEvents(), remaining);
+      saveJSON(eventsKey, remaining);
     }
   }
 
-  const stillCards = loadJSON<PendingCards>(keyCards(), {});
-  const stillMeta = loadJSON<api.MetaDTO | null>(keyMeta(), null);
-  const stillSettings = loadJSON<Record<string, unknown> | null>(keySettings(), null);
-  const stillEvents = loadJSON<PendingStudyEvents>(keyStudyEvents(), {});
-  const stillJournal = loadJSON<PendingJournal | null>(keyJournal(), null);
+  const wordLists = loadJSON<PendingWordLists>(wordListsKey, {});
+  const wordListKeys = Object.keys(wordLists);
+  if (wordListKeys.length > 0) {
+    const postedOk = new Set<string>();
+    for (let i = 0; i < wordListKeys.length; i += WORD_LIST_CHUNK) {
+      const chunkKeys = wordListKeys.slice(i, i + WORD_LIST_CHUNK);
+      const chunk: PendingWordLists = {};
+      for (const k of chunkKeys) chunk[k] = wordLists[k];
+      try {
+        await api.bulkWordLists(chunk);
+        for (const k of chunkKeys) postedOk.add(k);
+      } catch (e: unknown) {
+        error = e instanceof Error ? e.message : String(e);
+        break;
+      }
+    }
+    const current = loadJSON<PendingWordLists>(wordListsKey, {});
+    const leftover: PendingWordLists = {};
+    for (const [k, v] of Object.entries(current)) {
+      if (!postedOk.has(k)) {
+        leftover[k] = v;
+        continue;
+      }
+      const sent = wordLists[k];
+      if (!sent || (v.updated_at || 0) > (sent.updated_at || 0)) leftover[k] = v;
+    }
+    if (Object.keys(leftover).length === 0) {
+      try {
+        localStorage.removeItem(wordListsKey);
+      } catch {
+        /* ignore */
+      }
+    } else {
+      saveJSON(wordListsKey, leftover);
+    }
+  }
+
+  const stillCards = loadJSON<PendingCards>(cardsKey, {});
+  const stillMeta = loadJSON<api.MetaDTO | null>(metaKey, null);
+  const stillSettings = loadJSON<Record<string, unknown> | null>(settingsKey, null);
+  const stillEvents = loadJSON<PendingStudyEvents>(eventsKey, {});
+  const stillJournal = loadJSON<PendingJournal | null>(journalKey, null);
+  const stillWordLists = loadJSON<PendingWordLists>(wordListsKey, {});
   const pending =
     Object.keys(stillCards).length > 0 ||
     stillMeta != null ||
     stillSettings != null ||
     Object.keys(stillEvents).length > 0 ||
-    stillJournal != null;
+    stillJournal != null ||
+    Object.keys(stillWordLists).length > 0;
 
-  if (error) {
-    setStatus({ lastError: error, pending });
-  } else {
-    setStatus({ lastError: null, lastOkAt: Date.now(), pending });
-  }
+  if (!stillInScope(epoch)) return;
+
+  const next: SyncStatus = error
+    ? { ...status, lastError: error, pending }
+    : { ...status, lastError: null, lastOkAt: Date.now(), pending };
+  status = next;
+  saveJSON(statusKey, status);
+  listeners.forEach((fn) => fn(status));
 }
 
 /** 立即刷出待同步项（登录后 / 上线 / 定时）。并发调用共用同一次 flush。 */
@@ -340,10 +428,16 @@ export function flushPending(): Promise<SyncStatus> {
   if (!api.isLoggedIn()) return Promise.resolve(getSyncStatus());
   if (flushInFlight) return flushInFlight;
 
+  const epoch = getScopeEpoch();
   flushInFlight = (async () => {
     await flushOnce();
     // 本轮期间新入队且上一轮无错误：再刷一轮（覆盖「刚过关就被 sync 撞上」）
-    if (api.isLoggedIn() && getSyncStatus().pending && !getSyncStatus().lastError) {
+    if (
+      api.isLoggedIn() &&
+      stillInScope(epoch) &&
+      getSyncStatus().pending &&
+      !getSyncStatus().lastError
+    ) {
       await flushOnce();
     }
     return getSyncStatus();

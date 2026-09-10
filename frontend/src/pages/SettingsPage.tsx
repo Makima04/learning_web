@@ -8,6 +8,7 @@ import { useMeta } from "@/stores/meta";
 import { useTheme } from "@/stores/theme";
 import { useStudy } from "@/stores/study";
 import { useTodayLog } from "@/stores/todayLog";
+import { useWordLists } from "@/stores/wordLists";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -70,7 +71,9 @@ export function SettingsPage() {
   const [llmConcurrency, setLlmConcurrency] = useState(4);
   const [llmSaving, setLlmSaving] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(getSyncStatus);
-  const [accountBusy, setAccountBusy] = useState<"sync" | "flush" | "logout" | null>(null);
+  const [accountBusy, setAccountBusy] = useState<"sync" | "flush" | "logout" | "login" | null>(
+    null
+  );
   /** granted / denied / default / unsupported（ denied 时开启开关会提示去浏览器设置改） */
   const [notifyPerm, setNotifyPerm] = useState<NotificationPermission | "unsupported">(() =>
     reminderSupported() ? Notification.permission : "unsupported"
@@ -101,16 +104,30 @@ export function SettingsPage() {
 
   async function doLogin(reg: boolean) {
     setMsg("");
+    setAccountBusy("login");
     try {
       if (reg) await api.register(user, pass);
       else await api.login(user, pass);
       const u = api.getUser();
       applyUserScope(u?.id ?? null);
       auth.refresh();
-      await syncAccountData();
-      setMsg("登录成功，进度已同步");
+      setMsg("登录成功，正在同步进度…");
+      setAccountBusy(null);
+      void syncAccountData()
+        .then(() => {
+          if (!api.isLoggedIn()) return;
+          const st = getSyncStatus();
+          if (st.lastError) setMsg("登录成功，同步失败：" + st.lastError);
+          else setMsg("登录成功，进度已同步");
+        })
+        .catch((e: unknown) => {
+          if (!api.isLoggedIn()) return;
+          const message = e instanceof Error ? e.message : String(e);
+          setMsg("登录成功，同步失败：" + message);
+        });
     } catch (e: any) {
       setMsg(e?.message || "失败");
+      setAccountBusy(null);
     }
   }
 
@@ -137,6 +154,7 @@ export function SettingsPage() {
 
   async function doEmailAuth() {
     setMsg("");
+    setAccountBusy("login");
     try {
       if (emailPurpose === "register") {
         await api.registerWithEmail({ email, code, password: pass || undefined });
@@ -146,29 +164,58 @@ export function SettingsPage() {
       const u = api.getUser();
       applyUserScope(u?.id ?? null);
       auth.refresh();
-      await syncAccountData();
-      setMsg("登录成功，进度已同步");
+      setMsg("登录成功，正在同步进度…");
+      setAccountBusy(null);
+      void syncAccountData()
+        .then(() => {
+          if (!api.isLoggedIn()) return;
+          const st = getSyncStatus();
+          if (st.lastError) setMsg("登录成功，同步失败：" + st.lastError);
+          else setMsg("登录成功，进度已同步");
+        })
+        .catch((e: unknown) => {
+          if (!api.isLoggedIn()) return;
+          const message = e instanceof Error ? e.message : String(e);
+          setMsg("登录成功，同步失败：" + message);
+        });
     } catch (e: any) {
       setMsg(e?.message || "失败");
+      setAccountBusy(null);
     }
   }
 
   async function doLogout() {
     setAccountBusy("logout");
-    setMsg("登出中…");
+    setMsg("正在上传进度…");
     try {
-      try {
-        await flushPending();
-      } catch {
-        /* ignore */
+      let st = getSyncStatus();
+      if (st.pending) {
+        try {
+          st = await flushPending();
+        } catch (e: unknown) {
+          st = getSyncStatus();
+          if (!st.lastError) {
+            const message = e instanceof Error ? e.message : String(e);
+            st = { ...st, lastError: message };
+          }
+        }
       }
-      await api.logout();
+      if (st.pending || st.lastError) {
+        const reason = st.lastError
+          ? `进度未能全部上传：${st.lastError}`
+          : "仍有进度未传到服务器";
+        const force = confirm(
+          `${reason}\n\n现在登出的话，其他设备看不到这次未同步的学习记录；下次在本机登录才会继续上传。\n\n仍要登出？`
+        );
+        if (!force) {
+          setMsg(reason + "。已取消登出");
+          return;
+        }
+      }
+      void api.logout();
       applyUserScope(null);
       auth.refresh();
       setMsg("已登出");
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : String(e);
-      setMsg(message || "登出失败");
     } finally {
       setAccountBusy(null);
     }
@@ -294,14 +341,15 @@ export function SettingsPage() {
   async function resetAll() {
     const loggedIn = api.isLoggedIn();
     const tip = loggedIn
-      ? "确认清空本账号的学习进度与日志？将同时删除服务端卡片、学习记录与今日额度（不可恢复）。"
-      : "确认清空本地进度与学习日志？不可恢复。";
+      ? "确认清空本账号的学习进度与日志？将同时删除服务端卡片、生熟词表、学习记录与今日额度（不可恢复）。"
+      : "确认清空本地进度、生熟词表与学习日志？不可恢复。";
     if (!confirm(tip)) return;
     try {
       // 登录：先等服务端权威清空成功，再清本地；失败可见，不假装成功
       await useCards.getState().clearAll();
       useMeta.getState().reset({ skipMirror: loggedIn });
       await useJournal.getState().clearAll();
+      await useWordLists.getState().clearAll();
       useTodayLog.getState().clear();
       useStudy.getState().resetSession();
       setMsg(loggedIn ? "已重置本账号进度与学习日志" : "已重置本地进度与学习日志");
@@ -727,7 +775,7 @@ export function SettingsPage() {
                         disabled={accountBusy === "logout"}
                         onClick={() => void doLogout()}
                       >
-                        {accountBusy === "logout" ? "登出中…" : "登出"}
+                        {accountBusy === "logout" ? "正在上传…" : "登出"}
                       </Button>
                     </div>
                   </>
@@ -819,8 +867,12 @@ export function SettingsPage() {
                         {codeHint && (
                           <p className="text-xs text-muted-foreground">{codeHint}</p>
                         )}
-                        <Button onClick={() => void doEmailAuth()}>
-                          {emailPurpose === "register" ? "验证并注册" : "验证并登录"}
+                        <Button disabled={!!accountBusy} onClick={() => void doEmailAuth()}>
+                          {accountBusy === "login"
+                            ? "登录中…"
+                            : emailPurpose === "register"
+                              ? "验证并注册"
+                              : "验证并登录"}
                         </Button>
                         <p className="text-xs text-muted-foreground">
                           生产环境配置 <code>EW_RESEND_API_KEY</code> 发信；本地未配置时为开发模式（验证码会显示在本页）。
@@ -840,8 +892,14 @@ export function SettingsPage() {
                           onChange={(e) => setPass(e.target.value)}
                         />
                         <div className="flex gap-2">
-                          <Button onClick={() => void doLogin(false)}>登录</Button>
-                          <Button variant="outline" onClick={() => void doLogin(true)}>
+                          <Button disabled={!!accountBusy} onClick={() => void doLogin(false)}>
+                            {accountBusy === "login" ? "登录中…" : "登录"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            disabled={!!accountBusy}
+                            onClick={() => void doLogin(true)}
+                          >
                             注册
                           </Button>
                         </div>

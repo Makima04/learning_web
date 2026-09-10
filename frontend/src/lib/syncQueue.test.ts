@@ -3,10 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const apiMocks = vi.hoisted(() => ({
   isLoggedIn: vi.fn(() => true),
   postStudyEvent: vi.fn().mockResolvedValue({ ok: true }),
+  postStudyEventsBulk: vi.fn().mockResolvedValue({ ok: true }),
   bulkCards: vi.fn().mockResolvedValue({ ok: true }),
   putMeta: vi.fn().mockResolvedValue({ ok: true }),
   putSettings: vi.fn().mockResolvedValue({ ok: true }),
   putJournal: vi.fn().mockResolvedValue({ ok: true, skipped: false, updated_at: 1 }),
+  bulkWordLists: vi.fn().mockResolvedValue({ ok: true }),
 }));
 vi.mock("@/lib/api", () => apiMocks);
 
@@ -14,6 +16,7 @@ import { dayKey } from "@/lib/day";
 import {
   enqueueCard,
   enqueueStudyEvent,
+  enqueueWordListItem,
   flushPending,
   getSyncStatus,
 } from "@/lib/syncQueue";
@@ -29,7 +32,9 @@ describe("syncQueue flushPending", () => {
     });
     apiMocks.isLoggedIn.mockReturnValue(true);
     apiMocks.postStudyEvent.mockReset().mockResolvedValue({ ok: true });
+    apiMocks.postStudyEventsBulk.mockReset().mockResolvedValue({ ok: true });
     apiMocks.bulkCards.mockReset().mockResolvedValue({ ok: true });
+    apiMocks.bulkWordLists.mockReset().mockResolvedValue({ ok: true });
   });
 
   afterEach(() => {
@@ -41,7 +46,7 @@ describe("syncQueue flushPending", () => {
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    apiMocks.postStudyEvent.mockImplementation(async () => {
+    apiMocks.postStudyEventsBulk.mockImplementation(async () => {
       await gate;
       return { ok: true };
     });
@@ -58,7 +63,7 @@ describe("syncQueue flushPending", () => {
     const b = flushPending();
     release();
     await Promise.all([a, b]);
-    expect(apiMocks.postStudyEvent).toHaveBeenCalledTimes(1);
+    expect(apiMocks.postStudyEventsBulk).toHaveBeenCalledTimes(1);
   });
 
   it("does not drop events enqueued during an in-flight flush", async () => {
@@ -66,7 +71,7 @@ describe("syncQueue flushPending", () => {
     const firstGate = new Promise<void>((resolve) => {
       releaseFirst = resolve;
     });
-    apiMocks.postStudyEvent.mockImplementationOnce(async () => {
+    apiMocks.postStudyEventsBulk.mockImplementationOnce(async () => {
       await firstGate;
       return { ok: true };
     });
@@ -90,11 +95,11 @@ describe("syncQueue flushPending", () => {
     releaseFirst();
     await flushing;
 
-    expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ word_idx: 1 })
+    expect(apiMocks.postStudyEventsBulk).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ word_idx: 1 })])
     );
-    expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ word_idx: 2 })
+    expect(apiMocks.postStudyEventsBulk).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ word_idx: 2 })])
     );
     expect(getSyncStatus().pending).toBe(false);
   });
@@ -116,10 +121,10 @@ describe("syncQueue flushPending", () => {
       client_at: 20,
     });
     await flushPending();
-    expect(apiMocks.postStudyEvent).toHaveBeenCalledTimes(1);
-    expect(apiMocks.postStudyEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ word_idx: 8, event_type: "new", client_at: 20 })
-    );
+    expect(apiMocks.postStudyEventsBulk).toHaveBeenCalledTimes(1);
+    expect(apiMocks.postStudyEventsBulk).toHaveBeenCalledWith([
+      expect.objectContaining({ word_idx: 8, event_type: "new", client_at: 20 }),
+    ]);
   });
 
   it("returns lastError when bulkCards fails instead of pretending success", async () => {
@@ -138,5 +143,16 @@ describe("syncQueue flushPending", () => {
     const st = await flushPending();
     expect(st.lastError).toMatch(/boom/);
     expect(st.pending).toBe(true);
+  });
+
+  it("flushes pending word-list items in bulk", async () => {
+    enqueueWordListItem(12, { kind: "new", updated_at: 1 });
+    enqueueWordListItem(12, { kind: "known", updated_at: 2 });
+    await flushPending();
+    expect(apiMocks.bulkWordLists).toHaveBeenCalledTimes(1);
+    expect(apiMocks.bulkWordLists).toHaveBeenCalledWith({
+      "12": { kind: "known", updated_at: 2 },
+    });
+    expect(getSyncStatus().pending).toBe(false);
   });
 });

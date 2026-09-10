@@ -124,6 +124,14 @@ CREATE TABLE IF NOT EXISTS study_events (
 
 CREATE INDEX IF NOT EXISTS idx_study_events_user_day ON study_events(user_id, day_key);
 
+-- 客户端时间戳：重试幂等（同一词同一天同一 client_at 不重复插入）
+ALTER TABLE study_events ADD COLUMN IF NOT EXISTS client_at BIGINT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_study_events_idem
+    ON study_events (user_id, day_key, word_idx, client_at)
+    WHERE client_at IS NOT NULL AND client_at > 0;
+
+CREATE INDEX IF NOT EXISTS idx_cards_user_updated ON cards (user_id, updated_at);
+
 -- 邮箱（可选；邮箱验证码注册/登录）
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email) WHERE email IS NOT NULL;
@@ -174,6 +182,17 @@ CREATE TABLE IF NOT EXISTS word_lookups (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ
 );
+
+-- 生词表 / 熟词表（一词一档；kind=none 为跨设备删除墓碑）
+CREATE TABLE IF NOT EXISTS word_lists (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    word_idx INTEGER NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('new', 'known', 'none')),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, word_idx)
+);
+CREATE INDEX IF NOT EXISTS idx_word_lists_user_kind ON word_lists (user_id, kind);
+CREATE INDEX IF NOT EXISTS idx_word_lists_user_updated ON word_lists (user_id, updated_at);
 
 -- 王道/题库大题 LLM 解析：全局共用，按题目 id 主键；题干变了才重生成
 CREATE TABLE IF NOT EXISTS question_explanations (

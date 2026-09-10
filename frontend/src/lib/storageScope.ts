@@ -65,6 +65,7 @@ export function migrateUnscopedIfNeeded(base: string) {
 /** 学习进度相关 base key（主题 / 翻译缓存不按用户隔离） */
 export const SCOPED_BASES = [
   "ew.cards.v1",
+  "ew.cards.syncCursor.v1",
   "ew.meta.v1",
   "ew.meta.resetAt.v1",
   "ew.set.v1",
@@ -72,12 +73,14 @@ export const SCOPED_BASES = [
   "ew.kg.v1",
   "ew.politics.v1",
   "ew.todayLog.v1",
+  "ew.wordLists.v1",
   "ew.dayCounts.v1",
   "ew.sync.pending.cards.v1",
   "ew.sync.pending.meta.v1",
   "ew.sync.pending.settings.v1",
   "ew.sync.pending.studyEvents.v1",
   "ew.sync.pending.journal.v1",
+  "ew.sync.pending.wordLists.v1",
   "ew.sync.status.v1",
   "ew.reminder.firedDay",
 ] as const;

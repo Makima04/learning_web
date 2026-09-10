@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Bookmark,
   BookOpen,
   ChevronRight,
   Clapperboard,
@@ -35,6 +36,7 @@ const NAV: {
   mobileHidden?: boolean;
 }[] = [
   { to: "/", label: "学习概览", icon: LayoutDashboard, end: true },
+  { to: "/lists", label: "生熟词表", icon: Bookmark, mobileHidden: true },
   { to: "/kg", label: "知识图谱", icon: Network },
   { to: "/viz", label: "图解 408", icon: Clapperboard, mobileHidden: true },
   { to: "/journal", label: "学习日志", icon: NotebookPen },

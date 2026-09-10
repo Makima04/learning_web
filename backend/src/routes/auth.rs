@@ -11,7 +11,7 @@ use serde_json::json;
 use std::time::Instant;
 
 use crate::auth::{
-    gen_salt, gen_token, hash_password, session_expires_at, verify_password, AuthUser,
+    gen_salt, gen_token, hash_password_async, session_expires_at, verify_password_async, AuthUser,
     PasswordHashVersion,
 };
 use crate::db;
@@ -277,7 +277,7 @@ async fn register_email(
         // 无密码账号：随机不可用哈希，仅验证码登录
         let salt = gen_salt();
         let random_pw = gen_token();
-        (hash_password(&random_pw, &salt), salt)
+        (hash_password_async(random_pw, salt.clone()).await?, salt)
     } else {
         if password.len() < 8 {
             return Err(AppError::BadRequest(
@@ -285,7 +285,7 @@ async fn register_email(
             ));
         }
         let salt = gen_salt();
-        (hash_password(&password, &salt), salt)
+        (hash_password_async(password, salt.clone()).await?, salt)
     };
 
     let mut tx = state.pool.begin().await?;
@@ -430,7 +430,7 @@ async fn register(
     }
 
     let salt = gen_salt();
-    let pw_hash = hash_password(&body.password, &salt);
+    let pw_hash = hash_password_async(body.password.clone(), salt.clone()).await?;
     let mut tx = state.pool.begin().await?;
 
     let mut is_admin = false;
@@ -512,7 +512,12 @@ async fn login(
     let lookup_ms = lookup_started.elapsed().as_millis() as u64;
 
     let Some((id, username, pw_hash, salt, is_admin, email)) = row else {
-        let _ = verify_password(&body.password, "english_web_missing_user", "");
+        let _ = verify_password_async(
+            body.password.clone(),
+            "english_web_missing_user".into(),
+            String::new(),
+        )
+        .await?;
         tracing::info!(
             event = "auth.login_timing",
             outcome = "invalid_credentials",
@@ -525,7 +530,8 @@ async fn login(
     };
 
     let verify_started = Instant::now();
-    let password_version = verify_password(&body.password, &salt, &pw_hash);
+    let password_version =
+        verify_password_async(body.password.clone(), salt.clone(), pw_hash).await?;
     let verify_ms = verify_started.elapsed().as_millis() as u64;
     let Some(password_version) = password_version else {
         tracing::info!(
@@ -546,7 +552,7 @@ async fn login(
     let mut rehash_write_ms = 0;
     if rehash_needed {
         let rehash_hash_started = Instant::now();
-        let new_hash = hash_password(&body.password, &salt);
+        let new_hash = hash_password_async(body.password.clone(), salt).await?;
         rehash_hash_ms = rehash_hash_started.elapsed().as_millis() as u64;
 
         let rehash_write_started = Instant::now();
