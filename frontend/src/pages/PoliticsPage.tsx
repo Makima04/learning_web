@@ -84,6 +84,20 @@ export function PoliticsPage() {
         </p>
       </div>
 
+      <Link to="/politics/xiao" className="block">
+        <Card className="transition-colors hover:bg-muted/40">
+          <CardContent className="flex items-center gap-3 p-4">
+            <BookOpen className="h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">肖 1000 · 先学考点再刷题</p>
+              <p className="text-sm text-muted-foreground">
+                马原 / 毛中特 / 新思想 / 史纲 / 思法 · 看两分钟卡片立刻做对应选择
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="grid h-auto w-full grid-cols-3">
           <TabsTrigger value="practice" className="gap-1.5">

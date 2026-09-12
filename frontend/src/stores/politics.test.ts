@@ -24,6 +24,8 @@ describe("politics store", () => {
       drafts: {},
       attempts: [],
       lastQuestionId: null,
+      xiaoMarks: {},
+      lastXiaoKpId: null,
       updatedAt: 0,
     });
   });

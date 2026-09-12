@@ -79,9 +79,22 @@ export interface QuestionDraft {
   updatedAt: number;
 }
 
+export interface XiaoItemMark {
+  itemId: string;
+  mark: "pass" | "fuzzy" | "fail";
+  picked: string;
+  at: number;
+  /** 自评后的复习调度；旧记录没有时按首次复习处理。 */
+  step?: 0 | 1 | 3 | 7 | 14;
+  nextReviewOn?: string;
+}
+
 export interface PoliticsDoc {
   drafts: Record<string, QuestionDraft>;
   attempts: QuestionAttempt[];
   lastQuestionId: string | null;
+  /** 肖 1000 选择题作答记录，登录后随本包同步 */
+  xiaoMarks: Record<string, XiaoItemMark>;
+  lastXiaoKpId: string | null;
   updatedAt: number;
 }

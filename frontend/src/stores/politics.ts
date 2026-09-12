@@ -3,7 +3,13 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import { maxOfPart, scorePart } from "@/lib/politics/score";
 import { questionById } from "@/lib/politics/questions";
-import type { PoliticsDoc, QuestionAttempt, QuestionDraft } from "@/lib/politics/types";
+import { scheduleXiaoReview, type XiaoReviewStep } from "@/lib/politics/xiao";
+import type {
+  PoliticsDoc,
+  QuestionAttempt,
+  QuestionDraft,
+  XiaoItemMark,
+} from "@/lib/politics/types";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 
 const KEY_BASE = "ew.politics.v1";
@@ -14,7 +20,14 @@ function storageKey() {
 }
 
 function emptyDoc(): PoliticsDoc {
-  return { drafts: {}, attempts: [], lastQuestionId: null, updatedAt: 0 };
+  return {
+    drafts: {},
+    attempts: [],
+    lastQuestionId: null,
+    xiaoMarks: {},
+    lastXiaoKpId: null,
+    updatedAt: 0,
+  };
 }
 
 function loadJSON<T>(key: string, fallback: T): T {
@@ -40,6 +53,8 @@ function normalizeDoc(raw: Partial<PoliticsDoc> | null | undefined): PoliticsDoc
     drafts: raw?.drafts && typeof raw.drafts === "object" ? raw.drafts : {},
     attempts: Array.isArray(raw?.attempts) ? raw.attempts : [],
     lastQuestionId: typeof raw?.lastQuestionId === "string" ? raw.lastQuestionId : null,
+    xiaoMarks: raw?.xiaoMarks && typeof raw.xiaoMarks === "object" ? raw.xiaoMarks : {},
+    lastXiaoKpId: typeof raw?.lastXiaoKpId === "string" ? raw.lastXiaoKpId : null,
     updatedAt: typeof raw?.updatedAt === "number" ? raw.updatedAt : 0,
   };
 }
@@ -81,6 +96,7 @@ interface PoliticsStore extends PoliticsDoc {
     answers: Record<string, string>,
     checkedByPart: Record<string, string[]>
   ) => QuestionAttempt | null;
+  markXiao: (itemId: string, mark: XiaoItemMark["mark"], picked: string, kpId?: string) => void;
   syncFromServer: () => Promise<void>;
   replaceAll: (doc: PoliticsDoc) => void;
   clearAll: () => void;
@@ -103,6 +119,8 @@ export const usePolitics = create<PoliticsStore>((set, get) => ({
       drafts: { ...get().drafts, [questionId]: draft },
       attempts: get().attempts,
       lastQuestionId: questionId,
+      xiaoMarks: get().xiaoMarks,
+      lastXiaoKpId: get().lastXiaoKpId,
       updatedAt: now,
     };
     persist(doc);
@@ -152,11 +170,41 @@ export const usePolitics = create<PoliticsStore>((set, get) => ({
         MAX_ATTEMPTS
       ),
       lastQuestionId: questionId,
+      xiaoMarks: get().xiaoMarks,
+      lastXiaoKpId: get().lastXiaoKpId,
       updatedAt: now,
     };
     persist(doc, true);
     set(doc);
     return attempt;
+  },
+
+  markXiao: (itemId, mark, picked, kpId) => {
+    const now = Date.now();
+    const previous = get().xiaoMarks[itemId];
+    const previousStep: XiaoReviewStep =
+      previous?.step === 1 || previous?.step === 3 || previous?.step === 7 || previous?.step === 14
+        ? previous.step
+        : 0;
+    const schedule = scheduleXiaoReview(mark, previousStep);
+    const row: XiaoItemMark = {
+      itemId,
+      mark,
+      picked,
+      at: now,
+      step: schedule.step,
+      nextReviewOn: schedule.nextReviewOn,
+    };
+    const doc: PoliticsDoc = {
+      drafts: get().drafts,
+      attempts: get().attempts,
+      lastQuestionId: get().lastQuestionId,
+      xiaoMarks: { ...get().xiaoMarks, [itemId]: row },
+      lastXiaoKpId: kpId ?? get().lastXiaoKpId,
+      updatedAt: now,
+    };
+    persist(doc);
+    set(doc);
   },
 
   syncFromServer: async () => {
