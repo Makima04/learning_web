@@ -362,6 +362,89 @@ fn compact_items(items: &[Value]) -> Vec<Value> {
         .collect()
 }
 
+fn with_terminal(text: &str) -> String {
+    let text = text.trim();
+    if text.is_empty() || text.ends_with(['.', '!', '?']) {
+        text.to_string()
+    } else {
+        format!("{text}.")
+    }
+}
+
+/// 把选择题题干和选项拼成可分句文本。
+/// 完形没有题干，同一题的选项合成一句，例句里能看到这组干扰项。
+fn items_corpus(items: &[Value]) -> String {
+    let mut parts = Vec::new();
+    for item in items {
+        let stem = item["stem"].as_str().unwrap_or_default().trim();
+        let Some(opts) = item["options"].as_object() else {
+            if !stem.is_empty() {
+                parts.push(with_terminal(stem));
+            }
+            continue;
+        };
+        let mut keys: Vec<&String> = opts.keys().collect();
+        keys.sort();
+        if stem.is_empty() {
+            // 不用 "A."：句号会把选项切碎，例句变成 "displayed B."。
+            let line = keys
+                .iter()
+                .filter_map(|key| {
+                    let val = opts[*key].as_str().unwrap_or_default().trim();
+                    if val.is_empty() {
+                        None
+                    } else {
+                        Some(format!("{key}) {val}"))
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("; ");
+            if !line.is_empty() {
+                parts.push(with_terminal(&line));
+            }
+        } else {
+            parts.push(with_terminal(stem));
+            for key in keys {
+                let val = opts[key].as_str().unwrap_or_default().trim();
+                if val.is_empty() {
+                    continue;
+                }
+                parts.push(with_terminal(&format!("{key}) {val}")));
+            }
+        }
+    }
+    parts.join(" ")
+}
+
+/// 已在正文里的词保留原例句；只出现在题目或选项里的词追加到后面。
+fn merge_new_words(words: &mut Vec<Value>, extra: Vec<Value>) {
+    let mut seen = words
+        .iter()
+        .filter_map(|word| word["idx"].as_u64())
+        .collect::<HashSet<_>>();
+    words.extend(extra.into_iter().filter(|word| {
+        word["idx"]
+            .as_u64()
+            .map(|idx| seen.insert(idx))
+            .unwrap_or(false)
+    }));
+}
+
+/// 记词词表 = 正文命中，再加上题干和选项里正文没有的词。
+fn words_with_items(
+    body: &str,
+    items: &[Value],
+    lookup: &HashMap<String, Vec<String>>,
+    word_map: &HashMap<String, &Word>,
+) -> Vec<Value> {
+    let mut words = match_passage(body, lookup, word_map);
+    let extra_text = items_corpus(items);
+    if !extra_text.is_empty() {
+        merge_new_words(&mut words, match_passage(&extra_text, lookup, word_map));
+    }
+    words
+}
+
 fn value_array<'a>(value: &'a Value, key: &str) -> &'a [Value] {
     value
         .get(key)
@@ -454,7 +537,7 @@ fn match_paper(
                 let raw = section["passage"].as_str().unwrap_or_default();
                 let cloze_answers = answers_between(&answers, 1, 20);
                 let body = fill_cloze_blanks(raw, &items, &cloze_answers);
-                passages.push(json!({"label":"完形填空", "body":body, "words":match_passage(&body, lookup, word_map), "itemCount":items.len(), "items":items, "answers":cloze_answers}));
+                passages.push(json!({"label":"完形填空", "body":body, "words":words_with_items(&body, &items, lookup, word_map), "itemCount":items.len(), "items":items, "answers":cloze_answers}));
             }
             "reading_a" => {
                 for passage in value_array(section, "passages") {
@@ -469,7 +552,7 @@ fn match_paper(
                         .zip(numbers.iter().max())
                         .map(|(start, end)| answers_between(&answers, *start, *end))
                         .unwrap_or_default();
-                    passages.push(json!({"label":passage["label"], "body":passage["body"], "words":match_passage(passage["body"].as_str().unwrap_or_default(), lookup, word_map), "itemCount":items.len(), "items":items, "answers":passage_answers}));
+                    passages.push(json!({"label":passage["label"], "body":passage["body"], "words":words_with_items(passage["body"].as_str().unwrap_or_default(), &items, lookup, word_map), "itemCount":items.len(), "items":items, "answers":passage_answers}));
                 }
             }
             "reading_b" => {
@@ -497,16 +580,7 @@ fn match_paper(
                         lookup,
                         word_map,
                     );
-                    let mut seen = words
-                        .iter()
-                        .filter_map(|word| word["idx"].as_u64())
-                        .collect::<HashSet<_>>();
-                    words.extend(extra.into_iter().filter(|word| {
-                        word["idx"]
-                            .as_u64()
-                            .map(|idx| seen.insert(idx))
-                            .unwrap_or(false)
-                    }));
+                    merge_new_words(&mut words, extra);
                 }
                 passages.push(json!({"label":"新题型（七选五）", "body":body, "words":words, "itemCount":value_array(section, "gaps").len(), "answers":answers_between(&answers, 41, 45)}));
             }
@@ -861,5 +935,106 @@ mod fill_cloze_tests {
         let answers = serde_json::Map::from_iter([("1".to_string(), Value::String("A".into()))]);
         let out = fill_cloze_blanks("population. 1 , homelessness", &items, &answers);
         assert!(out.contains("Indeed"), "got: {out}");
+    }
+
+    #[test]
+    fn cloze_options_share_one_sentence() {
+        let items = vec![json!({
+            "n": 1,
+            "stem": "",
+            "options": {"B": "occupied", "A": "displayed", "D": "equipped", "C": "located"}
+        })];
+        let text = items_corpus(&items);
+        assert_eq!(
+            text,
+            "A) displayed; B) occupied; C) located; D) equipped."
+        );
+    }
+
+    #[test]
+    fn reading_stem_and_options_are_separate_sentences() {
+        let items = vec![json!({
+            "n": 21,
+            "stem": "The author mentions Texas weather to",
+            "options": {
+                "A": "forecast a policy shift.",
+                "B": "stress climate consequences"
+            }
+        })];
+        let text = items_corpus(&items);
+        assert!(text.contains("The author mentions Texas weather to."));
+        assert!(text.contains("A) forecast a policy shift."));
+        assert!(text.contains("B) stress climate consequences."));
+    }
+
+    #[test]
+    fn question_only_word_is_added_once() {
+        let words = vec![
+            Word {
+                index: 1,
+                english: "weather".into(),
+                senses: vec![Sense {
+                    pos: "n".into(),
+                    cn: "天气".into(),
+                }],
+            },
+            Word {
+                index: 2,
+                english: "forecast".into(),
+                senses: vec![Sense {
+                    pos: "v".into(),
+                    cn: "预报".into(),
+                }],
+            },
+            Word {
+                index: 3,
+                english: "displayed".into(),
+                senses: vec![Sense {
+                    pos: "v".into(),
+                    cn: "展示".into(),
+                }],
+            },
+        ];
+        let lookup = build_lookup(&words);
+        let word_map = words
+            .iter()
+            .map(|word| (word.english.to_lowercase(), word))
+            .collect::<HashMap<_, _>>();
+        let reading = vec![json!({
+            "n": 21,
+            "stem": "The author mentions the weather to",
+            "options": {"A": "forecast a policy shift", "B": "draw attention"}
+        })];
+        let hit = words_with_items(
+            "The weather in Texas was cold.",
+            &reading,
+            &lookup,
+            &word_map,
+        );
+        let englishes: Vec<&str> = hit
+            .iter()
+            .filter_map(|word| word["english"].as_str())
+            .collect();
+        assert_eq!(englishes.iter().filter(|en| **en == "weather").count(), 1);
+        assert!(englishes.contains(&"forecast"));
+        let forecast = hit
+            .iter()
+            .find(|word| word["english"] == "forecast")
+            .unwrap();
+        let sentence = forecast["sentences"][0].as_str().unwrap();
+        assert!(sentence.to_lowercase().contains("forecast"), "{sentence}");
+
+        let cloze = vec![json!({
+            "n": 1,
+            "stem": "",
+            "options": {"A": "Indeed", "B": "displayed"}
+        })];
+        let cloze_hit = words_with_items("Indeed, the town grew.", &cloze, &lookup, &word_map);
+        let cloze_en: Vec<&str> = cloze_hit
+            .iter()
+            .filter_map(|word| word["english"].as_str())
+            .collect();
+        assert!(cloze_en.contains(&"displayed"));
+        assert_eq!(cloze_en.iter().filter(|en| **en == "indeed").count(), 0);
     }
 }
