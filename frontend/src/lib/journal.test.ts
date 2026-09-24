@@ -6,6 +6,7 @@ import {
   isDueOnOrBefore,
   isKgJournalEntry,
   mergeJournalSnapshots,
+  mergeLwwRows,
   newEntryDefaults,
   nextStepAfterPass,
   planDueEntries,
@@ -380,5 +381,95 @@ describe("mergeJournalSnapshots", () => {
     newer.entries = [];
     const merged = mergeJournalSnapshots(newer, older);
     expect(merged.entries.map((e) => e.id)).toEqual(["only-old"]);
+  });
+
+  it("does not restore an entry deleted on the newer snapshot", () => {
+    const older = empty(100);
+    const manual = newEntryDefaults({
+      id: "manual-1",
+      categoryId: "cat-english",
+      title: "手写笔记",
+      body: "",
+      kind: "learn",
+      createdOn: "2026-08-16",
+    });
+    manual.updatedAt = 100;
+    older.entries = [manual];
+    older.logs = [{ id: "log-1", entryId: "manual-1", date: "2026-08-17", result: "pass" }];
+    const newer = empty(300);
+    newer.entries = [];
+    newer.deleted = [{ id: "manual-1", at: 250 }];
+    const merged = mergeJournalSnapshots(newer, older);
+    expect(merged.entries).toEqual([]);
+    expect(merged.logs).toEqual([]);
+    expect(merged.deleted).toEqual([{ id: "manual-1", at: 250 }]);
+  });
+
+  it("keeps an entry edited after the delete tombstone", () => {
+    const older = empty(100);
+    older.deleted = [{ id: "manual-1", at: 200 }];
+    const newer = empty(400);
+    const edited = newEntryDefaults({
+      id: "manual-1",
+      categoryId: "cat-english",
+      title: "删后又改",
+      body: "",
+      kind: "learn",
+      createdOn: "2026-08-16",
+    });
+    edited.updatedAt = 350;
+    newer.entries = [edited];
+    const merged = mergeJournalSnapshots(newer, older);
+    expect(merged.entries.map((e) => e.id)).toEqual(["manual-1"]);
+  });
+
+  it("picks the newer entry by its own updatedAt, not the snapshot time", () => {
+    const older = empty(100);
+    const edited = newEntryDefaults({
+      id: "manual-1",
+      categoryId: "cat-english",
+      title: "后改的",
+      body: "",
+      kind: "learn",
+      createdOn: "2026-08-16",
+    });
+    edited.updatedAt = 500;
+    older.entries = [edited];
+    const newer = empty(400);
+    newer.entries = [{ ...edited, title: "先写的", updatedAt: 200 }];
+    const merged = mergeJournalSnapshots(newer, older);
+    expect(merged.entries.map((e) => e.title)).toEqual(["后改的"]);
+  });
+});
+
+describe("mergeLwwRows", () => {
+  it("does not restore a row deleted by the newer tombstone", () => {
+    const { kept, push } = mergeLwwRows(
+      [{ id: "manual-1", updatedAt: 100, deleted: false, value: "old" }],
+      [{ id: "manual-1", updatedAt: 250, deleted: true }],
+      0
+    );
+    expect(kept).toEqual([{ id: "manual-1", updatedAt: 250, deleted: true }]);
+    expect(push).toEqual([]);
+  });
+
+  it("pushes a newer local tombstone instead of keeping the older entry", () => {
+    const { kept, push } = mergeLwwRows(
+      [{ id: "manual-1", updatedAt: 250, deleted: true }],
+      [{ id: "manual-1", updatedAt: 100, deleted: false, value: "old" }],
+      0
+    );
+    expect(kept).toEqual([{ id: "manual-1", updatedAt: 250, deleted: true }]);
+    expect(push).toEqual([{ id: "manual-1", updatedAt: 250, deleted: true }]);
+  });
+
+  it("drops rows at or before resetAt and does not push them", () => {
+    const { kept, push } = mergeLwwRows(
+      [{ id: "old", updatedAt: 10, deleted: false, value: 1 }],
+      [],
+      10
+    );
+    expect(kept).toEqual([]);
+    expect(push).toEqual([]);
   });
 });

@@ -3,6 +3,8 @@ import type {
   JournalCategory,
   JournalEntry,
   JournalKind,
+  JournalLogTombstone,
+  JournalTombstone,
   ReviewLog,
   ReviewResult,
   ReviewStep,
@@ -17,6 +19,10 @@ export interface JournalImport {
   entries: JournalEntry[];
   logs: ReviewLog[];
   weeklies: WeeklySummary[];
+  /** 旧导出里的条目墓碑；有则随导入按条上传，避免把删掉的笔记补回 */
+  deleted?: JournalTombstone[];
+  deletedLogs?: JournalLogTombstone[];
+  deletedCategories?: JournalTombstone[];
   updatedAt: number;
 }
 
@@ -330,13 +336,48 @@ export function parseJournal(value: unknown): JournalImport {
   if (categories.length > 200) throw new Error("学习日志分类过多");
   if (entries.length > 20000) throw new Error("学习日志条目过多");
   if (logs.length > 50000) throw new Error("学习日志复盘记录过多");
-  return {
+  const imported: JournalImport = {
     categories,
     entries,
     logs,
     weeklies,
     updatedAt: number(source.updatedAt ?? Date.now(), "学习日志更新时间", { min: 0 }),
   };
+  if (source.deleted !== undefined) imported.deleted = journalTombstones(source.deleted);
+  if (source.deletedLogs !== undefined) imported.deletedLogs = journalLogTombstones(source.deletedLogs);
+  if (source.deletedCategories !== undefined) {
+    imported.deletedCategories = journalTombstones(source.deletedCategories);
+  }
+  return imported;
+}
+
+function journalTombstones(value: unknown): JournalTombstone[] {
+  if (!Array.isArray(value)) throw new Error("学习日志删除记录格式无效");
+  const out: JournalTombstone[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as { id?: unknown; at?: unknown };
+    if (typeof row.id !== "string" || !row.id) continue;
+    out.push({ id: row.id, at: typeof row.at === "number" && row.at > 0 ? row.at : 0 });
+  }
+  return out;
+}
+
+function journalLogTombstones(value: unknown): JournalLogTombstone[] {
+  if (!Array.isArray(value)) throw new Error("学习日志复盘删除记录格式无效");
+  const out: JournalLogTombstone[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as { id?: unknown; entryId?: unknown; at?: unknown };
+    if (typeof row.id !== "string" || !row.id) continue;
+    if (typeof row.entryId !== "string" || !row.entryId) continue;
+    out.push({
+      id: row.id,
+      entryId: row.entryId,
+      at: typeof row.at === "number" && row.at > 0 ? row.at : 0,
+    });
+  }
+  return out;
 }
 
 export function parseImportData(text: string): ImportedData {

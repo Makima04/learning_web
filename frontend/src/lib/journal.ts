@@ -13,6 +13,8 @@ export interface JournalCategory {
   name: string;
   color: string;
   order: number;
+  /** 按条同步时钟；旧缓存可能没有 */
+  updatedAt?: number;
 }
 
 export interface JournalEntry {
@@ -45,6 +47,8 @@ export interface ReviewLog {
   date: string;
   result: ReviewResult;
   note?: string;
+  /** 按条同步时钟；旧缓存可能没有 */
+  updatedAt?: number;
 }
 
 export interface WeeklySummary {
@@ -223,65 +227,213 @@ export function computeWeekStats(
   };
 }
 
-/** 学习日志整包：以较新快照为底，补上较旧快照里多出来的条目（防多端互踩）。 */
+/** 已删除条目。较新的墓碑挡住旧条目补回。 */
+export interface JournalTombstone {
+  id: string;
+  at: number;
+}
+
+/** 已删除的复盘记录。entryId 随墓碑一起走，便于按条上传。 */
+export interface JournalLogTombstone {
+  id: string;
+  entryId: string;
+  at: number;
+}
+
+const MAX_JOURNAL_TOMBSTONES = 5000;
+
+/** 本地缓存 / 导入文件里的日志文档。同步按条比较，不按整包覆盖。 */
 export interface JournalDoc {
   categories: JournalCategory[];
   entries: JournalEntry[];
   logs: ReviewLog[];
   weeklies: WeeklySummary[];
+  deleted?: JournalTombstone[];
   updatedAt: number;
 }
 
-export function mergeJournalSnapshots(local: JournalDoc, remote: JournalDoc): JournalDoc {
-  const localTs = local.updatedAt || 0;
-  const remoteTs = remote.updatedAt || 0;
-  const base = localTs >= remoteTs ? local : remote;
-  const older = localTs >= remoteTs ? remote : local;
+/** 一条同步行。deleted 为墓碑，此时没有 value。 */
+export interface LwwRow<T> {
+  id: string;
+  updatedAt: number;
+  deleted: boolean;
+  value?: T;
+  /** 复盘记录所属条目；墓碑也保留，方便压过服务端正文 */
+  entryId?: string;
+}
 
-  const entries = new Map(base.entries.map((e) => [e.id, e]));
-  let added = false;
-  for (const e of older.entries) {
-    if (!entries.has(e.id)) {
-      entries.set(e.id, e);
-      added = true;
+export function unionTombstones(
+  ...groups: (JournalTombstone[] | undefined)[]
+): JournalTombstone[] {
+  const map = new Map<string, number>();
+  for (const group of groups) {
+    for (const item of group || []) {
+      if (!item || typeof item.id !== "string" || !item.id) continue;
+      const at = typeof item.at === "number" && Number.isFinite(item.at) ? item.at : 0;
+      const prev = map.get(item.id);
+      if (prev == null || at > prev) map.set(item.id, at);
     }
   }
+  return [...map.entries()]
+    .map(([id, at]) => ({ id, at }))
+    .sort((a, b) => b.at - a.at)
+    .slice(0, MAX_JOURNAL_TOMBSTONES);
+}
 
-  const logs = new Map(base.logs.map((l) => [l.id, l]));
-  for (const l of older.logs) {
-    if (!logs.has(l.id)) {
-      logs.set(l.id, l);
-      added = true;
+export function unionLogTombstones(
+  ...groups: (JournalLogTombstone[] | undefined)[]
+): JournalLogTombstone[] {
+  const map = new Map<string, JournalLogTombstone>();
+  for (const group of groups) {
+    for (const item of group || []) {
+      if (!item || typeof item.id !== "string" || !item.id) continue;
+      if (typeof item.entryId !== "string" || !item.entryId) continue;
+      const at = typeof item.at === "number" && Number.isFinite(item.at) ? item.at : 0;
+      const prev = map.get(item.id);
+      if (!prev || at >= prev.at) map.set(item.id, { id: item.id, entryId: item.entryId, at });
     }
   }
+  return [...map.values()]
+    .sort((a, b) => b.at - a.at)
+    .slice(0, MAX_JOURNAL_TOMBSTONES);
+}
 
-  const weeklies = new Map(base.weeklies.map((w) => [w.weekKey, w]));
-  for (const w of older.weeklies) {
-    const prev = weeklies.get(w.weekKey);
-    if (!prev) {
-      weeklies.set(w.weekKey, w);
-      added = true;
-    } else if ((w.updatedAt || 0) > (prev.updatedAt || 0)) {
-      weeklies.set(w.weekKey, w);
-      added = true;
+/**
+ * 按 id 做 last-write-wins。
+ * 同一 id 比较 updatedAt，较新者获胜；时间相同则墓碑压过正文。
+ * resetAt 及更早的行丢掉，且不会出现在 push 里。
+ * 某一侧独有的 id 会保留（它是一条真实记录，不是「整包里缺了就补回」）。
+ */
+export function mergeLwwRows<T>(
+  local: LwwRow<T>[],
+  remote: LwwRow<T>[],
+  resetAt = 0
+): { kept: LwwRow<T>[]; push: LwwRow<T>[] } {
+  const loc = new Map(local.map((row) => [row.id, row]));
+  const rem = new Map(remote.map((row) => [row.id, row]));
+  const ids = new Set<string>([...loc.keys(), ...rem.keys()]);
+  const kept: LwwRow<T>[] = [];
+  const push: LwwRow<T>[] = [];
+  for (const id of ids) {
+    const l = loc.get(id);
+    const r = rem.get(id);
+    const localFresh = !!l && l.updatedAt > resetAt;
+    const remoteFresh = !!r && r.updatedAt > resetAt;
+    const localWins =
+      localFresh &&
+      !!l &&
+      (!r ||
+        l.updatedAt > r.updatedAt ||
+        (l.updatedAt === r.updatedAt && l.deleted && !r.deleted));
+    if (localWins && l) {
+      kept.push(l);
+      push.push(l);
+    } else if (remoteFresh && r) {
+      kept.push(r);
+    } else if (localFresh && l) {
+      kept.push(l);
+      push.push(l);
     }
   }
+  return { kept, push };
+}
 
-  const categories = new Map(base.categories.map((c) => [c.id, c]));
-  for (const c of older.categories) {
-    if (!categories.has(c.id)) {
-      categories.set(c.id, c);
-      added = true;
+function entryRowsOf(doc: JournalDoc): LwwRow<JournalEntry>[] {
+  const map = new Map<string, LwwRow<JournalEntry>>();
+  for (const entry of doc.entries) {
+    const updatedAt = entry.updatedAt > 0 ? entry.updatedAt : 1;
+    map.set(entry.id, { id: entry.id, updatedAt, deleted: false, value: entry });
+  }
+  for (const tomb of doc.deleted || []) {
+    const at = tomb.at > 0 ? tomb.at : 1;
+    const prev = map.get(tomb.id);
+    // 墓碑不旧于正文时生效（等于也算删掉）
+    if (!prev || at >= prev.updatedAt) {
+      map.set(tomb.id, { id: tomb.id, updatedAt: at, deleted: true });
     }
   }
+  return [...map.values()];
+}
 
-  const cats = [...categories.values()].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+function logRowOf(log: ReviewLog): LwwRow<ReviewLog> {
+  const updatedAt = log.updatedAt && log.updatedAt > 0 ? log.updatedAt : 1;
   return {
-    categories: cats.length ? cats : DEFAULT_CATEGORIES.map((c) => ({ ...c })),
-    entries: [...entries.values()],
-    logs: [...logs.values()],
-    weeklies: [...weeklies.values()],
-    updatedAt: added ? Math.max(localTs, remoteTs, Date.now()) : Math.max(localTs, remoteTs),
+    id: log.id,
+    updatedAt,
+    deleted: false,
+    value: log,
+    entryId: log.entryId,
+  };
+}
+
+function categoryRowsOf(doc: JournalDoc): LwwRow<JournalCategory>[] {
+  const docAt = doc.updatedAt > 0 ? doc.updatedAt : 1;
+  return doc.categories.map((category) => ({
+    id: category.id,
+    updatedAt: category.updatedAt && category.updatedAt > 0 ? category.updatedAt : docAt,
+    deleted: false,
+    value: category,
+  }));
+}
+
+function weeklyRowsOf(doc: JournalDoc): LwwRow<WeeklySummary>[] {
+  return doc.weeklies.map((weekly) => ({
+    id: weekly.weekKey,
+    updatedAt: weekly.updatedAt > 0 ? weekly.updatedAt : 1,
+    deleted: false,
+    value: weekly,
+  }));
+}
+
+/**
+ * 两份日志按条合并。不再以较新快照为底去补另一份多出来的 id。
+ * 条目被较新墓碑删掉后，旧快照里的正文和复盘记录都不会补回。
+ */
+export function mergeJournalSnapshots(local: JournalDoc, remote: JournalDoc): JournalDoc {
+  const entryMerge = mergeLwwRows(entryRowsOf(local), entryRowsOf(remote), 0);
+  const entries: JournalEntry[] = [];
+  const deleted: JournalTombstone[] = [];
+  const entryTombAt = new Map<string, number>();
+  for (const row of entryMerge.kept) {
+    if (row.deleted) {
+      deleted.push({ id: row.id, at: row.updatedAt });
+      entryTombAt.set(row.id, row.updatedAt);
+      continue;
+    }
+    if (row.value) entries.push(row.value);
+  }
+
+  const logMerge = mergeLwwRows(
+    local.logs.map(logRowOf),
+    remote.logs.map(logRowOf),
+    0
+  );
+  const logs: ReviewLog[] = [];
+  for (const row of logMerge.kept) {
+    if (row.deleted || !row.value) continue;
+    const tombAt = entryTombAt.get(row.value.entryId);
+    // 条目已删，且这条复盘不比墓碑新：丢掉，避免删了又补回
+    if (tombAt != null && row.updatedAt <= tombAt) continue;
+    logs.push(row.value);
+  }
+
+  const weeklyMerge = mergeLwwRows(weeklyRowsOf(local), weeklyRowsOf(remote), 0);
+  const weeklies = weeklyMerge.kept.flatMap((row) =>
+    !row.deleted && row.value ? [row.value] : []
+  );
+
+  const categoryMerge = mergeLwwRows(categoryRowsOf(local), categoryRowsOf(remote), 0);
+  const categories = categoryMerge.kept
+    .flatMap((row) => (!row.deleted && row.value ? [row.value] : []))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  return {
+    categories: categories.length ? categories : DEFAULT_CATEGORIES.map((c) => ({ ...c })),
+    entries,
+    logs,
+    weeklies,
+    deleted: unionTombstones(deleted),
+    updatedAt: Math.max(local.updatedAt || 0, remote.updatedAt || 0),
   };
 }
 

@@ -7,7 +7,7 @@ const apiMocks = vi.hoisted(() => ({
   bulkCards: vi.fn().mockResolvedValue({ ok: true }),
   putMeta: vi.fn().mockResolvedValue({ ok: true }),
   putSettings: vi.fn().mockResolvedValue({ ok: true }),
-  putJournal: vi.fn().mockResolvedValue({ ok: true, skipped: false, updated_at: 1 }),
+  bulkJournal: vi.fn().mockResolvedValue({ ok: true }),
   bulkWordLists: vi.fn().mockResolvedValue({ ok: true }),
 }));
 vi.mock("@/lib/api", () => apiMocks);
@@ -15,6 +15,7 @@ vi.mock("@/lib/api", () => apiMocks);
 import { dayKey } from "@/lib/day";
 import {
   enqueueCard,
+  enqueueJournalRows,
   enqueueStudyEvent,
   enqueueWordListItem,
   flushPending,
@@ -34,6 +35,7 @@ describe("syncQueue flushPending", () => {
     apiMocks.postStudyEvent.mockReset().mockResolvedValue({ ok: true });
     apiMocks.postStudyEventsBulk.mockReset().mockResolvedValue({ ok: true });
     apiMocks.bulkCards.mockReset().mockResolvedValue({ ok: true });
+    apiMocks.bulkJournal.mockReset().mockResolvedValue({ ok: true });
     apiMocks.bulkWordLists.mockReset().mockResolvedValue({ ok: true });
   });
 
@@ -154,5 +156,68 @@ describe("syncQueue flushPending", () => {
       "12": { kind: "known", updated_at: 2 },
     });
     expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("keeps the newer journal row and posts a tombstone in bulk", async () => {
+    enqueueJournalRows({
+      entries: [{ id: "manual-1", updated_at: 1, deleted: false, entry: { id: "manual-1" } as never }],
+    });
+    enqueueJournalRows({
+      entries: [{ id: "manual-1", updated_at: 2, deleted: true }],
+    });
+    enqueueJournalRows({
+      entries: [{ id: "manual-1", updated_at: 1, deleted: false, entry: { id: "manual-1" } as never }],
+    });
+    await flushPending();
+    expect(apiMocks.bulkJournal).toHaveBeenCalledTimes(1);
+    expect(apiMocks.bulkJournal).toHaveBeenCalledWith({
+      entries: [{ id: "manual-1", updated_at: 2, deleted: true }],
+      logs: [],
+      categories: [],
+      weeklies: [],
+    });
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("chunks journal bulk posts so each request stays within 2000 rows", async () => {
+    enqueueJournalRows({
+      weeklies: Array.from({ length: 2001 }, (_, i) => ({
+        week_key: `w-${i}`,
+        note: "n",
+        updated_at: i + 1,
+      })),
+    });
+    await flushPending();
+    expect(apiMocks.bulkJournal).toHaveBeenCalledTimes(2);
+    const sizes = apiMocks.bulkJournal.mock.calls.map((call) => {
+      const body = call[0] as {
+        entries: unknown[];
+        logs: unknown[];
+        categories: unknown[];
+        weeklies: unknown[];
+      };
+      return body.entries.length + body.logs.length + body.categories.length + body.weeklies.length;
+    });
+    expect(sizes).toEqual([2000, 1]);
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("keeps journal rows for retry when bulk fails", async () => {
+    apiMocks.bulkJournal.mockRejectedValueOnce(new Error("nope"));
+    enqueueJournalRows({
+      entries: [{ id: "manual-1", updated_at: 3, deleted: true }],
+    });
+    const failed = await flushPending();
+    expect(failed.lastError).toMatch(/nope/);
+    expect(failed.pending).toBe(true);
+    apiMocks.bulkJournal.mockResolvedValue({ ok: true });
+    const ok = await flushPending();
+    expect(ok.pending).toBe(false);
+    expect(apiMocks.bulkJournal).toHaveBeenLastCalledWith({
+      entries: [{ id: "manual-1", updated_at: 3, deleted: true }],
+      logs: [],
+      categories: [],
+      weeklies: [],
+    });
   });
 });

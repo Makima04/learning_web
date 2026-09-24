@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
     updated_at TIMESTAMPTZ
 );
 
--- 学习日志 / 复盘板（按用户隔离的个人数据）
+-- 学习日志旧整包。启动时回填到按条表；新写入不再更新此表。
 CREATE TABLE IF NOT EXISTS user_journal (
     user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     payload JSONB NOT NULL DEFAULT '{}',
@@ -205,3 +205,226 @@ CREATE TABLE IF NOT EXISTS question_explanations (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ
 );
+
+-- 学习日志按条同步：最后写入获胜，deleted_at 为墓碑。只属于当前账号。
+CREATE TABLE IF NOT EXISTS journal_entries (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id TEXT NOT NULL,
+    payload JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ,
+    PRIMARY KEY (user_id, id)
+);
+
+CREATE TABLE IF NOT EXISTS journal_logs (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id TEXT NOT NULL,
+    entry_id TEXT NOT NULL DEFAULT '',
+    payload JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ NOT NULL,
+    deleted_at TIMESTAMPTZ,
+    PRIMARY KEY (user_id, id)
+);
+
+CREATE TABLE IF NOT EXISTS journal_categories (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id TEXT NOT NULL,
+    payload JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ NOT NULL,
+    deleted_at TIMESTAMPTZ,
+    PRIMARY KEY (user_id, id)
+);
+
+CREATE TABLE IF NOT EXISTS journal_weeklies (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    week_key TEXT NOT NULL,
+    note TEXT NOT NULL DEFAULT '',
+    updated_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (user_id, week_key)
+);
+
+-- 权威清空。重置时间之前的按条写入不能把数据救活。
+CREATE TABLE IF NOT EXISTS journal_reset (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    reset_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_journal_entries_user_updated ON journal_entries (user_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_journal_logs_user_updated ON journal_logs (user_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_journal_categories_user_updated ON journal_categories (user_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_journal_weeklies_user_updated ON journal_weeklies (user_id, updated_at);
+
+-- 从旧 user_journal 整包回填。ON CONFLICT DO NOTHING，不盖住已经按条写过的行。
+-- 重置过的账号跳过，避免重启把清空的数据灌回来。id 为空的元素不插入。
+INSERT INTO journal_entries (user_id, id, payload, updated_at, deleted_at)
+SELECT user_id, id, payload, updated_at, NULL::TIMESTAMPTZ
+FROM (
+    SELECT DISTINCT ON (uj.user_id, elem->>'id')
+        uj.user_id AS user_id,
+        elem->>'id' AS id,
+        elem AS payload,
+        to_timestamp(
+            COALESCE(
+                CASE
+                    WHEN jsonb_typeof(elem->'updatedAt') = 'number'
+                        THEN (elem->>'updatedAt')::DOUBLE PRECISION
+                    ELSE NULL
+                END,
+                CASE
+                    WHEN jsonb_typeof(uj.payload->'updatedAt') = 'number'
+                        THEN (uj.payload->>'updatedAt')::DOUBLE PRECISION
+                    ELSE NULL
+                END,
+                EXTRACT(EPOCH FROM uj.updated_at) * 1000.0,
+                EXTRACT(EPOCH FROM NOW()) * 1000.0
+            ) / 1000.0
+        ) AS updated_at
+    FROM user_journal uj
+    CROSS JOIN LATERAL jsonb_array_elements(
+        CASE
+            WHEN jsonb_typeof(uj.payload->'entries') = 'array' THEN uj.payload->'entries'
+            ELSE '[]'::jsonb
+        END
+    ) AS elem
+    WHERE COALESCE(elem->>'id', '') <> ''
+      AND NOT EXISTS (SELECT 1 FROM journal_reset jr WHERE jr.user_id = uj.user_id)
+    ORDER BY uj.user_id, elem->>'id',
+        COALESCE(
+            CASE
+                WHEN jsonb_typeof(elem->'updatedAt') = 'number'
+                    THEN (elem->>'updatedAt')::DOUBLE PRECISION
+                ELSE NULL
+            END,
+            0
+        ) DESC
+) AS backfill
+ON CONFLICT (user_id, id) DO NOTHING;
+
+INSERT INTO journal_logs (user_id, id, entry_id, payload, updated_at, deleted_at)
+SELECT user_id, id, entry_id, payload, updated_at, NULL::TIMESTAMPTZ
+FROM (
+    SELECT DISTINCT ON (uj.user_id, elem->>'id')
+        uj.user_id AS user_id,
+        elem->>'id' AS id,
+        COALESCE(NULLIF(elem->>'entryId', ''), NULLIF(elem->>'entry_id', ''), '') AS entry_id,
+        elem AS payload,
+        to_timestamp(
+            COALESCE(
+                CASE
+                    WHEN jsonb_typeof(uj.payload->'updatedAt') = 'number'
+                        THEN (uj.payload->>'updatedAt')::DOUBLE PRECISION
+                    ELSE NULL
+                END,
+                EXTRACT(EPOCH FROM uj.updated_at) * 1000.0,
+                EXTRACT(EPOCH FROM NOW()) * 1000.0
+            ) / 1000.0
+        ) AS updated_at
+    FROM user_journal uj
+    CROSS JOIN LATERAL jsonb_array_elements(
+        CASE
+            WHEN jsonb_typeof(uj.payload->'logs') = 'array' THEN uj.payload->'logs'
+            ELSE '[]'::jsonb
+        END
+    ) AS elem
+    WHERE COALESCE(elem->>'id', '') <> ''
+      AND NOT EXISTS (SELECT 1 FROM journal_reset jr WHERE jr.user_id = uj.user_id)
+    ORDER BY uj.user_id, elem->>'id'
+) AS backfill
+ON CONFLICT (user_id, id) DO NOTHING;
+
+INSERT INTO journal_categories (user_id, id, payload, updated_at, deleted_at)
+SELECT user_id, id, payload, updated_at, NULL::TIMESTAMPTZ
+FROM (
+    SELECT DISTINCT ON (uj.user_id, elem->>'id')
+        uj.user_id AS user_id,
+        elem->>'id' AS id,
+        elem AS payload,
+        to_timestamp(
+            COALESCE(
+                CASE
+                    WHEN jsonb_typeof(uj.payload->'updatedAt') = 'number'
+                        THEN (uj.payload->>'updatedAt')::DOUBLE PRECISION
+                    ELSE NULL
+                END,
+                EXTRACT(EPOCH FROM uj.updated_at) * 1000.0,
+                EXTRACT(EPOCH FROM NOW()) * 1000.0
+            ) / 1000.0
+        ) AS updated_at
+    FROM user_journal uj
+    CROSS JOIN LATERAL jsonb_array_elements(
+        CASE
+            WHEN jsonb_typeof(uj.payload->'categories') = 'array' THEN uj.payload->'categories'
+            ELSE '[]'::jsonb
+        END
+    ) AS elem
+    WHERE COALESCE(elem->>'id', '') <> ''
+      AND NOT EXISTS (SELECT 1 FROM journal_reset jr WHERE jr.user_id = uj.user_id)
+    ORDER BY uj.user_id, elem->>'id'
+) AS backfill
+ON CONFLICT (user_id, id) DO NOTHING;
+
+INSERT INTO journal_weeklies (user_id, week_key, note, updated_at)
+SELECT user_id, week_key, note, updated_at
+FROM (
+    SELECT DISTINCT ON (uj.user_id, elem->>'weekKey')
+        uj.user_id AS user_id,
+        elem->>'weekKey' AS week_key,
+        COALESCE(elem->>'note', '') AS note,
+        to_timestamp(
+            COALESCE(
+                CASE
+                    WHEN jsonb_typeof(elem->'updatedAt') = 'number'
+                        THEN (elem->>'updatedAt')::DOUBLE PRECISION
+                    ELSE NULL
+                END,
+                CASE
+                    WHEN jsonb_typeof(uj.payload->'updatedAt') = 'number'
+                        THEN (uj.payload->>'updatedAt')::DOUBLE PRECISION
+                    ELSE NULL
+                END,
+                EXTRACT(EPOCH FROM uj.updated_at) * 1000.0,
+                EXTRACT(EPOCH FROM NOW()) * 1000.0
+            ) / 1000.0
+        ) AS updated_at
+    FROM user_journal uj
+    CROSS JOIN LATERAL jsonb_array_elements(
+        CASE
+            WHEN jsonb_typeof(uj.payload->'weeklies') = 'array' THEN uj.payload->'weeklies'
+            ELSE '[]'::jsonb
+        END
+    ) AS elem
+    WHERE COALESCE(elem->>'weekKey', '') <> ''
+      AND NOT EXISTS (SELECT 1 FROM journal_reset jr WHERE jr.user_id = uj.user_id)
+    ORDER BY uj.user_id, elem->>'weekKey',
+        COALESCE(
+            CASE
+                WHEN jsonb_typeof(elem->'updatedAt') = 'number'
+                    THEN (elem->>'updatedAt')::DOUBLE PRECISION
+                ELSE NULL
+            END,
+            0
+        ) DESC
+) AS backfill
+ON CONFLICT (user_id, week_key) DO NOTHING;
+
+-- 删除墓碑。已有行（含上面刚回填的活条目，或已经按条更新过的行）不覆盖。
+INSERT INTO journal_entries (user_id, id, payload, updated_at, deleted_at)
+SELECT user_id, id, '{}'::jsonb, ts, ts
+FROM (
+    SELECT DISTINCT ON (uj.user_id, elem->>'id')
+        uj.user_id AS user_id,
+        elem->>'id' AS id,
+        to_timestamp((elem->>'at')::DOUBLE PRECISION / 1000.0) AS ts
+    FROM user_journal uj
+    CROSS JOIN LATERAL jsonb_array_elements(
+        CASE
+            WHEN jsonb_typeof(uj.payload->'deleted') = 'array' THEN uj.payload->'deleted'
+            ELSE '[]'::jsonb
+        END
+    ) AS elem
+    WHERE COALESCE(elem->>'id', '') <> ''
+      AND jsonb_typeof(elem->'at') = 'number'
+      AND NOT EXISTS (SELECT 1 FROM journal_reset jr WHERE jr.user_id = uj.user_id)
+    ORDER BY uj.user_id, elem->>'id', (elem->>'at')::DOUBLE PRECISION DESC
+) AS backfill
+ON CONFLICT (user_id, id) DO NOTHING;

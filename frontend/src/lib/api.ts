@@ -1,5 +1,6 @@
 // api.ts — backend client，镜像 web/api.js + 新增 study-events/stats 端点。
 // 同源 /api，无 CORS；自动带 Bearer token；JSON in/out；错误抛 Error(status,data)。
+import type { JournalCategory, JournalEntry, ReviewLog } from "@/lib/journal";
 
 const BASE = ""; // 同源
 const KEY_TOKEN = "ew.token.v1";
@@ -465,36 +466,62 @@ export async function putSettings(settings: Record<string, any>) {
   });
 }
 
-// ---- journal（需登录，用户个人学习日志 / 复盘板）----
-export interface JournalPayload {
-  categories?: unknown[];
-  entries?: unknown[];
-  logs?: unknown[];
-  weeklies?: unknown[];
-  updatedAt?: number;
+// ---- journal（需登录，按条同步；deleted=true 是墓碑，没有正文）----
+export interface JournalEntrySyncRow {
+  id: string;
+  updated_at: number;
+  deleted: boolean;
+  entry?: JournalEntry;
 }
 
-export async function getJournal(): Promise<{
-  journal: JournalPayload | null;
+export interface JournalLogSyncRow {
+  id: string;
+  entry_id: string;
   updated_at: number;
-}> {
+  deleted: boolean;
+  log?: ReviewLog;
+}
+
+export interface JournalCategorySyncRow {
+  id: string;
+  updated_at: number;
+  deleted: boolean;
+  category?: JournalCategory;
+}
+
+export interface JournalWeeklySyncRow {
+  week_key: string;
+  note: string;
+  updated_at: number;
+}
+
+export interface JournalBulkBody {
+  entries: JournalEntrySyncRow[];
+  logs: JournalLogSyncRow[];
+  categories: JournalCategorySyncRow[];
+  weeklies: JournalWeeklySyncRow[];
+}
+
+export interface JournalSyncState extends JournalBulkBody {
+  reset_at: number | null;
+  server_ms: number;
+}
+
+export async function getJournal(): Promise<JournalSyncState> {
   return req("/api/journal");
 }
 
-export async function putJournal(
-  journal: JournalPayload,
-  updatedAt: number
-): Promise<{
-  ok: boolean;
-  skipped?: boolean;
-  reason?: string;
-  journal?: JournalPayload;
-  updated_at: number;
-}> {
-  return req("/api/journal", {
-    method: "PUT",
-    body: JSON.stringify({ journal, updated_at: updatedAt }),
+/** 只提交本次变更。调用方保证四类条数合计不超过 2000。 */
+export async function bulkJournal(body: JournalBulkBody): Promise<{ ok?: boolean }> {
+  return req("/api/journal/bulk", {
+    method: "POST",
+    body: JSON.stringify(body),
   });
+}
+
+/** 清空该账号日志。reset_at 之前的本地条不能再推上去。 */
+export async function deleteJournal(): Promise<{ ok: boolean; reset_at: number }> {
+  return req("/api/journal", { method: "DELETE" });
 }
 
 // ---- study events / stats（新）----

@@ -1,5 +1,7 @@
 // journal store —— 学习日志 / 复盘板。
-// 本地缓存 ew.journal.v1；登录后与服务端按条目合并（较新快照为底，补上另一端多出的条目）。
+// 本地缓存 ew.journal.v1。未登录只写本机。
+// 登录后按条同步：同一 id 比较 updated_at，较新者获胜。删除是墓碑，不会整包覆盖，
+// 也不会把「另一份里多出来、但已被更新墓碑删掉」的 id 补回来。
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
@@ -7,23 +9,27 @@ import {
   DEFAULT_CATEGORIES,
   addDays,
   computeWeekStats,
-  mergeJournalSnapshots,
+  mergeLwwRows,
   newEntryDefaults,
-  scheduleAfterReview,
   planDueEntries,
+  scheduleAfterReview,
   sortDueEntries,
+  unionLogTombstones,
+  unionTombstones,
   weekKeyOf,
   type JournalCategory,
-  type JournalDoc,
   type JournalEntry,
   type JournalKind,
+  type JournalLogTombstone,
+  type JournalTombstone,
+  type LwwRow,
   type ReviewLog,
   type ReviewResult,
   type WeekStats,
   type WeeklySummary,
 } from "@/lib/journal";
 import { dayKeyToLocalMs, mapReviewToMark } from "@/lib/kg/journalBridge";
-import { enqueueJournal, setOnJournalSkipped } from "@/lib/syncQueue";
+import { clearPendingJournal, enqueueJournalRows } from "@/lib/syncQueue";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 
 const KEY_BASE = "ew.journal.v1";
@@ -37,7 +43,14 @@ export interface JournalSnapshot {
   entries: JournalEntry[];
   logs: ReviewLog[];
   weeklies: WeeklySummary[];
-  /** 文档级版本（毫秒），用于与服务端 LWW 同步 */
+  /** 已删除条目。刷新后仍在，同步时挡住把刚删的笔记补回 */
+  deleted: JournalTombstone[];
+  /** 已删除的复盘记录 */
+  deletedLogs: JournalLogTombstone[];
+  /** 已删除的分类 */
+  deletedCategories: JournalTombstone[];
+  /** 服务端清空水位；不晚于它的本地条不再上传 */
+  resetAt: number;
   updatedAt: number;
 }
 
@@ -47,8 +60,72 @@ function emptySnapshot(): JournalSnapshot {
     entries: [],
     logs: [],
     weeklies: [],
+    deleted: [],
+    deletedLogs: [],
+    deletedCategories: [],
+    resetAt: 0,
     updatedAt: 0,
   };
+}
+
+function finiteAt(raw: unknown): number {
+  return typeof raw === "number" && Number.isFinite(raw) ? raw : 0;
+}
+
+/** 正文不比墓碑新就丢掉；改过的条目留着，并撤掉更旧的墓碑。 */
+function reconcileEntries(
+  entries: JournalEntry[],
+  deleted: JournalTombstone[]
+): { entries: JournalEntry[]; deleted: JournalTombstone[] } {
+  const tombAt = new Map<string, number>();
+  for (const tomb of deleted) {
+    const prev = tombAt.get(tomb.id);
+    if (prev == null || tomb.at > prev) tombAt.set(tomb.id, tomb.at);
+  }
+  const live: JournalEntry[] = [];
+  for (const entry of entries) {
+    const at = tombAt.get(entry.id);
+    if (at != null && at >= (entry.updatedAt || 0)) continue;
+    live.push(entry);
+    if (at != null) tombAt.delete(entry.id);
+  }
+  return {
+    entries: live,
+    deleted: unionTombstones([...tombAt.entries()].map(([id, at]) => ({ id, at }))),
+  };
+}
+
+function reconcileLogs(
+  logs: ReviewLog[],
+  deletedLogs: JournalLogTombstone[]
+): { logs: ReviewLog[]; deletedLogs: JournalLogTombstone[] } {
+  const tombs = new Map<string, JournalLogTombstone>();
+  for (const tomb of deletedLogs) {
+    const prev = tombs.get(tomb.id);
+    if (!prev || tomb.at >= prev.at) tombs.set(tomb.id, tomb);
+  }
+  const live: ReviewLog[] = [];
+  for (const log of logs) {
+    const tomb = tombs.get(log.id);
+    const at = log.updatedAt || 0;
+    if (tomb && tomb.at >= at) continue;
+    live.push(log);
+    if (tomb && at > tomb.at) tombs.delete(log.id);
+  }
+  return { logs: live, deletedLogs: unionLogTombstones([...tombs.values()]) };
+}
+
+function loadCategories(
+  raw: JournalCategory[] | undefined,
+  deletedCategories: JournalTombstone[]
+): JournalCategory[] {
+  if (raw && raw.length) return raw;
+  if (deletedCategories.length) {
+    return DEFAULT_CATEGORIES.filter((c) => !deletedCategories.some((t) => t.id === c.id)).map(
+      (c) => ({ ...c })
+    );
+  }
+  return DEFAULT_CATEGORIES.map((c) => ({ ...c }));
 }
 
 function load(): JournalSnapshot {
@@ -56,15 +133,30 @@ function load(): JournalSnapshot {
     const raw = localStorage.getItem(storageKey());
     if (!raw) return emptySnapshot();
     const parsed = JSON.parse(raw) as Partial<JournalSnapshot>;
+    const deletedCategories = unionTombstones(
+      Array.isArray(parsed.deletedCategories) ? parsed.deletedCategories : []
+    );
+    const entrySplit = reconcileEntries(
+      Array.isArray(parsed.entries) ? parsed.entries : [],
+      unionTombstones(Array.isArray(parsed.deleted) ? parsed.deleted : [])
+    );
+    const logSplit = reconcileLogs(
+      Array.isArray(parsed.logs) ? parsed.logs : [],
+      unionLogTombstones(Array.isArray(parsed.deletedLogs) ? parsed.deletedLogs : [])
+    );
     return {
-      categories:
-        Array.isArray(parsed.categories) && parsed.categories.length
-          ? (parsed.categories as JournalCategory[])
-          : DEFAULT_CATEGORIES.map((c) => ({ ...c })),
-      entries: Array.isArray(parsed.entries) ? (parsed.entries as JournalEntry[]) : [],
-      logs: Array.isArray(parsed.logs) ? (parsed.logs as ReviewLog[]) : [],
-      weeklies: Array.isArray(parsed.weeklies) ? (parsed.weeklies as WeeklySummary[]) : [],
-      updatedAt: typeof parsed.updatedAt === "number" ? parsed.updatedAt : 0,
+      categories: loadCategories(
+        Array.isArray(parsed.categories) ? parsed.categories : undefined,
+        deletedCategories
+      ),
+      entries: entrySplit.entries,
+      logs: logSplit.logs,
+      weeklies: Array.isArray(parsed.weeklies) ? parsed.weeklies : [],
+      deleted: entrySplit.deleted,
+      deletedLogs: logSplit.deletedLogs,
+      deletedCategories,
+      resetAt: finiteAt(parsed.resetAt) > 0 ? finiteAt(parsed.resetAt) : 0,
+      updatedAt: finiteAt(parsed.updatedAt),
     };
   } catch {
     return emptySnapshot();
@@ -86,50 +178,527 @@ function snapshotOf(get: () => JournalStore): JournalSnapshot {
     entries: s.entries,
     logs: s.logs,
     weeklies: s.weeklies,
+    deleted: s.deleted,
+    deletedLogs: s.deletedLogs,
+    deletedCategories: s.deletedCategories,
+    resetAt: s.resetAt,
     updatedAt: s.updatedAt,
   };
 }
 
-function applyLocal(
-  set: (partial: Partial<JournalStore>) => void,
-  get: () => JournalStore,
-  patch: Partial<JournalSnapshot>,
-  options: { touch?: boolean; mirror?: boolean } = {}
-) {
-  const touch = options.touch !== false;
-  const next: JournalSnapshot = {
-    ...snapshotOf(get),
-    ...patch,
-    updatedAt: touch ? Date.now() : (patch.updatedAt ?? get().updatedAt),
-  };
-  set(next);
-  persist(next);
-  if (options.mirror !== false && api.isLoggedIn()) {
-    enqueueJournal(payloadOf(next), next.updatedAt);
+function indexEntries(snap: JournalSnapshot): Map<string, LwwRow<JournalEntry>> {
+  const map = new Map<string, LwwRow<JournalEntry>>();
+  for (const entry of snap.entries) {
+    map.set(entry.id, {
+      id: entry.id,
+      updatedAt: entry.updatedAt || 0,
+      deleted: false,
+      value: entry,
+    });
+  }
+  for (const tomb of snap.deleted) {
+    const prev = map.get(tomb.id);
+    if (!prev || tomb.at >= prev.updatedAt) {
+      map.set(tomb.id, { id: tomb.id, updatedAt: tomb.at || 0, deleted: true });
+    }
+  }
+  return map;
+}
+
+function indexLogs(snap: JournalSnapshot): Map<string, LwwRow<ReviewLog>> {
+  const map = new Map<string, LwwRow<ReviewLog>>();
+  for (const log of snap.logs) {
+    map.set(log.id, {
+      id: log.id,
+      updatedAt: log.updatedAt || 0,
+      deleted: false,
+      value: log,
+      entryId: log.entryId,
+    });
+  }
+  for (const tomb of snap.deletedLogs) {
+    const prev = map.get(tomb.id);
+    if (!prev || tomb.at >= prev.updatedAt) {
+      map.set(tomb.id, {
+        id: tomb.id,
+        updatedAt: tomb.at || 0,
+        deleted: true,
+        entryId: tomb.entryId,
+      });
+    }
+  }
+  return map;
+}
+
+function indexCategories(snap: JournalSnapshot): Map<string, LwwRow<JournalCategory>> {
+  const map = new Map<string, LwwRow<JournalCategory>>();
+  for (const category of snap.categories) {
+    map.set(category.id, {
+      id: category.id,
+      updatedAt: category.updatedAt || 0,
+      deleted: false,
+      value: category,
+    });
+  }
+  for (const tomb of snap.deletedCategories) {
+    const prev = map.get(tomb.id);
+    if (!prev || tomb.at >= prev.updatedAt) {
+      map.set(tomb.id, { id: tomb.id, updatedAt: tomb.at || 0, deleted: true });
+    }
+  }
+  return map;
+}
+
+function sameRow(prev: LwwRow<unknown> | undefined, next: LwwRow<unknown>): boolean {
+  return !!prev && prev.updatedAt === next.updatedAt && prev.deleted === next.deleted;
+}
+
+/** 只把这次相对上一份本地状态变过的行入队。 */
+function mirrorDiff(prev: JournalSnapshot, next: JournalSnapshot) {
+  if (!api.isLoggedIn()) return;
+  const resetAt = next.resetAt || 0;
+  const body: api.JournalBulkBody = { entries: [], logs: [], categories: [], weeklies: [] };
+
+  const prevEntries = indexEntries(prev);
+  for (const row of indexEntries(next).values()) {
+    if (sameRow(prevEntries.get(row.id), row)) continue;
+    if (row.updatedAt <= resetAt) continue;
+    if (row.deleted) {
+      body.entries.push({ id: row.id, updated_at: row.updatedAt, deleted: true });
+    } else if (row.value) {
+      body.entries.push({
+        id: row.id,
+        updated_at: row.updatedAt,
+        deleted: false,
+        entry: row.value,
+      });
+    }
+  }
+
+  const prevLogs = indexLogs(prev);
+  for (const row of indexLogs(next).values()) {
+    if (sameRow(prevLogs.get(row.id), row)) continue;
+    if (row.updatedAt <= resetAt) continue;
+    const entryId = row.entryId || row.value?.entryId || "";
+    if (row.deleted) {
+      body.logs.push({
+        id: row.id,
+        entry_id: entryId,
+        updated_at: row.updatedAt,
+        deleted: true,
+      });
+    } else if (row.value) {
+      body.logs.push({
+        id: row.id,
+        entry_id: row.value.entryId,
+        updated_at: row.updatedAt,
+        deleted: false,
+        log: row.value,
+      });
+    }
+  }
+
+  const prevCategories = indexCategories(prev);
+  for (const row of indexCategories(next).values()) {
+    if (sameRow(prevCategories.get(row.id), row)) continue;
+    if (row.updatedAt <= resetAt) continue;
+    if (row.deleted) {
+      body.categories.push({ id: row.id, updated_at: row.updatedAt, deleted: true });
+    } else if (row.value) {
+      body.categories.push({
+        id: row.id,
+        updated_at: row.updatedAt,
+        deleted: false,
+        category: row.value,
+      });
+    }
+  }
+
+  const prevWeeklies = new Map(prev.weeklies.map((w) => [w.weekKey, w]));
+  for (const weekly of next.weeklies) {
+    const old = prevWeeklies.get(weekly.weekKey);
+    if (old && old.updatedAt === weekly.updatedAt && old.note === weekly.note) continue;
+    if ((weekly.updatedAt || 0) <= resetAt) continue;
+    body.weeklies.push({
+      week_key: weekly.weekKey,
+      note: weekly.note,
+      updated_at: weekly.updatedAt || 0,
+    });
+  }
+
+  if (
+    body.entries.length ||
+    body.logs.length ||
+    body.categories.length ||
+    body.weeklies.length
+  ) {
+    enqueueJournalRows(body);
   }
 }
 
-function payloadOf(snap: JournalDoc): api.JournalPayload {
-  return {
-    categories: snap.categories,
-    entries: snap.entries,
-    logs: snap.logs,
-    weeklies: snap.weeklies,
-    updatedAt: snap.updatedAt,
-  };
+function commit(
+  set: (partial: Partial<JournalStore>) => void,
+  get: () => JournalStore,
+  patch: Partial<JournalSnapshot>,
+  mirror = true
+) {
+  const prev = snapshotOf(get);
+  const next: JournalSnapshot = { ...prev, ...patch, updatedAt: Date.now() };
+  set(next);
+  persist(next);
+  if (mirror) mirrorDiff(prev, next);
 }
 
-function normalizeRemote(payload: api.JournalPayload | null | undefined): JournalSnapshot | null {
-  if (!payload || typeof payload !== "object") return null;
-  const categories = Array.isArray(payload.categories)
-    ? (payload.categories as JournalCategory[])
-    : [];
+function isStockCategory(category: JournalCategory): boolean {
+  if (category.updatedAt && category.updatedAt > 0) return false;
+  const found = DEFAULT_CATEGORIES.find((item) => item.id === category.id);
+  return (
+    !!found &&
+    found.name === category.name &&
+    found.color === category.color &&
+    found.order === category.order
+  );
+}
+
+function logClock(log: ReviewLog): number {
+  if (log.updatedAt && log.updatedAt > 0) return log.updatedAt;
+  const [y, m, d] = log.date.split("-").map(Number);
+  if (y && m && d) {
+    const ms = new Date(y, m - 1, d).getTime();
+    if (ms > 0) return ms;
+  }
+  return 1;
+}
+
+/** 参与同步的本地行。没写过时钟的旧数据给一个很早的时间，好在服务端还没有时推一次。 */
+function syncEntryRows(snap: JournalSnapshot): LwwRow<JournalEntry>[] {
+  const map = new Map<string, LwwRow<JournalEntry>>();
+  for (const entry of snap.entries) {
+    const updatedAt = entry.updatedAt > 0 ? entry.updatedAt : 1;
+    map.set(entry.id, {
+      id: entry.id,
+      updatedAt,
+      deleted: false,
+      value: { ...entry, updatedAt },
+    });
+  }
+  for (const tomb of snap.deleted) {
+    const at = tomb.at > 0 ? tomb.at : 1;
+    const prev = map.get(tomb.id);
+    if (!prev || at >= prev.updatedAt) {
+      map.set(tomb.id, { id: tomb.id, updatedAt: at, deleted: true });
+    }
+  }
+  return [...map.values()];
+}
+
+function syncLogRows(snap: JournalSnapshot): LwwRow<ReviewLog>[] {
+  const map = new Map<string, LwwRow<ReviewLog>>();
+  for (const log of snap.logs) {
+    const updatedAt = logClock(log);
+    map.set(log.id, {
+      id: log.id,
+      updatedAt,
+      deleted: false,
+      value: { ...log, updatedAt },
+      entryId: log.entryId,
+    });
+  }
+  for (const tomb of snap.deletedLogs) {
+    const at = tomb.at > 0 ? tomb.at : 1;
+    const prev = map.get(tomb.id);
+    if (!prev || at >= prev.updatedAt) {
+      map.set(tomb.id, {
+        id: tomb.id,
+        updatedAt: at,
+        deleted: true,
+        entryId: tomb.entryId,
+      });
+    }
+  }
+  return [...map.values()];
+}
+
+function syncCategoryRows(snap: JournalSnapshot): LwwRow<JournalCategory>[] {
+  const map = new Map<string, LwwRow<JournalCategory>>();
+  for (const category of snap.categories) {
+    if (isStockCategory(category)) continue;
+    const updatedAt = category.updatedAt && category.updatedAt > 0 ? category.updatedAt : 1;
+    map.set(category.id, {
+      id: category.id,
+      updatedAt,
+      deleted: false,
+      value: { ...category, updatedAt },
+    });
+  }
+  for (const tomb of snap.deletedCategories) {
+    const at = tomb.at > 0 ? tomb.at : 1;
+    const prev = map.get(tomb.id);
+    if (!prev || at >= prev.updatedAt) {
+      map.set(tomb.id, { id: tomb.id, updatedAt: at, deleted: true });
+    }
+  }
+  return [...map.values()];
+}
+
+function syncWeeklyRows(snap: JournalSnapshot): LwwRow<WeeklySummary>[] {
+  return snap.weeklies.map((weekly) => {
+    const updatedAt = weekly.updatedAt > 0 ? weekly.updatedAt : 1;
+    return {
+      id: weekly.weekKey,
+      updatedAt,
+      deleted: false,
+      value: { ...weekly, updatedAt },
+    };
+  });
+}
+
+function remoteEntryRows(rows: api.JournalEntrySyncRow[] | undefined): LwwRow<JournalEntry>[] {
+  if (!Array.isArray(rows)) return [];
+  const out: LwwRow<JournalEntry>[] = [];
+  for (const row of rows) {
+    if (!row || typeof row.id !== "string" || !row.id) continue;
+    const updatedAt = finiteAt(row.updated_at);
+    if (row.deleted) {
+      out.push({ id: row.id, updatedAt, deleted: true });
+      continue;
+    }
+    if (!row.entry || typeof row.entry !== "object") continue;
+    out.push({
+      id: row.id,
+      updatedAt,
+      deleted: false,
+      value: { ...row.entry, id: row.id, updatedAt: updatedAt || row.entry.updatedAt || 0 },
+    });
+  }
+  return out;
+}
+
+function remoteLogRows(rows: api.JournalLogSyncRow[] | undefined): LwwRow<ReviewLog>[] {
+  if (!Array.isArray(rows)) return [];
+  const out: LwwRow<ReviewLog>[] = [];
+  for (const row of rows) {
+    if (!row || typeof row.id !== "string" || !row.id) continue;
+    const updatedAt = finiteAt(row.updated_at);
+    const entryId =
+      typeof row.entry_id === "string" && row.entry_id
+        ? row.entry_id
+        : row.log?.entryId || "";
+    if (row.deleted) {
+      out.push({ id: row.id, updatedAt, deleted: true, entryId });
+      continue;
+    }
+    if (!row.log || typeof row.log !== "object") continue;
+    out.push({
+      id: row.id,
+      updatedAt,
+      deleted: false,
+      entryId: row.log.entryId || entryId,
+      value: {
+        ...row.log,
+        id: row.id,
+        entryId: row.log.entryId || entryId,
+        updatedAt,
+      },
+    });
+  }
+  return out;
+}
+
+function remoteCategoryRows(
+  rows: api.JournalCategorySyncRow[] | undefined
+): LwwRow<JournalCategory>[] {
+  if (!Array.isArray(rows)) return [];
+  const out: LwwRow<JournalCategory>[] = [];
+  for (const row of rows) {
+    if (!row || typeof row.id !== "string" || !row.id) continue;
+    const updatedAt = finiteAt(row.updated_at);
+    if (row.deleted) {
+      out.push({ id: row.id, updatedAt, deleted: true });
+      continue;
+    }
+    if (!row.category || typeof row.category !== "object") continue;
+    out.push({
+      id: row.id,
+      updatedAt,
+      deleted: false,
+      value: { ...row.category, id: row.id, updatedAt },
+    });
+  }
+  return out;
+}
+
+function remoteWeeklyRows(rows: api.JournalWeeklySyncRow[] | undefined): LwwRow<WeeklySummary>[] {
+  if (!Array.isArray(rows)) return [];
+  const out: LwwRow<WeeklySummary>[] = [];
+  for (const row of rows) {
+    if (!row || typeof row.week_key !== "string" || !row.week_key) continue;
+    const updatedAt = finiteAt(row.updated_at);
+    out.push({
+      id: row.week_key,
+      updatedAt,
+      deleted: false,
+      value: {
+        weekKey: row.week_key,
+        note: typeof row.note === "string" ? row.note : "",
+        updatedAt,
+      },
+    });
+  }
+  return out;
+}
+
+function dedupePush<T>(rows: LwwRow<T>[]): LwwRow<T>[] {
+  const map = new Map<string, LwwRow<T>>();
+  for (const row of rows) {
+    const prev = map.get(row.id);
+    if (
+      !prev ||
+      row.updatedAt > prev.updatedAt ||
+      (row.updatedAt === prev.updatedAt && row.deleted && !prev.deleted)
+    ) {
+      map.set(row.id, row);
+    }
+  }
+  return [...map.values()];
+}
+
+/** 条目墓碑不旧于复盘记录时，记录也改成墓碑，避免删了笔记又把复盘补回来。 */
+function buryLogsUnderEntries(
+  merged: { kept: LwwRow<ReviewLog>[]; push: LwwRow<ReviewLog>[] },
+  entryTombAt: Map<string, number>
+): { kept: LwwRow<ReviewLog>[]; push: LwwRow<ReviewLog>[] } {
+  const kept: LwwRow<ReviewLog>[] = [];
+  const extra: LwwRow<ReviewLog>[] = [];
+  for (const row of merged.kept) {
+    const entryId = row.entryId || row.value?.entryId || "";
+    const tombAt = entryId ? entryTombAt.get(entryId) : undefined;
+    if (tombAt != null && !row.deleted && row.updatedAt <= tombAt) {
+      const tomb: LwwRow<ReviewLog> = {
+        id: row.id,
+        updatedAt: tombAt,
+        deleted: true,
+        entryId,
+      };
+      kept.push(tomb);
+      extra.push(tomb);
+    } else {
+      kept.push(row);
+    }
+  }
+  return { kept, push: dedupePush([...merged.push, ...extra]) };
+}
+
+function rowsToBulk(parts: {
+  entries: LwwRow<JournalEntry>[];
+  logs: LwwRow<ReviewLog>[];
+  categories: LwwRow<JournalCategory>[];
+  weeklies: LwwRow<WeeklySummary>[];
+}): api.JournalBulkBody {
+  const body: api.JournalBulkBody = { entries: [], logs: [], categories: [], weeklies: [] };
+  for (const row of parts.entries) {
+    if (row.deleted) body.entries.push({ id: row.id, updated_at: row.updatedAt, deleted: true });
+    else if (row.value) {
+      body.entries.push({
+        id: row.id,
+        updated_at: row.updatedAt,
+        deleted: false,
+        entry: row.value,
+      });
+    }
+  }
+  for (const row of parts.logs) {
+    const entryId = row.entryId || row.value?.entryId || "";
+    if (row.deleted) {
+      body.logs.push({
+        id: row.id,
+        entry_id: entryId,
+        updated_at: row.updatedAt,
+        deleted: true,
+      });
+    } else if (row.value) {
+      body.logs.push({
+        id: row.id,
+        entry_id: row.value.entryId,
+        updated_at: row.updatedAt,
+        deleted: false,
+        log: row.value,
+      });
+    }
+  }
+  for (const row of parts.categories) {
+    if (row.deleted) {
+      body.categories.push({ id: row.id, updated_at: row.updatedAt, deleted: true });
+    } else if (row.value) {
+      body.categories.push({
+        id: row.id,
+        updated_at: row.updatedAt,
+        deleted: false,
+        category: row.value,
+      });
+    }
+  }
+  for (const row of parts.weeklies) {
+    if (!row.value) continue;
+    body.weeklies.push({
+      week_key: row.value.weekKey,
+      note: row.value.note,
+      updated_at: row.updatedAt,
+    });
+  }
+  return body;
+}
+
+function categoriesFromRows(kept: LwwRow<JournalCategory>[]): JournalCategory[] {
+  const live = kept
+    .flatMap((row) => (!row.deleted && row.value ? [row.value] : []))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  if (live.length) return live;
+  const tombIds = new Set(kept.filter((row) => row.deleted).map((row) => row.id));
+  if (tombIds.size) {
+    return DEFAULT_CATEGORIES.filter((c) => !tombIds.has(c.id)).map((c) => ({ ...c }));
+  }
+  return DEFAULT_CATEGORIES.map((c) => ({ ...c }));
+}
+
+function snapshotFromPartial(data: Partial<JournalSnapshot>, resetAt: number): JournalSnapshot {
+  const base = emptySnapshot();
+  const stamp = finiteAt(data.updatedAt) > 0 ? finiteAt(data.updatedAt) : Date.now();
+  const categories = (
+    Array.isArray(data.categories) && data.categories.length ? data.categories : base.categories
+  ).map((category) => ({
+    ...category,
+    updatedAt: Math.max(category.updatedAt || 0, stamp),
+  }));
+  const entrySplit = reconcileEntries(
+    (Array.isArray(data.entries) ? data.entries : []).map((entry) => ({
+      ...entry,
+      updatedAt: Math.max(entry.updatedAt || 0, stamp),
+    })),
+    Array.isArray(data.deleted) ? data.deleted : []
+  );
+  const logSplit = reconcileLogs(
+    (Array.isArray(data.logs) ? data.logs : []).map((log) => ({
+      ...log,
+      updatedAt: Math.max(log.updatedAt || 0, stamp),
+    })),
+    Array.isArray(data.deletedLogs) ? data.deletedLogs : []
+  );
   return {
-    categories: categories.length ? categories : DEFAULT_CATEGORIES.map((c) => ({ ...c })),
-    entries: Array.isArray(payload.entries) ? (payload.entries as JournalEntry[]) : [],
-    logs: Array.isArray(payload.logs) ? (payload.logs as ReviewLog[]) : [],
-    weeklies: Array.isArray(payload.weeklies) ? (payload.weeklies as WeeklySummary[]) : [],
-    updatedAt: typeof payload.updatedAt === "number" ? payload.updatedAt : 0,
+    categories,
+    entries: entrySplit.entries,
+    logs: logSplit.logs,
+    weeklies: (Array.isArray(data.weeklies) ? data.weeklies : []).map((weekly) => ({
+      ...weekly,
+      updatedAt: Math.max(weekly.updatedAt || 0, stamp),
+    })),
+    deleted: entrySplit.deleted,
+    deletedLogs: logSplit.deletedLogs,
+    deletedCategories: unionTombstones(
+      Array.isArray(data.deletedCategories) ? data.deletedCategories : []
+    ),
+    resetAt,
+    updatedAt: stamp,
   };
 }
 
@@ -185,11 +754,11 @@ interface JournalStore extends JournalSnapshot {
   };
   saveWeeklyNote: (note: string, weekKey?: string) => void;
   rehydrate: () => void;
-  /** 用快照整体替换（导入用）；登录时会镜像到服务端 */
+  /** 用快照整体替换（导入用）；登录时按条入队，不整包 PUT */
   replaceAll: (data: Partial<JournalSnapshot>, options?: { mirror?: boolean }) => void;
   exportSnapshot: () => JournalSnapshot;
   clearAll: () => Promise<void>;
-  /** 登录后：拉取服务端个人数据，与本地按条目合并，必要时上传 */
+  /** 登录后拉取服务端按条结果，和本地按 updated_at 合并 */
   syncFromServer: () => Promise<void>;
 }
 
@@ -205,35 +774,28 @@ export const useJournal = create<JournalStore>((set, get) => ({
   exportSnapshot: () => snapshotOf(get),
 
   replaceAll: (data, options) => {
-    const base = emptySnapshot();
-    const next: JournalSnapshot = {
-      categories:
-        Array.isArray(data.categories) && data.categories.length
-          ? data.categories
-          : base.categories,
-      entries: Array.isArray(data.entries) ? data.entries : [],
-      logs: Array.isArray(data.logs) ? data.logs : [],
-      weeklies: Array.isArray(data.weeklies) ? data.weeklies : [],
-      updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : Date.now(),
-    };
+    const prev = snapshotOf(get);
+    const next = snapshotFromPartial(data, prev.resetAt);
     set(next);
     persist(next);
-    if (options?.mirror !== false && api.isLoggedIn()) {
-      enqueueJournal(payloadOf(next), next.updatedAt);
-    }
+    if (options?.mirror !== false) mirrorDiff(prev, next);
   },
 
   clearAll: async () => {
+    if (api.isLoggedIn()) {
+      const res = await api.deleteJournal();
+      const resetAt = finiteAt(res.reset_at) > 0 ? finiteAt(res.reset_at) : Date.now();
+      clearPendingJournal();
+      const next = emptySnapshot();
+      next.resetAt = resetAt;
+      next.updatedAt = resetAt;
+      set(next);
+      persist(next);
+      return;
+    }
     const next = emptySnapshot();
-    next.updatedAt = Date.now();
     set(next);
     persist(next);
-    if (api.isLoggedIn()) {
-      const res = await api.putJournal(payloadOf(next), next.updatedAt);
-      if (res.skipped) {
-        throw new Error("服务端日志较新，重置未写入");
-      }
-    }
   },
 
   addCategory: (name, color = "#64748b") => {
@@ -241,23 +803,26 @@ export const useJournal = create<JournalStore>((set, get) => ({
     if (!trimmed) return null;
     const cats = get().categories;
     if (cats.some((c) => c.name === trimmed)) return null;
+    const now = Date.now();
     const cat: JournalCategory = {
-      id: `cat-${Date.now().toString(36)}`,
+      id: `cat-${now.toString(36)}`,
       name: trimmed,
       color,
       order: cats.length,
+      updatedAt: now,
     };
-    applyLocal(set, get, { categories: [...cats, cat] });
+    commit(set, get, { categories: [...cats, cat] });
     return cat;
   },
 
   renameCategory: (id, name) => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    const now = Date.now();
     const categories = get().categories.map((c) =>
-      c.id === id ? { ...c, name: trimmed } : c
+      c.id === id ? { ...c, name: trimmed, updatedAt: now } : c
     );
-    applyLocal(set, get, { categories });
+    commit(set, get, { categories });
   },
 
   removeCategory: (id) => {
@@ -266,7 +831,11 @@ export const useJournal = create<JournalStore>((set, get) => ({
       return false;
     }
     if (categories.length <= 1) return false;
-    applyLocal(set, get, { categories: categories.filter((c) => c.id !== id) });
+    const now = Date.now();
+    commit(set, get, {
+      categories: categories.filter((c) => c.id !== id),
+      deletedCategories: unionTombstones(get().deletedCategories, [{ id, at: now }]),
+    });
     return true;
   },
 
@@ -289,7 +858,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
       fromKg: input.fromKg,
       sourceItemId: input.sourceItemId,
     });
-    applyLocal(set, get, { entries: [entry, ...get().entries] });
+    commit(set, get, { entries: [entry, ...get().entries] });
     return entry;
   },
 
@@ -301,11 +870,12 @@ export const useJournal = create<JournalStore>((set, get) => ({
     );
     if (existing) {
       // 已在队列：轻触更新时间，不重复入队
+      const now = Date.now();
       const entries = get().entries.map((e) =>
-        e.id === existing.id ? { ...e, updatedAt: Date.now() } : e
+        e.id === existing.id ? { ...e, updatedAt: now } : e
       );
-      applyLocal(set, get, { entries });
-      return existing;
+      commit(set, get, { entries });
+      return { ...existing, updatedAt: now };
     }
     return get().addEntry({
       categoryId: input.categoryId,
@@ -325,6 +895,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
     if (existing?.status === "active") return existing;
     if (existing) {
       const today = dayKey();
+      const now = Date.now();
       const entries = get().entries.map((e) =>
         e.id === existing.id
           ? {
@@ -338,11 +909,11 @@ export const useJournal = create<JournalStore>((set, get) => ({
               sourceItemId,
               title: input.title.trim() || e.title,
               body: input.body.trim(),
-              updatedAt: Date.now(),
+              updatedAt: now,
             }
           : e
       );
-      applyLocal(set, get, { entries });
+      commit(set, get, { entries });
       return entries.find((e) => e.id === existing.id) || existing;
     }
     return get().addEntry({
@@ -367,10 +938,11 @@ export const useJournal = create<JournalStore>((set, get) => ({
       changed = true;
       return { ...e, status: "archived" as const, updatedAt: now };
     });
-    if (changed) applyLocal(set, get, { entries });
+    if (changed) commit(set, get, { entries });
   },
 
   updateEntry: (id, patch) => {
+    const now = Date.now();
     const entries = get().entries.map((e) => {
       if (e.id !== id) return e;
       return {
@@ -378,26 +950,32 @@ export const useJournal = create<JournalStore>((set, get) => ({
         ...patch,
         title: patch.title !== undefined ? patch.title.trim() : e.title,
         body: patch.body !== undefined ? patch.body.trim() : e.body,
-        updatedAt: Date.now(),
+        updatedAt: now,
       };
     });
-    applyLocal(set, get, { entries });
+    commit(set, get, { entries });
   },
 
   deleteEntry: (id) => {
-    applyLocal(set, get, {
+    const now = Date.now();
+    const doomed = get().logs.filter((l) => l.entryId === id);
+    commit(set, get, {
       entries: get().entries.filter((e) => e.id !== id),
       logs: get().logs.filter((l) => l.entryId !== id),
+      deleted: unionTombstones(get().deleted, [{ id, at: now }]),
+      deletedLogs: unionLogTombstones(
+        get().deletedLogs,
+        doomed.map((log) => ({ id: log.id, entryId: log.entryId, at: now }))
+      ),
     });
   },
 
   archiveEntry: (id) => {
+    const now = Date.now();
     const entries = get().entries.map((e) =>
-      e.id === id
-        ? { ...e, status: "archived" as const, updatedAt: Date.now() }
-        : e
+      e.id === id ? { ...e, status: "archived" as const, updatedAt: now } : e
     );
-    applyLocal(set, get, { entries });
+    commit(set, get, { entries });
   },
 
   archiveEntriesByKpId: (kpId) => {
@@ -409,7 +987,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
       changed = true;
       return { ...e, status: "archived" as const, updatedAt: now };
     });
-    if (changed) applyLocal(set, get, { entries });
+    if (changed) commit(set, get, { entries });
   },
 
   reviewEntry: (id, result, note) => {
@@ -418,6 +996,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
     if (!entry || entry.status !== "active") return;
 
     const outcome = scheduleAfterReview(entry, result, today);
+    const now = Date.now();
     const entries = get().entries.map((e) => {
       if (e.id !== id) return e;
       return {
@@ -427,18 +1006,19 @@ export const useJournal = create<JournalStore>((set, get) => ({
         status: outcome.status,
         lapses: e.lapses + outcome.lapsesDelta,
         lastReviewedOn: today,
-        updatedAt: Date.now(),
+        updatedAt: now,
       };
     });
 
     const log: ReviewLog = {
-      id: `jl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      id: `jl-${now.toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
       entryId: id,
       date: today,
       result,
       note: note?.trim() || undefined,
+      updatedAt: now,
     };
-    applyLocal(set, get, { entries, logs: [log, ...get().logs] });
+    commit(set, get, { entries, logs: [log, ...get().logs] });
 
     // 关联考点：回写图谱熟练度，并用日志下次复盘日对齐 due
     if (entry.kpId) {
@@ -481,7 +1061,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
     };
     if (idx >= 0) weeklies[idx] = row;
     else weeklies.unshift(row);
-    applyLocal(set, get, { weeklies });
+    commit(set, get, { weeklies });
   },
 
   syncFromServer: async () => {
@@ -490,44 +1070,89 @@ export const useJournal = create<JournalStore>((set, get) => ({
     try {
       const remote = await api.getJournal();
       if (!stillInScope(epoch) || !api.isLoggedIn()) return;
-      const remoteUpdated = remote.updated_at || 0;
-      const remoteSnap = normalizeRemote(remote.journal);
       const local = snapshotOf(get);
-      const localHasData =
-        local.entries.length > 0 ||
-        local.logs.length > 0 ||
-        local.weeklies.length > 0 ||
-        local.updatedAt > 0;
+      const resetAt = Math.max(local.resetAt || 0, finiteAt(remote.reset_at));
 
-      // 服务端无数据：上传本地（若有）
-      if (!remoteSnap || remoteUpdated === 0) {
-        if (localHasData) {
-          const ts = local.updatedAt || Date.now();
-          if (!local.updatedAt) {
-            applyLocal(set, get, {}, { touch: true, mirror: false });
-          }
-          const snap = snapshotOf(get);
-          await api.putJournal(
-            {
-              categories: snap.categories,
-              entries: snap.entries,
-              logs: snap.logs,
-              weeklies: snap.weeklies,
-              updatedAt: snap.updatedAt || ts,
-            },
-            snap.updatedAt || ts
-          );
+      const entryMerge = mergeLwwRows(
+        syncEntryRows(local),
+        remoteEntryRows(remote.entries),
+        resetAt
+      );
+      const entryTombAt = new Map<string, number>();
+      const entries: JournalEntry[] = [];
+      const deleted: JournalTombstone[] = [];
+      for (const row of entryMerge.kept) {
+        if (row.deleted) {
+          deleted.push({ id: row.id, at: row.updatedAt });
+          entryTombAt.set(row.id, row.updatedAt);
+          continue;
         }
-        return;
+        if (row.value) entries.push(row.value);
       }
 
-      const remoteTs = Math.max(remoteUpdated, remoteSnap.updatedAt || 0);
-      const remoteNorm: JournalSnapshot = { ...remoteSnap, updatedAt: remoteTs };
-      const merged = mergeJournalSnapshots(local, remoteNorm);
-      set(merged);
-      persist(merged);
-      if (merged.updatedAt > remoteTs) {
-        enqueueJournal(payloadOf(merged), merged.updatedAt);
+      const logMerge = buryLogsUnderEntries(
+        mergeLwwRows(syncLogRows(local), remoteLogRows(remote.logs), resetAt),
+        entryTombAt
+      );
+      const logs: ReviewLog[] = [];
+      const deletedLogs: JournalLogTombstone[] = [];
+      for (const row of logMerge.kept) {
+        if (row.deleted) {
+          const entryId = row.entryId || "";
+          if (entryId) deletedLogs.push({ id: row.id, entryId, at: row.updatedAt });
+          continue;
+        }
+        if (row.value) logs.push(row.value);
+      }
+
+      const categoryMerge = mergeLwwRows(
+        syncCategoryRows(local),
+        remoteCategoryRows(remote.categories),
+        resetAt
+      );
+      const deletedCategories: JournalTombstone[] = [];
+      for (const row of categoryMerge.kept) {
+        if (row.deleted) deletedCategories.push({ id: row.id, at: row.updatedAt });
+      }
+
+      const weeklyMerge = mergeLwwRows(
+        syncWeeklyRows(local),
+        remoteWeeklyRows(remote.weeklies),
+        resetAt
+      );
+      const weeklies = weeklyMerge.kept.flatMap((row) =>
+        !row.deleted && row.value ? [row.value] : []
+      );
+
+      const entrySplit = reconcileEntries(entries, deleted);
+      const logSplit = reconcileLogs(logs, deletedLogs);
+      const next: JournalSnapshot = {
+        categories: categoriesFromRows(categoryMerge.kept),
+        entries: entrySplit.entries,
+        logs: logSplit.logs,
+        weeklies,
+        deleted: entrySplit.deleted,
+        deletedLogs: logSplit.deletedLogs,
+        deletedCategories: unionTombstones(deletedCategories),
+        resetAt,
+        updatedAt: Math.max(local.updatedAt || 0, resetAt),
+      };
+      if (!stillInScope(epoch) || !api.isLoggedIn()) return;
+      set(next);
+      persist(next);
+      const body = rowsToBulk({
+        entries: entryMerge.push,
+        logs: logMerge.push,
+        categories: categoryMerge.push,
+        weeklies: weeklyMerge.push,
+      });
+      if (
+        body.entries.length ||
+        body.logs.length ||
+        body.categories.length ||
+        body.weeklies.length
+      ) {
+        enqueueJournalRows(body);
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -535,15 +1160,3 @@ export const useJournal = create<JournalStore>((set, get) => ({
     }
   },
 }));
-
-setOnJournalSkipped((remote, updatedAt) => {
-  const forced = normalizeRemote(remote);
-  if (!forced) return;
-  const local = snapshotOf(useJournal.getState);
-  const merged = mergeJournalSnapshots(local, { ...forced, updatedAt });
-  useJournal.setState(merged);
-  persist(merged);
-  if (merged.updatedAt > updatedAt) {
-    enqueueJournal(payloadOf(merged), merged.updatedAt);
-  }
-});
