@@ -110,8 +110,36 @@ export interface XiaoMark {
   at: number;
 }
 
-let cache: { questions: XiaoQuestion[]; kps: XiaoKp[] } | null = null;
-let inflight: Promise<{ questions: XiaoQuestion[]; kps: XiaoKp[] }> | null = null;
+export interface XiaoChapterSummary {
+  chapter_no: number | null;
+  chapter: string;
+  questionCount: number;
+  kpCount: number;
+}
+
+export interface XiaoCatalogSubject {
+  id: XiaoSubject;
+  label: string;
+  hint: string;
+  questionCount: number;
+  kpCount: number;
+  chapters: XiaoChapterSummary[];
+}
+
+export interface XiaoCatalog {
+  version: 1;
+  subjects: XiaoCatalogSubject[];
+}
+
+export interface XiaoPack {
+  questions: XiaoQuestion[];
+  kps: XiaoKp[];
+}
+
+let catalogCache: XiaoCatalog | null = null;
+let catalogInflight: Promise<XiaoCatalog> | null = null;
+const subjectCache = new Map<XiaoSubject, XiaoPack>();
+const subjectInflight = new Map<XiaoSubject, Promise<XiaoPack>>();
 
 function isSubject(s: string): s is XiaoSubject {
   return s === "marx" || s === "mao" || s === "xi" || s === "history" || s === "moral";
@@ -131,24 +159,45 @@ export function optionKeys(q: XiaoQuestion): string[] {
   return ["A", "B", "C", "D"].filter((k) => q.options[k]);
 }
 
-export async function loadXiao(): Promise<{ questions: XiaoQuestion[]; kps: XiaoKp[] }> {
-  if (cache) return cache;
-  if (inflight) return inflight;
-  inflight = Promise.all([
-    fetch("/politics/xiao1000.json", { cache: "no-store" }).then((r) => {
-      if (!r.ok) throw new Error(`加载题库失败 (${r.status})`);
-      return r.json() as Promise<XiaoQuestion[]>;
-    }),
-    fetch("/politics/xiao1000.kp.json", { cache: "no-store" }).then((r) => {
-      if (!r.ok) throw new Error(`加载考点失败 (${r.status})`);
-      return r.json() as Promise<XiaoKp[]>;
-    }),
-  ]).then(([questions, kps]) => {
-    cache = { questions, kps };
-    inflight = null;
-    return cache;
-  });
-  return inflight;
+async function fetchJson<T>(path: string, label: string): Promise<T> {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`${label}失败 (${response.status})`);
+  return response.json() as Promise<T>;
+}
+
+export async function loadXiaoCatalog(): Promise<XiaoCatalog> {
+  if (catalogCache) return catalogCache;
+  if (catalogInflight) return catalogInflight;
+  catalogInflight = fetchJson<XiaoCatalog>("/politics/xiao1000.index.json", "加载肖 1000 目录")
+    .then((catalog) => {
+      catalogCache = catalog;
+      catalogInflight = null;
+      return catalog;
+    })
+    .catch((error) => {
+      catalogInflight = null;
+      throw error;
+    });
+  return catalogInflight;
+}
+
+export async function loadXiaoSubject(subject: XiaoSubject): Promise<XiaoPack> {
+  const cached = subjectCache.get(subject);
+  if (cached) return cached;
+  const pending = subjectInflight.get(subject);
+  if (pending) return pending;
+  const request = fetchJson<XiaoPack>(`/politics/xiao1000/${subject}.json`, `加载${XIAO_SUBJECT_LABEL[subject]}题库`)
+    .then((pack) => {
+      subjectCache.set(subject, pack);
+      subjectInflight.delete(subject);
+      return pack;
+    })
+    .catch((error) => {
+      subjectInflight.delete(subject);
+      throw error;
+    });
+  subjectInflight.set(subject, request);
+  return request;
 }
 
 export function kpsForSubject(kps: XiaoKp[], subject: XiaoSubject): XiaoKp[] {
@@ -163,6 +212,38 @@ export function questionsForKp(questions: XiaoQuestion[], kpId: string): XiaoQue
 
 export function questionsForSubject(questions: XiaoQuestion[], subject: XiaoSubject): XiaoQuestion[] {
   return questions.filter((q) => q.subject === subject);
+}
+
+export function chapterKey(chapterNo: number | null, chapter: string): string {
+  return `${chapterNo ?? "unknown"}:${chapter}`;
+}
+
+export function chaptersForSubject(
+  kps: XiaoKp[],
+  questions: XiaoQuestion[]
+): { chapter_no: number | null; chapter: string; kps: XiaoKp[]; questionCount: number }[] {
+  const questionsByChapter = new Map<string, number>();
+  for (const question of questions) {
+    const key = chapterKey(question.chapter_no, question.chapter);
+    questionsByChapter.set(key, (questionsByChapter.get(key) ?? 0) + 1);
+  }
+
+  const groups = new Map<string, { chapter_no: number | null; chapter: string; kps: XiaoKp[]; questionCount: number }>();
+  for (const kp of kps) {
+    const key = chapterKey(kp.chapter_no, kp.chapter);
+    const group = groups.get(key) ?? {
+      chapter_no: kp.chapter_no,
+      chapter: kp.chapter,
+      kps: [],
+      questionCount: questionsByChapter.get(key) ?? 0,
+    };
+    group.kps.push(kp);
+    groups.set(key, group);
+  }
+
+  return [...groups.values()].sort(
+    (a, b) => (a.chapter_no ?? 99) - (b.chapter_no ?? 99) || a.chapter.localeCompare(b.chapter)
+  );
 }
 
 export function findKp(kps: XiaoKp[], id: string): XiaoKp | undefined {

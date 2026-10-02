@@ -9,6 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "papers" / "politics" / "xiao1000"
 PUBLIC = ROOT / "frontend" / "public" / "politics" / "xiao1000.kp.json"
+QUESTIONS_PUBLIC = ROOT / "frontend" / "public" / "politics" / "xiao1000.json"
+CHUNK_DIR = ROOT / "frontend" / "public" / "politics" / "xiao1000"
+CATALOG_PUBLIC = ROOT / "frontend" / "public" / "politics" / "xiao1000.index.json"
 
 SUBJECTS = ["marx", "mao", "xi", "history", "moral"]
 PATCH_FILES = {
@@ -17,6 +20,13 @@ PATCH_FILES = {
     "xi": ["xi.explain.a.json", "xi.explain.b.json", "xi.explain.json"],
     "history": ["history.explain.json"],
     "moral": ["moral.explain.json"],
+}
+SUBJECT_META = {
+    "marx": ("马原", "理解题，先把概念钉死再做多选"),
+    "mao": ("毛中特", "革命道路、改造、探索，记忆+对比"),
+    "xi": ("新思想", "中国式现代化、新质生产力、最新提法"),
+    "history": ("史纲", "会议、文件、阶段意义，易混对比"),
+    "moral": ("思法", "人生价值、道德、法治运行"),
 }
 
 
@@ -29,7 +39,68 @@ def dump_indent(path: Path, data) -> None:
 
 
 def dump_compact(path: Path, data) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+
+
+def chapter_key(item: dict) -> tuple[int | None, str]:
+    return item.get("chapter_no"), item.get("chapter") or "未分章"
+
+
+def build_chunks_and_catalog(questions: list[dict], kps: list[dict]) -> None:
+    catalog = {"version": 1, "subjects": []}
+    for subject in SUBJECTS:
+        subject_questions = [q for q in questions if q.get("subject") == subject]
+        subject_kps = [kp for kp in kps if kp.get("subject") == subject]
+        dump_compact(CHUNK_DIR / f"{subject}.json", {"questions": subject_questions, "kps": subject_kps})
+
+        chapters: dict[tuple[int | None, str], dict] = {}
+
+        for item in subject_questions:
+            key = chapter_key(item)
+            chapter = chapters.setdefault(
+                key,
+                {
+                    "chapter_no": key[0],
+                    "chapter": key[1],
+                    "questionCount": 0,
+                    "kpCount": 0,
+                },
+            )
+            chapter["questionCount"] += 1
+
+        for item in subject_kps:
+            key = chapter_key(item)
+            chapter = chapters.setdefault(
+                key,
+                {
+                    "chapter_no": key[0],
+                    "chapter": key[1],
+                    "questionCount": 0,
+                    "kpCount": 0,
+                },
+            )
+            chapter["kpCount"] += 1
+        chapter_list = sorted(
+            chapters.values(),
+            key=lambda item: (
+                item["chapter_no"] is None,
+                item["chapter_no"] if item["chapter_no"] is not None else 99,
+                item["chapter"],
+            ),
+        )
+        label, hint = SUBJECT_META[subject]
+        catalog["subjects"].append(
+            {
+                "id": subject,
+                "label": label,
+                "hint": hint,
+                "questionCount": len(subject_questions),
+                "kpCount": len(subject_kps),
+                "chapters": chapter_list,
+            }
+        )
+    dump_compact(CATALOG_PUBLIC, catalog)
 
 
 def load_patches(subject: str) -> dict:
@@ -74,6 +145,7 @@ def main() -> int:
     missing: list[str] = []
     patched = 0
     public = load_json(PUBLIC)
+    questions = load_json(QUESTIONS_PUBLIC)
     public_by_id = {k["id"]: i for i, k in enumerate(public)}
 
     for subject in SUBJECTS:
@@ -101,6 +173,7 @@ def main() -> int:
         dump_indent(kp_path, kps)
 
     dump_compact(PUBLIC, public)
+    build_chunks_and_catalog(questions, public)
 
     print(f"merged patches into {patched} cards")
     print(f"public cards: {len(public)}")

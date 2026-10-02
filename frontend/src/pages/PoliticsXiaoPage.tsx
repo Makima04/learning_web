@@ -7,8 +7,10 @@ import {
   XIAO_SUBJECTS,
   XIAO_SUBJECT_LABEL,
   findKp,
+  chaptersForSubject,
   kpsForSubject,
-  loadXiao,
+  loadXiaoCatalog,
+  loadXiaoSubject,
   normalizeXiaoAnswer,
   optionKeys,
   parseXiaoSubject,
@@ -23,6 +25,8 @@ import {
   type XiaoMarkLevel,
   type XiaoQuestion,
   type XiaoSubject,
+  type XiaoCatalog,
+  type XiaoPack,
 } from "@/lib/politics/xiao";
 import { useAuth } from "@/stores/auth";
 import { usePolitics } from "@/stores/politics";
@@ -39,8 +43,12 @@ export function PoliticsXiaoPage() {
   const loggedIn = useAuth((s) => s.loggedIn);
   const load = usePolitics((s) => s.load);
   const syncFromServer = usePolitics((s) => s.syncFromServer);
-  const [pack, setPack] = useState<{ questions: XiaoQuestion[]; kps: XiaoKp[] } | null>(null);
+  const [catalog, setCatalog] = useState<XiaoCatalog | null>(null);
+  const [pack, setPack] = useState<XiaoPack | null>(null);
+  const [packSubject, setPackSubject] = useState<XiaoSubject | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const subject = parseXiaoSubject(rawSubject);
+  const kpId = rawKp ? decodeURIComponent(rawKp) : undefined;
 
   useEffect(() => {
     load();
@@ -50,9 +58,20 @@ export function PoliticsXiaoPage() {
   }, [loggedIn, syncFromServer]);
   useEffect(() => {
     let alive = true;
-    loadXiao()
+    setError(null);
+    if (subject) {
+      setPack(null);
+      setPackSubject(null);
+    }
+    const request = subject ? loadXiaoSubject(subject) : loadXiaoCatalog();
+    request
       .then((data) => {
-        if (alive) setPack(data);
+        if (!alive) return;
+        if (subject) {
+          setPack(data as XiaoPack);
+          setPackSubject(subject);
+        }
+        else setCatalog(data as XiaoCatalog);
       })
       .catch((e: unknown) => {
         if (alive) setError(e instanceof Error ? e.message : String(e));
@@ -60,10 +79,7 @@ export function PoliticsXiaoPage() {
     return () => {
       alive = false;
     };
-  }, []);
-
-  const subject = parseXiaoSubject(rawSubject);
-  const kpId = rawKp ? decodeURIComponent(rawKp) : undefined;
+  }, [subject]);
 
   if (error) {
     return (
@@ -75,13 +91,21 @@ export function PoliticsXiaoPage() {
       </div>
     );
   }
-  if (!pack) {
+  const readyPack = subject && packSubject === subject ? pack : null;
+
+  if (subject && !readyPack) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">加载肖 1000…</div>
     );
   }
+  if (!subject && !catalog) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">加载肖 1000 目录…</div>
+    );
+  }
   if (subject && kpId) {
-    const kp = findKp(pack.kps, kpId);
+    if (!readyPack) return null;
+    const kp = findKp(readyPack.kps, kpId);
     if (!kp || kp.subject !== subject) {
       return (
         <div className="mx-auto max-w-3xl space-y-3 px-4 py-6">
@@ -95,24 +119,25 @@ export function PoliticsXiaoPage() {
     return (
       <KpView
         kp={kp}
-        questions={questionsForKp(pack.questions, kp.id)}
+        questions={questionsForKp(readyPack.questions, kp.id)}
         subject={subject}
       />
     );
   }
   if (subject) {
+    if (!readyPack) return null;
     return (
       <SubjectView
         subject={subject}
-        kps={kpsForSubject(pack.kps, subject)}
-        questions={questionsForSubject(pack.questions, subject)}
+        kps={kpsForSubject(readyPack.kps, subject)}
+        questions={questionsForSubject(readyPack.questions, subject)}
       />
     );
   }
-  return <Hub questions={pack.questions} kps={pack.kps} />;
+  return <Hub catalog={catalog!} />;
 }
 
-function Hub({ questions, kps }: { questions: XiaoQuestion[]; kps: XiaoKp[] }) {
+function Hub({ catalog }: { catalog: XiaoCatalog }) {
   const xiaoMarks = usePolitics((s) => s.xiaoMarks);
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 md:px-8">
@@ -131,9 +156,11 @@ function Hub({ questions, kps }: { questions: XiaoQuestion[]; kps: XiaoKp[] }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {XIAO_SUBJECTS.map((s) => {
-          const qs = questionsForSubject(questions, s.id);
-          const done = qs.filter((q) => xiaoMarks[q.id]?.mark === "pass").length;
-          const due = qs.filter((q) => isXiaoDue(xiaoMarks[q.id]?.nextReviewOn)).length;
+          const info = catalog.subjects.find((item) => item.id === s.id);
+          const subjectPrefix = `xiao-${s.id}-`;
+          const marked = Object.values(xiaoMarks).filter((mark) => mark.itemId.startsWith(subjectPrefix));
+          const done = marked.filter((mark) => mark.mark === "pass").length;
+          const due = marked.filter((mark) => isXiaoDue(mark.nextReviewOn)).length;
           return (
             <Link key={s.id} to={xiaoPath(s.id)} className="block">
               <Card className="h-full transition-colors hover:bg-muted/40">
@@ -146,8 +173,8 @@ function Hub({ questions, kps }: { questions: XiaoQuestion[]; kps: XiaoKp[] }) {
                 <CardContent className="text-sm text-muted-foreground">
                   <p>{s.hint}</p>
                   <p className="mt-2">
-                    {kpsForSubject(kps, s.id).length} 个考点 · {qs.length} 题
-                    {qs.length > 0 ? ` · 会 ${done}` : ""}
+                    {info?.kpCount ?? 0} 个考点 · {info?.questionCount ?? 0} 题
+                    {(info?.questionCount ?? 0) > 0 ? ` · 会 ${done}` : ""}
                     {due ? ` · 今日复习 ${due}` : ""}
                   </p>
                 </CardContent>
@@ -170,6 +197,7 @@ function SubjectView({
   questions: XiaoQuestion[];
 }) {
   const xiaoMarks = usePolitics((s) => s.xiaoMarks);
+  const chapters = useMemo(() => chaptersForSubject(kps, questions), [kps, questions]);
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 md:px-8">
       <div>
@@ -187,34 +215,44 @@ function SubjectView({
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">{XIAO_SUBJECT_LABEL[subject]}</h1>
         <p className="mt-1 text-sm text-muted-foreground">按章打开卡片，学完立刻刷本章题。</p>
       </div>
-      <div className="space-y-2">
-        {kps.map((kp) => {
-          const qs = questionsForKp(questions, kp.id);
-          const done = qs.filter((q) => xiaoMarks[q.id]?.mark === "pass").length;
-          const fail = qs.filter((q) => xiaoMarks[q.id]?.mark === "fail").length;
-          const due = isXiaoDue(xiaoMarks[kpMarkId(kp.id)]?.nextReviewOn);
-          return (
-            <Link key={kp.id} to={xiaoPath(subject, kp.id)} className="block">
-              <Card className="transition-colors hover:bg-muted/40">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium leading-snug">{kp.name}</p>
-                    {kp.summary ? (
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{kp.summary}</p>
-                    ) : null}
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {qs.length} 题 · 会 {done}
-                      {fail ? ` · 不会 ${fail}` : ""}
-                      {due ? " · 今日复习" : ""}
-                      {kp.provisional ? " · 先按章刷，细考点稍后补上" : ""}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
+      <div className="space-y-6">
+        {chapters.map((chapter) => (
+          <section key={`${chapter.chapter_no ?? "unknown"}-${chapter.chapter}`} className="space-y-2">
+            <div className="flex items-baseline justify-between gap-3 border-b pb-2">
+              <h2 className="font-semibold tracking-tight">{chapter.chapter}</h2>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {chapter.kps.length} 个考点 · {chapter.questionCount} 题
+              </span>
+            </div>
+            {chapter.kps.map((kp) => {
+              const qs = questionsForKp(questions, kp.id);
+              const done = qs.filter((q) => xiaoMarks[q.id]?.mark === "pass").length;
+              const fail = qs.filter((q) => xiaoMarks[q.id]?.mark === "fail").length;
+              const due = isXiaoDue(xiaoMarks[kpMarkId(kp.id)]?.nextReviewOn);
+              return (
+                <Link key={kp.id} to={xiaoPath(subject, kp.id)} className="block">
+                  <Card className="transition-colors hover:bg-muted/40">
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium leading-snug">{kp.name}</p>
+                        {kp.summary ? (
+                          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{kp.summary}</p>
+                        ) : null}
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {qs.length} 题 · 会 {done}
+                          {fail ? ` · 不会 ${fail}` : ""}
+                          {due ? " · 今日复习" : ""}
+                          {kp.provisional ? " · 先按章刷，细考点稍后补上" : ""}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </section>
+        ))}
       </div>
     </div>
   );

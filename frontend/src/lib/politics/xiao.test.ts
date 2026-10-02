@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { hasKpExplain, isXiaoDue, normalizeXiaoAnswer, scheduleXiaoReview, xiaoPath } from "./xiao";
+import {
+  chaptersForSubject,
+  hasKpExplain,
+  isXiaoDue,
+  normalizeXiaoAnswer,
+  scheduleXiaoReview,
+  xiaoPath,
+} from "./xiao";
 
 describe("xiao helpers", () => {
   it("normalizes multi-select letters", () => {
@@ -40,5 +47,50 @@ describe("xiao helpers", () => {
     expect(hasKpExplain({ explain: undefined })).toBe(false);
     expect(hasKpExplain({ explain: [] })).toBe(false);
     expect(hasKpExplain({ explain: [{ title: "科学性", body: "有根据" }] })).toBe(true);
+  });
+
+  it("groups knowledge points by textbook chapter", () => {
+    const groups = chaptersForSubject(
+      [
+        {
+          id: "marx.ch2.a",
+          subject: "marx",
+          chapter: "第二章 实践与认识及其发展规律",
+          chapter_no: 2,
+          name: "实践是认识的基础",
+          summary: "",
+          bullets: [],
+          confusions: [],
+        },
+        {
+          id: "marx.ch1.a",
+          subject: "marx",
+          chapter: "第一章 世界的物质性及发展规律",
+          chapter_no: 1,
+          name: "物质",
+          summary: "",
+          bullets: [],
+          confusions: [],
+        },
+      ],
+      [
+        {
+          id: "xiao-marx-s-1",
+          source: "xiao1000",
+          subject: "marx",
+          kind: "single",
+          chapter: "第二章 实践与认识及其发展规律",
+          chapter_no: 2,
+          qno: 1,
+          stem: "题干",
+          options: { A: "选项" },
+          kp_ids: ["marx.ch2.a"],
+        },
+      ]
+    );
+    expect(groups.map((group) => [group.chapter_no, group.kps.length, group.questionCount])).toEqual([
+      [1, 1, 0],
+      [2, 1, 1],
+    ]);
   });
 });
