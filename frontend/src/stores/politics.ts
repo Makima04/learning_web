@@ -1,4 +1,4 @@
-// 考研政治主观题练习：本地即时写 + 登录后镜像 /api/politics（服务端权威）
+// 考研政治主观题练习：本地即时写 + 登录后经 syncQueue 镜像 /api/politics（服务端权威）
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import { maxOfPart, scorePart } from "@/lib/politics/score";
@@ -11,6 +11,7 @@ import type {
   XiaoItemMark,
 } from "@/lib/politics/types";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
+import { discardPendingPoliticsIfNotNewer, enqueuePolitics } from "@/lib/syncQueue";
 
 const KEY_BASE = "ew.politics.v1";
 const MAX_ATTEMPTS = 80;
@@ -63,25 +64,10 @@ function loadDoc(): PoliticsDoc {
   return normalizeDoc(loadJSON<Partial<PoliticsDoc>>(storageKey(), {}));
 }
 
-let putTimer: ReturnType<typeof setTimeout> | null = null;
-
-function persist(doc: PoliticsDoc, flush = false) {
+function persist(doc: PoliticsDoc) {
   saveJSON(storageKey(), doc);
-  if (!api.isLoggedIn()) return;
-  if (putTimer) {
-    clearTimeout(putTimer);
-    putTimer = null;
-  }
-  const send = () => {
-    void api.putPolitics(doc).catch((e) => {
-      console.warn("putPolitics failed:", e);
-    });
-  };
-  if (flush) {
-    send();
-    return;
-  }
-  putTimer = setTimeout(send, 800);
+  // 登录后入队批量镜像，失败可重试（scheduleFlush 去抖）
+  enqueuePolitics(doc);
 }
 
 function newAttemptId() {
@@ -174,7 +160,7 @@ export const usePolitics = create<PoliticsStore>((set, get) => ({
       lastXiaoKpId: get().lastXiaoKpId,
       updatedAt: now,
     };
-    persist(doc, true);
+    persist(doc);
     set(doc);
     return attempt;
   },
@@ -217,7 +203,7 @@ export const usePolitics = create<PoliticsStore>((set, get) => ({
       const local = loadDoc();
       if (!remote.updatedAt) {
         if (local.updatedAt > 0) {
-          await api.putPolitics(local);
+          enqueuePolitics(local);
         }
         if (!stillInScope(epoch)) return;
         set(local);
@@ -225,9 +211,10 @@ export const usePolitics = create<PoliticsStore>((set, get) => ({
       }
       if ((remote.updatedAt || 0) >= (local.updatedAt || 0)) {
         saveJSON(storageKey(), remote);
+        discardPendingPoliticsIfNotNewer(remote.updatedAt);
         set(remote);
       } else {
-        await api.putPolitics(local);
+        enqueuePolitics(local);
         if (!stillInScope(epoch)) return;
         set(local);
       }
@@ -239,14 +226,14 @@ export const usePolitics = create<PoliticsStore>((set, get) => ({
 
   replaceAll: (doc) => {
     const next = { ...emptyDoc(), ...normalizeDoc(doc), updatedAt: Date.now() };
-    persist(next, true);
+    persist(next);
     set(next);
   },
 
   clearAll: () => {
     const doc = emptyDoc();
     doc.updatedAt = Date.now();
-    persist(doc, true);
+    persist(doc);
     set(doc);
   },
 }));

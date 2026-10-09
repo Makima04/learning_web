@@ -6,6 +6,7 @@ import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
 import { blankTargetHtml } from "@/lib/quiz";
 import { getPhonetic, getWordMap } from "@/lib/words";
+import { usePapersReady } from "@/lib/papersLoad";
 import { papersRecitePathFromPaperIdx } from "@/lib/papersNav";
 import { esc, cn } from "@/lib/utils";
 import { speakEnglish, stopSpeaking } from "@/lib/tts";
@@ -31,6 +32,8 @@ function canAutoSpeak(phase: UiPhase): boolean {
 export function StudyPage() {
   const navigate = useNavigate();
   const settings = useSettings();
+  // 例句 / 完型依赖 PAPERS；未加载前勿渲染答题卡
+  const { ready: papersReady, error: papersError } = usePapersReady();
   const mode = useStudy((state) => state.mode);
   const queue = useStudy((state) => state.queue);
   const qpos = useStudy((state) => state.qpos);
@@ -206,6 +209,14 @@ export function StudyPage() {
     const target = event.target as HTMLElement;
     if (target.closest(".c-word, button")) return;
     void showExampleTranslation();
+  }
+
+  if (!papersReady) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">
+        {papersError ? `真题数据加载失败：${papersError}` : "正在加载真题例句…"}
+      </div>
+    );
   }
 
   if (uiPhase === "idle") {

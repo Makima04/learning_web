@@ -1,9 +1,10 @@
 use sqlx::PgPool;
 
-/// Run schema from migrations/001_init.sql (idempotent CREATE IF NOT EXISTS).
+/// Apply sqlx migrations (embeds `./migrations` at compile time).
+/// Baseline `001_init.sql` is idempotent (CREATE/ALTER IF NOT EXISTS), so existing
+/// prod DBs without `_sqlx_migrations` can apply once safely on first boot.
 pub async fn init_schema(pool: &PgPool) -> anyhow::Result<()> {
-    let sql = include_str!("../migrations/001_init.sql");
-    sqlx::raw_sql(sql).execute(pool).await?;
+    sqlx::migrate!("./migrations").run(pool).await?;
     Ok(())
 }
 

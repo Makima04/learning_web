@@ -44,6 +44,14 @@ export interface WordExample {
   sentence: string;
 }
 let exampleIndex: Map<number, WordExample[]> | null = null;
+let paperOrder: number[] | null = null;
+
+/** papers.js 懒加载到位后清掉派生 memo，避免空 PAPERS 时缓存了错误索引。 */
+export function resetPapersDerivedCaches() {
+  exampleIndex = null;
+  paperOrder = null;
+}
+
 export function getExampleIndex(): Map<number, WordExample[]> {
   if (exampleIndex) return exampleIndex;
   const idx: Map<number, WordExample[]> = new Map();
@@ -73,7 +81,6 @@ export function getExamples(idx: number, limit = 5): WordExample[] {
 // ---- PAPER_ORDER：未学习新词的出场顺序 = 真题出现顺序（2006→）----
 // 按 PAPERS year 升序遍历，每篇章 words[]（已按 count desc）按首次出现收集 idx，
 // 最后追加不出现在任何真题的 WORDS 索引（按 WORDS 顺序）。
-let paperOrder: number[] | null = null;
 export function getPaperOrder(): number[] {
   if (paperOrder) return paperOrder;
   const seen: Set<number> = new Set();

@@ -46,7 +46,8 @@ export interface Paper {
 declare global {
   interface Window {
     WORDS: WordEntry[];
-    PAPERS: Paper[];
+    /** 真题数据：首屏不注入，由 ensurePapersLoaded 按需拉 /papers.js */
+    PAPERS?: Paper[];
     EW_VERSION?: string;
     // 旧版可选的 baked 译文文件
     TRANS?: Record<string, string>;

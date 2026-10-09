@@ -10,7 +10,7 @@ axum-extra = { version = "0.10", features = ["typed-header"] }
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["fs", "compression-gzip", "trace", "set-header"] }
-sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono", "json"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono", "json", "migrate"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }

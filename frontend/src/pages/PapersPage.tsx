@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SECTION_TYPE_LABEL } from "@/lib/words";
+import { usePapersReady } from "@/lib/papersLoad";
 import {
   buildPassageReader,
   passageReaderPath,
@@ -26,19 +27,24 @@ export function PapersPage() {
   const navigate = useNavigate();
   const cards = useCards((s) => s.cards);
   const setPassageReader = useStudy((s) => s.setPassageReader);
+  const { ready: papersReady, error: papersError } = usePapersReady();
 
   const variant = normalizeVariant(variantParam);
   const yearNum = yearParam != null ? parseInt(yearParam, 10) : NaN;
   const hasYear = Number.isFinite(yearNum);
   const variantOk = variantParam === "en1" || variantParam === "en2";
 
-  const yearList = useMemo(() => listYearsForVariant(variant), [variant]);
+  const yearList = useMemo(
+    () => (papersReady ? listYearsForVariant(variant) : []),
+    [variant, papersReady]
+  );
   const yearHit = useMemo(
-    () => (hasYear ? getPaperByVariantYear(variant, yearNum) : null),
-    [hasYear, variant, yearNum]
+    () => (papersReady && hasYear ? getPaperByVariantYear(variant, yearNum) : null),
+    [hasYear, variant, yearNum, papersReady]
   );
 
   useEffect(() => {
+    if (!papersReady) return;
     if (!variantParam || !variantOk) {
       navigate(papersListPath("en1"), { replace: true });
       return;
@@ -46,7 +52,15 @@ export function PapersPage() {
     if (hasYear && !yearHit) {
       navigate(papersListPath(variant), { replace: true });
     }
-  }, [variantParam, variantOk, hasYear, yearHit, variant, navigate]);
+  }, [papersReady, variantParam, variantOk, hasYear, yearHit, variant, navigate]);
+
+  if (!papersReady) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">
+        {papersError ? `真题数据加载失败：${papersError}` : "正在加载真题…"}
+      </div>
+    );
+  }
 
   if (!variantParam || !variantOk) {
     return (

@@ -1,5 +1,5 @@
 // 登录后学习进度镜像写：批量 / 去抖 / 失败入队重试。
-// cards、生词表、学习日志按条 bulk；meta / settings 走 PUT；study_events 按词入队后 POST。
+// cards、生词表、学习日志按条 bulk；meta / settings / kg / politics 走 PUT；study_events 按词入队后 POST。
 
 import * as api from "@/lib/api";
 import type {
@@ -33,6 +33,8 @@ type PendingWordLists = Record<string, WordListItemDTO>;
 const BASE_CARDS = "ew.sync.pending.cards.v1";
 const BASE_META = "ew.sync.pending.meta.v1";
 const BASE_SETTINGS = "ew.sync.pending.settings.v1";
+const BASE_KG = "ew.sync.pending.kg.v1";
+const BASE_POLITICS = "ew.sync.pending.politics.v1";
 const BASE_STUDY_EVENTS = "ew.sync.pending.studyEvents.v1";
 const BASE_JOURNAL = "ew.sync.pending.journal.v1";
 const BASE_WORD_LISTS = "ew.sync.pending.wordLists.v1";
@@ -46,6 +48,12 @@ function keyMeta() {
 }
 function keySettings() {
   return scopedKey(BASE_SETTINGS);
+}
+function keyKg() {
+  return scopedKey(BASE_KG);
+}
+function keyPolitics() {
+  return scopedKey(BASE_POLITICS);
 }
 function keyStudyEvents() {
   return scopedKey(BASE_STUDY_EVENTS);
@@ -122,6 +130,8 @@ function recomputePending() {
   const cards = loadJSON<PendingCards>(keyCards(), {});
   const meta = loadJSON<api.MetaDTO | null>(keyMeta(), null);
   const settings = loadJSON<Record<string, unknown> | null>(keySettings(), null);
+  const kg = loadJSON<Record<string, unknown> | null>(keyKg(), null);
+  const politics = loadJSON<Record<string, unknown> | null>(keyPolitics(), null);
   const studyEvents = loadJSON<PendingStudyEvents>(keyStudyEvents(), {});
   const journal = loadPendingJournal(keyJournal());
   const wordLists = loadJSON<PendingWordLists>(keyWordLists(), {});
@@ -129,6 +139,8 @@ function recomputePending() {
     Object.keys(cards).length > 0 ||
     meta != null ||
     settings != null ||
+    kg != null ||
+    politics != null ||
     Object.keys(studyEvents).length > 0 ||
     journalPendingCount(journal) > 0 ||
     Object.keys(wordLists).length > 0;
@@ -172,6 +184,52 @@ export function enqueueSettings(settings: Record<string, unknown>) {
   saveJSON(keySettings(), settings);
   recomputePending();
   scheduleFlush();
+}
+
+/** KG 整包入队；同账号只保留最新一版（服务端 LWW） */
+export function enqueueKg(doc: Record<string, unknown> | object) {
+  if (!api.isLoggedIn()) return;
+  saveJSON(keyKg(), doc);
+  recomputePending();
+  scheduleFlush();
+}
+
+/** 政治整包入队；同账号只保留最新一版（服务端 LWW） */
+export function enqueuePolitics(doc: Record<string, unknown> | object) {
+  if (!api.isLoggedIn()) return;
+  saveJSON(keyPolitics(), doc);
+  recomputePending();
+  scheduleFlush();
+}
+
+/**
+ * 拉取采纳了更新的服务端文档后，丢掉不比远端新的 pending，避免 flush 用旧包覆盖。
+ * pending.updatedAt 更大则保留（本地尚未刷出的更新）。
+ */
+export function discardPendingKgIfNotNewer(serverUpdatedAt: number) {
+  const pending = loadJSON<{ updatedAt?: number } | null>(keyKg(), null);
+  if (pending == null) return;
+  if ((pending.updatedAt || 0) <= serverUpdatedAt) {
+    try {
+      localStorage.removeItem(keyKg());
+    } catch {
+      /* ignore */
+    }
+    recomputePending();
+  }
+}
+
+export function discardPendingPoliticsIfNotNewer(serverUpdatedAt: number) {
+  const pending = loadJSON<{ updatedAt?: number } | null>(keyPolitics(), null);
+  if (pending == null) return;
+  if ((pending.updatedAt || 0) <= serverUpdatedAt) {
+    try {
+      localStorage.removeItem(keyPolitics());
+    } catch {
+      /* ignore */
+    }
+    recomputePending();
+  }
 }
 
 /** 学习事件入队（离线可重试）；同日同词覆盖，「新」优先于「复」 */
@@ -478,6 +536,8 @@ async function flushOnce(): Promise<void> {
   const cardsKey = keyCards();
   const metaKey = keyMeta();
   const settingsKey = keySettings();
+  const kgKey = keyKg();
+  const politicsKey = keyPolitics();
   const journalKey = keyJournal();
   const eventsKey = keyStudyEvents();
   const wordListsKey = keyWordLists();
@@ -517,6 +577,28 @@ async function flushOnce(): Promise<void> {
       await api.putSettings(settings);
       const current = loadJSON<Record<string, unknown> | null>(settingsKey, null);
       if (!current || sameJson(current, settings)) localStorage.removeItem(settingsKey);
+    } catch (e: unknown) {
+      error = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  const kg = loadJSON<Record<string, unknown> | null>(kgKey, null);
+  if (kg) {
+    try {
+      await api.putKg(kg);
+      const current = loadJSON<Record<string, unknown> | null>(kgKey, null);
+      if (!current || sameJson(current, kg)) localStorage.removeItem(kgKey);
+    } catch (e: unknown) {
+      error = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  const politics = loadJSON<Record<string, unknown> | null>(politicsKey, null);
+  if (politics) {
+    try {
+      await api.putPolitics(politics);
+      const current = loadJSON<Record<string, unknown> | null>(politicsKey, null);
+      if (!current || sameJson(current, politics)) localStorage.removeItem(politicsKey);
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : String(e);
     }
@@ -678,6 +760,8 @@ async function flushOnce(): Promise<void> {
   const stillCards = loadJSON<PendingCards>(cardsKey, {});
   const stillMeta = loadJSON<api.MetaDTO | null>(metaKey, null);
   const stillSettings = loadJSON<Record<string, unknown> | null>(settingsKey, null);
+  const stillKg = loadJSON<Record<string, unknown> | null>(kgKey, null);
+  const stillPolitics = loadJSON<Record<string, unknown> | null>(politicsKey, null);
   const stillEvents = loadJSON<PendingStudyEvents>(eventsKey, {});
   const stillJournal = loadPendingJournal(journalKey);
   const stillWordLists = loadJSON<PendingWordLists>(wordListsKey, {});
@@ -685,6 +769,8 @@ async function flushOnce(): Promise<void> {
     Object.keys(stillCards).length > 0 ||
     stillMeta != null ||
     stillSettings != null ||
+    stillKg != null ||
+    stillPolitics != null ||
     Object.keys(stillEvents).length > 0 ||
     journalPendingCount(stillJournal) > 0 ||
     Object.keys(stillWordLists).length > 0;

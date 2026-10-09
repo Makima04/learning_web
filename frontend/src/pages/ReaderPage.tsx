@@ -8,6 +8,7 @@ import {
   parsePassageReaderParams,
   passageReaderMatches,
 } from "@/lib/passageReader";
+import { ensurePapersLoaded } from "@/lib/papersLoad";
 import { esc, cn } from "@/lib/utils";
 import { translate } from "@/lib/llm";
 import { speakEnglish } from "@/lib/tts";
@@ -229,7 +230,7 @@ export function ReaderPage() {
     [params.variant, params.year, params.label]
   );
 
-  // URL 深链：刷新后从 window.PAPERS 重建 passageReader
+  // URL 深链：先 ensure papers，再从 window.PAPERS 重建 passageReader
   useEffect(() => {
     if (!routeKey) {
       navigate("/papers", { replace: true });
@@ -239,14 +240,27 @@ export function ReaderPage() {
       setHydrateFailed(false);
       return;
     }
-    const loaded = loadPassageReader(routeKey);
-    if (loaded) {
-      setPassageReader(loaded);
-      setHydrateFailed(false);
-    } else {
-      setHydrateFailed(true);
-      navigate("/papers", { replace: true });
-    }
+    let cancelled = false;
+    ensurePapersLoaded()
+      .then(() => {
+        if (cancelled) return;
+        const loaded = loadPassageReader(routeKey);
+        if (loaded) {
+          setPassageReader(loaded);
+          setHydrateFailed(false);
+        } else {
+          setHydrateFailed(true);
+          navigate("/papers", { replace: true });
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setHydrateFailed(true);
+        navigate("/papers", { replace: true });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [routeKey, reader, setPassageReader, navigate]);
 
   const { paragraphs, sentences } = useMemo(

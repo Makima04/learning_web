@@ -413,19 +413,23 @@ export const useStudy = create<StudyState>((set, get) => ({
     const cards = useCards.getState().cards;
     const settings = useSettings.getState();
     const meta = useMeta.getState().get();
+    // 与 snapshot 同口径：todayLog（study_events 去重）与 meta GREATEST 取大，避免多端计划偏松
+    const logCounts = useTodayLog.getState().counts();
+    const newToday = Math.max(meta.newToday, logCounts.newCount);
+    const reviewToday = Math.max(meta.reviewToday, logCounts.reviewCount);
     const { known, newbie } = listSets();
     let queue: QueueItem[] = [];
 
     if (mode !== "review") {
       // 软目标：计划内取剩余；计划已满仍可按 dailyNew 再开一批
-      const planLeft = Math.max(0, settings.dailyNew - meta.newToday);
+      const planLeft = Math.max(0, settings.dailyNew - newToday);
       const limit = planLeft > 0 ? planLeft : Math.max(1, settings.dailyNew);
       queue = getWords()
         .filter((word) => !isLearned(cards[word[0]]) && !known.has(word[0]))
         .slice(0, limit)
         .map((word) => ({ idx: word[0], card: cloneCard(cards[word[0]]), group: "new" }));
     } else {
-      const planLeft = Math.max(0, settings.dailyReview - meta.reviewToday);
+      const planLeft = Math.max(0, settings.dailyReview - reviewToday);
       const limit = planLeft > 0 ? planLeft : Math.max(1, settings.dailyReview);
       const dueItems = Object.entries(cards)
         .filter(([idx, card]) => isDue(card, now) && !known.has(+idx))

@@ -7,6 +7,8 @@ const apiMocks = vi.hoisted(() => ({
   bulkCards: vi.fn().mockResolvedValue({ ok: true }),
   putMeta: vi.fn().mockResolvedValue({ ok: true }),
   putSettings: vi.fn().mockResolvedValue({ ok: true }),
+  putKg: vi.fn().mockResolvedValue({ ok: true }),
+  putPolitics: vi.fn().mockResolvedValue({ ok: true }),
   bulkJournal: vi.fn().mockResolvedValue({ ok: true }),
   bulkWordLists: vi.fn().mockResolvedValue({ ok: true }),
 }));
@@ -14,8 +16,12 @@ vi.mock("@/lib/api", () => apiMocks);
 
 import { dayKey } from "@/lib/day";
 import {
+  discardPendingKgIfNotNewer,
+  discardPendingPoliticsIfNotNewer,
   enqueueCard,
   enqueueJournalRows,
+  enqueueKg,
+  enqueuePolitics,
   enqueueStudyEvent,
   enqueueWordListItem,
   flushPending,
@@ -35,6 +41,10 @@ describe("syncQueue flushPending", () => {
     apiMocks.postStudyEvent.mockReset().mockResolvedValue({ ok: true });
     apiMocks.postStudyEventsBulk.mockReset().mockResolvedValue({ ok: true });
     apiMocks.bulkCards.mockReset().mockResolvedValue({ ok: true });
+    apiMocks.putMeta.mockReset().mockResolvedValue({ ok: true });
+    apiMocks.putSettings.mockReset().mockResolvedValue({ ok: true });
+    apiMocks.putKg.mockReset().mockResolvedValue({ ok: true });
+    apiMocks.putPolitics.mockReset().mockResolvedValue({ ok: true });
     apiMocks.bulkJournal.mockReset().mockResolvedValue({ ok: true });
     apiMocks.bulkWordLists.mockReset().mockResolvedValue({ ok: true });
   });
@@ -219,5 +229,81 @@ describe("syncQueue flushPending", () => {
       categories: [],
       weeklies: [],
     });
+  });
+
+  it("flushes pending kg whole-doc and keeps newer mid-flight version", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    apiMocks.putKg.mockImplementationOnce(async () => {
+      await gate;
+      return { ok: true };
+    });
+
+    const v1 = { states: {}, itemMarks: [], itemNotes: {}, papers: [], updatedAt: 1 };
+    const v2 = { ...v1, updatedAt: 2, itemNotes: { q1: "n" } };
+    enqueueKg(v1);
+    const flushing = flushPending();
+    enqueueKg(v2);
+    release();
+    await flushing;
+
+    expect(apiMocks.putKg).toHaveBeenCalledWith(v1);
+    // mid-flight 更新后二次 flush 刷出 v2
+    expect(apiMocks.putKg).toHaveBeenCalledWith(v2);
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("keeps kg pending for retry when putKg fails", async () => {
+    apiMocks.putKg.mockRejectedValueOnce(new Error("kg-down"));
+    enqueueKg({ states: {}, itemMarks: [], itemNotes: {}, papers: [], updatedAt: 9 });
+    const failed = await flushPending();
+    expect(failed.lastError).toMatch(/kg-down/);
+    expect(failed.pending).toBe(true);
+    apiMocks.putKg.mockResolvedValue({ ok: true });
+    const ok = await flushPending();
+    expect(ok.pending).toBe(false);
+    expect(apiMocks.putKg).toHaveBeenLastCalledWith(
+      expect.objectContaining({ updatedAt: 9 })
+    );
+  });
+
+  it("flushes pending politics whole-doc", async () => {
+    const doc = {
+      drafts: {},
+      attempts: [],
+      lastQuestionId: null,
+      xiaoMarks: {},
+      lastXiaoKpId: null,
+      updatedAt: 5,
+    };
+    enqueuePolitics(doc);
+    await flushPending();
+    expect(apiMocks.putPolitics).toHaveBeenCalledTimes(1);
+    expect(apiMocks.putPolitics).toHaveBeenCalledWith(doc);
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("discards stale kg/politics pending when server is newer", () => {
+    enqueueKg({ states: {}, itemMarks: [], itemNotes: {}, papers: [], updatedAt: 10 });
+    enqueuePolitics({
+      drafts: {},
+      attempts: [],
+      lastQuestionId: null,
+      xiaoMarks: {},
+      lastXiaoKpId: null,
+      updatedAt: 10,
+    });
+    expect(getSyncStatus().pending).toBe(true);
+    discardPendingKgIfNotNewer(20);
+    discardPendingPoliticsIfNotNewer(20);
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("keeps kg pending when local pending is newer than server", () => {
+    enqueueKg({ states: {}, itemMarks: [], itemNotes: {}, papers: [], updatedAt: 30 });
+    discardPendingKgIfNotNewer(20);
+    expect(getSyncStatus().pending).toBe(true);
   });
 });

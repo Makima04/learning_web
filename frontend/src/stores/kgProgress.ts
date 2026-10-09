@@ -1,7 +1,8 @@
-// 知识图谱用户进度：本地即时写 + 登录后镜像 /api/kg（服务端权威）
+// 知识图谱用户进度：本地即时写 + 登录后经 syncQueue 镜像 /api/kg（服务端权威）
 import { create } from "zustand";
 import * as api from "@/lib/api";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
+import { discardPendingKgIfNotNewer, enqueueKg } from "@/lib/syncQueue";
 import { applyItemMark, applyMarkToKp, markCovered } from "@/lib/kg/mark";
 import { findKp } from "@/data/kg";
 import { journalCopyForKp } from "@/lib/kg/journalBridge";
@@ -72,26 +73,11 @@ function loadDoc(): KgDoc {
   };
 }
 
-let putTimer: ReturnType<typeof setTimeout> | null = null;
-
-function persist(doc: KgDoc, flush = true) {
+function persist(doc: KgDoc) {
   const payload = toPayload(doc);
   saveJSON(storageKey(), payload);
-  if (!api.isLoggedIn()) return;
-  if (putTimer) {
-    clearTimeout(putTimer);
-    putTimer = null;
-  }
-  const send = () => {
-    void api.putKg(loadDoc()).catch((e) => {
-      console.warn("putKg failed:", e);
-    });
-  };
-  if (flush) {
-    send();
-    return;
-  }
-  putTimer = setTimeout(send, 800);
+  // 登录后入队批量镜像，失败可重试（scheduleFlush 去抖）
+  enqueueKg(payload);
 }
 
 interface KgStore extends KgDoc {
@@ -202,7 +188,7 @@ export const useKgProgress = create<KgStore>((set, get) => ({
     if (itemNotes === get().itemNotes) return;
     const now = Date.now();
     const doc: KgDoc = { ...get(), itemNotes, updatedAt: now };
-    persist(doc, false);
+    persist(doc);
     set(doc);
   },
 
@@ -239,13 +225,13 @@ export const useKgProgress = create<KgStore>((set, get) => ({
       const local = loadDoc();
       if (!remote || !remote.updatedAt) {
         if (local.updatedAt > 0) {
-          await api.putKg(local);
+          enqueueKg(toPayload(local));
         }
         if (!stillInScope(epoch)) return;
         set(local);
         return;
       }
-      // 服务端权威：远端更新则覆盖；否则推本地
+      // 服务端权威：远端更新则覆盖；否则入队推本地（flush 由 accountSync 负责）
       if ((remote.updatedAt || 0) >= (local.updatedAt || 0)) {
         const doc: KgDoc = {
           states: remote.states ?? {},
@@ -255,9 +241,10 @@ export const useKgProgress = create<KgStore>((set, get) => ({
           updatedAt: remote.updatedAt ?? 0,
         };
         saveJSON(storageKey(), doc);
+        discardPendingKgIfNotNewer(doc.updatedAt);
         set(doc);
       } else {
-        await api.putKg(local);
+        enqueueKg(toPayload(local));
         if (!stillInScope(epoch)) return;
         set(local);
       }

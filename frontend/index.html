@@ -26,9 +26,8 @@
         } catch (e) {}
       })();
     </script>
-    <!-- 数据走 classic script 全局（Vite serve public/，build 复制到 dist） -->
+    <!-- 词库走 classic script；真题 papers.js(~15MB) 按需注入，见 lib/papersLoad.ts -->
     <script src="/data.js"></script>
-    <script src="/papers.js"></script>
     <title>红宝书 · 背单词</title>
   </head>
   <body>

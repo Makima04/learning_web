@@ -7,6 +7,7 @@ const apiMocks = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/api", () => apiMocks);
 
+import { flushPending, getSyncStatus } from "@/lib/syncQueue";
 import { usePolitics } from "./politics";
 
 describe("politics store", () => {
@@ -55,5 +56,24 @@ describe("politics store", () => {
 
   it("unknown question returns null", () => {
     expect(usePolitics.getState().submitQuestion("nope", {}, {})).toBeNull();
+  });
+
+  it("enqueues politics via syncQueue when logged in instead of fire-and-forget putPolitics", async () => {
+    apiMocks.isLoggedIn.mockReturnValue(true);
+    usePolitics.getState().saveDraft("2024-34", "1", "queue me");
+    expect(apiMocks.putPolitics).not.toHaveBeenCalled();
+    expect(getSyncStatus().pending).toBe(true);
+    await flushPending();
+    expect(apiMocks.putPolitics).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lastQuestionId: "2024-34",
+        drafts: expect.objectContaining({
+          "2024-34": expect.objectContaining({
+            answers: expect.objectContaining({ "1": "queue me" }),
+          }),
+        }),
+      })
+    );
+    expect(getSyncStatus().pending).toBe(false);
   });
 });
