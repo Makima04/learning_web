@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { BookOpen, Check, ChevronDown, ChevronRight, ListChecks } from "lucide-react";
+import { BookOpen, Check, ChevronDown, ChevronRight, ListChecks, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   XIAO_SUBJECTS,
   XIAO_SUBJECT_LABEL,
   findKp,
+  findChapter,
   chaptersForSubject,
   kpsForSubject,
   loadXiaoCatalog,
@@ -14,12 +15,14 @@ import {
   normalizeXiaoAnswer,
   optionKeys,
   parseXiaoSubject,
+  parseChapterRouteParam,
   kpMarkId,
   isXiaoDue,
   questionsForKp,
   questionsForSubject,
   hasKpExplain,
   xiaoPath,
+  type XiaoChapterGroup,
   type XiaoKp,
   type XiaoKind,
   type XiaoMarkLevel,
@@ -28,6 +31,8 @@ import {
   type XiaoCatalog,
   type XiaoPack,
 } from "@/lib/politics/xiao";
+import { ApiError, type XiaoBriefResult } from "@/lib/api";
+import { loadXiaoBrief, peekXiaoBrief } from "@/lib/politics/xiaoBrief";
 import { useAuth } from "@/stores/auth";
 import { usePolitics } from "@/stores/politics";
 import { cn } from "@/lib/utils";
@@ -39,7 +44,11 @@ const MARKS: { id: XiaoMarkLevel; label: string; cls: string }[] = [
 ];
 
 export function PoliticsXiaoPage() {
-  const { subject: rawSubject, kpId: rawKp } = useParams<{ subject?: string; kpId?: string }>();
+  const { subject: rawSubject, kpId: rawKp, chapterNo: rawChapter } = useParams<{
+    subject?: string;
+    kpId?: string;
+    chapterNo?: string;
+  }>();
   const loggedIn = useAuth((s) => s.loggedIn);
   const load = usePolitics((s) => s.load);
   const syncFromServer = usePolitics((s) => s.syncFromServer);
@@ -49,6 +58,7 @@ export function PoliticsXiaoPage() {
   const [error, setError] = useState<string | null>(null);
   const subject = parseXiaoSubject(rawSubject);
   const kpId = rawKp ? decodeURIComponent(rawKp) : undefined;
+  const chapterNo = parseChapterRouteParam(rawChapter);
 
   useEffect(() => {
     load();
@@ -121,6 +131,41 @@ export function PoliticsXiaoPage() {
         kp={kp}
         questions={questionsForKp(readyPack.questions, kp.id)}
         subject={subject}
+      />
+    );
+  }
+  if (subject && rawChapter !== undefined) {
+    if (!readyPack) return null;
+    if (chapterNo === undefined) {
+      return (
+        <div className="mx-auto max-w-3xl space-y-3 px-4 py-6">
+          <p className="text-sm text-destructive">没有这一章</p>
+          <Button asChild variant="outline">
+            <Link to={xiaoPath(subject)}>返回{XIAO_SUBJECT_LABEL[subject]}</Link>
+          </Button>
+        </div>
+      );
+    }
+    const chapters = chaptersForSubject(
+      kpsForSubject(readyPack.kps, subject),
+      questionsForSubject(readyPack.questions, subject)
+    );
+    const chapter = findChapter(chapters, chapterNo);
+    if (!chapter) {
+      return (
+        <div className="mx-auto max-w-3xl space-y-3 px-4 py-6">
+          <p className="text-sm text-destructive">没有这一章</p>
+          <Button asChild variant="outline">
+            <Link to={xiaoPath(subject)}>返回{XIAO_SUBJECT_LABEL[subject]}</Link>
+          </Button>
+        </div>
+      );
+    }
+    return (
+      <ChapterView
+        subject={subject}
+        chapter={chapter}
+        questions={questionsForSubject(readyPack.questions, subject)}
       />
     );
   }
@@ -213,46 +258,103 @@ function SubjectView({
           {XIAO_SUBJECT_LABEL[subject]}
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">{XIAO_SUBJECT_LABEL[subject]}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">按章打开卡片，学完立刻刷本章题。</p>
+        <p className="mt-1 text-sm text-muted-foreground">先选大章，再进小考点。</p>
       </div>
-      <div className="space-y-6">
-        {chapters.map((chapter) => (
-          <section key={`${chapter.chapter_no ?? "unknown"}-${chapter.chapter}`} className="space-y-2">
-            <div className="flex items-baseline justify-between gap-3 border-b pb-2">
-              <h2 className="font-semibold tracking-tight">{chapter.chapter}</h2>
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {chapter.kps.length} 个考点 · {chapter.questionCount} 题
-              </span>
-            </div>
-            {chapter.kps.map((kp) => {
-              const qs = questionsForKp(questions, kp.id);
-              const done = qs.filter((q) => xiaoMarks[q.id]?.mark === "pass").length;
-              const fail = qs.filter((q) => xiaoMarks[q.id]?.mark === "fail").length;
-              const due = isXiaoDue(xiaoMarks[kpMarkId(kp.id)]?.nextReviewOn);
-              return (
-                <Link key={kp.id} to={xiaoPath(subject, kp.id)} className="block">
-                  <Card className="transition-colors hover:bg-muted/40">
-                    <CardContent className="flex items-center gap-3 p-4">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium leading-snug">{kp.name}</p>
-                        {kp.summary ? (
-                          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{kp.summary}</p>
-                        ) : null}
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {qs.length} 题 · 会 {done}
-                          {fail ? ` · 不会 ${fail}` : ""}
-                          {due ? " · 今日复习" : ""}
-                          {kp.provisional ? " · 先按章刷，细考点稍后补上" : ""}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </section>
-        ))}
+      <div className="space-y-3">
+        {chapters.map((chapter) => {
+          const done = chapter.kps.reduce(
+            (n, kp) => n + questionsForKp(questions, kp.id).filter((q) => xiaoMarks[q.id]?.mark === "pass").length,
+            0
+          );
+          const due = chapter.kps.some((kp) => isXiaoDue(xiaoMarks[kpMarkId(kp.id)]?.nextReviewOn));
+          return (
+            <Link
+              key={`${chapter.chapter_no ?? "unknown"}-${chapter.chapter}`}
+              to={xiaoPath(subject, { chapter: chapter.chapter_no })}
+              className="block"
+            >
+              <Card className="transition-colors hover:bg-muted/40">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium leading-snug">{chapter.chapter}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {chapter.kps.length} 个考点 · {chapter.questionCount} 题
+                      {done ? ` · 会 ${done}` : ""}
+                      {due ? " · 今日复习" : ""}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ChapterView({
+  subject,
+  chapter,
+  questions,
+}: {
+  subject: XiaoSubject;
+  chapter: XiaoChapterGroup;
+  questions: XiaoQuestion[];
+}) {
+  const xiaoMarks = usePolitics((s) => s.xiaoMarks);
+  return (
+    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 md:px-8">
+      <div>
+        <p className="text-xs text-muted-foreground">
+          <Link to="/politics" className="hover:underline">
+            考研政治
+          </Link>
+          <span className="mx-1">/</span>
+          <Link to={xiaoPath()} className="hover:underline">
+            肖 1000
+          </Link>
+          <span className="mx-1">/</span>
+          <Link to={xiaoPath(subject)} className="hover:underline">
+            {XIAO_SUBJECT_LABEL[subject]}
+          </Link>
+          <span className="mx-1">/</span>
+          {chapter.chapter}
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{chapter.chapter}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {chapter.kps.length} 个考点 · {chapter.questionCount} 题 · 打开卡片学完立刻刷题
+        </p>
+      </div>
+      <div className="space-y-2">
+        {chapter.kps.map((kp) => {
+          const qs = questionsForKp(questions, kp.id);
+          const done = qs.filter((q) => xiaoMarks[q.id]?.mark === "pass").length;
+          const fail = qs.filter((q) => xiaoMarks[q.id]?.mark === "fail").length;
+          const due = isXiaoDue(xiaoMarks[kpMarkId(kp.id)]?.nextReviewOn);
+          return (
+            <Link key={kp.id} to={xiaoPath(subject, kp.id)} className="block">
+              <Card className="transition-colors hover:bg-muted/40">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium leading-snug">{kp.name}</p>
+                    {kp.summary ? (
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{kp.summary}</p>
+                    ) : null}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {qs.length} 题 · 会 {done}
+                      {fail ? ` · 不会 ${fail}` : ""}
+                      {due ? " · 今日复习" : ""}
+                      {kp.provisional ? " · 先按章刷，细考点稍后补上" : ""}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
@@ -273,6 +375,7 @@ function KpView({
     () => (kind === "all" ? questions : questions.filter((q) => q.kind === kind)),
     [questions, kind]
   );
+  const chapterPath = xiaoPath(subject, { chapter: kp.chapter_no });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 md:px-8">
@@ -280,6 +383,10 @@ function KpView({
         <p className="text-xs text-muted-foreground">
           <Link to={xiaoPath(subject)} className="hover:underline">
             {XIAO_SUBJECT_LABEL[subject]}
+          </Link>
+          <span className="mx-1">/</span>
+          <Link to={chapterPath} className="hover:underline">
+            {kp.chapter}
           </Link>
           <span className="mx-1">/</span>
           {kp.name}
@@ -507,6 +614,25 @@ function LearnCard({
   );
 }
 
+function XiaoBriefView({ brief }: { brief: XiaoBriefResult }) {
+  return (
+    <div className="space-y-2 rounded-md border bg-muted/40 p-3">
+      <p className="text-sm font-medium leading-relaxed">{brief.key}</p>
+      {brief.trap ? <p className="text-xs leading-relaxed text-muted-foreground">易混：{brief.trap}</p> : null}
+      <ul className="space-y-1 text-sm leading-relaxed">
+        {(brief.options ?? []).map((opt) => (
+          <li key={opt.k}>
+            <span className={cn("font-medium", opt.ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>
+              {opt.k} {opt.ok ? "对" : "错"}
+            </span>
+            {opt.why ? <span> · {opt.why}</span> : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function QuizQueue({ kpId, items }: { kpId: string; items: XiaoQuestion[] }) {
   const marks = usePolitics((s) => s.xiaoMarks);
   const [pos, setPos] = useState(0);
@@ -548,6 +674,9 @@ function XiaoQuizCard({
   const correct = normalizeXiaoAnswer(item.answer);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState(false);
+  const [brief, setBrief] = useState<XiaoBriefResult | null>(() => peekXiaoBrief(item.id));
+  const [briefState, setBriefState] = useState<"idle" | "loading" | "error" | "needLogin" | "unconfigured">("idle");
+  const [showRaw, setShowRaw] = useState(false);
   const navigate = useNavigate();
 
   const pickedStr = normalizeXiaoAnswer([...picked].join(""));
@@ -569,6 +698,22 @@ function XiaoQuizCard({
     setSubmitted(true);
   }
 
+  async function askBrief() {
+    if (!correct || briefState === "loading") return;
+    setBriefState("loading");
+    try {
+      const result = await loadXiaoBrief(item);
+      if (result.status === "ok" && result.key) {
+        setBrief(result);
+        setBriefState("idle");
+        return;
+      }
+      setBriefState(result.status === "unconfigured" ? "unconfigured" : "error");
+    } catch (error) {
+      setBriefState(error instanceof ApiError && error.status === 401 ? "needLogin" : "error");
+    }
+  }
+
   return (
     <Card>
       <CardContent className="space-y-4 p-5">
@@ -577,7 +722,11 @@ function XiaoQuizCard({
             {index + 1} / {total} · {item.kind === "single" ? "单选" : "多选"} · 第 {item.qno} 题
             {item.source_ref ? ` · ${item.source_ref}` : ""}
           </p>
-          <button type="button" className="hover:underline" onClick={() => navigate(xiaoPath(item.subject))}>
+          <button
+            type="button"
+            className="hover:underline"
+            onClick={() => navigate(xiaoPath(item.subject, { chapter: item.chapter_no }))}
+          >
             结束
           </button>
         </div>
@@ -614,10 +763,45 @@ function XiaoQuizCard({
         ) : (
           <div className="space-y-3">
             <p className={cn("text-sm font-medium", ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>
-              {correct ? (ok ? "正确" : `正确答案 ${correct}`) : "这题还没有挂上答案，先看解析"}
+              {correct ? (ok ? `正确 · ${correct}` : `正确答案 ${correct}`) : "这题还没有挂上答案，先看解析"}
             </p>
+            {brief?.status === "ok" && brief.key ? (
+              <XiaoBriefView brief={brief} />
+            ) : correct ? (
+              <div className="space-y-1">
+                <Button size="sm" variant="outline" className="gap-2" onClick={() => void askBrief()} disabled={briefState === "loading"}>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {briefState === "loading" ? "正在抽出关键…" : "看关键"}
+                </Button>
+                {briefState === "needLogin" ? (
+                  <p className="text-xs text-muted-foreground">
+                    <button type="button" className="underline" onClick={() => navigate("/settings")}>
+                      登录
+                    </button>
+                    后可以生成，生成过的题会直接打开。
+                  </p>
+                ) : null}
+                {briefState === "unconfigured" ? (
+                  <p className="text-xs text-muted-foreground">还没配好模型，先看原解析。</p>
+                ) : null}
+                {briefState === "error" ? (
+                  <p className="text-xs text-muted-foreground">这次没抽出关键，可以再点一次。</p>
+                ) : null}
+              </div>
+            ) : null}
             {item.explain ? (
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{item.explain}</p>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:underline"
+                  onClick={() => setShowRaw((open) => !open)}
+                >
+                  {showRaw ? "收起原解析" : "原解析"}
+                </button>
+                {showRaw ? (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{item.explain}</p>
+                ) : null}
+              </div>
             ) : null}
             <div className="flex flex-wrap items-center gap-2">
               {MARKS.map((m) => (

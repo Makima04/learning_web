@@ -218,17 +218,21 @@ export function chapterKey(chapterNo: number | null, chapter: string): string {
   return `${chapterNo ?? "unknown"}:${chapter}`;
 }
 
-export function chaptersForSubject(
-  kps: XiaoKp[],
-  questions: XiaoQuestion[]
-): { chapter_no: number | null; chapter: string; kps: XiaoKp[]; questionCount: number }[] {
+export type XiaoChapterGroup = {
+  chapter_no: number | null;
+  chapter: string;
+  kps: XiaoKp[];
+  questionCount: number;
+};
+
+export function chaptersForSubject(kps: XiaoKp[], questions: XiaoQuestion[]): XiaoChapterGroup[] {
   const questionsByChapter = new Map<string, number>();
   for (const question of questions) {
     const key = chapterKey(question.chapter_no, question.chapter);
     questionsByChapter.set(key, (questionsByChapter.get(key) ?? 0) + 1);
   }
 
-  const groups = new Map<string, { chapter_no: number | null; chapter: string; kps: XiaoKp[]; questionCount: number }>();
+  const groups = new Map<string, XiaoChapterGroup>();
   for (const kp of kps) {
     const key = chapterKey(kp.chapter_no, kp.chapter);
     const group = groups.get(key) ?? {
@@ -250,8 +254,38 @@ export function findKp(kps: XiaoKp[], id: string): XiaoKp | undefined {
   return kps.find((k) => k.id === id);
 }
 
-export function xiaoPath(subject?: XiaoSubject, kpId?: string): string {
-  if (subject && kpId) return `/politics/xiao/${subject}/${encodeURIComponent(kpId)}`;
-  if (subject) return `/politics/xiao/${subject}`;
-  return "/politics/xiao";
+/** 路由里的章号：数字或 unknown（chapter_no 为空时） */
+export function chapterRouteParam(chapterNo: number | null): string {
+  return chapterNo == null ? "unknown" : String(chapterNo);
+}
+
+export function parseChapterRouteParam(raw: string | undefined): number | null | undefined {
+  if (raw == null) return undefined;
+  if (raw === "unknown") return null;
+  if (/^\d+$/.test(raw)) return Number(raw);
+  return undefined;
+}
+
+export function findChapter(
+  chapters: XiaoChapterGroup[],
+  chapterNo: number | null
+): XiaoChapterGroup | undefined {
+  return chapters.find((c) => c.chapter_no === chapterNo);
+}
+
+export function xiaoPath(
+  subject?: XiaoSubject,
+  rest?: string | { chapter?: number | null; kp?: string }
+): string {
+  if (!subject) return "/politics/xiao";
+  if (typeof rest === "string") {
+    return `/politics/xiao/${subject}/${encodeURIComponent(rest)}`;
+  }
+  if (rest?.kp) {
+    return `/politics/xiao/${subject}/${encodeURIComponent(rest.kp)}`;
+  }
+  if (rest && "chapter" in rest) {
+    return `/politics/xiao/${subject}/chapter/${chapterRouteParam(rest.chapter ?? null)}`;
+  }
+  return `/politics/xiao/${subject}`;
 }

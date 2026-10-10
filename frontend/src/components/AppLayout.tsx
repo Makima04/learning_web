@@ -32,13 +32,11 @@ const NAV: {
   label: string;
   icon: typeof BookOpen;
   end?: boolean;
-  /** true = 不占用移动端底部导航的 4 个名额 */
-  mobileHidden?: boolean;
 }[] = [
   { to: "/", label: "学习概览", icon: LayoutDashboard, end: true },
-  { to: "/lists", label: "生熟词表", icon: Bookmark, mobileHidden: true },
+  { to: "/lists", label: "生熟词表", icon: Bookmark },
   { to: "/kg", label: "知识图谱", icon: Network },
-  { to: "/viz", label: "图解 408", icon: Clapperboard, mobileHidden: true },
+  { to: "/viz", label: "图解 408", icon: Clapperboard },
   { to: "/journal", label: "学习日志", icon: NotebookPen },
   { to: "/papers", label: "真题阅读", icon: FileText },
   { to: "/papers-recite", label: "真题记词", icon: LibraryBig },
@@ -74,7 +72,7 @@ export function AppLayout() {
     <div className="min-h-screen bg-background text-foreground md:flex">
       <aside
         className={cn(
-          "hidden md:sticky md:top-0 md:flex h-screen shrink-0 flex-col border-r transition-[width] duration-200",
+          "hidden md:sticky md:top-0 md:flex h-dvh max-h-dvh shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200",
           "bg-[hsl(var(--sidebar))]",
           navCollapsed ? "w-[76px]" : "w-[250px]"
         )}
@@ -93,7 +91,7 @@ export function AppLayout() {
           </NavLink>
         </div>
 
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
           {!navCollapsed && <p className="px-3 py-2 text-xs font-medium text-muted-foreground">学习空间</p>}
           {NAV.filter((item) => item.to !== "/viz" || enableCs408).map((item) => {
             const Icon = item.icon;
@@ -142,7 +140,7 @@ export function AppLayout() {
         </div>
       </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col pb-16 md:pb-0">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col pb-[calc(7.25rem+env(safe-area-inset-bottom))] md:pb-0">
         <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-3 md:hidden">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
@@ -174,10 +172,9 @@ export function AppLayout() {
         <main className="min-h-0 flex-1 overflow-auto"><Outlet /></main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-4 border-t bg-card md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
+        <div className="grid grid-cols-5">
         {NAV.filter((item) => item.to !== "/viz" || enableCs408)
-          .filter((item) => !item.mobileHidden)
-          .slice(0, 4)
           .map((item) => {
           const Icon = item.icon;
           const remembered = hrefForNavRoot(item.to);
@@ -194,16 +191,17 @@ export function AppLayout() {
               end={item.end && href === item.to}
               className={() =>
                 cn(
-                  "flex flex-col items-center justify-center gap-1 text-[11px]",
+                  "flex min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] leading-none",
                   active ? "font-semibold text-primary" : "text-muted-foreground"
                 )
               }
             >
               <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
-              <span className="max-w-full truncate px-1">{item.label.replace("学习", "")}</span>
+              <span className="max-w-full truncate">{item.label.replace("学习", "")}</span>
             </NavLink>
           );
         })}
+        </div>
       </nav>
     </div>
   );

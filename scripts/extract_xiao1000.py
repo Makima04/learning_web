@@ -50,8 +50,14 @@ CHAPTER_RE = re.compile(
 Q_RE = re.compile(r"^(\d{1,3})(?:[\.．、]\s*|\s+)(\S.*)$")
 OPT_RE = re.compile(r"^([A-D])[\.．、，,]\s*(.*)$")
 OPT_INLINE_RE = re.compile(r"([A-D])[\.．、，,]\s*")
+# OCR 会把「答案」认成「答菜 / 答亲」，题号后还可能夹 ’ 。
+# 多选字母之间偶有顿号；末尾的 0 多半是 C（如 B0）。
 ANS_RE = re.compile(
-    r"(\d{1,3})\s*[\.．]?\s*答\s*[案菜]\s*([A-Da-d]{1,4})"
+    r"(\d{1,3})\s*[\.．、'’`]*\s*答\s*[案菜亲]\s*"
+    r"([A-Da-d0](?:\s*[、,，]?\s*[A-Da-d0]){0,3})"
+)
+CORRECT_RE = re.compile(
+    r"简析\s*([A-D](?:\s*[、,，]\s*[A-D]){1,3})\s*正确"
 )
 SRC_RE = re.compile(r"出处\s*精讲\s*P?\s*(\d+)\s*考点\s*(\S+)")
 WATERMARK_RE = re.compile(r"更多考研干货.*|微信公众号.*|一烫")
@@ -321,8 +327,7 @@ def parse_answer_lines(lines: list[str], page_no: int) -> list[dict]:
         if am:
             if cur:
                 recs.append(cur)
-            ans = am.group(2).upper()
-            ans = "".join(ch for ch in ans if ch in "ABCD")
+            ans = normalize_answer_letters(am.group(2))
             cur = {
                 "qno": int(am.group(1)),
                 "answer": ans,
@@ -385,8 +390,39 @@ def extract_answers(force: bool = False) -> list[dict]:
     return all_recs
 
 
+def normalize_answer_letters(raw: str) -> str:
+    """抽出 A–D。OCR 把 C 认成 0 时（如 B0）记成 C。"""
+    chars: list[str] = []
+    for ch in raw.upper():
+        if ch in "ABCD":
+            chars.append(ch)
+        elif ch == "0":
+            chars.append("C")
+    return "".join(dict.fromkeys(chars))
+
+
+def fill_multi_answer_from_explain(rec: dict) -> None:
+    """多选只认出一个字母时，用「简析 B、C正确」补全。"""
+    ans = rec.get("answer") or ""
+    if len(ans) >= 2:
+        return
+    matched = CORRECT_RE.search(rec.get("explain") or "")
+    if not matched:
+        return
+    letters = "".join(dict.fromkeys(ch for ch in matched.group(1) if ch in "ABCD"))
+    if len(letters) < 2:
+        return
+    if ans and not set(ans) < set(letters):
+        return
+    rec["answer"] = "".join(sorted(letters))
+
+
 def split_answer_segments(answers: list[dict]) -> list[list[dict]]:
-    """题号回绕处分段；过短的尾巴并入上一段（解析册翻页造成的假重置）。"""
+    """题号回绕处分段。
+
+    双栏按「先左后右」读时，多选开头的 1、2、3 会和上一栏单选末题挤在同一小段。
+    整段并回上一段会把多选第 1 题的答案盖掉。低题号接到下一段，大题号还给上一段。
+    """
     segments: list[list[dict]] = []
     cur: list[dict] = []
     last = 0
@@ -399,13 +435,26 @@ def split_answer_segments(answers: list[dict]) -> list[list[dict]]:
         last = n
     if cur:
         segments.append(cur)
-    merged: list[list[dict]] = []
-    for seg in segments:
-        if merged and len(seg) < 15:
-            merged[-1].extend(seg)
+
+    fixed: list[list[dict]] = []
+    i = 0
+    while i < len(segments):
+        seg = segments[i]
+        nxt = segments[i + 1] if i + 1 < len(segments) else None
+        if fixed and nxt and len(seg) < 15 and seg and seg[0]["qno"] <= 8:
+            low = [rec for rec in seg if rec["qno"] <= 12]
+            high = [rec for rec in seg if rec["qno"] > 12]
+            if low and low[-1]["qno"] < nxt[0]["qno"] <= low[-1]["qno"] + 3:
+                fixed[-1].extend(high)
+                segments[i + 1] = low + nxt
+                i += 1
+                continue
+        if fixed and len(seg) < 15:
+            fixed[-1].extend(seg)
         else:
-            merged.append(seg)
-    return merged
+            fixed.append(list(seg))
+        i += 1
+    return fixed
 
 
 def attach_source_ref(rec: dict) -> None:
@@ -444,13 +493,93 @@ def merge(questions: list[dict], answers: list[dict]) -> list[dict]:
             rec = amap.get(q["qno"])
             if not rec:
                 continue
-            q["answer"] = rec["answer"]
+            if kind == "multi":
+                fill_multi_answer_from_explain(rec)
+            q["answer"] = "".join(sorted(rec["answer"]))
             q["source_ref"] = rec.get("source_ref") or ""
             q["explain"] = rec.get("explain") or ""
             q["ans_pdf_page"] = rec.get("ans_pdf_page")
             hit += 1
         print(f"  merge {subj} {kind}: {hit}/{len(qs)}")
     return questions
+
+
+def load_answers_from_ocr_txt() -> list[dict]:
+    """从已保存的 answers.ocr.txt 再解析，不必重跑 OCR。"""
+    text = (OUT_DIR / "answers.ocr.txt").read_text(encoding="utf-8")
+    all_recs: list[dict] = []
+    page_no = 0
+    buf: list[str] = []
+
+    def flush() -> None:
+        nonlocal buf
+        if page_no and buf:
+            all_recs.extend(parse_answer_lines(buf, page_no))
+        buf = []
+
+    for ln in text.splitlines():
+        matched = re.match(r"===== p(\d+) =====", ln.strip())
+        if matched:
+            flush()
+            page_no = int(matched.group(1))
+            continue
+        buf.append(ln)
+    flush()
+    return all_recs
+
+
+def repair_public(dry_run: bool = False) -> None:
+    """用修正后的分段，把多选开头被吞掉的答案补回前端题库。"""
+    answers = load_answers_from_ocr_txt()
+    questions = json.loads(PUBLIC.read_text(encoding="utf-8"))
+    snapshot = {
+        q["id"]: {
+            "answer": q.get("answer") or "",
+            "explain": q.get("explain") or "",
+            "source_ref": q.get("source_ref") or "",
+            "ans_pdf_page": q.get("ans_pdf_page"),
+        }
+        for q in questions
+    }
+    merge(questions, answers)
+    changed: list[tuple[str, str, str]] = []
+    for q in questions:
+        old = snapshot[q["id"]]
+        new_ans = "".join(sorted(q.get("answer") or ""))
+        old_ans = "".join(sorted(old["answer"]))
+        if new_ans == old_ans or (not new_ans and old_ans):
+            q["answer"] = old["answer"]
+            q["explain"] = old["explain"]
+            q["source_ref"] = old["source_ref"]
+            if old["ans_pdf_page"] is not None:
+                q["ans_pdf_page"] = old["ans_pdf_page"]
+            elif "ans_pdf_page" in q and old["ans_pdf_page"] is None:
+                q.pop("ans_pdf_page", None)
+            continue
+        q["answer"] = new_ans
+        changed.append((q["id"], old_ans, new_ans))
+    print(f"  answer changes {len(changed)}")
+    for qid, old_ans, new_ans in changed:
+        print(f"    {qid}: {old_ans or '∅'} -> {new_ans}")
+    if dry_run:
+        return
+    PUBLIC.write_text(json.dumps(questions, ensure_ascii=False) + "\n", encoding="utf-8")
+    by_id = {q["id"]: q for q in questions}
+    chunk_dir = PUBLIC.parent / "xiao1000"
+    for path in sorted(chunk_dir.glob("*.json")):
+        pack = json.loads(path.read_text(encoding="utf-8"))
+        for q in pack.get("questions") or []:
+            src = by_id.get(q["id"])
+            if not src:
+                continue
+            for key in ("answer", "explain", "source_ref", "ans_pdf_page"):
+                if key in src:
+                    q[key] = src[key]
+                elif key in q and key not in src:
+                    q.pop(key, None)
+        path.write_text(json.dumps(pack, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        print(f"  chunk {path.name}")
+    print(f"  public {PUBLIC}")
 
 
 def write_public(items: list[dict]) -> None:
@@ -461,9 +590,18 @@ def write_public(items: list[dict]) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", nargs="?", default="questions", choices=["questions", "answers", "merge", "all"])
+    ap.add_argument(
+        "mode",
+        nargs="?",
+        default="questions",
+        choices=["questions", "answers", "merge", "all", "repair"],
+    )
     ap.add_argument("--force-ocr", action="store_true")
+    ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
+    if args.mode == "repair":
+        repair_public(dry_run=args.dry_run)
+        return
     if args.mode in ("questions", "all"):
         extract_questions()
     if args.mode in ("answers", "all"):

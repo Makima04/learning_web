@@ -130,6 +130,7 @@ export default function App() {
           <Route path="politics" element={<PoliticsPage />} />
           <Route path="politics/xiao" element={<PoliticsXiaoPage />} />
           <Route path="politics/xiao/:subject" element={<PoliticsXiaoPage />} />
+          <Route path="politics/xiao/:subject/chapter/:chapterNo" element={<PoliticsXiaoPage />} />
           <Route path="politics/xiao/:subject/:kpId" element={<PoliticsXiaoPage />} />
           <Route path="politics/q/:qid" element={<PoliticsPage />} />
           <Route path="politics/:tab" element={<PoliticsPage />} />

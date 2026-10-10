@@ -580,6 +580,39 @@ export async function putPolitics(politics: Record<string, unknown> | object): P
   });
 }
 
+export interface XiaoBriefOption {
+  k: string;
+  ok: boolean;
+  why: string;
+}
+
+export interface XiaoBriefBody {
+  item_id: string;
+  kind: "single" | "multi";
+  stem: string;
+  options: { k: string; text: string }[];
+  answer: string;
+  explain?: string;
+}
+
+export interface XiaoBriefResult {
+  item_id: string;
+  status: "ok" | "unconfigured" | "error" | string;
+  cached?: boolean;
+  key?: string;
+  trap?: string;
+  options?: XiaoBriefOption[];
+  detail?: string;
+}
+
+export async function xiaoBrief(body: XiaoBriefBody): Promise<XiaoBriefResult> {
+  return req("/api/politics/xiao-brief", {
+    method: "POST",
+    body: JSON.stringify(body),
+    timeoutMs: LONG_TIMEOUT_MS,
+  });
+}
+
 export async function putKg(kg: Record<string, unknown> | object): Promise<{
   ok: boolean;
   skipped?: boolean;

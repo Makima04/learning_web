@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   chaptersForSubject,
+  findChapter,
   hasKpExplain,
   isXiaoDue,
   normalizeXiaoAnswer,
+  parseChapterRouteParam,
   scheduleXiaoReview,
   xiaoPath,
 } from "./xiao";
@@ -15,10 +17,14 @@ describe("xiao helpers", () => {
     expect(normalizeXiaoAnswer("")).toBe("");
   });
 
-  it("builds paths with encoded kp ids", () => {
+  it("builds paths with encoded kp ids and chapter routes", () => {
     expect(xiaoPath()).toBe("/politics/xiao");
     expect(xiaoPath("marx")).toBe("/politics/xiao/marx");
     expect(xiaoPath("marx", "marx.ch1")).toBe("/politics/xiao/marx/marx.ch1");
+    expect(xiaoPath("marx", { kp: "marx.ch1" })).toBe("/politics/xiao/marx/marx.ch1");
+    expect(xiaoPath("marx", { chapter: 1 })).toBe("/politics/xiao/marx/chapter/1");
+    expect(xiaoPath("marx", { chapter: 0 })).toBe("/politics/xiao/marx/chapter/0");
+    expect(xiaoPath("marx", { chapter: null })).toBe("/politics/xiao/marx/chapter/unknown");
   });
 
   it("schedules active recall reviews by confidence", () => {
@@ -47,6 +53,14 @@ describe("xiao helpers", () => {
     expect(hasKpExplain({ explain: undefined })).toBe(false);
     expect(hasKpExplain({ explain: [] })).toBe(false);
     expect(hasKpExplain({ explain: [{ title: "科学性", body: "有根据" }] })).toBe(true);
+  });
+
+  it("parses chapter route params", () => {
+    expect(parseChapterRouteParam(undefined)).toBeUndefined();
+    expect(parseChapterRouteParam("1")).toBe(1);
+    expect(parseChapterRouteParam("0")).toBe(0);
+    expect(parseChapterRouteParam("unknown")).toBeNull();
+    expect(parseChapterRouteParam("abc")).toBeUndefined();
   });
 
   it("groups knowledge points by textbook chapter", () => {
@@ -92,5 +106,7 @@ describe("xiao helpers", () => {
       [1, 1, 0],
       [2, 1, 1],
     ]);
+    expect(findChapter(groups, 2)?.chapter).toBe("第二章 实践与认识及其发展规律");
+    expect(findChapter(groups, null)).toBeUndefined();
   });
 });
