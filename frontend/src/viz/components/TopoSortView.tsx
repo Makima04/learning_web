@@ -152,7 +152,7 @@ function NetSvg({ removed, cur, crit, stage }: { removed?: Set<string>; cur?: st
         return (
           <g key={`${e.a}-${e.b}`} opacity={gone ? 0.25 : 1}>
             <line x1={sx} y1={sy} x2={ex} y2={ey} stroke={isCrit ? C.done : C.line} strokeWidth={isCrit ? 3 : 1.4} markerEnd={isCrit ? "url(#tp-arrow-g)" : "url(#tp-arrow)"} />
-            <text x={(sx + ex) / 2 + 6} y={(sy + ey) / 2 - 4} fontSize={10} fontWeight={700} fill={isCrit ? "#047857" : C.text}>
+            <text x={(sx + ex) / 2 + 6} y={(sy + ey) / 2 - 4} fontSize={10} fontWeight={700} fill={isCrit ? "var(--viz-ink-ok)" : C.text}>
               {e.w}
             </text>
           </g>
@@ -164,8 +164,8 @@ function NetSvg({ removed, cur, crit, stage }: { removed?: Set<string>; cur?: st
         const isCur = cur === v;
         return (
           <g key={v} opacity={gone && !isCur ? 0.4 : 1}>
-            <circle cx={x} cy={y} r={17} fill={isCur ? C.active : gone ? C.done : C.node} stroke="#94a3b8" />
-            <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={isCur || gone ? "#fff" : C.nodeText}>
+            <circle cx={x} cy={y} r={17} fill={isCur ? C.active : gone ? C.done : C.node} stroke="var(--viz-line)" />
+            <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={isCur || gone ? "var(--viz-on)" : C.nodeText}>
               {v}
             </text>
           </g>
@@ -216,9 +216,9 @@ export function TopoSortView() {
           <p className="text-xs text-muted-foreground">入度表</p>
           <div className="flex flex-wrap gap-1.5">
             {AOV_NODES.map((v) => (
-              <div key={v} className={cn("w-11 overflow-hidden rounded-md border border-border text-center", tf.cur === v && "border-sky-500")}>
+              <div key={v} className={cn("w-11 overflow-hidden rounded-md border border-border text-center", tf.cur === v && "border-info")}>
                 <div className="bg-muted text-[10px] text-muted-foreground">V{v}</div>
-                <div className={cn("py-0.5 font-mono text-sm font-bold", tf.indeg[v] === 0 && !tf.removed.has(v) ? "text-emerald-600" : "")}>
+                <div className={cn("py-0.5 font-mono text-sm font-bold", tf.indeg[v] === 0 && !tf.removed.has(v) ? "text-ink-success" : "")}>
                   {tf.indeg[v]}
                 </div>
               </div>
@@ -232,7 +232,7 @@ export function TopoSortView() {
           <p className="text-xs text-muted-foreground">事件双表（ve 最早 / vl 最迟；相等的事件在关键路径上）</p>
           <div className="flex flex-wrap gap-1.5">
             {AOV_NODES.map((v) => (
-              <div key={v} className={cn("w-16 overflow-hidden rounded-md border border-border text-center", cf.hiNode === v && "border-sky-500")}>
+              <div key={v} className={cn("w-16 overflow-hidden rounded-md border border-border text-center", cf.hiNode === v && "border-info")}>
                 <div className="bg-muted text-[10px] text-muted-foreground">V{v}</div>
                 <div className="py-0.5 font-mono text-xs font-bold">
                   {cf.ve[v] ?? "·"} / {cf.vl[v] ?? "·"}

@@ -461,7 +461,7 @@ export function ReaderPage() {
   if (!reader) {
     if (hydrateFailed) return null;
     return (
-      <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-[calc(100dvh_-_4rem_-_var(--nav-reserve,0px))] md:h-[calc(100vh-4rem)] items-center justify-center text-sm text-muted-foreground">
         正在载入篇章…
       </div>
     );
@@ -473,7 +473,7 @@ export function ReaderPage() {
   const transAction = readerTransAction(loading, activeZh != null, activeErr != null);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] min-h-0">
+    <div className="flex flex-col h-[calc(100dvh_-_4rem_-_var(--nav-reserve,0px))] md:h-[calc(100vh-4rem)] min-h-0">
       <header className="flex items-center gap-2 px-3 py-2 border-b shrink-0">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           ‹
@@ -490,7 +490,7 @@ export function ReaderPage() {
       {/* 左右分栏：小屏上下叠 */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
         {/* 左：原文 + 选择题 */}
-        <div className="flex-1 min-h-0 overflow-auto border-b lg:border-b-0 lg:border-r">
+        <div className="flex-1 min-h-0 overflow-auto border-b-2 border-border/60 bg-card lg:border-b-0 lg:border-r-2">
           <div className="p-4 md:p-8 max-w-3xl mx-auto w-full">
             <div
               className="reader-body text-[1.08rem] leading-[1.95] tracking-[0.01em]"
@@ -548,7 +548,7 @@ export function ReaderPage() {
                   return (
                     <div
                       key={it.n}
-                      className="rounded-lg border bg-card p-3 md:p-4 space-y-2"
+                      className="rounded-2xl bg-card p-3 shadow-edge md:p-4 space-y-2"
                     >
                       <div className="font-medium text-sm leading-relaxed">
                         <span className="text-primary tnum mr-1.5">{it.n}.</span>
@@ -565,7 +565,7 @@ export function ReaderPage() {
                             "border-transparent bg-muted/40 hover:bg-muted";
                           if (open && isAns)
                             tone =
-                              "border-emerald-500/60 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100";
+                              "border-success/60 bg-success/10 text-ink-success";
                           else if (open && isPick && !isAns)
                             tone =
                               "border-destructive/50 bg-destructive/10 text-destructive";
@@ -633,7 +633,7 @@ export function ReaderPage() {
         </div>
 
         {/* 右：译文 / 解析 */}
-        <aside className="lg:w-[min(420px,40%)] shrink-0 flex flex-col min-h-[40vh] lg:min-h-0 border-t lg:border-t-0 bg-muted/20">
+        <aside className="lg:w-[min(420px,40%)] shrink-0 flex flex-col h-[42%] lg:h-auto border-t lg:border-t-0 bg-muted/20">
           <div className="flex items-center gap-1 px-3 py-2 border-b shrink-0">
             <Button
               size="sm"
@@ -663,20 +663,20 @@ export function ReaderPage() {
             )}
           </div>
 
-          <div className="flex-1 overflow-auto p-4 space-y-4">
+          <div className="min-h-0 flex-1 overflow-auto p-4 space-y-4">
             {rightTab === "trans" && (
               <>
                 <div className="text-xs text-muted-foreground">
                   第 {sentences.length ? active + 1 : 0} / {sentences.length} 句
                   · 点左侧句子自动出译 · 空格下一句
                 </div>
-                <div className="rounded-lg border bg-background p-3 text-sm leading-relaxed">
+                <div className="rounded-lg border-2 border-border/70 bg-background p-3 text-sm leading-relaxed">
                   <div className="text-muted-foreground text-xs mb-2">原文</div>
                   <p className="whitespace-pre-wrap">
                     {sentences[active] || "（无原文）"}
                   </p>
                 </div>
-                <div className="rounded-lg border bg-background p-3 text-sm leading-relaxed min-h-[5rem]">
+                <div className="rounded-lg border-2 border-border/70 bg-background p-3 text-sm leading-relaxed min-h-[5rem]">
                   <div className="text-muted-foreground text-xs mb-2">中文</div>
                   {loading && activeZh == null ? (
                     <p className="text-muted-foreground">正在请求翻译…</p>
@@ -706,7 +706,7 @@ export function ReaderPage() {
                   尚无逐题文字解析时，右侧汇总作答与答案键。
                 </div>
                 {score && (
-                  <div className="rounded-lg border bg-background p-3 text-sm">
+                  <div className="rounded-lg border-2 border-border/70 bg-background p-3 text-sm">
                     <div className="font-medium mb-1">作答进度</div>
                     <div className="text-muted-foreground tnum">
                       已答 {score.answered} / {score.total}
@@ -734,7 +734,7 @@ export function ReaderPage() {
                         key={it.n}
                         className={cn(
                           "rounded-md border px-3 py-2 text-sm",
-                          ok && "border-emerald-500/40 bg-emerald-500/5",
+                          ok && "border-success/40 bg-success/5",
                           bad && "border-destructive/40 bg-destructive/5"
                         )}
                       >
@@ -750,7 +750,7 @@ export function ReaderPage() {
                                   className={cn(
                                     "text-xs",
                                     ok
-                                      ? "text-emerald-700 dark:text-emerald-300"
+                                      ? "text-ink-success"
                                       : "text-destructive"
                                   )}
                                 >

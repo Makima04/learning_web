@@ -59,8 +59,8 @@ function CollisionTimeline() {
     <svg viewBox={`0 0 ${w} 168`} className="w-full">
       <text x={20} y={30} fontSize={11} fontWeight={700} fill={C.nodeText}>A</text>
       <text x={20} y={110} fontSize={11} fontWeight={700} fill={C.nodeText}>B</text>
-      <line x1={40} y1={30} x2={w - 20} y2={30} stroke="#cbd5e1" />
-      <line x1={40} y1={110} x2={w - 20} y2={110} stroke="#cbd5e1" />
+      <line x1={40} y1={30} x2={w - 20} y2={30} stroke="var(--viz-line-soft)" />
+      <line x1={40} y1={110} x2={w - 20} y2={110} stroke="var(--viz-line-soft)" />
       {/* A 的信号向右 */}
       <line x1={x(0)} y1={30} x2={x(TAU)} y2={110} stroke={C.active} strokeWidth={2} />
       {/* B 的信号向左（t=τ−ε 起） */}
@@ -70,17 +70,17 @@ function CollisionTimeline() {
       <text x={x(TAU)} y={134} textAnchor="middle" fontSize={10} fill={C.bad}>t=τ 冲突！B 停发+jam</text>
       {/* jam 传回 A */}
       <line x1={x(TAU)} y1={110} x2={x(CONTENTION)} y2={30} stroke={C.warn} strokeWidth={2} strokeDasharray="5 3" />
-      <text x={x(CONTENTION)} y={22} textAnchor="middle" fontSize={10} fill="#b45309">t=2τ A 才发现</text>
+      <text x={x(CONTENTION)} y={22} textAnchor="middle" fontSize={10} fill="var(--viz-ink-warn)">t=2τ A 才发现</text>
       {/* 刻度 */}
       {[0, TAU, CONTENTION].map((t) => (
         <g key={t}>
-          <line x1={x(t)} y1={26} x2={x(t)} y2={34} stroke="#94a3b8" />
-          <line x1={x(t)} y1={106} x2={x(t)} y2={114} stroke="#94a3b8" />
+          <line x1={x(t)} y1={26} x2={x(t)} y2={34} stroke="var(--viz-line)" />
+          <line x1={x(t)} y1={106} x2={x(t)} y2={114} stroke="var(--viz-line)" />
           <text x={x(t)} y={158} textAnchor="middle" fontSize={9} fill={C.text}>{t.toFixed(0)}µs</text>
         </g>
       ))}
-      <text x={x(TAU / 2)} y={70} textAnchor="middle" fontSize={9} fill="#0369a1">A 的信号 →</text>
-      <text x={x(TAU * 1.5)} y={96} textAnchor="middle" fontSize={9} fill="#b45309">← jam 回传</text>
+      <text x={x(TAU / 2)} y={70} textAnchor="middle" fontSize={9} fill="var(--viz-ink-info)">A 的信号 →</text>
+      <text x={x(TAU * 1.5)} y={96} textAnchor="middle" fontSize={9} fill="var(--viz-ink-warn)">← jam 回传</text>
     </svg>
   );
 }
@@ -95,7 +95,7 @@ export function CsmaView() {
       {fr.show === "collision" && <CollisionTimeline />}
       {fr.show === "minframe" && (
         <div className="rounded-xl border border-dashed p-4 text-center font-mono text-sm">
-          最小帧长 = 2τ × R ÷ 8 = 512bit × 10Mb/s 口径 = <b className="text-sky-600">{minFrameLen(10)} B</b>
+          最小帧长 = 2τ × R ÷ 8 = 512bit × 10Mb/s 口径 = <b className="text-ink-info">{minFrameLen(10)} B</b>
         </div>
       )}
       {fr.show === "backoff" && (

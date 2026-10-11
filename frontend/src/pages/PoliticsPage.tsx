@@ -193,7 +193,7 @@ function QuestionList() {
             <Link
               key={q.id}
               to={`/politics/q/${q.id}`}
-              className="block rounded-xl border bg-card p-4 transition hover:border-primary/40 hover:bg-accent/40"
+              className="block rounded-2xl border-2 border-transparent bg-card p-4 shadow-edge transition hover:border-primary/40 hover:bg-accent/40"
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm font-semibold">
@@ -369,7 +369,7 @@ function PracticeView({ question, onBack }: { question: PoliticsQuestion; onBack
               {shown && (
                 <div className="space-y-3 rounded-md border border-dashed p-3">
                   {auto.missingMaterial && (
-                    <p className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-300">
+                    <p className="flex items-start gap-2 text-sm text-ink-warning">
                       <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
                       没摘到材料关键词，这一问最多只能拿到原理分。把「{p.materialHints[0]}」写进分析里。
                     </p>
@@ -439,7 +439,7 @@ function MethodPanel() {
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
           {METHOD_STEPS.map((s, i) => (
-            <div key={s.title} className="rounded-lg border p-3">
+            <div key={s.title} className="rounded-lg border-2 border-border/70 p-3">
               <p className="text-sm font-medium">
                 {i + 1}. {s.title}
               </p>
@@ -495,12 +495,12 @@ function MethodPanel() {
         <CardContent className="space-y-3 pb-4 text-sm leading-7">
           <p className="text-muted-foreground">{BAD_VS_GOOD.prompt}</p>
           <div>
-            <p className="font-medium text-rose-700 dark:text-rose-300">低分</p>
+            <p className="font-medium text-ink-danger">低分</p>
             <p className="mt-1">{BAD_VS_GOOD.bad}</p>
             <p className="mt-1 text-xs text-muted-foreground">{BAD_VS_GOOD.badWhy}</p>
           </div>
           <div>
-            <p className="font-medium text-emerald-700 dark:text-emerald-300">高分</p>
+            <p className="font-medium text-ink-success">高分</p>
             <p className="mt-1">{BAD_VS_GOOD.good}</p>
             <p className="mt-1 text-xs text-muted-foreground">{BAD_VS_GOOD.goodWhy}</p>
           </div>
@@ -534,7 +534,7 @@ function LogPanel() {
           <Link
             key={a.id}
             to={`/politics/q/${a.questionId}`}
-            className="block rounded-xl border bg-card p-4 transition hover:border-primary/40"
+            className="block rounded-2xl border-2 border-transparent bg-card p-4 shadow-edge transition hover:border-primary/40"
           >
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-sm font-medium">

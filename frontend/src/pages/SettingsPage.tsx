@@ -596,9 +596,9 @@ export function SettingsPage() {
                     <p>
                       状态：
                       {llm.configured ? (
-                        <span className="text-emerald-600">已配置</span>
+                        <span className="text-ink-success">已配置</span>
                       ) : (
-                        <span className="text-amber-600">未配置（需填写网关 URL 与 Key）</span>
+                        <span className="text-ink-warning">未配置（需填写网关 URL 与 Key）</span>
                       )}
                     </p>
                     <p>
@@ -739,11 +739,11 @@ export function SettingsPage() {
                       <p>
                         进度同步：
                         {syncStatus.pending ? (
-                          <span className="text-amber-600">有待上传</span>
+                          <span className="text-ink-warning">有待上传</span>
                         ) : syncStatus.lastError ? (
                           <span className="text-destructive">失败</span>
                         ) : (
-                          <span className="text-emerald-600">正常</span>
+                          <span className="text-ink-success">正常</span>
                         )}
                       </p>
                       {syncStatus.lastOkAt && (

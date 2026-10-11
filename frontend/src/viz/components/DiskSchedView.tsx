@@ -88,10 +88,10 @@ function Axis({ path, step }: { path: number[]; step: number }) {
   const cur = path[step]!;
   return (
     <svg viewBox="0 0 500 130" className="w-full">
-      <line x1={30} y1={90} x2={470} y2={90} stroke="#94a3b8" strokeWidth={1.5} />
+      <line x1={30} y1={90} x2={470} y2={90} stroke="var(--viz-line)" strokeWidth={1.5} />
       {[0, 50, 100, 150, 199].map((t) => (
         <g key={t}>
-          <line x1={x(t)} y1={86} x2={x(t)} y2={94} stroke="#94a3b8" />
+          <line x1={x(t)} y1={86} x2={x(t)} y2={94} stroke="var(--viz-line)" />
           <text x={x(t)} y={106} textAnchor="middle" fontSize={9} fill={C.text}>{t}</text>
         </g>
       ))}
@@ -106,7 +106,7 @@ function Axis({ path, step }: { path: number[]; step: number }) {
       {REQS.map((req) => {
         const served = path.slice(1, step + 1).includes(req);
         return (
-          <circle key={req} cx={x(req)} cy={90} r={5} fill={served ? C.done : "#fff"} stroke={served ? C.done : "#94a3b8"} strokeWidth={1.5} />
+          <circle key={req} cx={x(req)} cy={90} r={5} fill={served ? C.done : "var(--viz-node)"} stroke={served ? C.done : "var(--viz-line)"} strokeWidth={1.5} />
         );
       })}
       {/* 当前磁头 */}

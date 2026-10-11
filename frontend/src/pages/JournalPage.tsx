@@ -183,7 +183,7 @@ export function JournalPage() {
             <Download className="h-4 w-4" />
             导出
           </Button>
-          <div className="flex flex-col items-end gap-0.5 rounded-lg border bg-card px-3 py-2 text-sm">
+          <div className="flex flex-col items-end gap-0.5 rounded-lg bg-card px-3 py-2 text-sm shadow-edge-sm">
             <div className="flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-primary" />
               <span>
@@ -230,7 +230,7 @@ export function JournalPage() {
           {!hasTodayWork ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-                <Check className="h-8 w-8 text-emerald-500" />
+                <Check className="h-8 w-8 text-ink-success" />
                 <div>
                   <p className="font-medium">
                     {hasDeferred ? "今日复盘额度已排满" : "今日没有到期复盘"}
@@ -365,10 +365,10 @@ export function JournalPage() {
                         type="button"
                         onClick={() => setKind(k)}
                         className={cn(
-                          "rounded-lg border px-3 py-2 text-sm",
+                          "rounded-lg border-2 border-border/70 px-3 py-2 text-sm",
                           kind === k
                             ? k === "mistake"
-                              ? "border-rose-500 bg-rose-50 text-rose-800 dark:bg-rose-400/10 dark:text-rose-200"
+                              ? "border-destructive bg-destructive/10 text-ink-danger"
                               : "border-primary bg-primary/10 text-primary"
                             : "hover:bg-muted"
                         )}
@@ -493,16 +493,16 @@ export function JournalPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-lg border p-3 text-center">
+                <div className="rounded-lg border-2 border-border/70 p-3 text-center">
                   <div className="text-2xl font-semibold">{weeklyStats.created}</div>
                   <div className="text-xs text-muted-foreground">新建</div>
                 </div>
-                <div className="rounded-lg border p-3 text-center">
+                <div className="rounded-lg border-2 border-border/70 p-3 text-center">
                   <div className="text-2xl font-semibold">{weeklyStats.reviewed}</div>
                   <div className="text-xs text-muted-foreground">复盘次数</div>
                 </div>
-                <div className="rounded-lg border p-3 text-center">
-                  <div className="text-2xl font-semibold text-rose-600 dark:text-rose-400">
+                <div className="rounded-lg border-2 border-border/70 p-3 text-center">
+                  <div className="text-2xl font-semibold text-ink-danger">
                     {weeklyStats.failed}
                   </div>
                   <div className="text-xs text-muted-foreground">回退/忘了</div>
@@ -536,7 +536,7 @@ export function JournalPage() {
                     {weeklyStats.topFailTitles.map((row) => (
                       <li key={row.title}>
                         {row.title}
-                        <span className="ml-2 text-rose-600 dark:text-rose-400">
+                        <span className="ml-2 text-ink-danger">
                           ×{row.fails}
                         </span>
                       </li>

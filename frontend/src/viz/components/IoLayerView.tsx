@@ -62,7 +62,7 @@ export function IoLayerView() {
           key={l.name}
           className={cn(
             "flex items-center gap-3 rounded-xl border p-3 transition",
-            fr.hot === i ? "border-sky-500 bg-sky-500/5 ring-2 ring-sky-500" : "border-border"
+            fr.hot === i ? "border-info bg-info/5 ring-2 ring-info" : "border-border"
           )}
         >
           <span className="w-32 shrink-0 text-sm font-semibold">{l.name}</span>

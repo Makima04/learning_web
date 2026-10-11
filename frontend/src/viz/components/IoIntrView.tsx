@@ -78,7 +78,7 @@ function Timeline({ mode }: { mode: "query" | "intr" }) {
                 key={i}
                 className={cn(
                   "h-6 flex-1 rounded-sm",
-                  busy ? "bg-emerald-500" : poll ? "bg-amber-300" : "bg-muted"
+                  busy ? "bg-success" : poll ? "bg-warning/40" : "bg-muted"
                 )}
                 title={busy ? "处理数据" : poll ? "轮询等待" : "跑其他程序"}
               />
@@ -90,7 +90,7 @@ function Timeline({ mode }: { mode: "query" | "intr" }) {
         <span className="w-16 text-muted-foreground">设备</span>
         <div className="flex flex-1 gap-0.5">
           {Array.from({ length: segs }, (_, i) => (
-            <div key={i} className="h-6 flex-1 rounded-sm bg-sky-400" title="准备数据" />
+            <div key={i} className="h-6 flex-1 rounded-sm bg-info" title="准备数据" />
           ))}
         </div>
       </div>
@@ -116,11 +116,11 @@ export function IoIntrView() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border p-3 text-center">
             <p className="text-xs text-muted-foreground">查询：CPU 占用</p>
-            <p className="font-mono text-lg font-bold text-amber-600">{COST.queryCpuUs} µs</p>
+            <p className="font-mono text-lg font-bold text-ink-warning">{COST.queryCpuUs} µs</p>
           </div>
           <div className="rounded-xl border p-3 text-center">
             <p className="text-xs text-muted-foreground">中断：CPU 占用</p>
-            <p className="font-mono text-lg font-bold text-emerald-600">{COST.intrCpuUs} µs</p>
+            <p className="font-mono text-lg font-bold text-ink-success">{COST.intrCpuUs} µs</p>
           </div>
         </div>
       )}

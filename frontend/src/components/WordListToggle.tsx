@@ -22,7 +22,7 @@ export function WordListToggle({
         className={cn(
           "rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors",
           kind === "new"
-            ? "border-amber-500/50 bg-amber-500/15 text-amber-800 dark:text-amber-300"
+            ? "border-warning/50 bg-warning/15 text-ink-warning"
             : "border-transparent bg-muted/70 text-muted-foreground hover:text-foreground"
         )}
         onClick={() => setKind(idx, "new")}
@@ -35,7 +35,7 @@ export function WordListToggle({
         className={cn(
           "rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors",
           kind === "known"
-            ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300"
+            ? "border-success/50 bg-success/15 text-ink-success"
             : "border-transparent bg-muted/70 text-muted-foreground hover:text-foreground"
         )}
         onClick={() => setKind(idx, "known")}

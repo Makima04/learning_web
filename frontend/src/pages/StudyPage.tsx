@@ -435,15 +435,15 @@ export function StudyPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-8rem)] flex-col overflow-hidden md:h-[calc(100vh-4rem)]">
-      <header className="flex shrink-0 items-center gap-3 border-b px-3 py-2">
+    <div className="flex h-[calc(100dvh_-_4rem_-_var(--nav-reserve,0px))] flex-col overflow-hidden md:h-[calc(100vh-4rem)]">
+      <header className="flex shrink-0 items-center gap-3 border-b-2 border-border/60 px-3 py-2">
         <Button variant="ghost" size="icon" onClick={() => { resetSession(); navigate("/"); }}>‹</Button>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${bar.percent}%` }} /></div>
+        <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary-bright transition-all" style={{ width: `${bar.percent}%` }} /></div>
         {wordIdx != null ? <WordListToggle idx={wordIdx} /> : null}
         <div className="shrink-0 text-sm text-muted-foreground tnum">{bar.done} / {bar.total}</div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden p-4 md:justify-center md:p-8">
-        <div className="min-h-0 max-h-full w-full max-w-lg overflow-y-auto overscroll-contain rounded-xl border bg-card shadow-sm md:max-w-2xl">{body}</div>
+        <div className="min-h-0 max-h-full w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl bg-card shadow-edge md:max-w-2xl">{body}</div>
       </div>
       <div className="shrink-0 border-t bg-background p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">{controls}</div>
       {pop && (
@@ -602,7 +602,7 @@ function SettleView({
   );
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-8rem)] w-full max-w-lg flex-col gap-3 p-4 md:h-[calc(100vh-4rem)] md:max-w-2xl md:gap-4 md:p-6">
+    <div className="mx-auto flex h-[calc(100dvh_-_4rem_-_var(--nav-reserve,0px))] w-full max-w-lg flex-col gap-3 p-4 md:h-[calc(100vh-4rem)] md:max-w-2xl md:gap-4 md:p-6">
       <div className="flex shrink-0 flex-col items-center gap-1 pt-1 text-center">
         <div className="text-3xl md:text-4xl" aria-hidden>
           {isPassageBrowse ? "📖" : isSessionEnd ? "🎉" : "✅"}
@@ -621,7 +621,7 @@ function SettleView({
       </div>
 
       {words.length > 0 ? (
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border bg-card shadow-sm">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-card shadow-edge">
           <ul className="divide-y">
             {words.map((w, i) => {
               const showCn = !mask || revealed.has(w.idx);
@@ -663,7 +663,7 @@ function SettleView({
           </ul>
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
+        <div className="flex min-h-0 flex-1 items-center justify-center rounded-2xl border-2 border-dashed text-sm text-muted-foreground">
           {isSessionEnd ? "没有待回顾的词" : "本组无词"}
         </div>
       )}
@@ -840,6 +840,29 @@ function relearnBody(
   );
 }
 
+const ACTION_TONE = {
+  good: "bg-success text-success-foreground shadow-edge-success",
+  hard: "bg-warning text-warning-foreground shadow-edge-warning",
+  again: "bg-destructive text-destructive-foreground shadow-edge-destructive",
+} as const;
+
 function ActionRow({ columns, actions }: { columns: string; actions: { key: string; label: string; onClick: () => void; tone?: "good" | "hard" | "again" }[] }) {
-  return <div className={cn("mx-auto grid max-w-lg gap-2 md:max-w-2xl", columns)}>{actions.map((action) => <button key={action.key + action.label} type="button" onClick={action.onClick} className={cn("flex flex-col items-center gap-0.5 rounded-lg border px-2 py-3 transition-colors hover:bg-accent", action.tone === "good" && "hover:border-emerald-400", action.tone === "hard" && "hover:border-amber-400", action.tone === "again" && "hover:border-red-400")}><span className="text-xs text-muted-foreground">{action.key}</span><span className="text-sm font-medium">{action.label}</span></button>)}</div>;
+  return (
+    <div className={cn("mx-auto grid max-w-lg gap-2.5 md:max-w-2xl", columns)}>
+      {actions.map((action) => (
+        <button
+          key={action.key + action.label}
+          type="button"
+          onClick={action.onClick}
+          className={cn(
+            "flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2.5 transition-[transform,box-shadow,filter] hover:brightness-105 active:translate-y-[3px] active:shadow-none",
+            action.tone ? ACTION_TONE[action.tone] : "bg-primary text-primary-foreground shadow-edge-primary"
+          )}
+        >
+          <span className="text-[11px] font-semibold opacity-70">{action.key}</span>
+          <span className="text-sm font-bold">{action.label}</span>
+        </button>
+      ))}
+    </div>
+  );
 }

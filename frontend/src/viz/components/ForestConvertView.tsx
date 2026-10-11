@@ -131,8 +131,8 @@ function TreeSvg({ done, cur }: { done: string[]; cur?: string }) {
         const on = done.includes(id);
         return (
           <g key={id} opacity={done.length && !on ? 0.5 : 1}>
-            <circle cx={x} cy={y} r={15} fill={cur === id ? C.active : on ? C.done : C.node} stroke="#94a3b8" />
-            <text x={x} y={y + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill={cur === id || on ? "#fff" : C.nodeText}>
+            <circle cx={x} cy={y} r={15} fill={cur === id ? C.active : on ? C.done : C.node} stroke="var(--viz-line)" />
+            <text x={x} y={y + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill={cur === id || on ? "var(--viz-on)" : C.nodeText}>
               {id}
             </text>
           </g>
@@ -165,8 +165,8 @@ function BiSvg({ done, cur }: { done: string[]; cur?: string }) {
         const on = done.includes(id);
         return (
           <g key={id} opacity={done.length && !on ? 0.5 : 1}>
-            <circle cx={x} cy={y} r={15} fill={cur === id ? C.active : on ? C.done : C.node} stroke="#94a3b8" />
-            <text x={x} y={y + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill={cur === id || on ? "#fff" : C.nodeText}>
+            <circle cx={x} cy={y} r={15} fill={cur === id ? C.active : on ? C.done : C.node} stroke="var(--viz-line)" />
+            <text x={x} y={y + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill={cur === id || on ? "var(--viz-on)" : C.nodeText}>
               {id}
             </text>
           </g>

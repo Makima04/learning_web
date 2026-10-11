@@ -129,8 +129,8 @@ export function DpView() {
                     key={j}
                     className={cn(
                       "border border-border p-1",
-                      pathKeys.has(`${i}-${j}`) && "bg-emerald-500/30 font-bold",
-                      fr.row === i && j > 0 && !pathKeys.has(`${i}-${j}`) && "bg-sky-500/20",
+                      pathKeys.has(`${i}-${j}`) && "bg-success/30 font-bold",
+                      fr.row === i && j > 0 && !pathKeys.has(`${i}-${j}`) && "bg-info/20",
                       v === -1 && "text-transparent"
                     )}
                   >

@@ -150,10 +150,10 @@ export function CacheView() {
         <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2 font-mono text-xs">
           <span>块 {cur.block}</span>
           <span className="text-muted-foreground">地址 {cur.addr.toString(2).padStart(8, "0")}₂ =</span>
-          <span className="rounded bg-violet-500/25 px-1.5 py-0.5 font-bold">{Math.floor(cur.block / sets).toString(2).padStart(8 - 2 - Math.log2(sets), "0")}ᴛ</span>
-          <span className="rounded bg-emerald-500/25 px-1.5 py-0.5 font-bold">{(mode === "direct" ? cur.block % 4 : mode === "set2" ? cur.block % 2 : 0).toString(2).padStart(Math.log2(sets), "0")}ᵢ</span>
-          <span className="rounded bg-amber-500/25 px-1.5 py-0.5 font-bold">00ₒ</span>
-          <span className={cn("rounded px-1.5 py-0.5 font-bold", cur.hit ? "bg-emerald-600 text-white" : "bg-rose-500 text-white")}>
+          <span className="rounded bg-app-purple/25 px-1.5 py-0.5 font-bold">{Math.floor(cur.block / sets).toString(2).padStart(8 - 2 - Math.log2(sets), "0")}ᴛ</span>
+          <span className="rounded bg-success/25 px-1.5 py-0.5 font-bold">{(mode === "direct" ? cur.block % 4 : mode === "set2" ? cur.block % 2 : 0).toString(2).padStart(Math.log2(sets), "0")}ᵢ</span>
+          <span className="rounded bg-warning/25 px-1.5 py-0.5 font-bold">00ₒ</span>
+          <span className={cn("rounded px-1.5 py-0.5 font-bold", cur.hit ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground")}>
             {cur.hit ? "命中" : "失效"} → {cur.where}
           </span>
         </div>
@@ -166,7 +166,7 @@ export function CacheView() {
           {fr.sim.slots.map((t, i) => {
             const isCur = cur && t === cur.block && (mode === "direct" ? i === cur.block % 4 : mode === "set2" ? Math.floor(i / 2) === cur.block % 2 : true);
             return (
-              <div key={i} className={cn("w-16 overflow-hidden rounded-md border text-center", isCur ? "border-emerald-600" : "border-border")}>
+              <div key={i} className={cn("w-16 overflow-hidden rounded-md border text-center", isCur ? "border-success" : "border-border")}>
                 <div className="bg-muted text-[10px] text-muted-foreground">
                   {mode === "direct" ? `行 ${i}` : mode === "set2" ? `组 ${Math.floor(i / 2)}·路 ${i % 2}` : `行 ${i}`}
                 </div>
@@ -182,7 +182,7 @@ export function CacheView() {
             key={k}
             className={cn(
               "w-10 rounded border py-0.5 text-center font-mono text-xs font-bold",
-              k >= fr.upto ? "border-border text-muted-foreground/50" : fr.sim.accesses[k]?.hit ? "border-emerald-600 bg-emerald-600/15 text-emerald-700 dark:text-emerald-400" : "border-rose-500 bg-rose-500/15 text-rose-600 dark:text-rose-400"
+              k >= fr.upto ? "border-border text-muted-foreground/50" : fr.sim.accesses[k]?.hit ? "border-success bg-success/15 text-ink-success" : "border-destructive bg-destructive/15 text-ink-danger"
             )}
           >
             {b}

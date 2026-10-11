@@ -160,8 +160,8 @@ export function BankerView() {
               <tr
                 key={name}
                 className={cn(
-                  fr.finished.includes(name) && !fr.reqMode && "bg-emerald-500/10",
-                  fr.reqMode && BK_REQUEST.p === i && "bg-amber-500/10"
+                  fr.finished.includes(name) && !fr.reqMode && "bg-success/10",
+                  fr.reqMode && BK_REQUEST.p === i && "bg-warning/10"
                 )}
               >
                 <td className="border border-border p-1.5 font-bold">{name}</td>
@@ -176,7 +176,7 @@ export function BankerView() {
       <div className="flex flex-wrap gap-2 text-xs">
         <span className="rounded border border-border bg-muted/40 px-2 py-1 font-mono">Work/Available：{fmt(fr.work)}</span>
         {fr.seq.length > 0 && (
-          <span className="rounded border border-emerald-600 bg-emerald-500/10 px-2 py-1 font-mono">
+          <span className="rounded border border-success bg-success/10 px-2 py-1 font-mono">
             安全序列：{fr.seq.join("→")}
           </span>
         )}

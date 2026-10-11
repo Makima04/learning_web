@@ -105,8 +105,8 @@ export function BtPropsView() {
           const m = fr.mark[id];
           return (
             <g key={id}>
-              <circle cx={nd.x} cy={nd.y} r={17} fill={m ? FILL[m] : C.node} stroke="#94a3b8" />
-              <text x={nd.x} y={nd.y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={m ? "#fff" : C.nodeText}>
+              <circle cx={nd.x} cy={nd.y} r={17} fill={m ? FILL[m] : C.node} stroke="var(--viz-line)" />
+              <text x={nd.x} y={nd.y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={m ? "var(--viz-on)" : C.nodeText}>
                 {id}
               </text>
               {fr.hi?.includes(id) && (

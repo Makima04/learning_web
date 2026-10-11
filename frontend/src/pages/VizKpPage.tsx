@@ -20,8 +20,8 @@ import {
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
-  { id: "fuzzy", label: "模糊", cls: "bg-amber-500 text-white" },
-  { id: "pass", label: "会", cls: "bg-emerald-600 text-white" },
+  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
+  { id: "pass", label: "会", cls: "bg-success text-success-foreground" },
   { id: "skip", label: "跳过", cls: "bg-muted text-muted-foreground" },
 ];
 
@@ -174,7 +174,7 @@ export function VizKpPage() {
                 key={m.id}
                 type="button"
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-medium",
+                  "rounded-full px-4 py-1.5 text-xs font-bold transition-[transform,box-shadow,filter] active:translate-y-[2px]",
                   m.cls,
                   st?.lastMark === m.id && "ring-2 ring-offset-2 ring-primary"
                 )}

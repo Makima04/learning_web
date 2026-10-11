@@ -194,7 +194,7 @@ function StackEvalDemo({ mode }: { mode: Mode }) {
                   key={i}
                   className="grid h-8 place-items-center rounded-md font-mono text-sm font-bold text-white"
                   style={{
-                    background: i === fr.stack.length - 1 ? C.active : "#64748b",
+                    background: i === fr.stack.length - 1 ? C.active : "var(--viz-text)",
                   }}
                 >
                   {s}

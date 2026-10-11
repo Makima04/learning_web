@@ -113,11 +113,11 @@ export function TcpView() {
         {/* 生命线 */}
         <text x={X_C} y={22} textAnchor="middle" fontSize={12} fontWeight={700} fill={C.nodeText}>客户端</text>
         <text x={X_S} y={22} textAnchor="middle" fontSize={12} fontWeight={700} fill={C.nodeText}>服务器</text>
-        <line x1={X_C} y1={30} x2={X_C} y2={H - 8} stroke="#94a3b8" />
-        <line x1={X_S} y1={30} x2={X_S} y2={H - 8} stroke="#94a3b8" />
+        <line x1={X_C} y1={30} x2={X_C} y2={H - 8} stroke="var(--viz-line)" />
+        <line x1={X_S} y1={30} x2={X_S} y2={H - 8} stroke="var(--viz-line)" />
         {/* 状态标签 */}
-        <text x={X_C - 6} y={H - 14} textAnchor="end" fontSize={10} fontWeight={700} fill="#0ea5e9">{fr.cState}</text>
-        <text x={X_S + 6} y={H - 14} fontSize={10} fontWeight={700} fill="#10b981">{fr.sState}</text>
+        <text x={X_C - 6} y={H - 14} textAnchor="end" fontSize={10} fontWeight={700} fill="var(--viz-active)">{fr.cState}</text>
+        <text x={X_S + 6} y={H - 14} fontSize={10} fontWeight={700} fill="var(--viz-done)">{fr.sState}</text>
         {/* 报文箭头 */}
         {fr.packets.map((pk, i) => {
           const from = pk.dir === "c2s" ? X_C : X_S;

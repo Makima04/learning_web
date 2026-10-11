@@ -38,8 +38,8 @@ import { usePolitics } from "@/stores/politics";
 import { cn } from "@/lib/utils";
 
 const MARKS: { id: XiaoMarkLevel; label: string; cls: string }[] = [
-  { id: "pass", label: "会", cls: "bg-emerald-600 text-white" },
-  { id: "fuzzy", label: "模糊", cls: "bg-amber-500 text-white" },
+  { id: "pass", label: "会", cls: "bg-success text-success-foreground" },
+  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
 ];
 
@@ -480,7 +480,7 @@ function LearnCard({
             <p key={c.wrong}>
               <span className="text-destructive">不是</span> {c.wrong}
               <span className="mx-1 text-muted-foreground">→</span>
-              <span className="text-emerald-700 dark:text-emerald-400">而是</span> {c.right}
+              <span className="text-ink-success">而是</span> {c.right}
             </p>
           ))}
         </div>
@@ -583,7 +583,7 @@ function LearnCard({
                           className={cn(
                             "rounded-md border px-3 py-1.5 text-sm",
                             !answered && "hover:bg-muted/60",
-                            answered && choice === v && (ok ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-400/10" : "border-destructive bg-destructive/10"),
+                            answered && choice === v && (ok ? "border-success bg-success/10" : "border-destructive bg-destructive/10"),
                             answered && choice !== v && "opacity-50"
                           )}
                           onClick={() => setPicked((prev) => ({ ...prev, [i]: v }))}
@@ -596,7 +596,7 @@ function LearnCard({
                       <p
                         className={cn(
                           "text-xs leading-relaxed",
-                          ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
+                          ok ? "text-ink-success" : "text-destructive"
                         )}
                       >
                         {ok ? "对" : "再看一眼"}
@@ -622,7 +622,7 @@ function XiaoBriefView({ brief }: { brief: XiaoBriefResult }) {
       <ul className="space-y-1 text-sm leading-relaxed">
         {(brief.options ?? []).map((opt) => (
           <li key={opt.k}>
-            <span className={cn("font-medium", opt.ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>
+            <span className={cn("font-medium", opt.ok ? "text-ink-success" : "text-destructive")}>
               {opt.k} {opt.ok ? "对" : "错"}
             </span>
             {opt.why ? <span> · {opt.why}</span> : null}
@@ -744,7 +744,7 @@ function XiaoQuizCard({
                   className={cn(
                     "flex w-full gap-2 rounded-md border px-3 py-2 text-left text-sm leading-relaxed",
                     chosen && !submitted && "border-primary bg-primary/5",
-                    inAns && "border-emerald-600 bg-emerald-50 dark:bg-emerald-400/10",
+                    inAns && "border-success bg-success/10",
                     wrongPick && "border-destructive bg-destructive/10"
                   )}
                 >
@@ -762,7 +762,7 @@ function XiaoQuizCard({
           </Button>
         ) : (
           <div className="space-y-3">
-            <p className={cn("text-sm font-medium", ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>
+            <p className={cn("text-sm font-medium", ok ? "text-ink-success" : "text-destructive")}>
               {correct ? (ok ? `正确 · ${correct}` : `正确答案 ${correct}`) : "这题还没有挂上答案，先看解析"}
             </p>
             {brief?.status === "ok" && brief.key ? (

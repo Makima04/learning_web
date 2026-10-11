@@ -68,7 +68,7 @@ export function InodeView() {
           {["直接", "一级间接", "二级间接", "三级间接"].map((n, i) => (
             <div key={n} className="rounded-xl border p-3 text-center">
               <p className="text-xs text-muted-foreground">{n}</p>
-              <p className="my-1 font-mono text-sm font-bold text-sky-600">{CALC.blocks[i]!.toLocaleString()} 块</p>
+              <p className="my-1 font-mono text-sm font-bold text-ink-info">{CALC.blocks[i]!.toLocaleString()} 块</p>
               <p className="text-[11px] text-muted-foreground">读盘 {CALC.reads[i]} 次</p>
             </div>
           ))}

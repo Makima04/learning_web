@@ -133,14 +133,14 @@ export function RecurView() {
                   cy={y}
                   r={16}
                   fill={st === "calling" ? C.active : st === "done" ? C.done : C.node}
-                  stroke={fr.cur === key ? C.bad : "#94a3b8"}
+                  stroke={fr.cur === key ? C.bad : "var(--viz-line)"}
                   strokeWidth={fr.cur === key ? 2.4 : 1}
                 />
-                <text x={x} y={y + 4} textAnchor="middle" fontSize={10.5} fontWeight={700} fill={st === "idle" ? C.nodeText : "#fff"}>
+                <text x={x} y={y + 4} textAnchor="middle" fontSize={10.5} fontWeight={700} fill={st === "idle" ? C.nodeText : "var(--viz-on)"}>
                   {label(n).replace("fib", "f")}
                 </text>
                 {fr.rets[key] !== undefined && (
-                  <text x={x + 18} y={y - 10} fontSize={11} fontWeight={700} fill="#047857">
+                  <text x={x + 18} y={y - 10} fontSize={11} fontWeight={700} fill="var(--viz-ink-ok)">
                     ={fr.rets[key]}
                   </text>
                 )}
@@ -156,7 +156,7 @@ export function RecurView() {
               <span
                 key={i}
                 className="grid h-7 place-items-center rounded-md font-mono text-xs font-bold text-white"
-                style={{ background: i === fr.stack.length - 1 ? C.active : "#64748b" }}
+                style={{ background: i === fr.stack.length - 1 ? C.active : "var(--viz-text)" }}
               >
                 {s}
               </span>

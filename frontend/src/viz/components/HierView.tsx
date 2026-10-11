@@ -100,7 +100,7 @@ const BOXES: Record<string, { x: number; y: number; w: number; h: number; label:
   in: { x: 40, y: 232, w: 120, h: 44, label: "输入设备" },
   out: { x: 230, y: 232, w: 120, h: 44, label: "输出设备" },
 };
-const CTRL_LINE = "#94a3b8";
+const CTRL_LINE = "var(--viz-line)";
 
 export function HierView() {
   const frames = useMemo(buildFrames, []);
@@ -129,14 +129,14 @@ export function HierView() {
               <rect
                 x={b.x} y={b.y} width={b.w} height={b.h} rx="10"
                 fill={on ? C.active : C.node}
-                stroke={on ? C.active : "#94a3b8"}
+                stroke={on ? C.active : "var(--viz-line)"}
                 strokeWidth={on ? 2 : 1}
               />
-              <text x={b.x + b.w / 2} y={b.y + (b.sub ? 24 : 28)} textAnchor="middle" fontSize="13" fontWeight="700" fill={on ? "#fff" : C.nodeText}>
+              <text x={b.x + b.w / 2} y={b.y + (b.sub ? 24 : 28)} textAnchor="middle" fontSize="13" fontWeight="700" fill={on ? "var(--viz-on)" : C.nodeText}>
                 {b.label}
               </text>
               {b.sub && (
-                <text x={b.x + b.w / 2} y={b.y + 40} textAnchor="middle" fontSize="9" fill={on ? "#e0f2fe" : C.text}>
+                <text x={b.x + b.w / 2} y={b.y + 40} textAnchor="middle" fontSize="9" fill={on ? "var(--viz-on)" : C.text}>
                   {b.sub}
                 </text>
               )}

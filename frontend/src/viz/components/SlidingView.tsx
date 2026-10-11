@@ -106,7 +106,7 @@ export function SlidingView() {
               key={no}
               className={cn(
                 "w-14 rounded-md border py-1.5 text-center font-mono text-xs font-bold",
-                isAcked ? "border-emerald-600 bg-emerald-600 text-white" : isLost ? "border-rose-500 bg-rose-500/20 text-rose-600" : "border-border bg-muted/40"
+                isAcked ? "border-success bg-success text-success-foreground" : isLost ? "border-destructive bg-destructive/20 text-ink-danger" : "border-border bg-muted/40"
               )}
             >
               帧{no}
@@ -119,7 +119,7 @@ export function SlidingView() {
         {sim.events.slice(0, fr.step + 1).slice(-6).map((e, i) => (
           <div key={i} className={cn(
             "rounded-md border px-3 py-1 text-xs",
-            e.type === "ack" ? "border-emerald-400 bg-emerald-500/10" : e.type === "timeout" || e.type === "loss" ? "border-rose-400 bg-rose-500/10" : "border-border bg-muted/40"
+            e.type === "ack" ? "border-success bg-success/10" : e.type === "timeout" || e.type === "loss" ? "border-destructive bg-destructive/10" : "border-border bg-muted/40"
           )}>
             {e.note}
           </div>

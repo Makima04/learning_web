@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
-  { id: "fuzzy", label: "模糊", cls: "bg-amber-500 text-white" },
-  { id: "pass", label: "会了", cls: "bg-emerald-600 text-white" },
+  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
+  { id: "pass", label: "会了", cls: "bg-success text-success-foreground" },
   { id: "skip", label: "跳过", cls: "bg-muted text-muted-foreground" },
 ];
 

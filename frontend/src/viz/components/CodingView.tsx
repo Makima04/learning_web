@@ -98,10 +98,10 @@ function Wave({ bits, scheme, show }: { bits: string; scheme: Scheme; show: bool
       {bits.split("").map((b, i) => (
         <g key={i}>
           <rect x={i * cw * 2 + 2} y={h + 26} width={cw * 2 - 4} height={18} rx={3} fill={b === "1" ? C.warn : C.node} />
-          <text x={i * cw * 2 + cw} y={h + 39} textAnchor="middle" fontSize={12} fontWeight={700} fill={b === "1" ? "#fff" : C.nodeText}>
+          <text x={i * cw * 2 + cw} y={h + 39} textAnchor="middle" fontSize={12} fontWeight={700} fill={b === "1" ? "var(--viz-on)" : C.nodeText}>
             {b}
           </text>
-          <line x1={i * cw * 2} y1={8} x2={i * cw * 2} y2={h + 24} stroke="#e2e8f0" strokeDasharray="3 3" />
+          <line x1={i * cw * 2} y1={8} x2={i * cw * 2} y2={h + 24} stroke="var(--viz-node)" strokeDasharray="3 3" />
         </g>
       ))}
       <path d={path} fill="none" stroke={C.active} strokeWidth={2.4} strokeLinejoin="round" />
@@ -120,7 +120,7 @@ export function CodingView() {
       {(Object.keys(SCHEME_NAME) as Scheme[]).map((s) => {
         const on = fr.schemes.includes(s);
         return (
-          <div key={s} className={cn("rounded-xl border p-2", on ? "border-sky-400" : "border-border opacity-50")}>
+          <div key={s} className={cn("rounded-xl border p-2", on ? "border-info" : "border-border opacity-50")}>
             <p className="px-2 text-xs font-semibold text-muted-foreground">{SCHEME_NAME[s]}</p>
             <Wave bits={BITS} scheme={s} show={on || showAll} />
           </div>

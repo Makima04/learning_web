@@ -139,7 +139,7 @@ export function CircularQueueView() {
                   height={30}
                   rx={6}
                   fill={FILL[st]}
-                  stroke={st === "empty" ? "#94a3b8" : "#64748b"}
+                  stroke={st === "empty" ? "var(--viz-line)" : "var(--viz-text)"}
                   strokeWidth={st === "empty" ? 1 : 1.4}
                   strokeDasharray={st === "empty" ? "4 3" : undefined}
                 />
@@ -149,7 +149,7 @@ export function CircularQueueView() {
                   textAnchor="middle"
                   fontSize={14}
                   fontWeight={600}
-                  fill={fr.slots[i] ? TXT[st] : "#94a3b8"}
+                  fill={fr.slots[i] ? TXT[st] : "var(--viz-line)"}
                 >
                   {fr.slots[i] ?? i}
                 </text>
@@ -169,7 +169,7 @@ export function CircularQueueView() {
               <g key={label}>
                 <line x1={ax} y1={ay} x2={ax + Math.cos(ang) * 12} y2={ay + Math.sin(ang) * 12} stroke={color} strokeWidth={2} />
                 <circle cx={ax} cy={ay} r={11} fill={color} />
-                <text x={ax} y={ay + 3.5} textAnchor="middle" fontSize={9} fill="#fff" fontWeight={700}>
+                <text x={ax} y={ay + 3.5} textAnchor="middle" fontSize={9} fill="var(--viz-on)" fontWeight={700}>
                   {label === "front" ? "F" : "R"}
                 </text>
               </g>

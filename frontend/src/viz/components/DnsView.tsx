@@ -116,7 +116,7 @@ export function DnsView() {
             key={m}
             type="button"
             onClick={() => setMode(m)}
-            className={cn("rounded border px-2 py-1", m === mode ? "border-sky-500 bg-sky-500/10 font-bold" : "border-border text-muted-foreground hover:bg-muted")}
+            className={cn("rounded border px-2 py-1", m === mode ? "border-info bg-info/10 font-bold" : "border-border text-muted-foreground hover:bg-muted")}
           >
             {label}：{dnsResolve(m).count} 条
           </button>
@@ -128,8 +128,8 @@ export function DnsView() {
           const on = cur != null && (cur.from === name || cur.to === name || NODES[cur.from]?.[0] === x);
           return (
             <g key={name}>
-              <rect x={x - 52} y={y - 14} width={104} height={28} rx={14} fill={on ? "#0ea5e9" : "#e2e8f0"} />
-              <text x={x} y={y + 4} textAnchor="middle" fontSize={10} fontWeight={700} fill={on ? "#fff" : "#0f172a"}>{name}</text>
+              <rect x={x - 52} y={y - 14} width={104} height={28} rx={14} fill={on ? "var(--viz-active)" : "var(--viz-node)"} />
+              <text x={x} y={y + 4} textAnchor="middle" fontSize={10} fontWeight={700} fill={on ? "var(--viz-on)" : "var(--viz-node-text)"}>{name}</text>
             </g>
           );
         })}
@@ -137,10 +137,10 @@ export function DnsView() {
           const a = NODES[m.from];
           const b = NODES[m.to];
           if (!a || !b) return null;
-          return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#94a3b8" strokeWidth={1.2} strokeDasharray="4 3" opacity={i === fr.step ? 1 : 0.35} />;
+          return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="var(--viz-line)" strokeWidth={1.2} strokeDasharray="4 3" opacity={i === fr.step ? 1 : 0.35} />;
         })}
         {cur && (
-          <text x={210} y={152} textAnchor="middle" fontSize={10} fill="#0369a1">
+          <text x={210} y={152} textAnchor="middle" fontSize={10} fill="var(--viz-ink-info)">
             {cur.from} → {cur.to}：{cur.query}
           </text>
         )}

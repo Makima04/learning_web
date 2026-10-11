@@ -167,12 +167,12 @@ export function HeapSortView() {
             const fill = hi ? C.warn : inHeap ? C.node : C.done;
             return (
               <g key={i} opacity={inHeap ? 1 : 0.75}>
-                <circle cx={x} cy={y} r={20} fill={fill} stroke="#94a3b8" />
-                <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={hi ? "#fff" : C.nodeText}>
+                <circle cx={x} cy={y} r={20} fill={fill} stroke="var(--viz-line)" />
+                <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={hi ? "var(--viz-on)" : C.nodeText}>
                   {v}
                 </text>
                 {tag && (
-                  <text x={x + 15} y={y - 12} fontSize={9} fontWeight={700} fill={hi ? "#fff" : inHeap ? "#0284c7" : "#065f46"}>
+                  <text x={x + 15} y={y - 12} fontSize={9} fontWeight={700} fill={hi ? "var(--viz-on)" : inHeap ? "var(--viz-ink-info)" : "var(--viz-ink-ok)"}>
                     {tagChar(tag)}
                   </text>
                 )}
@@ -195,7 +195,7 @@ export function HeapSortView() {
                   key={k}
                   className={cn(
                     "w-12 overflow-hidden rounded-md border text-center",
-                    hi ? "border-amber-500 bg-amber-500" : inHeap ? "border-border" : "border-emerald-600 bg-emerald-600"
+                    hi ? "border-warning bg-warning" : inHeap ? "border-border" : "border-success bg-success"
                   )}
                 >
                   <div className={cn("text-[10px]", hi ? "text-white/80" : inHeap ? "bg-muted text-muted-foreground" : "text-white/80")}>

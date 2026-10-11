@@ -68,10 +68,10 @@ export function ChannelView() {
         {ROWS.map((r) => (
           <div
             key={r.mode}
-            className={`rounded-xl border p-3 text-center ${fr.hot === r.mode ? "border-sky-500 bg-sky-500/5 ring-2 ring-sky-500" : "border-border"}`}
+            className={`rounded-xl border p-3 text-center ${fr.hot === r.mode ? "border-info bg-info/5 ring-2 ring-info" : "border-border"}`}
           >
             <p className="text-sm font-semibold">{r.name}</p>
-            <p className="my-2 font-mono text-xl font-bold text-sky-600">{ioCpuCost(CH_BYTES, r.mode)}</p>
+            <p className="my-2 font-mono text-xl font-bold text-ink-info">{ioCpuCost(CH_BYTES, r.mode)}</p>
             <p className="text-[11px] text-muted-foreground">{r.detail}</p>
           </div>
         ))}

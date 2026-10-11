@@ -256,14 +256,14 @@ function GraphScanDemo({ mode }: { mode: Mode }) {
             const fill = cur ? C.active : vi >= 0 ? C.done : C.node;
             return (
               <g key={k}>
-                <circle cx={x} cy={y} r={22} fill={fill} stroke="#94a3b8" strokeWidth={1.2} />
-                <text x={x} y={y + 6} textAnchor="middle" fontSize={16} fontWeight={700} fill={cur || vi >= 0 ? "#fff" : C.nodeText}>
+                <circle cx={x} cy={y} r={22} fill={fill} stroke="var(--viz-line)" strokeWidth={1.2} />
+                <text x={x} y={y + 6} textAnchor="middle" fontSize={16} fontWeight={700} fill={cur || vi >= 0 ? "var(--viz-on)" : C.nodeText}>
                   {k}
                 </text>
                 {vi >= 0 && (
                   <>
-                    <circle cx={x + 18} cy={y - 16} r={10} fill={cur ? "#fff" : C.active} />
-                    <text x={x + 18} y={y - 12} textAnchor="middle" fontSize={11} fontWeight={700} fill={cur ? C.active : "#fff"}>
+                    <circle cx={x + 18} cy={y - 16} r={10} fill={cur ? "var(--viz-node)" : C.active} />
+                    <text x={x + 18} y={y - 12} textAnchor="middle" fontSize={11} fontWeight={700} fill={cur ? C.active : "var(--viz-on)"}>
                       {vi + 1}
                     </text>
                   </>
@@ -286,9 +286,9 @@ function GraphScanDemo({ mode }: { mode: Mode }) {
                   className={cn(
                     "rounded-md px-2.5 py-1 font-mono text-xs font-bold",
                     fr.mode === "dfs" && i === fr.box.length - 1
-                      ? "bg-sky-500 text-white"
+                      ? "bg-info text-info-foreground"
                       : fr.mode === "bfs" && i === 0
-                        ? "bg-sky-500 text-white"
+                        ? "bg-info text-info-foreground"
                         : "bg-muted"
                   )}
                 >
@@ -305,7 +305,7 @@ function GraphScanDemo({ mode }: { mode: Mode }) {
                   key={i}
                   className={cn(
                     "grid h-8 w-8 place-items-center rounded-md font-mono text-sm font-bold",
-                    i === fr.visited.length - 1 ? "bg-emerald-600 text-white" : "bg-muted"
+                    i === fr.visited.length - 1 ? "bg-success text-success-foreground" : "bg-muted"
                   )}
                 >
                   {v}

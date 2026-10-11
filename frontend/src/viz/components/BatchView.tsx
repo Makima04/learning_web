@@ -147,7 +147,7 @@ function Gantt({ segs, total, mode }: { segs: Seg[]; total: number; mode: "singl
               key={i}
               className={cn(
                 "absolute top-0 h-full border-r border-white/60 text-center text-[10px] font-bold leading-7 text-white",
-                s.kind === "cpu" ? "bg-emerald-500" : s.kind === "io" ? "bg-sky-400" : "bg-muted"
+                s.kind === "cpu" ? "bg-success" : s.kind === "io" ? "bg-info" : "bg-muted"
               )}
               style={{ left: `${(s.start / total) * 100}%`, width: `${(s.len / total) * 100}%` }}
             >
@@ -177,11 +177,11 @@ export function BatchView() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border p-3 text-center">
             <p className="text-xs text-muted-foreground">单道总耗时</p>
-            <p className="font-mono text-lg font-bold text-amber-600">{SINGLE.total} ms</p>
+            <p className="font-mono text-lg font-bold text-ink-warning">{SINGLE.total} ms</p>
           </div>
           <div className="rounded-xl border p-3 text-center">
             <p className="text-xs text-muted-foreground">多道总耗时</p>
-            <p className="font-mono text-lg font-bold text-emerald-600">{MULTI.total} ms</p>
+            <p className="font-mono text-lg font-bold text-ink-success">{MULTI.total} ms</p>
           </div>
         </div>
       )}

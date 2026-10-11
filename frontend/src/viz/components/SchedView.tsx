@@ -104,7 +104,7 @@ export function rr(procs: Proc[], q: number): SchedResult {
 }
 
 type Mode = "FCFS" | "SJF" | "RR";
-const COLORS = ["bg-sky-500", "bg-emerald-600", "bg-amber-500", "bg-violet-500"];
+const COLORS = ["bg-info", "bg-success", "bg-warning", "bg-app-purple"];
 
 function buildSchedFrames(mode: Mode): { frames: SFrame[]; result: SchedResult } {
   const result = mode === "FCFS" ? fcfs(PROCS) : mode === "SJF" ? sjf(PROCS) : rr(PROCS, RR_Q);
@@ -203,7 +203,7 @@ export function SchedView() {
                 <td className="border border-border p-1.5">{p.name}</td>
                 <td className="border border-border p-1.5">{p.arrive}</td>
                 <td className="border border-border p-1.5">{p.burst}</td>
-                <td className={cn("border border-border p-1.5", result.completion[i]! <= (result.segments[fr.upto - 1]?.end ?? -1) && "bg-emerald-500/15")}>
+                <td className={cn("border border-border p-1.5", result.completion[i]! <= (result.segments[fr.upto - 1]?.end ?? -1) && "bg-success/15")}>
                   {result.completion[i]}
                 </td>
                 <td className="border border-border p-1.5">{result.tt[i]}</td>

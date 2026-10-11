@@ -109,8 +109,8 @@ export function RadixSortView() {
                     className={cn(
                       "rounded border px-1.5 py-0.5 font-mono text-xs font-bold",
                       fr.hiVal === x && k === b.length - 1
-                        ? "border-sky-500 bg-sky-500 text-white"
-                        : "border-border bg-sky-500/15"
+                        ? "border-info bg-info text-info-foreground"
+                        : "border-border bg-info/15"
                     )}
                   >
                     {x}

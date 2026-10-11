@@ -169,7 +169,7 @@ export function BTreeView() {
               const w = nodeW(n);
               out.push(
                 <g key={`n${x}-${y}`}>
-                  <rect x={x - w / 2} y={y - 16} width={w} height={32} rx={6} fill={C.node} stroke="#94a3b8" />
+                  <rect x={x - w / 2} y={y - 16} width={w} height={32} rx={6} fill={C.node} stroke="var(--viz-line)" />
                   {n.keys.map((k, i) => (
                     <text key={k} x={x - w / 2 + 8 + i * 30} y={y + 5} fontSize={13} fontWeight={700} fill={C.nodeText}>
                       {k}

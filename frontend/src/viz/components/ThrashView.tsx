@@ -59,29 +59,29 @@ const FACTOR_CARDS: { key: FactorKey; title: string; body: string; cls: string; 
     key: "fault",
     title: "会影响缺页率",
     body: "置换算法、工作集/驻留集大小、进程数（多道程度）、页大小。驻留集 < 工作集 → 抖动。",
-    cls: "border-sky-400 bg-sky-500/5",
-    hi: "border-sky-500 bg-sky-500/15 ring-2 ring-sky-500",
+    cls: "border-info bg-info/5",
+    hi: "border-info bg-info/15 ring-2 ring-info",
   },
   {
     key: "cost",
     title: "不影响缺页率（影响缺页代价）",
     body: "页缓冲队列：已淘汰页的缓存。缺页已发生，队列命中只免读盘，不改变缺页次数。",
-    cls: "border-amber-400 bg-amber-500/5",
-    hi: "border-amber-500 bg-amber-500/15 ring-2 ring-amber-500",
+    cls: "border-warning bg-warning/5",
+    hi: "border-warning bg-warning/15 ring-2 ring-warning",
   },
   {
     key: "eat",
     title: "降低 EAT，不降缺页率",
     body: "TLB：缓存页表项，削翻译访存。页缓冲队列：降缺页 I/O，从而降平均访存时间。",
-    cls: "border-emerald-500 bg-emerald-500/5",
-    hi: "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500",
+    cls: "border-success bg-success/5",
+    hi: "border-success bg-success/15 ring-2 ring-success",
   },
   {
     key: "noeat",
     title: "不降低 EAT",
     body: "多级页表：减少页表连续内存，翻译多一次访存，平均访存时间上升而不是下降。",
-    cls: "border-rose-400 bg-rose-500/5",
-    hi: "border-rose-500 bg-rose-500/15 ring-2 ring-rose-500",
+    cls: "border-destructive bg-destructive/5",
+    hi: "border-destructive bg-destructive/15 ring-2 ring-destructive",
   },
 ];
 
@@ -200,8 +200,8 @@ function Curve() {
     <div className="flex items-end gap-4 rounded-xl border p-4">
       {FRAMES.map((m, i) => (
         <div key={m} className="flex-1 text-center">
-          <p className="font-mono text-lg font-bold text-sky-600">{FAULTS[i]}</p>
-          <div className="mx-auto mt-1 w-full rounded-t bg-sky-500/80" style={{ height: `${(FAULTS[i]! / max) * 90}px` }} />
+          <p className="font-mono text-lg font-bold text-ink-info">{FAULTS[i]}</p>
+          <div className="mx-auto mt-1 w-full rounded-t bg-info/80" style={{ height: `${(FAULTS[i]! / max) * 90}px` }} />
           <p className="mt-1 text-xs text-muted-foreground">{m} 个页框</p>
         </div>
       ))}
@@ -215,7 +215,7 @@ function WsBar({ ws, w }: { ws: ReturnType<typeof workingSet>; w: number }) {
       <p className="text-xs text-muted-foreground">窗口 w = {w}：每一步的工作集</p>
       <div className="flex gap-1">
         {ws.sets.map((s, t) => (
-          <div key={t} className={cn("rounded border px-1 py-0.5 text-center font-mono text-[10px]", s.size >= 3 ? "border-amber-500 bg-amber-500/20" : "border-border bg-muted/40")}>
+          <div key={t} className={cn("rounded border px-1 py-0.5 text-center font-mono text-[10px]", s.size >= 3 ? "border-warning bg-warning/20" : "border-border bg-muted/40")}>
             <div className="text-muted-foreground">{WS_REF[t]}</div>
             <div>{[...s].sort().join("")}</div>
           </div>
@@ -281,12 +281,12 @@ function FactorCards({ hot }: { hot: FactorKey[] }) {
 function CauseCards() {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <div className="rounded-xl border border-rose-400 bg-rose-500/5 p-3 text-xs leading-6">
-        <p className="mb-1 text-sm font-semibold text-rose-600">抖动中</p>
+      <div className="rounded-xl border border-destructive bg-destructive/5 p-3 text-xs leading-6">
+        <p className="mb-1 text-sm font-semibold text-ink-danger">抖动中</p>
         进程多 → 每进程页框 &lt; 工作集 → 齐缺页 → 磁盘饱和 → CPU 空转
       </div>
-      <div className="rounded-xl border border-emerald-500 bg-emerald-500/5 p-3 text-xs leading-6">
-        <p className="mb-1 text-sm font-semibold text-emerald-600">解药</p>
+      <div className="rounded-xl border border-success bg-success/5 p-3 text-xs leading-6">
+        <p className="mb-1 text-sm font-semibold text-ink-success">解药</p>
         挂起部分进程 / 工作集策略 / PFF 反馈 / 预留页框。固定分配不可配全局置换（2015）。
       </div>
     </div>

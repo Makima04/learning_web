@@ -21,8 +21,8 @@ import { cn } from "@/lib/utils";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
-  { id: "fuzzy", label: "模糊", cls: "bg-amber-500 text-white" },
-  { id: "pass", label: "会", cls: "bg-emerald-600 text-white" },
+  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
+  { id: "pass", label: "会", cls: "bg-success text-success-foreground" },
   { id: "skip", label: "跳过", cls: "bg-muted text-muted-foreground" },
 ];
 
@@ -255,7 +255,7 @@ export function KgModulePage() {
                           className={cn(
                             "rounded-md px-2 py-0.5",
                             s.drill.learn > 0
-                              ? "bg-amber-50 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300"
+                              ? "bg-warning/10 text-ink-warning"
                               : "bg-muted text-muted-foreground"
                           )}
                         >
@@ -265,7 +265,7 @@ export function KgModulePage() {
                           className={cn(
                             "rounded-md px-2 py-0.5",
                             s.drill.review > 0
-                              ? "bg-rose-50 text-rose-800 dark:bg-rose-400/10 dark:text-rose-300"
+                              ? "bg-destructive/10 text-ink-danger"
                               : "bg-muted text-muted-foreground"
                           )}
                         >
@@ -284,7 +284,7 @@ export function KgModulePage() {
                       className={cn(
                         "rounded-md px-2 py-0.5",
                         drill.learn > 0
-                          ? "bg-amber-50 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300"
+                          ? "bg-warning/10 text-ink-warning"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
@@ -294,7 +294,7 @@ export function KgModulePage() {
                       className={cn(
                         "rounded-md px-2 py-0.5",
                         drill.review > 0
-                          ? "bg-rose-50 text-rose-800 dark:bg-rose-400/10 dark:text-rose-300"
+                          ? "bg-destructive/10 text-ink-danger"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
@@ -325,7 +325,7 @@ export function KgModulePage() {
                     className={cn(
                       "rounded-full px-2 py-0.5",
                       st?.covered
-                        ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200"
+                        ? "bg-info/15 text-ink-info"
                         : "bg-muted text-muted-foreground"
                     )}
                   >

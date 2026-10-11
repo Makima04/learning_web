@@ -63,7 +63,7 @@ function buildExtFrames(): EFrame[] {
   return frames;
 }
 
-const RUN_COLORS = ["bg-sky-500/25", "bg-emerald-500/25", "bg-amber-500/25", "bg-violet-500/25", "bg-rose-500/25"];
+const RUN_COLORS = ["bg-info/25", "bg-success/25", "bg-warning/25", "bg-app-purple/25", "bg-destructive/25"];
 
 export function ExternalSortView() {
   const frames = useMemo(buildExtFrames, []);
@@ -81,7 +81,7 @@ export function ExternalSortView() {
               key={i}
               className={cn(
                 "flex gap-0.5 rounded-lg border p-1",
-                merging ? "border-amber-500 bg-amber-500/10" : "border-border"
+                merging ? "border-warning bg-warning/10" : "border-border"
               )}
             >
               {run.map((x, j) => (

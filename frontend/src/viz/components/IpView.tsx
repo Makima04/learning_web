@@ -110,7 +110,7 @@ export function IpView() {
             {[0, 64, 128, 192].map((off, i) => {
               const info = subnetInfo(`192.168.1.${off}`, 26);
               return (
-                <tr key={off} className={fr.phase === `子网 ${i + 1}` ? "bg-sky-500/10" : ""}>
+                <tr key={off} className={fr.phase === `子网 ${i + 1}` ? "bg-info/10" : ""}>
                   <td className="border border-border p-1.5">192.168.1.{off}</td>
                   <td className="border border-border p-1.5">/26</td>
                   <td className="border border-border p-1.5">255.255.255.192</td>
@@ -120,7 +120,7 @@ export function IpView() {
                 </tr>
               );
             })}
-            <tr className={fr.phase === "AND 演算" ? "bg-amber-500/10" : ""}>
+            <tr className={fr.phase === "AND 演算" ? "bg-warning/10" : ""}>
               <td className="border border-border p-1.5 font-bold">192.168.10.70</td>
               <td className="border border-border p-1.5 font-bold">/26</td>
               <td className="border border-border p-1.5">255.255.255.192</td>
@@ -133,8 +133,8 @@ export function IpView() {
       </div>
       {fr.phase === "AND 演算" && (
         <div className="rounded-lg border bg-muted/30 p-2 font-mono text-xs leading-6">
-          <div>192.168.10.<span className="font-bold text-sky-600 dark:text-sky-400">70</span> = …01000110₂</div>
-          <div>255.255.255.<span className="font-bold text-sky-600 dark:text-sky-400">192</span> = …11000000₂</div>
+          <div>192.168.10.<span className="font-bold text-ink-info">70</span> = …01000110₂</div>
+          <div>255.255.255.<span className="font-bold text-ink-info">192</span> = …11000000₂</div>
           <div>AND ⇒ …01000000₂ = <span className="font-bold">64</span> → 网络 192.168.10.64；块 64–127；广播 .127；主机号 70−64=6</div>
         </div>
       )}

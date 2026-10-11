@@ -78,7 +78,7 @@ export function VizControls({ p }: { p: Player }) {
       <span className="ml-1 text-xs tabular-nums text-muted-foreground">
         第 {p.idx + 1} / {p.total} 步
       </span>
-      <div className="ml-auto flex overflow-hidden rounded-md border">
+      <div className="ml-auto flex overflow-hidden rounded-full border-2 border-border">
         {SPEEDS.map((s, i) => (
           <button
             key={s.label}
@@ -102,7 +102,7 @@ export function VizControls({ p }: { p: Player }) {
 /** 当前步骤解说面板 */
 export function StepDesc({ frame }: { frame: VizFrame }) {
   return (
-    <div className="min-h-[64px] rounded-lg border bg-muted/40 p-3 text-sm leading-relaxed">
+    <div className="min-h-[64px] rounded-2xl border-2 border-border/70 bg-card p-3 text-sm leading-relaxed shadow-edge-sm">
       {frame.phase && (
         <span className="mr-2 inline-block rounded bg-primary/15 px-1.5 py-0.5 text-[11px] font-medium text-primary">
           {frame.phase}
@@ -113,20 +113,20 @@ export function StepDesc({ frame }: { frame: VizFrame }) {
   );
 }
 
-/** 统一色板：明暗主题下都取固定柔和色，保证可读 */
+/** 统一色板：跟主题变量走，亮暗都可读。黄色状态用深色字。 */
 export const C = {
-  node: "#e2e8f0", // 未访问节点底色（slate-200）
-  nodeText: "#0f172a",
-  active: "#0ea5e9", // 当前步高亮（sky-500）
-  activeText: "#ffffff",
-  done: "#10b981", // 已完成/已访问（emerald-500）
-  doneText: "#ffffff",
-  warn: "#f59e0b", // 基准/待比较（amber-500）
-  warnText: "#ffffff",
-  bad: "#f43f5e", // 失配/被删（rose-500）
-  badText: "#ffffff",
-  line: "#94a3b8", // 普通连线（slate-400）
-  text: "#64748b", // 次要文字（slate-500）
+  node: "var(--viz-node)",
+  nodeText: "var(--viz-node-text)",
+  active: "var(--viz-active)",
+  activeText: "var(--viz-on)",
+  done: "var(--viz-done)",
+  doneText: "var(--viz-on)",
+  warn: "var(--viz-warn)",
+  warnText: "var(--viz-warn-text)",
+  bad: "var(--viz-bad)",
+  badText: "var(--viz-on)",
+  line: "var(--viz-line)",
+  text: "var(--viz-text)",
 } as const;
 
 /* ---------- 共享渲染小件：数组格子 / 下标转下标数字 ---------- */
@@ -152,10 +152,10 @@ export interface CellItem {
 
 const CELL_CLS: Record<NonNullable<CellItem["state"]>, string> = {
   normal: "border-border bg-muted/40 text-foreground",
-  hi: "border-sky-500 bg-sky-500 text-white",
-  done: "border-emerald-600 bg-emerald-600 text-white",
-  warn: "border-amber-500 bg-amber-500 text-white",
-  bad: "border-rose-500 bg-rose-500 text-white",
+  hi: "border-info bg-info text-info-foreground",
+  done: "border-success bg-success text-success-foreground",
+  warn: "border-warning bg-warning text-warning-foreground",
+  bad: "border-destructive bg-destructive text-destructive-foreground",
   dim: "border-border/60 bg-transparent text-muted-foreground",
 };
 
@@ -167,9 +167,9 @@ export function Cells({ items, w = "w-11" }: { items: CellItem[]; w?: string }) 
         const st = it.state ?? "normal";
         const plain = st === "normal" || st === "dim";
         return (
-          <div key={i} className={cn("overflow-hidden rounded-md border text-center", w, CELL_CLS[st])}>
+          <div key={i} className={cn("overflow-hidden rounded-xl border-2 text-center", w, CELL_CLS[st])}>
             {it.label != null && (
-              <div className={cn("text-[10px] leading-4", plain ? "bg-muted text-muted-foreground" : "text-white/80")}>
+              <div className={cn("text-[10px] leading-4", plain ? "bg-muted text-muted-foreground" : "opacity-80")}>
                 {it.label}
                 {it.tag ? sub(it.tag) : ""}
               </div>

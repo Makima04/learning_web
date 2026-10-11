@@ -247,7 +247,7 @@ export function KgMapPage() {
                   <Link
                     key={mod.id}
                     to={kgModulePath(book.id as BookId, mod.id, subject)}
-                    className="group rounded-xl border bg-card p-4 shadow-sm transition hover:border-primary/40 hover:shadow"
+                    className="group rounded-2xl border-2 border-transparent bg-card p-4 shadow-edge transition hover:border-primary/40"
                   >
                     <div className="mb-2 flex items-start justify-between gap-2">
                       <h3 className="text-sm font-semibold group-hover:text-primary">
@@ -263,14 +263,14 @@ export function KgMapPage() {
                           <span>覆盖</span>
                           <span>{mp ? pct(mp.coverage) : "0%"}</span>
                         </div>
-                        <Bar value={mp?.coverage ?? 0} className="bg-sky-500" />
+                        <Bar value={mp?.coverage ?? 0} className="bg-info" />
                       </div>
                       <div>
                         <div className="mb-0.5 flex justify-between">
                           <span>掌握</span>
                           <span>{mp ? pct(mp.mastery) : "0%"}</span>
                         </div>
-                        <Bar value={mp?.mastery ?? 0} className="bg-emerald-500" />
+                        <Bar value={mp?.mastery ?? 0} className="bg-success" />
                       </div>
                       <div className="flex justify-between pt-1">
                         <span>
@@ -280,7 +280,7 @@ export function KgMapPage() {
                             : ""}
                         </span>
                         {(mp?.dueCount ?? 0) > 0 && (
-                          <span className="text-amber-600 dark:text-amber-400">
+                          <span className="text-ink-warning">
                             {mp!.dueCount} 待复习
                           </span>
                         )}

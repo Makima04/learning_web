@@ -57,8 +57,8 @@ export function TodayWordList({
                   className={cn(
                     "rounded px-1.5 py-0.5 text-[10px] font-medium",
                     w.type === "new"
-                      ? "bg-amber-50 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300"
-                      : "bg-sky-50 text-sky-800 dark:bg-sky-400/10 dark:text-sky-300"
+                      ? "bg-warning/10 text-ink-warning"
+                      : "bg-info/10 text-ink-info"
                   )}
                 >
                   {w.type === "new" ? "新" : "复"}

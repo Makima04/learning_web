@@ -27,8 +27,8 @@ import { ItemNoteField } from "@/pages/itemNoteField";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
-  { id: "fuzzy", label: "模糊", cls: "bg-amber-500 text-white" },
-  { id: "pass", label: "会了", cls: "bg-emerald-600 text-white" },
+  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
+  { id: "pass", label: "会了", cls: "bg-success text-success-foreground" },
   { id: "skip", label: "跳过", cls: "bg-muted text-muted-foreground" },
 ];
 
@@ -110,7 +110,7 @@ function YearList({ index }: { index: ExamIndex }) {
             <Link
               key={p.year}
               to={`/kg/exams/${p.year}`}
-              className="rounded-xl border bg-card p-4 transition hover:border-primary/40 hover:bg-accent/40"
+              className="rounded-2xl border-2 border-transparent bg-card p-4 shadow-edge transition hover:border-primary/40 hover:bg-accent/40"
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-lg font-semibold">{p.year}</span>

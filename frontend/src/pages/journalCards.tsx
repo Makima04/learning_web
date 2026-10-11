@@ -41,14 +41,14 @@ function EntryMeta({
         className={cn(
           "rounded-full px-2 py-0.5",
           entry.kind === "mistake"
-            ? "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300"
-            : "bg-sky-50 text-sky-700 dark:bg-sky-400/10 dark:text-sky-300"
+            ? "bg-destructive/10 text-ink-danger"
+            : "bg-info/10 text-ink-info"
         )}
       >
         {KIND_LABEL[entry.kind]}
       </span>
       {(entry.fromKg || entry.kpId) && (
-        <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300">
+        <span className="rounded-full bg-app-purple/10 px-2 py-0.5 text-ink-purple">
           知识图谱
         </span>
       )}
@@ -57,7 +57,7 @@ function EntryMeta({
       ) : (
         <>
           <span>间隔 {entry.step} 天</span>
-          <span className={overdue ? "font-medium text-rose-600 dark:text-rose-400" : undefined}>
+          <span className={overdue ? "font-medium text-ink-danger" : undefined}>
             {overdue ? `逾期 · 应复 ${entry.nextReviewOn}` : `下次 ${entry.nextReviewOn}`}
           </span>
         </>
@@ -175,7 +175,7 @@ export function ChapterReviewCard({
               <p className="text-xs text-muted-foreground">{chapter.bookName}</p>
               <CardTitle className="text-base leading-snug">{chapter.moduleName}</CardTitle>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300">
+                <span className="rounded-full bg-app-purple/10 px-2 py-0.5 text-ink-purple">
                   知识图谱
                 </span>
                 <span>
@@ -187,7 +187,7 @@ export function ChapterReviewCard({
                   <span>首次 {chapter.firstReviewCount}</span>
                 )}
                 {chapter.overdueCount > 0 && (
-                  <span className="font-medium text-rose-600 dark:text-rose-400">
+                  <span className="font-medium text-ink-danger">
                     逾期 {chapter.overdueCount}
                   </span>
                 )}

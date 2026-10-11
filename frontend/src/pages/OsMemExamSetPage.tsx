@@ -35,8 +35,8 @@ import { OsMemTags } from "@/pages/osMemTags";
 import { vizFor } from "@/viz/registry";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
-  { id: "pass", label: "对", cls: "bg-emerald-600 text-white" },
-  { id: "fuzzy", label: "模糊", cls: "bg-amber-500 text-white" },
+  { id: "pass", label: "对", cls: "bg-success text-success-foreground" },
+  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
   { id: "fail", label: "错", cls: "bg-destructive text-destructive-foreground" },
 ];
 
@@ -319,7 +319,7 @@ function SetView({ group }: { group: GroupParam }) {
               to={osMemSetPath({ group, topic: t.id, mode: proof ? "proof" : undefined })}
               className={cn(
                 "rounded-md px-2 py-0.5 text-[11px]",
-                topicFilter === t.id ? "bg-violet-600 text-white" : "bg-violet-500/10 text-violet-800 dark:text-violet-200"
+                topicFilter === t.id ? "bg-primary text-primary-foreground" : "bg-app-purple/10 text-ink-purple"
               )}
             >
               {t.name}
@@ -392,9 +392,9 @@ function QRow({
             <span
               className={cn(
                 "rounded px-1.5 py-0.5 text-[10px] text-white",
-                mark === "pass" && "bg-emerald-600",
+                mark === "pass" && "bg-success",
                 mark === "fail" && "bg-destructive",
-                mark === "fuzzy" && "bg-amber-500",
+                mark === "fuzzy" && "bg-warning",
                 mark === "skip" && "bg-muted-foreground"
               )}
             >

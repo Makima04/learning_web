@@ -211,17 +211,17 @@ const ARROW_STYLE: Record<Arrow["kind"], { color: string; dash?: string; opacity
 const FILL: Record<Node2["state"], string> = {
   normal: C.node,
   active: C.active,
-  new: "#eff6ff",
+  new: "var(--viz-info-soft)",
   warn: C.warn,
-  dead: "#cbd5e1",
+  dead: "var(--viz-line-soft)",
   done: C.done,
 };
 const TEXT: Record<Node2["state"], string> = {
   normal: C.nodeText,
   active: C.activeText,
-  new: "#1d4ed8",
+  new: "var(--viz-ink-info)",
   warn: C.warnText,
-  dead: "#94a3b8",
+  dead: "var(--viz-line)",
   done: C.doneText,
 };
 
@@ -281,7 +281,7 @@ export function LinkedListView() {
                 height={H}
                 rx={8}
                 fill={FILL[nd.state]}
-                stroke={nd.state === "new" ? "#3b82f6" : "#94a3b8"}
+                stroke={nd.state === "new" ? "var(--viz-active)" : "var(--viz-line)"}
                 strokeWidth={nd.state === "new" ? 1.5 : 1}
                 strokeDasharray={nd.state === "new" ? "5 3" : undefined}
               />

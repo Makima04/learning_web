@@ -183,7 +183,7 @@ export function QuickSortView() {
                 height={h}
                 rx={5}
                 fill={fill}
-                stroke={isSettled || isPivot ? "transparent" : "#94a3b8"}
+                stroke={isSettled || isPivot ? "transparent" : "var(--viz-line)"}
                 strokeDasharray={isHole ? "5 4" : undefined}
               />
               <text x={x + 22} y={170 - h - 7} textAnchor="middle" fontSize={13} fontWeight={700} fill={C.nodeText}>
@@ -191,7 +191,7 @@ export function QuickSortView() {
               </text>
               {/* 重复元素的原始下标角标：追踪身份，演示稳定性 */}
               {!isHole && fr.tags[k] && (
-                <text x={x + 38} y={170 - h - 14} fontSize={9} fontWeight={700} fill={isSettled ? "#065f46" : "#0284c7"}>
+                <text x={x + 38} y={170 - h - 14} fontSize={9} fontWeight={700} fill={isSettled ? "var(--viz-ink-ok)" : "var(--viz-ink-info)"}>
                   {fr.tags[k] === "1" ? "₁" : fr.tags[k] === "2" ? "₂" : fr.tags[k]}
                 </text>
               )}

@@ -96,7 +96,7 @@ export function MicroView() {
               {CM.map((row) => {
                 const on = row.addr === cur.addr && (row.addr < 2 || microRun(fr.op)[2]!.addr === row.addr);
                 return (
-                  <tr key={row.addr} className={cn("border-t font-mono", on && "bg-sky-500/15 font-bold")}>
+                  <tr key={row.addr} className={cn("border-t font-mono", on && "bg-info/15 font-bold")}>
                     <td className="py-1.5">{row.addr}</td>
                     <td className="">{row.ctrl}</td>
                     <td className="">{row.next}</td>
@@ -109,7 +109,7 @@ export function MicroView() {
       ) : (
         <div className="space-y-1.5">
           {hardwireRun(fr.op).map((s) => (
-            <div key={s.addr} className={cn("rounded-md border px-3 py-2 font-mono text-xs", s.addr === cur.addr ? "border-sky-500 bg-sky-500/15 font-bold" : "border-border bg-muted/30")}>
+            <div key={s.addr} className={cn("rounded-md border px-3 py-2 font-mono text-xs", s.addr === cur.addr ? "border-info bg-info/15 font-bold" : "border-border bg-muted/30")}>
               {s.signal}
               <span className="ml-2 font-sans text-[11px] text-muted-foreground">{s.effect}</span>
             </div>

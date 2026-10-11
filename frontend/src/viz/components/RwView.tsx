@@ -119,17 +119,17 @@ export function RwView() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-1.5">
         {st.activeReaders.map((id) => (
-          <span key={id} className="rounded border border-emerald-600 bg-emerald-600/15 px-2 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+          <span key={id} className="rounded border border-success bg-success/15 px-2 py-1 text-xs font-bold text-ink-success">
             读{id} 读中
           </span>
         ))}
         {st.writerActive && (
-          <span className="rounded border border-amber-500 bg-amber-500/15 px-2 py-1 text-xs font-bold text-amber-700 dark:text-amber-400">
+          <span className="rounded border border-warning bg-warning/15 px-2 py-1 text-xs font-bold text-ink-warning">
             写1 写中
           </span>
         )}
         {st.writerWaiting && !st.writerActive && (
-          <span className="rounded border border-rose-500 bg-rose-500/15 px-2 py-1 text-xs font-bold text-rose-600 dark:text-rose-400">
+          <span className="rounded border border-destructive bg-destructive/15 px-2 py-1 text-xs font-bold text-ink-danger">
             写者等待中…
           </span>
         )}
@@ -144,7 +144,7 @@ export function RwView() {
         </div>
         <div className="w-20 overflow-hidden rounded-md border border-border text-center">
           <div className="bg-muted text-[10px] text-muted-foreground">rw</div>
-          <div className={cn("py-0.5 font-bold", st.rw === 0 && "text-amber-600 dark:text-amber-400")}>{st.rw}</div>
+          <div className={cn("py-0.5 font-bold", st.rw === 0 && "text-ink-warning")}>{st.rw}</div>
         </div>
         <div className="w-20 overflow-hidden rounded-md border border-border text-center">
           <div className="bg-muted text-[10px] text-muted-foreground">mutex</div>

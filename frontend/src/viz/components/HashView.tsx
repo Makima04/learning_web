@@ -159,7 +159,7 @@ export function HashView() {
                 key={i}
                 className={cn(
                   "w-12 overflow-hidden rounded-md border text-center",
-                  fr.hiCell === i ? "border-amber-500 bg-amber-500 text-white" : "border-border bg-muted/40"
+                  fr.hiCell === i ? "border-warning bg-warning text-warning-foreground" : "border-border bg-muted/40"
                 )}
               >
                 <div className="bg-muted text-[10px] text-muted-foreground">{i}</div>
@@ -174,14 +174,14 @@ export function HashView() {
           <div className="space-y-1">
             {(fr.buckets ?? []).map((chain, i) => (
               <div key={i} className="flex items-center gap-1.5">
-                <span className={cn("w-6 rounded border text-center font-mono text-xs", fr.hiBucket === i ? "border-amber-500 bg-amber-500 text-white" : "border-border bg-muted/50 text-muted-foreground")}>
+                <span className={cn("w-6 rounded border text-center font-mono text-xs", fr.hiBucket === i ? "border-warning bg-warning text-warning-foreground" : "border-border bg-muted/50 text-muted-foreground")}>
                   {i}
                 </span>
                 {chain.length === 0 ? (
                   <span className="text-xs text-muted-foreground">∧</span>
                 ) : (
                   chain.map((k) => (
-                    <span key={k} className="rounded border border-border bg-sky-500/20 px-1.5 py-0.5 font-mono text-xs font-bold">
+                    <span key={k} className="rounded border border-border bg-info/20 px-1.5 py-0.5 font-mono text-xs font-bold">
                       {k}
                     </span>
                   ))

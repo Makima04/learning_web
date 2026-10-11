@@ -24,8 +24,8 @@ function isInteractiveClick(e: React.MouseEvent): boolean {
 }
 
 export const PRACTICE_MARKS: { id: MarkLevel; label: string; cls: string }[] = [
-  { id: "pass", label: "会", cls: "bg-emerald-600 text-white" },
-  { id: "fuzzy", label: "模糊", cls: "bg-amber-500 text-white" },
+  { id: "pass", label: "会", cls: "bg-success text-success-foreground" },
+  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
 ];
 
@@ -64,8 +64,8 @@ export function LearnReviewButtons({
                   primary
                     ? "bg-white/15"
                     : key === "review"
-                      ? "bg-rose-50 text-rose-700 dark:bg-rose-400/10"
-                      : "bg-amber-50 text-amber-700 dark:bg-amber-400/10"
+                      ? "bg-destructive/10 text-ink-danger"
+                      : "bg-warning/10 text-ink-warning"
                 )}
               >
                 {key === "review" ? (
@@ -195,7 +195,7 @@ export function PracticeQuestionCard({
             className={cn(
               "ml-auto inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm",
               collected
-                ? "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-400/10 dark:text-rose-300"
+                ? "border-destructive/40 bg-destructive/10 text-ink-danger"
                 : "text-muted-foreground hover:bg-muted"
             )}
           >

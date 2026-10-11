@@ -80,22 +80,22 @@ function PacketBar({ depth, dir }: { depth: number; dir: "send" | "recv" }) {
   const appW = (APP / ENC.sizes[3]!) * 100;
   if (dir === "recv") {
     const rem = Math.max(0, 3 - depth);
-    if (rem >= 1) segs.push({ label: "IP头", w: (20 / size) * 100, cls: "bg-amber-400 text-amber-900" });
-    if (rem >= 2) segs.push({ label: "TCP头", w: (20 / size) * 100, cls: "bg-sky-400" });
-    if (rem >= 3) segs.push({ label: "以太头", w: (14 / size) * 100, cls: "bg-violet-400" });
-    segs.push({ label: "数据", w: appW, cls: "bg-emerald-500" });
+    if (rem >= 1) segs.push({ label: "IP头", w: (20 / size) * 100, cls: "bg-warning text-ink-warning" });
+    if (rem >= 2) segs.push({ label: "TCP头", w: (20 / size) * 100, cls: "bg-info" });
+    if (rem >= 3) segs.push({ label: "以太头", w: (14 / size) * 100, cls: "bg-app-purple" });
+    segs.push({ label: "数据", w: appW, cls: "bg-success" });
   } else {
     if (depth >= 3) {
-      segs.push({ label: "以太头", w: (14 / size) * 100, cls: "bg-violet-400" });
-      segs.push({ label: "TCP头", w: (20 / size) * 100, cls: "bg-sky-400" });
-      segs.push({ label: "IP头", w: (20 / size) * 100, cls: "bg-amber-400 text-amber-900" });
+      segs.push({ label: "以太头", w: (14 / size) * 100, cls: "bg-app-purple" });
+      segs.push({ label: "TCP头", w: (20 / size) * 100, cls: "bg-info" });
+      segs.push({ label: "IP头", w: (20 / size) * 100, cls: "bg-warning text-ink-warning" });
     } else if (depth === 2) {
-      segs.push({ label: "TCP头", w: (20 / size) * 100, cls: "bg-sky-400" });
-      segs.push({ label: "IP头", w: (20 / size) * 100, cls: "bg-amber-400 text-amber-900" });
+      segs.push({ label: "TCP头", w: (20 / size) * 100, cls: "bg-info" });
+      segs.push({ label: "IP头", w: (20 / size) * 100, cls: "bg-warning text-ink-warning" });
     } else if (depth === 1) {
-      segs.push({ label: "TCP头", w: (20 / size) * 100, cls: "bg-sky-400" });
+      segs.push({ label: "TCP头", w: (20 / size) * 100, cls: "bg-info" });
     }
-    segs.push({ label: "数据", w: appW, cls: "bg-emerald-500" });
+    segs.push({ label: "数据", w: appW, cls: "bg-success" });
   }
   return (
     <div>

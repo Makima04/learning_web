@@ -171,23 +171,23 @@ function TreeSvg({ fr }: { fr: Frame }) {
         const vi = fr.visited.indexOf(key);
         const cur = fr.current === key;
         const fill = cur ? C.active : vi >= 0 ? C.done : C.node;
-        const txt = cur || vi >= 0 ? "#fff" : C.nodeText;
+        const txt = cur || vi >= 0 ? "var(--viz-on)" : C.nodeText;
         return (
           <g key={key}>
-            <circle cx={x} cy={y} r={21} fill={fill} stroke="#94a3b8" />
+            <circle cx={x} cy={y} r={21} fill={fill} stroke="var(--viz-line)" />
             <text x={x} y={y + 6} textAnchor="middle" fontSize={17} fontWeight={700} fill={txt}>
               {key}
             </text>
             {vi >= 0 && (
               <>
-                <circle cx={x + 17} cy={y - 15} r={10} fill={cur ? "#fff" : C.active} />
+                <circle cx={x + 17} cy={y - 15} r={10} fill={cur ? "var(--viz-node)" : C.active} />
                 <text
                   x={x + 17}
                   y={y - 11}
                   textAnchor="middle"
                   fontSize={11}
                   fontWeight={700}
-                  fill={cur ? C.active : "#fff"}
+                  fill={cur ? C.active : "var(--viz-on)"}
                 >
                   {vi + 1}
                 </text>
@@ -247,7 +247,7 @@ function TreeTravDemo({ order }: { order: Order }) {
                   key={i}
                   className={cn(
                     "rounded-md px-2 py-1 font-mono text-xs font-bold",
-                    i === fr.stack.length - 1 ? "bg-sky-500 text-white" : "bg-muted text-muted-foreground"
+                    i === fr.stack.length - 1 ? "bg-info text-info-foreground" : "bg-muted text-muted-foreground"
                   )}
                 >
                   {s}
@@ -263,7 +263,7 @@ function TreeTravDemo({ order }: { order: Order }) {
                   key={i}
                   className={cn(
                     "grid h-8 w-8 place-items-center rounded-md font-mono text-sm font-bold",
-                    i === fr.visited.length - 1 ? "bg-emerald-600 text-white" : "bg-muted"
+                    i === fr.visited.length - 1 ? "bg-success text-success-foreground" : "bg-muted"
                   )}
                 >
                   {v}

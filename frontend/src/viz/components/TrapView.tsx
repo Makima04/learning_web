@@ -77,11 +77,11 @@ export function TrapView() {
               key={s.no}
               className={cn(
                 "flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs transition",
-                i === fr.step ? "ring-2 ring-sky-500" : "opacity-70",
-                s.user ? "border-sky-400 bg-sky-500/10" : s.kernel ? "border-emerald-500 bg-emerald-500/10" : "border-border"
+                i === fr.step ? "ring-2 ring-info" : "opacity-70",
+                s.user ? "border-info bg-info/10" : s.kernel ? "border-success bg-success/10" : "border-border"
               )}
             >
-              <span className={cn("w-16 shrink-0 font-semibold", s.user ? "text-sky-600" : "text-emerald-600")}>
+              <span className={cn("w-16 shrink-0 font-semibold", s.user ? "text-ink-info" : "text-ink-success")}>
                 {s.user ? "用户态" : "核心态"}
               </span>
               <span className="font-mono">{s.user || s.kernel}</span>
@@ -102,7 +102,7 @@ export function TrapView() {
             {SAMPLE_INSNS.map((ins) => (
               <tr key={ins} className="border-t">
                 <td className="py-1 font-mono">{ins}</td>
-                <td className={cn("text-center font-semibold", isPrivileged(ins) ? "text-rose-500" : "text-emerald-600")}>
+                <td className={cn("text-center font-semibold", isPrivileged(ins) ? "text-ink-danger" : "text-ink-success")}>
                   {isPrivileged(ins) ? "✗（特权指令）" : "✓"}
                 </td>
                 <td className="text-left text-muted-foreground">

@@ -108,7 +108,7 @@ export function TodayPage() {
         </label>
       </div>
 
-      <Card className="border-border/90 shadow-sm">
+      <Card>
         <CardContent className="p-0">
           <TodayWordList
             words={words}

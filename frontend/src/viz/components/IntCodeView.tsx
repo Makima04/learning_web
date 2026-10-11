@@ -97,8 +97,8 @@ function BitRow({ label, s, changed }: { label: string; s: string; changed: numb
             key={i}
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded font-mono text-sm font-bold",
-              i === 0 ? "border border-sky-400 text-sky-600" : "border border-border",
-              ch.has(i) ? "bg-amber-500 text-white" : "bg-muted/40"
+              i === 0 ? "border border-info text-ink-info" : "border border-border",
+              ch.has(i) ? "bg-warning text-warning-foreground" : "bg-muted/40"
             )}
             style={ch.has(i) ? { borderColor: C.warn } : undefined}
           >
@@ -147,7 +147,7 @@ export function IntCodeView() {
               {sample.map((v) => {
                 const e = intEncodings(v);
                 return (
-                  <tr key={v} className={cn("border-t font-mono", v === X && "bg-sky-500/10 font-bold")}>
+                  <tr key={v} className={cn("border-t font-mono", v === X && "bg-info/10 font-bold")}>
                     <td className="py-1 text-left font-sans">{v}</td>
                     <td>{e.orig ?? "—"}</td>
                     <td>{e.inv ?? "—"}</td>

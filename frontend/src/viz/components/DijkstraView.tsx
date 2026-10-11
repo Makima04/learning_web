@@ -169,7 +169,7 @@ export function DijkstraView() {
                   strokeWidth={hi ? 3.4 : inTree ? 3 : 1.8}
                   markerEnd={hi ? "url(#dj-arrow-hi)" : "url(#dj-arrow)"}
                 />
-                <circle cx={(sx + ex) / 2 + (dy / len) * 10} cy={(sy + ey) / 2 - (dx / len) * 10} r={10} fill="#f8fafc" stroke={stroke} />
+                <circle cx={(sx + ex) / 2 + (dy / len) * 10} cy={(sy + ey) / 2 - (dx / len) * 10} r={10} fill="var(--viz-node)" stroke={stroke} />
                 <text x={(sx + ex) / 2 + (dy / len) * 10} y={(sy + ey) / 2 - (dx / len) * 10 + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={C.nodeText}>
                   {w}
                 </text>
@@ -183,8 +183,8 @@ export function DijkstraView() {
             const fill = cur ? C.active : isDone ? C.done : C.node;
             return (
               <g key={k}>
-                <circle cx={x} cy={y} r={22} fill={fill} stroke="#94a3b8" />
-                <text x={x} y={y + 6} textAnchor="middle" fontSize={16} fontWeight={700} fill={cur || isDone ? "#fff" : C.nodeText}>
+                <circle cx={x} cy={y} r={22} fill={fill} stroke="var(--viz-line)" />
+                <text x={x} y={y + 6} textAnchor="middle" fontSize={16} fontWeight={700} fill={cur || isDone ? "var(--viz-on)" : C.nodeText}>
                   {k}
                 </text>
               </g>
@@ -200,10 +200,10 @@ export function DijkstraView() {
                 {VS.map((v) => (
                   <th
                     key={v}
-                    className={cn("border p-1.5 font-mono", fr.cur === v && "bg-primary/15 text-primary", fr.updated === v && "bg-amber-100 dark:bg-amber-950")}
+                    className={cn("border p-1.5 font-mono", fr.cur === v && "bg-primary/15 text-primary", fr.updated === v && "bg-warning/15")}
                   >
                     {v}
-                    {fr.done.includes(v) && <span className="ml-0.5 text-emerald-600">✓</span>}
+                    {fr.done.includes(v) && <span className="ml-0.5 text-ink-success">✓</span>}
                   </th>
                 ))}
               </tr>
@@ -212,7 +212,7 @@ export function DijkstraView() {
               <tr>
                 <td className="border p-1.5 text-muted-foreground">距离</td>
                 {VS.map((v) => (
-                  <td key={v} className={cn("border p-1.5 font-mono font-bold", fr.updated === v && "bg-amber-100 dark:bg-amber-950")}>
+                  <td key={v} className={cn("border p-1.5 font-mono font-bold", fr.updated === v && "bg-warning/15")}>
                     {fmt(fr.dist[v])}
                   </td>
                 ))}

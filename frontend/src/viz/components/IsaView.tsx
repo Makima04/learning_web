@@ -92,7 +92,7 @@ function MemChain({ m }: { m: EaItem }) {
           <div
             className={cn(
               "rounded-md border px-2.5 py-1 text-center",
-              c.on ? "border-sky-500 bg-sky-500/15" : "border-border bg-muted/30"
+              c.on ? "border-info bg-info/15" : "border-border bg-muted/30"
             )}
           >
             <div className="text-[10px] text-muted-foreground">{c.label}</div>
@@ -124,8 +124,8 @@ export function IsaView() {
           <MemChain m={mode} />
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded bg-muted px-2 py-1 font-mono">{mode.formula}</span>
-            {mode.ea != null && <span className="rounded bg-sky-500/15 px-2 py-1 font-mono text-sky-600">EA = {mode.ea}</span>}
-            <span className="rounded bg-emerald-600 px-2 py-1 font-mono text-white">操作数 = {mode.operand}</span>
+            {mode.ea != null && <span className="rounded bg-info/15 px-2 py-1 font-mono text-ink-info">EA = {mode.ea}</span>}
+            <span className="rounded bg-success px-2 py-1 font-mono text-white">操作数 = {mode.operand}</span>
             <span className="rounded bg-muted px-2 py-1 font-mono">访存 {mode.memAccess} 次</span>
           </div>
         </div>

@@ -103,7 +103,7 @@ export function ProcStateView() {
             return (
               <g key={i} opacity={on ? 1 : 0.35}>
                 <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={on ? C.active : C.line} strokeWidth={on ? 2.2 : 1.2} />
-                <text x={mx} y={my} textAnchor="middle" fontSize={9} fill={on ? "#0369a1" : C.text}>
+                <text x={mx} y={my} textAnchor="middle" fontSize={9} fill={on ? "var(--viz-ink-info)" : C.text}>
                   {e.ev}
                 </text>
               </g>
@@ -114,8 +114,8 @@ export function ProcStateView() {
             const active = curState === s && !isThread;
             return (
               <g key={s}>
-                <circle cx={x} cy={y} r={22} fill={active ? C.active : s === "run" ? C.node : C.node} stroke={active ? C.active : "#94a3b8"} strokeWidth={active ? 2.5 : 1} />
-                <text x={x} y={y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={active ? "#fff" : C.nodeText}>
+                <circle cx={x} cy={y} r={22} fill={active ? C.active : s === "run" ? C.node : C.node} stroke={active ? C.active : "var(--viz-line)"} strokeWidth={active ? 2.5 : 1} />
+                <text x={x} y={y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={active ? "var(--viz-on)" : C.nodeText}>
                   {STATE_NAME[s]}
                 </text>
               </g>
@@ -127,11 +127,11 @@ export function ProcStateView() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border p-3">
             <p className="mb-2 text-sm font-semibold">进程（资源单位）</p>
-            <div className="mx-auto w-fit rounded-lg border-2 border-sky-400 p-2">
+            <div className="mx-auto w-fit rounded-lg border-2 border-info p-2">
               <div className="mb-1 text-center text-[11px] text-muted-foreground">共享：代码·数据·文件·地址空间</div>
               <div className="flex gap-2">
                 {["线程1 线程2", "线程2"].map((t, i) => (
-                  <div key={i} className="rounded border border-emerald-400 bg-emerald-500/10 px-2 py-1 text-[11px]">
+                  <div key={i} className="rounded border border-success bg-success/10 px-2 py-1 text-[11px]">
                     {t}
                     <div className="text-[10px] text-muted-foreground">私有：栈·寄存器·PC</div>
                   </div>

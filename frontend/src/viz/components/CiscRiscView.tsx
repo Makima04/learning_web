@@ -67,7 +67,7 @@ function PipeGrid() {
                     <div
                       className={cn(
                         "flex h-6 w-9 items-center justify-center rounded font-mono",
-                        on ? "bg-sky-500 text-white" : "bg-muted/30 text-transparent"
+                        on ? "bg-info text-info-foreground" : "bg-muted/30 text-transparent"
                       )}
                     >
                       {on ? names[st] : "·"}
@@ -81,7 +81,7 @@ function PipeGrid() {
             <td className="pr-2 text-muted-foreground">CISC 同期</td>
             {Array.from({ length: total }, (_, c) => (
               <td key={c} className="p-0.5">
-                <div className={cn("flex h-6 w-9 items-center justify-center rounded font-mono text-[10px]", c < R.ciscCycles ? "bg-amber-500/30 text-amber-700" : "bg-muted/30 text-transparent")}>
+                <div className={cn("flex h-6 w-9 items-center justify-center rounded font-mono text-[10px]", c < R.ciscCycles ? "bg-warning/30 text-ink-warning" : "bg-muted/30 text-transparent")}>
                   {c < R.ciscCycles ? "…" : "·"}
                 </div>
               </td>
@@ -109,7 +109,7 @@ export function CiscRiscView() {
       )}
       {fr.show === "cisc" && (
         <div className="space-y-2">
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 font-mono text-sm">add C, A, B<span className="ml-2 text-xs text-muted-foreground">（1 条指令 · {R.ciscCycles} 拍）</span></div>
+          <div className="rounded-xl border border-warning/40 bg-warning/5 p-3 font-mono text-sm">add C, A, B<span className="ml-2 text-xs text-muted-foreground">（1 条指令 · {R.ciscCycles} 拍）</span></div>
           <div className="grid grid-cols-5 gap-1 text-center text-[11px]">
             {["取指×2", "取A×2", "取B×2", "加×1", "存C×3"].map((s) => (
               <div key={s} className="rounded bg-muted/50 px-1 py-2 font-mono">{s}</div>

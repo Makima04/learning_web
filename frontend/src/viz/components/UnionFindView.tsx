@@ -170,8 +170,8 @@ export function UnionFindView() {
             const hi = fr.hi?.includes(i);
             return (
               <g key={i}>
-                <circle cx={x} cy={y} r={17} fill={hi ? C.active : fr.parent[i] === i ? C.done : C.node} stroke="#94a3b8" />
-                <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={hi || fr.parent[i] === i ? "#fff" : C.nodeText}>
+                <circle cx={x} cy={y} r={17} fill={hi ? C.active : fr.parent[i] === i ? C.done : C.node} stroke="var(--viz-line)" />
+                <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={hi || fr.parent[i] === i ? "var(--viz-on)" : C.nodeText}>
                   {i}
                 </text>
               </g>
@@ -184,7 +184,7 @@ export function UnionFindView() {
             {Array.from({ length: N }, (_, i) => i + 1).map((i) => (
               <div key={i} className="overflow-hidden rounded-md border border-border text-center">
                 <div className="bg-muted text-[10px] text-muted-foreground">{i}</div>
-                <div className={fr.hi?.includes(i) ? "py-0.5 font-mono text-sm font-bold text-sky-600" : "py-0.5 font-mono text-sm font-bold"}>
+                <div className={fr.hi?.includes(i) ? "py-0.5 font-mono text-sm font-bold text-ink-info" : "py-0.5 font-mono text-sm font-bold"}>
                   {fr.parent[i]}
                 </div>
               </div>

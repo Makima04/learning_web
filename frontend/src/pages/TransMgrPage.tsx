@@ -178,9 +178,9 @@ export function TransMgrPage() {
                     <span
                       className={cn(
                         "ml-2",
-                        it.status === "ok" && "text-emerald-600",
+                        it.status === "ok" && "text-ink-success",
                         it.status === "error" && "text-destructive",
-                        !it.status && "text-amber-600"
+                        !it.status && "text-ink-warning"
                       )}
                     >
                       {it.status || "none"}

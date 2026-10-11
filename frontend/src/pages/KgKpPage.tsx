@@ -205,7 +205,7 @@ export function KgKpPage() {
               a.id === srcPref ? -1 : b.id === srcPref ? 1 : 0
             )
             .map((s) => (
-              <div key={s.id} className="space-y-3 rounded-lg border p-4">
+              <div key={s.id} className="space-y-3 rounded-lg border-2 border-border/70 p-4">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-base font-semibold">{s.label}</h2>
                   <p className="text-xs text-muted-foreground">

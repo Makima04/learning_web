@@ -104,10 +104,10 @@ export function Ipv6View() {
             const r = compressIPv6(s);
             const hot = `ex${i + 1}` === fr.show;
             return (
-              <tr key={s} className={cn("border-t", hot && "bg-sky-500/10 font-bold")}>
+              <tr key={s} className={cn("border-t", hot && "bg-info/10 font-bold")}>
                 <td className="py-1.5">示例 {i + 1}</td>
                 <td className="font-mono text-[11px]">{s.toLowerCase()}</td>
-                <td className="font-mono text-[11px] text-sky-600">{r.result}</td>
+                <td className="font-mono text-[11px] text-ink-info">{r.result}</td>
               </tr>
             );
           })}

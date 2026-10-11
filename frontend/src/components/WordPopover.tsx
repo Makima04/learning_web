@@ -124,7 +124,7 @@ export function WordPopover({
     const phonetic = getPhonetic(entry);
     return (
       <div
-        className="fixed z-50 w-72 rounded-lg border bg-popover text-popover-foreground shadow-lg p-3"
+        className="fixed z-50 w-72 rounded-lg border-2 bg-popover text-popover-foreground shadow-edge p-3"
         style={{ left, top }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -164,7 +164,7 @@ export function WordPopover({
 
   return (
     <div
-      className="fixed z-50 w-72 rounded-lg border bg-popover text-popover-foreground shadow-lg p-3"
+      className="fixed z-50 w-72 rounded-lg border-2 bg-popover text-popover-foreground shadow-edge p-3"
       style={{ left, top }}
       onClick={(e) => e.stopPropagation()}
     >

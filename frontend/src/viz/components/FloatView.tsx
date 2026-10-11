@@ -89,23 +89,23 @@ function Bits({ bits, reveal }: { bits: FloatBits; reveal: FFrame["reveal"] }) {
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <span className={cn("text-xs font-bold", reveal.includes("sign") ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground")}>符号</span>
+        <span className={cn("text-xs font-bold", reveal.includes("sign") ? "text-ink-danger" : "text-muted-foreground")}>符号</span>
         <div className="flex gap-0.5">
           {bits.sign.split("").map((ch, i) =>
-            cell(ch, i, reveal.includes("sign") ? "bg-rose-500 text-white" : "", reveal.includes("sign"))
+            cell(ch, i, reveal.includes("sign") ? "bg-destructive text-destructive-foreground" : "", reveal.includes("sign"))
           )}
         </div>
-        <span className={cn("text-xs font-bold", reveal.includes("exp") ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground")}>阶码（8 位）</span>
+        <span className={cn("text-xs font-bold", reveal.includes("exp") ? "text-ink-success" : "text-muted-foreground")}>阶码（8 位）</span>
         <div className="flex gap-0.5">
           {bits.exp.split("").map((ch, i) =>
-            cell(ch, i, reveal.includes("exp") ? "bg-emerald-600 text-white" : "", reveal.includes("exp"))
+            cell(ch, i, reveal.includes("exp") ? "bg-success text-success-foreground" : "", reveal.includes("exp"))
           )}
         </div>
-        <span className={cn("text-xs font-bold", reveal.includes("frac") ? "text-sky-700 dark:text-sky-400" : "text-muted-foreground")}>尾数（23 位，隐含 1.）</span>
+        <span className={cn("text-xs font-bold", reveal.includes("frac") ? "text-ink-info" : "text-muted-foreground")}>尾数（23 位，隐含 1.）</span>
       </div>
       <div className="flex gap-0.5">
         {bits.frac.split("").map((ch, i) =>
-          cell(ch, i, reveal.includes("frac") ? "bg-sky-500 text-white" : "", reveal.includes("frac"))
+          cell(ch, i, reveal.includes("frac") ? "bg-info text-info-foreground" : "", reveal.includes("frac"))
         )}
       </div>
     </div>

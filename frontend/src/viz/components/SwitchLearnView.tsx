@@ -85,23 +85,23 @@ export function SwitchLearnView() {
     <div className="space-y-4">
       <svg viewBox="0 0 520 170" className="w-full">
         {/* 交换机 */}
-        <rect x={200} y={70} width={120} height={44} rx={8} fill="#e2e8f0" stroke="#94a3b8" />
-        <text x={260} y={97} textAnchor="middle" fontSize={12} fontWeight={700} fill="#0f172a">交换机</text>
+        <rect x={200} y={70} width={120} height={44} rx={8} fill="var(--viz-node)" stroke="var(--viz-line)" />
+        <text x={260} y={97} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--viz-node-text)">交换机</text>
         {Object.entries(PORT).map(([mac, port], i) => {
           const x = 60 + i * 118;
           const active = cur != null && (cur.frame.from === mac || cur.outPorts.includes(port) || cur.frame.to === mac);
           const isSrc = cur?.frame.from === mac;
           return (
             <g key={mac}>
-              <line x1={x} y1={40} x2={x} y2={70} stroke={isSrc ? "#f59e0b" : active ? "#0ea5e9" : "#cbd5e1"} strokeWidth={isSrc || active ? 2.4 : 1.2} />
-              <rect x={x - 20} y={12} width={40} height={28} rx={6} fill={isSrc ? "#f59e0b" : active ? "#0ea5e9" : "#e2e8f0"} />
-              <text x={x} y={31} textAnchor="middle" fontSize={12} fontWeight={700} fill={isSrc || active ? "#fff" : "#0f172a"}>{mac}</text>
-              <text x={x} y={66} textAnchor="middle" fontSize={9} fill="#64748b">{port} 口</text>
+              <line x1={x} y1={40} x2={x} y2={70} stroke={isSrc ? "var(--viz-warn)" : active ? "var(--viz-active)" : "var(--viz-line-soft)"} strokeWidth={isSrc || active ? 2.4 : 1.2} />
+              <rect x={x - 20} y={12} width={40} height={28} rx={6} fill={isSrc ? "var(--viz-warn)" : active ? "var(--viz-active)" : "var(--viz-node)"} />
+              <text x={x} y={31} textAnchor="middle" fontSize={12} fontWeight={700} fill={isSrc ? "var(--viz-warn-text)" : active ? "var(--viz-on)" : "var(--viz-node-text)"}>{mac}</text>
+              <text x={x} y={66} textAnchor="middle" fontSize={9} fill="var(--viz-text)">{port} 口</text>
             </g>
           );
         })}
         {cur && (
-          <text x={260} y={140} textAnchor="middle" fontSize={10} fill={cur.flood ? "#b45309" : "#047857"}>
+          <text x={260} y={140} textAnchor="middle" fontSize={10} fill={cur.flood ? "var(--viz-ink-warn)" : "var(--viz-ink-ok)"}>
             {cur.flood ? `洪泛：从 ${cur.outPorts.join("/")} 端口转发` : `单播：仅端口 ${cur.outPorts.join("/")}`}
           </text>
         )}

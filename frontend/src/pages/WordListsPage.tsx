@@ -85,7 +85,7 @@ export function WordListsPage() {
         </div>
       </div>
 
-      <Card className="border-border/90 shadow-sm">
+      <Card>
         <CardContent className="p-0">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
             <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)}>

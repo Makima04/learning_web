@@ -390,7 +390,7 @@ export function PageReplaceView() {
                   )}
                 >
                   {r}
-                  {cfg.writes?.[i] ? <span className="text-amber-600">ᵂ</span> : null}
+                  {cfg.writes?.[i] ? <span className="text-ink-warning">ᵂ</span> : null}
                 </th>
               ))}
             </tr>
@@ -414,9 +414,9 @@ export function PageReplaceView() {
                       className={cn(
                         "border border-border/50 p-1 leading-tight",
                         i >= fr.upto && "text-transparent",
-                        isNew && "bg-sky-500/25 font-bold",
+                        isNew && "bg-info/25 font-bold",
                         isEvict && "text-muted-foreground",
-                        isHand && i === fr.upto - 1 && "ring-1 ring-amber-500"
+                        isHand && i === fr.upto - 1 && "ring-1 ring-warning"
                       )}
                     >
                       <div>{v ?? "·"}</div>
@@ -440,7 +440,7 @@ export function PageReplaceView() {
                 return (
                   <td key={i} className="p-1">
                     {st && i < fr.upto ? (
-                      <span className={cn("font-bold", st.hit ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                      <span className={cn("font-bold", st.hit ? "text-ink-success" : "text-ink-danger")}>
                         {st.hit ? "✓" : "✗"}
                       </span>
                     ) : (

@@ -88,9 +88,9 @@ export function FreeSpaceView() {
       {(fr.show === "bitmap" || fr.show === "bitmap2") && (
         <div className="rounded-xl border border-dashed p-4 text-center font-mono text-sm">
           {fr.show === "bitmap" ? (
-            <>块 100 → 第 <b className="text-sky-600">{bitmapPos(100).row}</b> 行 第 <b className="text-sky-600">{bitmapPos(100).col}</b> 列</>
+            <>块 100 → 第 <b className="text-ink-info">{bitmapPos(100).row}</b> 行 第 <b className="text-ink-info">{bitmapPos(100).col}</b> 列</>
           ) : (
-            <>第 3 行 第 4 列 → 块 <b className="text-sky-600">{bitmapBlock(3, 4)}</b></>
+            <>第 3 行 第 4 列 → 块 <b className="text-ink-info">{bitmapBlock(3, 4)}</b></>
           )}
           <div className="mt-1 text-xs text-muted-foreground">b = 32 × i + j（行、列均从 0 起）</div>
         </div>
@@ -102,11 +102,11 @@ export function FreeSpaceView() {
               key={i}
               className={cn(
                 "rounded border px-1.5 py-1 text-center font-mono text-[11px]",
-                e.reload ? "border-amber-500 bg-amber-500/20 font-bold" : "border-border bg-muted/40"
+                e.reload ? "border-warning bg-warning/20 font-bold" : "border-border bg-muted/40"
               )}
             >
               {e.block}
-              {e.reload && <div className="text-[9px] text-amber-600">读下一组</div>}
+              {e.reload && <div className="text-[9px] text-ink-warning">读下一组</div>}
             </div>
           ))}
         </div>

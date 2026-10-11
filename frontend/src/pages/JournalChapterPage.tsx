@@ -19,8 +19,8 @@ import { ItemNoteField } from "@/pages/itemNoteField";
 import { QuestionKpLine, WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
-  { id: "pass", label: "会", cls: "bg-emerald-600 text-white" },
-  { id: "fuzzy", label: "模糊", cls: "bg-amber-500 text-white" },
+  { id: "pass", label: "会", cls: "bg-success text-success-foreground" },
+  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
   { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
 ];
 
@@ -78,7 +78,7 @@ export function JournalChapterPage() {
       {dueInChapter.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-            <Check className="h-8 w-8 text-emerald-500" />
+            <Check className="h-8 w-8 text-ink-success" />
             <div>
               <p className="font-medium">
                 {isWrong ? "本章今日没有待复习的错题" : "本章今日没有待复盘的知识点"}
@@ -126,7 +126,7 @@ export function JournalChapterPage() {
                       ))}
                       <button
                         type="button"
-                        className="ml-auto inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-rose-700 dark:text-rose-300"
+                        className="ml-auto inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-ink-danger"
                         onClick={() => toggleWangdaoCollect(q, false)}
                       >
                         <Bookmark className="h-4 w-4 fill-current" />

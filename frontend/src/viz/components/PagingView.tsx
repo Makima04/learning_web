@@ -369,42 +369,42 @@ function PagingDemo({ mode }: { mode: Mode }) {
     <div className="space-y-4">
       {mode === "分页" && (
         <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拆") ? "border-sky-500 bg-sky-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拆") ? "border-info bg-info/15 font-bold" : "border-border")}>
             逻辑地址 {PG_VA}
           </span>
           <span>=</span>
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拆") ? "border-sky-500 bg-sky-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拆") ? "border-info bg-info/15 font-bold" : "border-border")}>
             页号 {page}
           </span>
           <span>+</span>
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拆") ? "border-amber-500 bg-amber-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拆") ? "border-warning bg-warning/15 font-bold" : "border-border")}>
             偏移 {offset}
           </span>
           <span>→</span>
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("表") ? "border-emerald-600 bg-emerald-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("表") ? "border-success bg-success/15 font-bold" : "border-border")}>
             页表[{page}] = 帧 {frame}
           </span>
           <span>→</span>
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拼") ? "border-violet-500 bg-violet-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拼") ? "border-app-purple bg-app-purple/15 font-bold" : "border-border")}>
             PA = {pa}
           </span>
         </div>
       )}
       {mode === "分段" && (
         <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拆") ? "border-sky-500 bg-sky-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拆") ? "border-info bg-info/15 font-bold" : "border-border")}>
             地址 ({seg}, {segOff})
           </span>
           <span>→</span>
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("界") ? "border-rose-500 bg-rose-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("界") ? "border-destructive bg-destructive/15 font-bold" : "border-border")}>
             偏移 {segOff} &lt; 段长 {SEG_TABLE[seg]!.limit} ✓
           </span>
           <span>→</span>
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("表") ? "border-emerald-600 bg-emerald-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("表") ? "border-success bg-success/15 font-bold" : "border-border")}>
             段表[{seg}] = 基址 {SEG_TABLE[seg]!.base}
           </span>
           <span>→</span>
-          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拼") ? "border-violet-500 bg-violet-500/15 font-bold" : "border-border")}>
+          <span className={cn("rounded border px-2 py-1", fr.hi.includes("拼") ? "border-app-purple bg-app-purple/15 font-bold" : "border-border")}>
             PA = {segPa}
           </span>
         </div>
@@ -414,9 +414,9 @@ function PagingDemo({ mode }: { mode: Mode }) {
           <BitBar
             hi={fr.hi}
             fields={[
-              { id: "dir", label: "页目录号", bits: 10, value: hexH(w.dir, 3), cls: "bg-sky-500/20" },
-              { id: "pt", label: "页号", bits: 10, value: hexH(w.pt, 3), cls: "bg-emerald-500/20" },
-              { id: "off", label: "页内偏移", bits: 12, value: hexH(w.offset, 3), cls: "bg-amber-500/20" },
+              { id: "dir", label: "页目录号", bits: 10, value: hexH(w.dir, 3), cls: "bg-info/20" },
+              { id: "pt", label: "页号", bits: 10, value: hexH(w.pt, 3), cls: "bg-success/20" },
+              { id: "off", label: "页内偏移", bits: 12, value: hexH(w.offset, 3), cls: "bg-warning/20" },
             ]}
           />
           <div className="flex min-w-[28rem] overflow-x-auto font-mono text-[10px]">
@@ -440,27 +440,27 @@ function PagingDemo({ mode }: { mode: Mode }) {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            <Chip on={fr.hi.includes("拆")} cls="border-sky-500 bg-sky-500/15">
+            <Chip on={fr.hi.includes("拆")} cls="border-info bg-info/15">
               {`VA ${hexH(TL_VA, 8)}`}
             </Chip>
             <span className="text-xs text-muted-foreground">→</span>
-            <Chip on={fr.hi.includes("pdbr")} cls="border-rose-500 bg-rose-500/15">
+            <Chip on={fr.hi.includes("pdbr")} cls="border-destructive bg-destructive/15">
               {`PDBR ${hexH(w.pdbr, 8)}（物理）`}
             </Chip>
             <span className="text-xs text-muted-foreground">→</span>
-            <Chip on={fr.hi.includes("pde")} cls="border-sky-500 bg-sky-500/15">
+            <Chip on={fr.hi.includes("pde")} cls="border-info bg-info/15">
               {`PDE ${hexH(w.pdePa, 8)}`}
             </Chip>
             <span className="text-xs text-muted-foreground">→</span>
-            <Chip on={fr.hi.includes("ptb")} cls="border-emerald-600 bg-emerald-500/15">
+            <Chip on={fr.hi.includes("ptb")} cls="border-success bg-success/15">
               {`PT 基址 ${hexH(w.ptBase, 8)}`}
             </Chip>
             <span className="text-xs text-muted-foreground">→</span>
-            <Chip on={fr.hi.includes("pte")} cls="border-violet-500 bg-violet-500/15">
+            <Chip on={fr.hi.includes("pte")} cls="border-app-purple bg-app-purple/15">
               {`PTE ${hexH(w.ptePa, 8)}`}
             </Chip>
             <span className="text-xs text-muted-foreground">→</span>
-            <Chip on={fr.hi.includes("拼")} cls="border-amber-500 bg-amber-500/15">
+            <Chip on={fr.hi.includes("拼")} cls="border-warning bg-warning/15">
               {`PA ${hexH(w.pa, 8)}`}
             </Chip>
           </div>
@@ -478,26 +478,26 @@ function PagingDemo({ mode }: { mode: Mode }) {
             hi={fr.hi}
             fields={[
               { id: "unused", label: "未用", bits: 25, value: "保留", cls: "bg-muted/50" },
-              { id: "l1", label: "L1", bits: 9, value: "512 项", cls: "bg-sky-500/20" },
-              { id: "l2", label: "L2", bits: 9, value: "512 项", cls: "bg-emerald-500/20" },
-              { id: "l3", label: "L3", bits: 9, value: "512 项", cls: "bg-violet-500/20" },
-              { id: "off", label: "偏移", bits: 12, value: "4KB", cls: "bg-amber-500/20" },
+              { id: "l1", label: "L1", bits: 9, value: "512 项", cls: "bg-info/20" },
+              { id: "l2", label: "L2", bits: 9, value: "512 项", cls: "bg-success/20" },
+              { id: "l3", label: "L3", bits: 9, value: "512 项", cls: "bg-app-purple/20" },
+              { id: "off", label: "偏移", bits: 12, value: "4KB", cls: "bg-warning/20" },
             ]}
           />
           <div className="flex flex-wrap items-center gap-1.5">
-            <Chip on={fr.hi.includes("l1")} cls="border-sky-500 bg-sky-500/15">
+            <Chip on={fr.hi.includes("l1")} cls="border-info bg-info/15">
               {`L1 ${l1} 页框`}
             </Chip>
             <span className="text-xs text-muted-foreground">→</span>
-            <Chip on={fr.hi.includes("l2")} cls="border-emerald-600 bg-emerald-500/15">
+            <Chip on={fr.hi.includes("l2")} cls="border-success bg-success/15">
               {`L2 ${l2} 页框`}
             </Chip>
             <span className="text-xs text-muted-foreground">→</span>
-            <Chip on={fr.hi.includes("l3")} cls="border-violet-500 bg-violet-500/15">
+            <Chip on={fr.hi.includes("l3")} cls="border-app-purple bg-app-purple/15">
               {`L3 ${l3 / 1024}K 页框`}
             </Chip>
             <span className="text-xs text-muted-foreground">→</span>
-            <Chip on={fr.hi.includes("off")} cls="border-amber-500 bg-amber-500/15">
+            <Chip on={fr.hi.includes("off")} cls="border-warning bg-warning/15">
               {`数据页 2²⁷`}
             </Chip>
           </div>
@@ -506,7 +506,7 @@ function PagingDemo({ mode }: { mode: Mode }) {
               <div className="rounded-lg border bg-muted/30 px-3 py-2">
                 满映射：L3 = {l3.toLocaleString("en-US")} = 256K 个页框
               </div>
-              <div className="rounded-lg border border-emerald-600/40 bg-emerald-500/10 px-3 py-2 font-bold">
+              <div className="rounded-lg border border-success/40 bg-success/10 px-3 py-2 font-bold">
                 只用 1 个数据页：页表仅 L1+L2+L3 各 1 张
               </div>
             </div>

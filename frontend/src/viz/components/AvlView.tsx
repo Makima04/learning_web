@@ -213,11 +213,11 @@ export function AvlView() {
           const onPath = fr.pathKeys.includes(key);
           const act = fr.actKeys?.includes(key);
           const fill = isWarn ? C.warn : isNew ? C.active : act ? C.done : C.node;
-          const stroke = onPath ? "#0284c7" : "#94a3b8";
+          const stroke = onPath ? "var(--viz-ink-info)" : "var(--viz-line)";
           return (
             <g key={key}>
               <circle cx={x} cy={y} r={20} fill={fill} stroke={stroke} strokeWidth={onPath ? 2.4 : 1.2} />
-              <text x={x} y={y + 5} textAnchor="middle" fontSize={14} fontWeight={700} fill={isWarn || isNew || act ? "#fff" : C.nodeText}>
+              <text x={x} y={y + 5} textAnchor="middle" fontSize={14} fontWeight={700} fill={isWarn ? "var(--viz-warn-text)" : isNew || act ? "var(--viz-on)" : C.nodeText}>
                 {key}
               </text>
               {fr.showBf && (

@@ -102,13 +102,13 @@ export function ArpView() {
           {(fr.show === "arp" ? same : fr.show === "arpX" ? cross : hit).packets.map((pk) => (
             <div key={pk.step} className={cn(
               "flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs",
-              pk.broadcast ? "border-amber-500 bg-amber-500/10" : pk.kind === "data" ? "border-emerald-500 bg-emerald-500/10" : "border-border"
+              pk.broadcast ? "border-warning bg-warning/10" : pk.kind === "data" ? "border-success bg-success/10" : "border-border"
             )}>
               <span className="w-16 shrink-0 font-semibold">
                 {pk.kind === "request" ? "① 请求" : pk.kind === "reply" ? "② 回应" : "③ 数据"}
               </span>
               <span className="flex-1">{pk.note}</span>
-              {pk.broadcast && <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">广播</span>}
+              {pk.broadcast && <span className="rounded bg-warning px-1.5 py-0.5 text-[10px] font-bold text-white">广播</span>}
             </div>
           ))}
         </div>
@@ -125,7 +125,7 @@ export function ArpView() {
           <tbody>
             {ICMP_TYPES.map((t) => (
               <tr key={t.no} className="border-t">
-                <td className="py-1 font-mono font-bold text-sky-600">{t.no}</td>
+                <td className="py-1 font-mono font-bold text-ink-info">{t.no}</td>
                 <td className="">{t.name}</td>
                 <td className="text-muted-foreground">{t.note}</td>
               </tr>
@@ -138,7 +138,7 @@ export function ArpView() {
           {traceroute(4).map((h) => (
             <div key={h.ttl} className="flex items-center gap-1.5">
               {h.ttl > 1 && <span className="text-muted-foreground">→</span>}
-              <span className={cn("rounded border px-2 py-1 font-mono", h.type === "echo" ? "border-emerald-500 bg-emerald-500/10" : "border-border")}>
+              <span className={cn("rounded border px-2 py-1 font-mono", h.type === "echo" ? "border-success bg-success/10" : "border-border")}>
                 TTL={h.ttl} {h.from}
                 <div className="text-[10px] text-muted-foreground">ICMP {h.type === "echo" ? "0 回答" : "11 超时"}</div>
               </span>

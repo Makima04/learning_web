@@ -116,11 +116,11 @@ export function DatapathView() {
               <rect
                 x={x} y={y} width={100} height={56} rx={8}
                 fill={on ? C.active : C.node}
-                stroke={on ? C.active : "#94a3b8"}
+                stroke={on ? C.active : "var(--viz-line)"}
                 strokeWidth={on ? 2 : 1}
               />
               {label.split("\n").map((ln, k) => (
-                <text key={k} x={x + 50} y={y + 24 + k * 14} textAnchor="middle" fontSize="12" fontWeight={700} fill={on ? "#fff" : C.nodeText}>
+                <text key={k} x={x + 50} y={y + 24 + k * 14} textAnchor="middle" fontSize="12" fontWeight={700} fill={on ? "var(--viz-on)" : C.nodeText}>
                   {ln}
                 </text>
               ))}

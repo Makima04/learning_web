@@ -133,7 +133,7 @@ function HamPanel({ cover, phase }: { cover?: number[]; phase: string }) {
               <div
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded border font-mono text-sm font-bold",
-                  on ? "border-amber-500 bg-amber-500 text-white" : isP ? "border-sky-400 bg-sky-500/10 text-sky-600" : "border-border bg-muted/40"
+                  on ? "border-warning bg-warning text-warning-foreground" : isP ? "border-info bg-info/10 text-ink-info" : "border-border bg-muted/40"
                 )}
               >
                 {b}
@@ -155,7 +155,7 @@ function CrcPanel({ row }: { row?: number }) {
     <div className="overflow-x-auto rounded-xl border bg-muted/30 p-3 font-mono text-xs leading-6">
       <div className="font-bold">{MSG.join("")}{"0".repeat(GX.length - 1)} ← 被除数：M = {MSG.join("")} 补 {GX.length - 1} 个 0</div>
       {steps.map((s, i) => (
-        <div key={i} className={cn("whitespace-pre", row === i && "rounded bg-amber-500/20 px-1")}>
+        <div key={i} className={cn("whitespace-pre", row === i && "rounded bg-warning/20 px-1")}>
           {" ".repeat(s.divisorAt)}
           {GX.join("")} ┐ 异或后 ↓ {" "}
           {i === steps.length - 1 ? `余数 = ${s.state.slice(-(GX.length - 1)).join("")}` : s.state.join("")}
@@ -180,7 +180,7 @@ export function CheckCodeView() {
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="rounded bg-muted px-2 py-1 font-mono">收到 {RECV.join("")}</span>
               <span className="text-muted-foreground">S = {SYN} → 第 {SYN} 位出错 → 纠回 {CODE.join("")}</span>
-              <span className="rounded bg-emerald-600 px-2 py-1 font-mono text-white">纠正成功</span>
+              <span className="rounded bg-success px-2 py-1 font-mono text-white">纠正成功</span>
             </div>
           )}
         </div>

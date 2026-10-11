@@ -207,11 +207,11 @@ export function RbtView() {
                   cx={x}
                   cy={y}
                   r={R}
-                  fill={n.red ? C.bad : "#1e293b"}
-                  stroke={hi ? C.active : n.red ? "#be123c" : "#0f172a"}
+                  fill={n.red ? C.bad : "var(--viz-ink)"}
+                  stroke={hi ? C.active : n.red ? "var(--viz-bad)" : "var(--viz-node-text)"}
                   strokeWidth={hi ? 3 : 1}
                 />
-                <text x={x} y={y + 5} textAnchor="middle" fontSize={12} fontWeight={700} fill="#fff">
+                <text x={x} y={y + 5} textAnchor="middle" fontSize={12} fontWeight={700} fill={n.red ? "var(--viz-on)" : "var(--viz-ink-text)"}>
                   {n.v}
                 </text>
               </g>

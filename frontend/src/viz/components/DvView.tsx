@@ -132,7 +132,7 @@ export function DvView() {
             const [x, y] = POS[n]!;
             return (
               <g key={n}>
-                <circle cx={x} cy={y} r={16} fill={C.node} stroke="#94a3b8" />
+                <circle cx={x} cy={y} r={16} fill={C.node} stroke="var(--viz-line)" />
                 <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={C.nodeText}>
                   {n}
                 </text>
@@ -159,7 +159,7 @@ export function DvView() {
                     const v = mat[x]![y]!;
                     const ch = fr.changed.includes(`${x}→${y}`);
                     return (
-                      <td key={y} className={cn("border border-border p-1", ch && "bg-emerald-500/25 font-bold")}>
+                      <td key={y} className={cn("border border-border p-1", ch && "bg-success/25 font-bold")}>
                         {v === INF ? "∞" : v}
                       </td>
                     );

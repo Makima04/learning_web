@@ -220,7 +220,7 @@ function CharRow({
               height={28}
               rx={5}
               fill={fill}
-              stroke={st === "normal" ? "#94a3b8" : "transparent"}
+              stroke={st === "normal" ? "var(--viz-line)" : "transparent"}
             />
             <text
               x={(k * CELL + (CELL - 2)) / 2}
@@ -228,7 +228,7 @@ function CharRow({
               textAnchor="middle"
               fontSize={14}
               fontWeight={700}
-              fill={st === "normal" ? C.nodeText : "#fff"}
+              fill={st === "normal" ? C.nodeText : "var(--viz-on)"}
             >
               {ch}
             </text>

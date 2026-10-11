@@ -88,16 +88,16 @@ export function GreedyView() {
     <div className="space-y-4">
       <svg viewBox={`0 0 ${W + 30} 250`} className="w-full">
         {/* 时间轴 */}
-        <line x1={20} y1={228} x2={W + 20} y2={228} stroke="#94a3b8" />
+        <line x1={20} y1={228} x2={W + 20} y2={228} stroke="var(--viz-line)" />
         {Array.from({ length: 8 }, (_, i) => i * 2).map((t) => (
           <g key={t}>
-            <line x1={20 + (t / 14) * W} y1={224} x2={20 + (t / 14) * W} y2={232} stroke="#94a3b8" />
-            <text x={20 + (t / 14) * W} y={244} textAnchor="middle" fontSize={9} fill="#64748b">{t}</text>
+            <line x1={20 + (t / 14) * W} y1={224} x2={20 + (t / 14) * W} y2={232} stroke="var(--viz-line)" />
+            <text x={20 + (t / 14) * W} y={244} textAnchor="middle" fontSize={9} fill="var(--viz-text)">{t}</text>
           </g>
         ))}
         {/* 上一个选中活动的结束线 */}
         {fr.lastF !== null && (
-          <line x1={20 + (fr.lastF / 14) * W} y1={6} x2={20 + (fr.lastF / 14) * W} y2={222} stroke="#10b981" strokeDasharray="4 4" strokeWidth={1.4} />
+          <line x1={20 + (fr.lastF / 14) * W} y1={6} x2={20 + (fr.lastF / 14) * W} y2={222} stroke="var(--viz-done)" strokeDasharray="4 4" strokeWidth={1.4} />
         )}
         {ACTS.map((a, i) => {
           const y = 12 + i * 19;
@@ -111,10 +111,10 @@ export function GreedyView() {
                 width={((a.f - a.s) / 14) * W}
                 height={13}
                 rx={4}
-                fill={isPicked ? "#10b981" : fr.cur === i ? "#f59e0b" : "#94a3b8"}
+                fill={isPicked ? "var(--viz-done)" : fr.cur === i ? "var(--viz-warn)" : "var(--viz-line)"}
                 opacity={isPicked || fr.cur === i ? 0.9 : 0.35}
               />
-              <text x={24 + (a.s / 14) * W} y={y + 10} fontSize={9} fontWeight={700} fill="#fff">
+              <text x={24 + (a.s / 14) * W} y={y + 10} fontSize={9} fontWeight={700} fill={fr.cur === i && !isPicked ? "var(--viz-warn-text)" : "var(--viz-on)"}>
                 {i + 1}
               </text>
             </g>

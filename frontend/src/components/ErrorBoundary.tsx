@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!error) return this.props.children;
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6">
-        <div className="w-full max-w-md rounded-lg border bg-card p-6 text-center shadow-sm">
+        <div className="w-full max-w-md rounded-2xl bg-card p-6 text-center shadow-edge">
           <h1 className="text-lg font-semibold">页面出了点问题</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             渲染时发生错误。学习进度在本地与服务端都有保存，刷新通常即可恢复。

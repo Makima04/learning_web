@@ -4,71 +4,154 @@
 
 @layer base {
   /*
-   * 白 + 绿（参考 408os 真题系统）：
-   * - 页面近白 / 冷灰底，题目与正文近黑
-   * - 主色柔和翠绿：按钮、导航激活、强调
-   * - 卡片纯白，轻阴影感靠 border；阅读高亮用淡绿底，不改字色
+   * 动森风（参考 guokaigdg/animal-island-ui，MIT）：
+   * - 白天：奶油点点底 + 棕色字，主色动森青绿（比游戏原色略深，保证白字对比度 ≥3）
+   * - 夜晚：海军蓝底 + 米色字，主色亮青绿配深色字
+   * - 卡片/按钮靠底部实色「厚边」(--edge / --primary-edge) 出立体感，不用模糊阴影
    */
   :root {
-    --background: 150 20% 97%;
-    --foreground: 160 12% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 160 12% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 160 12% 12%;
-    /* 翠绿主色（接近 408 的「查看答案」按钮） */
-    --primary: 152 48% 38%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 150 18% 94%;
-    --secondary-foreground: 160 12% 20%;
-    --muted: 150 14% 94%;
-    --muted-foreground: 160 8% 40%;
-    --accent: 152 40% 94%;
-    --accent-foreground: 152 48% 28%;
-    --destructive: 0 72% 48%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 150 12% 88%;
-    --input: 150 12% 86%;
-    --ring: 152 48% 38%;
-    --radius: 0.75rem;
-    /* 阅读：淡绿底 + 深绿下划线，字仍近黑 */
-    --reader-hl: 152 45% 36%;
-    --reader-hl-bg: 152 42% 93%;
-    --reader-active: 152 36% 94%;
-    --reader-active-ring: 152 40% 70%;
-    --sidebar: 0 0% 100%;
-    /* 浅绿卡片面（统计块、标签等可用） */
-    --card-soft: 152 35% 96%;
+    --background: 50 60% 92%;
+    --foreground: 34 30% 32%;
+    --card: 46 100% 97%;
+    --card-foreground: 34 30% 32%;
+    --popover: 46 100% 97%;
+    --popover-foreground: 34 30% 32%;
+    --primary: 174 85% 32%;
+    --primary-foreground: 48 100% 96%;
+    --primary-edge: 174 86% 25%;
+    /* 游戏原色青绿：只做装饰（叶子、选中光晕），不承载文字 */
+    --primary-bright: 175 78% 44%;
+    --secondary: 42 46% 89%;
+    --secondary-foreground: 34 30% 32%;
+    --muted: 43 47% 88%;
+    --muted-foreground: 36 17% 46%;
+    --accent: 163 47% 93%;
+    --accent-foreground: 175 83% 26%;
+    --destructive: 0 64% 58%;
+    --destructive-foreground: 48 100% 96%;
+    --destructive-edge: 0 50% 47%;
+    --border: 39 40% 84%;
+    --input: 39 38% 78%;
+    --ring: 174 85% 32%;
+    --edge: 41 42% 80%;
+    --radius: 1.25rem;
+    /* 语义色：成功/提醒/信息（SRS 评分、状态标签） */
+    --success: 92 62% 40%;
+    --success-foreground: 48 100% 96%;
+    --success-edge: 92 62% 30%;
+    --warning: 46 92% 54%;
+    --warning-foreground: 34 30% 25%;
+    --warning-edge: 45 88% 44%;
+    --info: 228 70% 66%;
+    --info-foreground: 48 100% 96%;
+    /* 状态色的「墨水」版：小字用，奶油底上对比度 ≥4.5 */
+    --ink-success: 100 59% 30%;
+    --ink-warning: 39 100% 27%;
+    --ink-info: 228 51% 48%;
+    --ink-danger: 0 52% 46%;
+    --ink-purple: 268 48% 49%;
+    /* NookPhone 应用色：科目/模块图标底色，不承载正文 */
+    --app-pink: 351 85% 81%;
+    --app-purple: 271 77% 71%;
+    --app-blue: 228 78% 74%;
+    --app-yellow: 43 90% 69%;
+    --app-orange: 21 71% 65%;
+    --app-teal: 161 50% 67%;
+    --app-green: 120 34% 66%;
+    --app-red: 3 96% 71%;
+    --app-brown: 38 26% 48%;
+    /* 阅读：青绿下划线，当前句淡黄马克笔底 */
+    --reader-hl: 174 85% 32%;
+    --reader-hl-bg: 47 87% 88%;
+    --reader-active: 47 87% 88%;
+    --reader-active-ring: 45 82% 68%;
+    --sidebar: 46 100% 97%;
+    --card-soft: 46 76% 93%;
+    /* 页面点点底纹 */
+    --dot: 40 25% 70% / 0.32;
   }
 
   .dark {
-    /* 深绿夜色：仍以绿为强调，正文浅色 */
-    --background: 160 14% 9%;
-    --foreground: 150 12% 94%;
-    --card: 160 12% 12%;
-    --card-foreground: 150 12% 94%;
-    --popover: 160 12% 14%;
-    --popover-foreground: 150 12% 94%;
-    --primary: 152 48% 48%;
-    --primary-foreground: 160 20% 8%;
-    --secondary: 160 12% 17%;
-    --secondary-foreground: 150 12% 92%;
-    --muted: 160 10% 15%;
-    --muted-foreground: 150 8% 68%;
-    --accent: 152 22% 18%;
-    --accent-foreground: 152 50% 72%;
-    --destructive: 0 62% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 160 10% 20%;
-    --input: 160 10% 22%;
-    --ring: 152 48% 48%;
-    --reader-hl: 152 50% 52%;
-    --reader-hl-bg: 152 28% 16%;
-    --reader-active: 152 22% 16%;
-    --reader-active-ring: 152 35% 36%;
-    --sidebar: 160 14% 8%;
-    --card-soft: 152 16% 14%;
+    --background: 229 31% 25%;
+    --foreground: 36 40% 90%;
+    --card: 228 29% 30%;
+    --card-foreground: 36 40% 90%;
+    --popover: 228 29% 34%;
+    --popover-foreground: 36 40% 90%;
+    --primary: 173 63% 45%;
+    --primary-foreground: 221 51% 16%;
+    --primary-edge: 174 64% 34%;
+    --primary-bright: 174 58% 60%;
+    --secondary: 228 29% 36%;
+    --secondary-foreground: 36 40% 90%;
+    --muted: 229 29% 32%;
+    --muted-foreground: 36 17% 69%;
+    --accent: 193 34% 28%;
+    --accent-foreground: 173 61% 72%;
+    --destructive: 0 71% 69%;
+    --destructive-foreground: 221 51% 16%;
+    --destructive-edge: 0 41% 53%;
+    --border: 228 27% 40%;
+    --input: 228 26% 44%;
+    --ring: 173 63% 45%;
+    --edge: 229 32% 20%;
+    --success: 92 50% 55%;
+    --success-foreground: 221 51% 16%;
+    --success-edge: 92 40% 38%;
+    --warning: 46 85% 60%;
+    --warning-foreground: 221 51% 16%;
+    --warning-edge: 46 60% 42%;
+    --info: 228 75% 76%;
+    --info-foreground: 221 51% 16%;
+    --ink-success: 96 57% 69%;
+    --ink-warning: 45 86% 72%;
+    --ink-info: 228 89% 85%;
+    --ink-danger: 0 79% 80%;
+    --ink-purple: 269 81% 84%;
+    --app-pink: 351 60% 70%;
+    --app-purple: 271 55% 68%;
+    --app-blue: 228 60% 70%;
+    --app-yellow: 43 75% 62%;
+    --app-orange: 21 60% 62%;
+    --app-teal: 161 40% 58%;
+    --app-green: 120 28% 58%;
+    --app-red: 3 75% 66%;
+    --app-brown: 38 22% 50%;
+    --reader-hl: 174 58% 60%;
+    --reader-hl-bg: 227 28% 38%;
+    --reader-active: 227 28% 38%;
+    --reader-active-ring: 227 26% 54%;
+    --sidebar: 229 32% 22%;
+    --card-soft: 227 28% 32%;
+    --dot: 0 0% 100% / 0.05;
   }
+}
+
+/* 图解 408 的 SVG 填色：引用上面的语义色，亮暗自动跟着走 */
+:root {
+  --viz-node: hsl(var(--card));
+  --viz-node-text: hsl(var(--foreground));
+  --viz-active: hsl(var(--primary));
+  --viz-done: hsl(var(--success));
+  --viz-warn: hsl(var(--warning));
+  --viz-warn-text: hsl(var(--warning-foreground));
+  --viz-bad: hsl(var(--destructive));
+  --viz-on: hsl(var(--primary-foreground));
+  --viz-line: hsl(var(--muted-foreground) / 0.55);
+  --viz-line-soft: hsl(var(--muted-foreground) / 0.32);
+  --viz-text: hsl(var(--muted-foreground));
+  --viz-ink-info: hsl(var(--ink-info));
+  --viz-ink-ok: hsl(var(--ink-success));
+  --viz-ink-warn: hsl(var(--ink-warning));
+  --viz-info-soft: hsl(var(--info) / 0.18);
+  --viz-bad-soft: hsl(var(--destructive) / 0.35);
+  --viz-ink: hsl(var(--foreground));
+  --viz-ink-text: hsl(var(--primary-foreground));
+}
+/* 红黑树的黑结点：夜间前景色是浅色，不能同时当底和字 */
+.dark {
+  --viz-ink: hsl(221 45% 12%);
+  --viz-ink-text: hsl(var(--foreground));
 }
 
 @layer base {
@@ -77,9 +160,14 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    background-image: radial-gradient(circle, hsl(var(--dot)) 1.5px, transparent 1.6px),
+      radial-gradient(circle, hsl(var(--dot)) 1px, transparent 1.1px);
+    background-size: 28px 28px, 14px 14px;
+    background-position: 0 0, 7px 7px;
+    background-attachment: fixed;
     font-feature-settings: "tnum" 1;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-family: "Nunito Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "PingFang SC", "HarmonyOS Sans SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     text-rendering: optimizeLegibility;
   }
   .tnum {
@@ -117,8 +205,14 @@
 .reader-para {
   margin: 0 0 1.15em;
   text-indent: 2em;
-  text-align: justify;
+  text-align: left;
   hyphens: auto;
+}
+/* 窄屏两端对齐会把词间距撑得很大，仅宽屏启用 */
+@media (min-width: 768px) {
+  .reader-para {
+    text-align: justify;
+  }
 }
 .reader-para:last-child {
   margin-bottom: 0;
@@ -177,11 +271,31 @@
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.22);
+  background: hsl(var(--edge));
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.35);
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* 选中项旁那片轻轻摇摆的叶子 */
+@keyframes leaf-wiggle {
+  0%,
+  100% {
+    transform: rotate(-12deg);
+  }
+  50% {
+    transform: rotate(14deg);
+  }
+}
+.leaf-wiggle {
+  animation: leaf-wiggle 2s ease-in-out infinite;
+  transform-origin: 30% 90%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .leaf-wiggle {
+    animation: none;
+  }
 }
 ::-webkit-scrollbar-track {
   background: transparent;

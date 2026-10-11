@@ -19,8 +19,8 @@ export function ExamTags({
   const cls = examClassOf(year, n);
   if (!cls) return null;
   const pill = compact ? "rounded px-1.5 py-0.5 text-[10px]" : "rounded-md px-2 py-0.5 text-[11px]";
-  const majorCls = cn(pill, "bg-sky-500/15 text-sky-800 dark:text-sky-200");
-  const minorCls = cn(pill, "bg-violet-500/15 text-violet-800 dark:text-violet-200");
+  const majorCls = cn(pill, "bg-info/15 text-ink-info");
+  const minorCls = cn(pill, "bg-app-purple/15 text-ink-purple");
   const q = examKey(year, n);
   if (!link) {
     return (

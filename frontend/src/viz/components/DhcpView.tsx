@@ -70,12 +70,12 @@ export function DhcpView() {
           {doraSteps().map((d) => (
             <div key={d.no} className={cn(
               "flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs",
-              d.broadcast ? "border-amber-500 bg-amber-500/10" : "border-border"
+              d.broadcast ? "border-warning bg-warning/10" : "border-border"
             )}>
-              <span className="w-20 shrink-0 font-bold text-sky-600">{d.name}</span>
+              <span className="w-20 shrink-0 font-bold text-ink-info">{d.name}</span>
               <span className="w-40 shrink-0 font-mono text-[11px] text-muted-foreground">{d.from} → {d.to}</span>
               <span className="flex-1">{d.note}</span>
-              {d.broadcast && <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">广播</span>}
+              {d.broadcast && <span className="rounded bg-warning px-1.5 py-0.5 text-[10px] font-bold text-white">广播</span>}
             </div>
           ))}
         </div>
@@ -85,7 +85,7 @@ export function DhcpView() {
           <div className="flex items-center gap-2">
             <span className="w-16 font-semibold">客户端</span>
             <div className="flex flex-1 items-center gap-2">
-              <div className="h-8 flex-1 rounded border border-emerald-500 bg-emerald-500/10 px-2 leading-8">
+              <div className="h-8 flex-1 rounded border border-success bg-success/10 px-2 leading-8">
                 控制连接（服务器 21 口）— 命令/应答
               </div>
             </div>
@@ -93,7 +93,7 @@ export function DhcpView() {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-16" />
-            <div className={cn("h-8 flex-1 rounded border px-2 leading-8", fr.show === "ftp-active" ? "border-rose-400 bg-rose-500/10" : "border-sky-400 bg-sky-500/10")}>
+            <div className={cn("h-8 flex-1 rounded border px-2 leading-8", fr.show === "ftp-active" ? "border-destructive bg-destructive/10" : "border-info bg-info/10")}>
               {fr.show === "ftp-active"
                 ? "数据连接：服务器 20 口 → 主动连客户端指定口（NAT 不友好）"
                 : "数据连接：客户端 → 主动连服务器 PASV 指定的口（NAT 友好）"}

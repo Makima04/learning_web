@@ -85,11 +85,11 @@ export function FileStructView() {
               key={s}
               className={cn(
                 "rounded-lg border px-3 py-2",
-                fr.structure === s ? "border-sky-500 bg-sky-500/10" : "border-border"
+                fr.structure === s ? "border-info bg-info/10" : "border-border"
               )}
             >
               <p className="font-semibold">{s === "seq" ? "连续" : s === "linked" ? "链接" : "索引"}</p>
-              <p className="font-mono text-sky-600">读第 5 块 = {rr.reads} 次读盘</p>
+              <p className="font-mono text-ink-info">读第 5 块 = {rr.reads} 次读盘</p>
             </div>
           );
         })}
@@ -99,7 +99,7 @@ export function FileStructView() {
           {r.path.map((blk, i) => (
             <div key={i} className="flex items-center gap-2">
               {i > 0 && <span className="text-muted-foreground">→</span>}
-              <div className={cn("rounded-md border px-2.5 py-1.5 text-center font-mono text-xs", i === r.path.length - 1 ? "border-emerald-500 bg-emerald-500/15 font-bold" : "border-border bg-muted/40")}>
+              <div className={cn("rounded-md border px-2.5 py-1.5 text-center font-mono text-xs", i === r.path.length - 1 ? "border-success bg-success/15 font-bold" : "border-border bg-muted/40")}>
                 块{blk}
                 <div className="text-[10px] text-muted-foreground">{i === r.path.length - 1 ? "目标(第5块)" : `→${LINK_NEXT[blk] ?? "∅"}`}</div>
               </div>
@@ -110,9 +110,9 @@ export function FileStructView() {
       {(fr.structure === "seq" || fr.structure === "indexed") && (
         <div className="flex items-center gap-3 rounded-xl border border-dashed p-3 font-mono text-xs">
           {fr.structure === "seq" ? (
-            <>逻辑块 5 → 物理块 {F_START}+4 = <b className="text-emerald-600">{r.path[0]}</b>（一次定位）</>
+            <>逻辑块 5 → 物理块 {F_START}+4 = <b className="text-ink-success">{r.path[0]}</b>（一次定位）</>
           ) : (
-            <>索引表[5] = <b className="text-emerald-600">{r.path[0]}</b>（表在内存，读盘 1 次）</>
+            <>索引表[5] = <b className="text-ink-success">{r.path[0]}</b>（表在内存，读盘 1 次）</>
           )}
         </div>
       )}

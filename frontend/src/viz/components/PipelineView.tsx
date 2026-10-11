@@ -74,11 +74,11 @@ function buildPipelineFrames(loadUse: boolean): PFrame[] {
 }
 
 const STAGE_COLOR: Record<string, string> = {
-  IF: "bg-sky-500 text-white",
-  ID: "bg-emerald-600 text-white",
-  EX: "bg-amber-500 text-white",
-  MEM: "bg-violet-500 text-white",
-  WB: "bg-rose-500 text-white",
+  IF: "bg-info text-info-foreground",
+  ID: "bg-success text-success-foreground",
+  EX: "bg-warning text-warning-foreground",
+  MEM: "bg-app-purple text-white",
+  WB: "bg-destructive text-destructive-foreground",
   "*": "bg-muted text-muted-foreground border border-dashed",
 };
 

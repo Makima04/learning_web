@@ -107,8 +107,8 @@ export function VirtMemView() {
           const on = fr.active.includes(id);
           return (
             <g key={id} opacity={fr.active.length === 0 ? 0.85 : on ? 1 : 0.4}>
-              <rect x={n.x} y={n.y} width={n.w} height={30} rx={8} fill={on ? C.active : C.node} stroke="#94a3b8" />
-              <text x={n.x + n.w / 2} y={n.y + 20} textAnchor="middle" fontSize={12} fontWeight={700} fill={on ? "#fff" : C.nodeText}>
+              <rect x={n.x} y={n.y} width={n.w} height={30} rx={8} fill={on ? C.active : C.node} stroke="var(--viz-line)" />
+              <text x={n.x + n.w / 2} y={n.y + 20} textAnchor="middle" fontSize={12} fontWeight={700} fill={on ? "var(--viz-on)" : C.nodeText}>
                 {n.label}
               </text>
             </g>
@@ -125,13 +125,13 @@ export function VirtMemView() {
             <>
               <span>VA 0x{fr.vaNum.toString(16).toUpperCase()}</span>
               <span>=</span>
-              <span className="rounded bg-emerald-500/25 px-1.5 py-0.5 font-bold">虚页 {fr.vaNum >> 12}</span>
-              <span className="rounded bg-amber-500/25 px-1.5 py-0.5 font-bold">偏移 0x{(fr.vaNum & 0xfff).toString(16).toUpperCase()}</span>
+              <span className="rounded bg-success/25 px-1.5 py-0.5 font-bold">虚页 {fr.vaNum >> 12}</span>
+              <span className="rounded bg-warning/25 px-1.5 py-0.5 font-bold">偏移 0x{(fr.vaNum & 0xfff).toString(16).toUpperCase()}</span>
               <span>→</span>
-              <span className="rounded bg-sky-500/25 px-1.5 py-0.5 font-bold">PA 0x{fr.pa.toString(16).toUpperCase()}</span>
+              <span className="rounded bg-info/25 px-1.5 py-0.5 font-bold">PA 0x{fr.pa.toString(16).toUpperCase()}</span>
             </>
           ) : (
-            <span className="text-rose-600 dark:text-rose-400">虚页 {fr.vaNum >> 12}：缺页！有效位 0，转 OS 处理</span>
+            <span className="text-ink-danger">虚页 {fr.vaNum >> 12}：缺页！有效位 0，转 OS 处理</span>
           )}
         </div>
       )}
@@ -139,7 +139,7 @@ export function VirtMemView() {
         <p className="text-xs text-muted-foreground">TLB（快表）当前内容</p>
         <div className="flex flex-wrap gap-1.5">
           {fr.tlb.map((t) => (
-            <span key={t.vpn} className="rounded border border-border bg-sky-500/15 px-2 py-0.5 font-mono text-xs font-bold">
+            <span key={t.vpn} className="rounded border border-border bg-info/15 px-2 py-0.5 font-mono text-xs font-bold">
               页{t.vpn} → 帧{t.frame}
             </span>
           ))}

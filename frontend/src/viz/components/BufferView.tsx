@@ -92,7 +92,7 @@ function Timeline({ ev, total }: { ev: BufferEvent[]; total: number }) {
                   key={i}
                   className={cn(
                     "absolute top-0 h-full overflow-hidden text-center text-[9px] font-bold leading-5 text-white",
-                    r.key === "fill" ? "bg-sky-500" : r.key === "move" ? "bg-amber-400 text-amber-900" : "bg-emerald-500"
+                    r.key === "fill" ? "bg-info" : r.key === "move" ? "bg-warning text-ink-warning" : "bg-success"
                   )}
                   style={{ left: `${(e.start / total) * 100}%`, width: `${((e.end - e.start) / total) * 100}%` }}
                 >
@@ -123,9 +123,9 @@ export function BufferView() {
               <span key={pr} className="rounded border border-border bg-muted/50 px-2 py-1">{pr}</span>
             ))}
             <span className="text-muted-foreground">→ 输出井（磁盘队列）→</span>
-            <span className="rounded border border-sky-400 bg-sky-500/10 px-2 py-1">SPOOLing 进程</span>
+            <span className="rounded border border-info bg-info/10 px-2 py-1">SPOOLing 进程</span>
             <span className="text-muted-foreground">→</span>
-            <span className="rounded border border-emerald-500 bg-emerald-500/10 px-2 py-1">打印机（独占）</span>
+            <span className="rounded border border-success bg-success/10 px-2 py-1">打印机（独占）</span>
           </div>
           <p className="mt-2 text-muted-foreground">独占设备 → 逻辑上的共享设备；用户进程写完井就返回，不必等纸打完</p>
         </div>
@@ -134,11 +134,11 @@ export function BufferView() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border p-3 text-center">
             <p className="text-xs text-muted-foreground">单缓冲 5 块</p>
-            <p className="font-mono text-lg font-bold text-amber-600">{SINGLE.total} µs</p>
+            <p className="font-mono text-lg font-bold text-ink-warning">{SINGLE.total} µs</p>
           </div>
           <div className="rounded-xl border p-3 text-center">
             <p className="text-xs text-muted-foreground">双缓冲 5 块</p>
-            <p className="font-mono text-lg font-bold text-emerald-600">{DOUBLE.total} µs</p>
+            <p className="font-mono text-lg font-bold text-ink-success">{DOUBLE.total} µs</p>
           </div>
         </div>
       )}

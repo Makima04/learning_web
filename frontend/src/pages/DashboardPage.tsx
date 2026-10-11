@@ -76,18 +76,18 @@ function StudyAction({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "group flex min-h-32 flex-col justify-between rounded-lg p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "group flex min-h-32 w-full flex-col justify-between rounded-2xl p-5 text-left transition-[transform,box-shadow,border-color,filter] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 enabled:active:translate-y-[3px] enabled:active:shadow-none",
         primary
-          ? "bg-primary text-primary-foreground transition-opacity hover:opacity-95"
-          : "border bg-card transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50",
+          ? "bg-primary text-primary-foreground shadow-edge-primary hover:brightness-105"
+          : "border-2 border-border bg-card shadow-edge enabled:hover:border-primary/50 disabled:cursor-not-allowed disabled:opacity-50",
       )}
     >
-      <span className={cn("grid h-9 w-9 place-items-center rounded-lg", primary ? "bg-white/15" : iconClassName)}>
-        <Icon className="h-5 w-5" />
+      <span className={cn("grid h-10 w-10 place-items-center rounded-xl", primary ? "bg-primary-foreground/20" : iconClassName)}>
+        <Icon className="h-5 w-5" strokeWidth={2.2} />
       </span>
       <span>
-        <span className="block text-lg font-semibold">{title}</span>
-        <span className={cn("mt-1 block text-sm", primary ? "text-white/80" : "text-muted-foreground")}>{description}</span>
+        <span className="block text-lg font-extrabold">{title}</span>
+        <span className={cn("mt-1 block text-sm", primary ? "text-primary-foreground/85" : "text-muted-foreground")}>{description}</span>
       </span>
     </button>
   );
@@ -203,7 +203,7 @@ export function DashboardPage() {
         : `今日 ${stats.reviewToday}/${stats.reviewGoal} 已完成 · 还有 ${stats.due} 个可继续`,
     primary: reviewIsPriority,
     disabled: !stats.canReview,
-    iconClassName: "bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
+    iconClassName: "bg-destructive/10 text-ink-danger",
     onClick: beginReview,
   };
   const learnAction = {
@@ -219,7 +219,7 @@ export function DashboardPage() {
           : "可继续学习新词",
     primary: !reviewIsPriority,
     disabled: !stats.canLearn,
-    iconClassName: "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
+    iconClassName: "bg-warning/10 text-ink-warning",
     onClick: beginLearn,
   };
   const studyActions = reviewIsPriority ? [reviewAction, learnAction] : [learnAction, reviewAction];
@@ -229,13 +229,13 @@ export function DashboardPage() {
       <section className="mb-6">
         <div>
           <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" />{dateLabel}</p>
-          <h1 className="text-2xl font-semibold">{user?.username ? `${user.username}，继续前进` : "今天，继续前进"}</h1>
+          <h1 className="text-2xl font-extrabold">{user?.username ? `${user.username}，继续前进` : "今天，继续前进"}</h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{tipFor(stats)}</p>
         </div>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(290px,0.8fr)]">
-        <Card className="overflow-hidden border-border/90 shadow-sm">
+        <Card className="overflow-hidden">
           <CardContent className="p-0">
             <div className="border-b p-5 md:p-6">
               <div className="flex items-start justify-between gap-6">
@@ -248,8 +248,8 @@ export function DashboardPage() {
                   <p className="mt-1 text-xs text-muted-foreground">已完成 / 今日计划</p>
                 </div>
               </div>
-              <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${progress * 100}%` }} />
+              <div className="mt-5 h-3 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary-bright transition-[width] duration-500" style={{ width: `${progress * 100}%` }} />
               </div>
             </div>
             <div className="grid gap-3 p-5 md:grid-cols-2 md:p-6">
@@ -272,7 +272,7 @@ export function DashboardPage() {
                     })()
                   }
                   primary={false}
-                  iconClassName="bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
+                  iconClassName="bg-warning/10 text-ink-warning"
                   onClick={() => navigate("/lists")}
                 />
               </div>
@@ -296,7 +296,7 @@ export function DashboardPage() {
                         : "记录今日所学，明日自动提醒复盘"
                   }
                   primary={false}
-                  iconClassName="bg-violet-50 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300"
+                  iconClassName="bg-app-purple/10 text-ink-purple"
                   onClick={() => navigate("/journal")}
                 />
               </div>
@@ -304,7 +304,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/90 shadow-none">
+        <Card>
           <CardContent className="p-5 md:p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -314,9 +314,9 @@ export function DashboardPage() {
               <span className="text-2xl font-semibold tnum">{Math.round(knownPercent)}%</span>
             </div>
             <div className="mt-7 flex h-3 overflow-hidden rounded-full bg-muted">
-              <div className="h-full bg-emerald-500" style={{ width: `${knownPercent}%` }} />
-              <div className="h-full bg-sky-500" style={{ width: `${reviewingPercent}%` }} />
-              <div className="h-full bg-amber-400" style={{ width: `${learningPercent}%` }} />
+              <div className="h-full bg-success" style={{ width: `${knownPercent}%` }} />
+              <div className="h-full bg-info" style={{ width: `${reviewingPercent}%` }} />
+              <div className="h-full bg-warning" style={{ width: `${learningPercent}%` }} />
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <span><b className="block text-base tnum">{stats.mastered}</b><span className="text-xs text-muted-foreground">已掌握</span></span>
@@ -329,7 +329,7 @@ export function DashboardPage() {
       </section>
 
       <section className="mt-6">
-        <Card className="border-border/90 shadow-sm">
+        <Card>
           <CardContent className="p-0">
             <div className="flex items-start justify-between gap-4 border-b p-5 md:p-6">
               <div>
@@ -379,7 +379,7 @@ export function DashboardPage() {
       </section>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(290px,0.8fr)]">
-        <Card className="border-border/90 shadow-none">
+        <Card>
           <CardContent className="p-5 md:p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -391,8 +391,8 @@ export function DashboardPage() {
               {forecast.map((count, index) => (
                 <div key={labels[index]} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2">
                   <span className={cn("text-xs tnum", index === 0 ? "font-semibold text-primary" : "text-muted-foreground")}>{count || ""}</span>
-                  <div className="flex h-24 w-full items-end rounded-sm bg-muted/70">
-                    <div className={cn("w-full rounded-sm", index === 0 ? "bg-primary" : "bg-foreground/25")} style={{ height: count ? `${Math.max(10, (count / maxForecast) * 100)}%` : "0%" }} />
+                  <div className="flex h-24 w-full items-end overflow-hidden rounded-lg bg-muted/70">
+                    <div className={cn("w-full rounded-lg", index === 0 ? "bg-primary" : "bg-app-teal")} style={{ height: count ? `${Math.max(10, (count / maxForecast) * 100)}%` : "0%" }} />
                   </div>
                   <span className="whitespace-nowrap text-[11px] text-muted-foreground">{labels[index]}</span>
                 </div>
@@ -401,7 +401,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/90 shadow-none">
+        <Card>
           <CardContent className="p-5 md:p-6">
             <p className="text-sm font-semibold">学习资源</p>
             <div className="mt-3 divide-y">

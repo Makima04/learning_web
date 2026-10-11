@@ -73,7 +73,7 @@ function MiniTimeline({ mode }: { mode: HttpMode }) {
   const calc = httpTotal(mode);
   const cells = calc.rtts;
   const connColor = (i: number) =>
-    mode === "nonkeep" ? ["#f59e0b", "#fbbf24", "#f59e0b", "#fbbf24", "#f59e0b", "#fbbf24", "#f59e0b", "#fbbf24"][i % 8] : "#10b981";
+    mode === "nonkeep" ? ["var(--viz-warn)", "var(--viz-warn)", "var(--viz-warn)", "var(--viz-warn)", "var(--viz-warn)", "var(--viz-warn)", "var(--viz-warn)", "var(--viz-warn)"][i % 8] : "var(--viz-done)";
   return (
     <div>
       <div className="flex gap-0.5">

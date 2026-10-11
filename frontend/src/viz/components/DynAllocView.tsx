@@ -223,7 +223,7 @@ function Bar({ parts, chosen }: { parts: Part[]; chosen: number }) {
                 "flex items-center justify-center border-r text-[11px] font-bold last:border-r-0",
                 isPick ? "text-white" : "bg-muted/50 text-muted-foreground"
               )}
-              style={{ width: `${(p.size / total) * 100}%`, background: isPick ? "#0ea5e9" : undefined }}
+              style={{ width: `${(p.size / total) * 100}%`, background: isPick ? "var(--viz-active)" : undefined }}
             >
               {p.size}
             </div>
@@ -233,7 +233,7 @@ function Bar({ parts, chosen }: { parts: Part[]; chosen: number }) {
       {chosen >= 0 && (
         <div className="relative h-6">
           <div
-            className="absolute top-0 h-6 rounded bg-emerald-600 text-center text-[11px] font-bold leading-6 text-white"
+            className="absolute top-0 h-6 rounded bg-success text-center text-[11px] font-bold leading-6 text-white"
             style={{
               left: `${(parts.slice(0, chosen).reduce((s, p) => s + p.size, 0) / total) * 100}%`,
               width: `${(REQ / total) * 100}%`,
@@ -242,7 +242,7 @@ function Bar({ parts, chosen }: { parts: Part[]; chosen: number }) {
             分配 {REQ}
           </div>
           <div
-            className="absolute top-0 h-6 rounded bg-amber-400 text-center text-[11px] font-bold leading-6 text-amber-900"
+            className="absolute top-0 h-6 rounded bg-warning text-center text-[11px] font-bold leading-6 text-ink-warning"
             style={{
               left: `${((parts.slice(0, chosen).reduce((s, p) => s + p.size, 0) + REQ) / total) * 100}%`,
               width: `${((parts[chosen]!.size - REQ) / total) * 100}%`,
@@ -272,7 +272,7 @@ function AllocDemo() {
             return (
               <div key={po.key} className="flex-1 rounded-xl border p-3">
                 <p className="text-sm font-semibold">{po.name}</p>
-                <p className="my-1 font-mono text-lg font-bold text-sky-600">
+                <p className="my-1 font-mono text-lg font-bold text-ink-info">
                   {INIT_PARTS[r.chosen]!.size} KB → 余 {r.remain} KB
                 </p>
                 <p className="text-[11px] text-muted-foreground">{po.desc}</p>
@@ -389,9 +389,9 @@ function buildCoalFrames(): CoalFrame[] {
 }
 
 const ZONE_CLS: Record<ZoneKind, string> = {
-  free: "bg-amber-400 text-amber-950",
-  rec: "bg-sky-500 text-white",
-  merged: "bg-emerald-600 text-white",
+  free: "bg-warning text-ink-warning",
+  rec: "bg-info text-info-foreground",
+  merged: "bg-success text-success-foreground",
   used: "bg-muted/70 text-muted-foreground",
 };
 
@@ -408,7 +408,7 @@ function ZoneBar({ zone, hi }: { zone: ZoneSeg[]; hi: number[] }) {
               key={`${z.start}-${i}`}
               className={cn(
                 "flex flex-col items-center justify-center border-r text-[10px] font-bold last:border-r-0",
-                on && z.kind === "free" ? "bg-sky-500 text-white" : ZONE_CLS[z.kind]
+                on && z.kind === "free" ? "bg-info text-info-foreground" : ZONE_CLS[z.kind]
               )}
               style={{ width: `${(z.size / total) * 100}%` }}
             >
@@ -438,7 +438,7 @@ function FreeCards({ blocks, hi, title }: { blocks: FreeBlock[]; hi: number[]; t
               key={b.start}
               className={cn(
                 "min-w-[7rem] rounded-lg border px-3 py-2 font-mono text-xs",
-                on ? "border-sky-500 bg-sky-500 text-white" : "border-border bg-muted/40"
+                on ? "border-info bg-info text-info-foreground" : "border-border bg-muted/40"
               )}
             >
               <div className="text-[10px] opacity-80">起始 {b.start}K</div>
@@ -466,14 +466,14 @@ function CoalDemo() {
         <div>
           <p className="mb-1 text-[11px] text-muted-foreground">最佳适应空闲链（大小升序，链头 = 最小块）</p>
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-sky-600">头</span>
+            <span className="text-[11px] font-semibold text-ink-info">头</span>
             {fr.chain.map((b, i) => (
               <div key={b.start} className="flex items-center gap-1.5">
                 {i > 0 && <span className="text-muted-foreground">→</span>}
                 <div
                   className={cn(
                     "rounded-md border px-2.5 py-1 font-mono text-xs font-bold",
-                    i === 0 ? "border-sky-500 bg-sky-500 text-white" : "border-border bg-muted/40"
+                    i === 0 ? "border-info bg-info text-info-foreground" : "border-border bg-muted/40"
                   )}
                 >
                   {b.start}K / {b.size}KB
@@ -486,7 +486,7 @@ function CoalDemo() {
       <div className="flex flex-wrap gap-2 text-[11px]">
         <span className="rounded-md border bg-muted/40 px-2 py-1">空闲分区 {fr.nFree} 个</span>
         {head && (
-          <span className="rounded-md border border-emerald-600/40 bg-emerald-500/15 px-2 py-1 font-mono font-bold text-emerald-700">
+          <span className="rounded-md border border-success/40 bg-success/15 px-2 py-1 font-mono font-bold text-ink-success">
             链头 {head.start}K · {head.size}KB
           </span>
         )}
@@ -633,10 +633,10 @@ function BuddyBar({ blocks, hi }: { blocks: BuddyBlock[]; hi: number[] }) {
               className={cn(
                 "flex flex-col items-center justify-center border-r text-[10px] font-bold last:border-r-0",
                 b.used
-                  ? "bg-emerald-600 text-white"
+                  ? "bg-success text-success-foreground"
                   : on
-                    ? "bg-sky-500 text-white"
-                    : "bg-amber-400 text-amber-950"
+                    ? "bg-info text-info-foreground"
+                    : "bg-warning text-ink-warning"
               )}
               style={{ width: `${(b.size / total) * 100}%` }}
             >
@@ -678,7 +678,7 @@ function BuddyDemo() {
         <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
           <span className="text-muted-foreground">已拆出伙伴</span>
           {fr.splits.map((s) => (
-            <span key={s} className="rounded-md border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 font-mono font-bold text-sky-700">
+            <span key={s} className="rounded-md border border-info/40 bg-info/15 px-2 py-0.5 font-mono font-bold text-ink-info">
               {s}KB
             </span>
           ))}
@@ -686,15 +686,15 @@ function BuddyDemo() {
       )}
       {fr.showContrast && (
         <div className="grid gap-2 sm:grid-cols-2">
-          <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-3">
-            <p className="text-xs font-semibold text-rose-600">伙伴系统 · 不能合</p>
+          <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3">
+            <p className="text-xs font-semibold text-ink-danger">伙伴系统 · 不能合</p>
             <p className="mt-1 font-mono text-sm">
               {BUDDY_REQ}+256 <span className="font-bold">✗</span> 大小不等
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">只合并等大空闲伙伴（地址 XOR 大小）</p>
           </div>
-          <div className="rounded-xl border border-emerald-600/40 bg-emerald-500/10 p-3">
-            <p className="text-xs font-semibold text-emerald-700">动态分区 · 相邻即合</p>
+          <div className="rounded-xl border border-success/40 bg-success/10 p-3">
+            <p className="text-xs font-semibold text-ink-success">动态分区 · 相邻即合</p>
             <p className="mt-1 font-mono text-sm">
               {BUDDY_REQ}+256+512 = 896KB
             </p>
@@ -702,7 +702,7 @@ function BuddyDemo() {
           </div>
         </div>
       )}
-      {fr.freeNote && <p className="text-[11px] font-medium text-sky-700">{fr.freeNote}</p>}
+      {fr.freeNote && <p className="text-[11px] font-medium text-ink-info">{fr.freeNote}</p>}
       <StepDesc frame={fr} />
       <VizControls p={p} />
     </div>

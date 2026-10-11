@@ -70,9 +70,9 @@ function buildFrames(): Frame[] {
 
 function WordTable() {
   const rows = [
-    { label: "伪首部", words: W.pseudo, cls: "bg-amber-400/20" },
-    { label: "UDP 首部", words: W.header, cls: "bg-sky-400/20" },
-    { label: "数据", words: W.data, cls: "bg-emerald-500/20" },
+    { label: "伪首部", words: W.pseudo, cls: "bg-warning/20" },
+    { label: "UDP 首部", words: W.header, cls: "bg-info/20" },
+    { label: "数据", words: W.data, cls: "bg-success/20" },
   ];
   return (
     <div className="space-y-1 text-xs">
@@ -86,8 +86,8 @@ function WordTable() {
       ))}
       <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
         <span>Σ（回卷）= {hex(CALC.sum)}</span>
-        <span className="font-bold text-sky-600">校验和 = ~Σ = {hex(CALC.checksum)}</span>
-        <span className="text-emerald-600">回验 Σ' = {hex(VERIFY.sum)}（全 1 通过）</span>
+        <span className="font-bold text-ink-info">校验和 = ~Σ = {hex(CALC.checksum)}</span>
+        <span className="text-ink-success">回验 Σ' = {hex(VERIFY.sum)}（全 1 通过）</span>
       </div>
     </div>
   );

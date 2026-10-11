@@ -65,7 +65,7 @@ function buildFrames(): Frame[] {
 
 function MachineCard({ name, f, res, win }: { name: string; f: number; res: ReturnType<typeof perfCalc>; win: boolean }) {
   return (
-    <div className={cn("rounded-xl border p-3", win ? "border-emerald-500 bg-emerald-500/5" : "border-border")}>
+    <div className={cn("rounded-xl border p-3", win ? "border-success bg-success/5" : "border-border")}>
       <div className="mb-2 flex items-center justify-between">
         <span className="text-sm font-semibold">{name}</span>
         <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">{f / 1000} GHz</span>
@@ -76,7 +76,7 @@ function MachineCard({ name, f, res, win }: { name: string; f: number; res: Retu
         <div className="flex justify-between font-semibold"><span>执行时间</span><span className="font-mono">{(res.timeUs / 1000).toFixed(0)} ms</span></div>
         <div className="flex justify-between"><span className="text-muted-foreground">MIPS</span><span className="font-mono">{res.mips.toFixed(0)}</span></div>
       </div>
-      {win && <div className="mt-2 text-center text-[11px] text-emerald-600">同为 10⁶ 条指令</div>}
+      {win && <div className="mt-2 text-center text-[11px] text-ink-success">同为 10⁶ 条指令</div>}
     </div>
   );
 }

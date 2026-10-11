@@ -52,7 +52,7 @@ function ArbDiagram({ mode, winner, bgAt }: { mode: Frame["mode"]; winner: numbe
   return (
     <svg viewBox="0 0 460 200" className="w-full">
       {/* 仲裁器 */}
-      <rect x={20} y={70} width={80} height={60} rx={8} fill={C.node} stroke="#94a3b8" />
+      <rect x={20} y={70} width={80} height={60} rx={8} fill={C.node} stroke="var(--viz-line)" />
       <text x={60} y={96} textAnchor="middle" fontSize={12} fontWeight={700} fill={C.nodeText}>仲裁器</text>
       <text x={60} y={112} textAnchor="middle" fontSize={9} fill={C.text}>{mode === "chain" ? "BG 链" : mode === "counter" ? "计数译码" : "并行判决"}</text>
       {REQ_DEMO.map((req, i) => {
@@ -63,13 +63,13 @@ function ArbDiagram({ mode, winner, bgAt }: { mode: Frame["mode"]; winner: numbe
           <g key={i}>
             <line x1={100} y1={100} x2={x - 30} y2={100} stroke={mode === "indep" && req ? C.active : C.line} strokeWidth={mode === "indep" && req ? 2 : 1} />
             <rect x={x - 30} y={70} width={60} height={60} rx={8}
-              fill={won ? C.done : req ? C.warn : C.node} stroke="#94a3b8" />
-            <text x={x} y={96} textAnchor="middle" fontSize={12} fontWeight={700} fill={won || req ? "#fff" : C.nodeText}>设备{i}</text>
-            <text x={x} y={112} textAnchor="middle" fontSize={9} fill={won || req ? "#f8fafc" : C.text}>
+              fill={won ? C.done : req ? C.warn : C.node} stroke="var(--viz-line)" />
+            <text x={x} y={96} textAnchor="middle" fontSize={12} fontWeight={700} fill={req && !won ? "var(--viz-warn-text)" : won || req ? "var(--viz-on)" : C.nodeText}>设备{i}</text>
+            <text x={x} y={112} textAnchor="middle" fontSize={9} fill={won || req ? "var(--viz-node)" : C.text}>
               {req ? (won ? "获得总线" : "请求中") : "空闲"}
             </text>
             {mode === "chain" && i < REQ_DEMO.length - 1 && (
-              <line x1={x + 30} y1={100} x2={x + 50} y2={100} stroke={bgPassing ? C.active : "#cbd5e1"} strokeWidth={bgPassing ? 2.4 : 1.4} strokeDasharray={bgPassing ? undefined : "3 3"} />
+              <line x1={x + 30} y1={100} x2={x + 50} y2={100} stroke={bgPassing ? C.active : "var(--viz-line-soft)"} strokeWidth={bgPassing ? 2.4 : 1.4} strokeDasharray={bgPassing ? undefined : "3 3"} />
             )}
           </g>
         );
@@ -112,7 +112,7 @@ function WaveDiagram({ wave }: { wave: number }) {
         [reqDn, "③主方撤销"],
         [ackDn, "④从方撤销"],
       ].map(([x, label], i) => (
-        <text key={i} x={x as number} y={122} fontSize={9} textAnchor="middle" fill={wave >= i + 1 ? "#0284c7" : C.text}>{label as string}</text>
+        <text key={i} x={x as number} y={122} fontSize={9} textAnchor="middle" fill={wave >= i + 1 ? "var(--viz-ink-info)" : C.text}>{label as string}</text>
       ))}
     </svg>
   );

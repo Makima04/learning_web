@@ -116,20 +116,20 @@ export function CongView() {
     <div className="space-y-4">
       <svg viewBox={`0 0 ${X0 + PW + 30} ${Y0 + PH + 34}`} className="w-full">
         {/* 坐标轴 */}
-        <line x1={X0} y1={Y0} x2={X0} y2={Y0 + PH} stroke="#94a3b8" />
-        <line x1={X0} y1={Y0 + PH} x2={X0 + PW} y2={Y0 + PH} stroke="#94a3b8" />
+        <line x1={X0} y1={Y0} x2={X0} y2={Y0 + PH} stroke="var(--viz-line)" />
+        <line x1={X0} y1={Y0 + PH} x2={X0 + PW} y2={Y0 + PH} stroke="var(--viz-line)" />
         {Array.from({ length: 7 }, (_, i) => i * 2).map((c) => (
           <g key={c}>
-            <line x1={X0 - 4} y1={py(c)} x2={X0} y2={py(c)} stroke="#94a3b8" />
-            <text x={X0 - 8} y={py(c) + 3} textAnchor="end" fontSize={9} fill="#64748b">{c}</text>
+            <line x1={X0 - 4} y1={py(c)} x2={X0} y2={py(c)} stroke="var(--viz-line)" />
+            <text x={X0 - 8} y={py(c) + 3} textAnchor="end" fontSize={9} fill="var(--viz-text)">{c}</text>
           </g>
         ))}
         {tl.filter((_, i) => i % 3 === 0).map((pt) => (
-          <text key={pt.rtt} x={px(pt.rtt)} y={Y0 + PH + 14} textAnchor="middle" fontSize={9} fill="#64748b">
+          <text key={pt.rtt} x={px(pt.rtt)} y={Y0 + PH + 14} textAnchor="middle" fontSize={9} fill="var(--viz-text)">
             {pt.rtt}
           </text>
         ))}
-        <text x={X0 + PW / 2} y={Y0 + PH + 30} textAnchor="middle" fontSize={10} fill="#64748b">RTT</text>
+        <text x={X0 + PW / 2} y={Y0 + PH + 30} textAnchor="middle" fontSize={10} fill="var(--viz-text)">RTT</text>
         {/* ssthresh 阶梯线 */}
         {(() => {
           const segs: ReactElement[] = [];
@@ -140,7 +140,7 @@ export function CongView() {
                 key={pt.rtt}
                 x1={px(prev.rtt)} y1={py(prev.ssthresh)}
                 x2={px(pt.rtt)} y2={py(pt.ssthresh)}
-                stroke="#94a3b8" strokeDasharray="4 4" strokeWidth={1.2}
+                stroke="var(--viz-line)" strokeDasharray="4 4" strokeWidth={1.2}
               />
             );
             prev = pt;
@@ -167,7 +167,7 @@ export function CongView() {
         {tl.slice(0, fr.upto + 1).map((pt) => (
           <circle key={pt.rtt} cx={px(pt.rtt)} cy={py(pt.cwnd)} r={3} fill={pt.event ? C.bad : C.nodeText} />
         ))}
-        <text x={X0 + PW - 60} y={py(8) - 6} fontSize={10} fill="#64748b">ssthresh…</text>
+        <text x={X0 + PW - 60} y={py(8) - 6} fontSize={10} fill="var(--viz-text)">ssthresh…</text>
       </svg>
       <p className="text-xs text-muted-foreground">
         蓝线 = 慢启动（指数），绿线 = 拥塞避免（线性），红点 = 拥塞事件；灰虚线 = ssthresh（随事件降半）。

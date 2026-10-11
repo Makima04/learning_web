@@ -138,7 +138,7 @@ export function PvView() {
           {sem("empty", fr.st.empty)}
           {sem("full", fr.st.full)}
           {fr.st.blocked && (
-            <span className="self-center rounded bg-rose-500/15 px-2 py-1 text-xs font-bold text-rose-600 dark:text-rose-400">
+            <span className="self-center rounded bg-destructive/15 px-2 py-1 text-xs font-bold text-ink-danger">
               {fr.st.blocked === "P" ? "生产者阻塞中…" : "消费者阻塞中…"}
             </span>
           )}
@@ -152,6 +152,6 @@ export function PvView() {
 
 function cnSem(v: number) {
   return v === 0
-    ? "py-0.5 font-mono text-sm font-bold text-amber-600 dark:text-amber-400"
+    ? "py-0.5 font-mono text-sm font-bold text-ink-warning"
     : "py-0.5 font-mono text-sm font-bold";
 }

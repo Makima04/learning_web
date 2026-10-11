@@ -149,8 +149,8 @@ export function BstView() {
             const hi = fr.hi.includes(n.v);
             nodes.push(
               <g key={n.v}>
-                <circle cx={x} cy={y} r={R} fill={hi ? C.active : C.node} stroke="#94a3b8" />
-                <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={hi ? "#fff" : C.nodeText}>
+                <circle cx={x} cy={y} r={R} fill={hi ? C.active : C.node} stroke="var(--viz-line)" />
+                <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={hi ? "var(--viz-on)" : C.nodeText}>
                   {n.v}
                 </text>
               </g>

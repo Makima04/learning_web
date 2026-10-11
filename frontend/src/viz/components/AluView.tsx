@@ -129,7 +129,7 @@ function CasePanel({ c }: { c: { a: number; b: number; sub: boolean } }) {
         <span className="text-sm font-semibold">
           {c.a} {c.sub ? "−" : "+"} {c.b}
         </span>
-        <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-bold", r.v ? "bg-rose-500 text-white" : "bg-emerald-600 text-white")}>
+        <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-bold", r.v ? "bg-destructive text-destructive-foreground" : "bg-success text-success-foreground")}>
           {r.v ? "溢出 V=1" : "无溢出"}
         </span>
       </div>
@@ -142,8 +142,8 @@ function CasePanel({ c }: { c: { a: number; b: number; sub: boolean } }) {
                 key={i}
                 className={cn(
                   "flex h-6 w-6 items-center justify-center rounded font-mono text-xs font-bold",
-                  i === 0 ? "border border-sky-400" : "border border-border",
-                  row.label === "Σ" && r.v ? "bg-rose-500/15 text-rose-600" : "bg-muted/40"
+                  i === 0 ? "border border-info" : "border border-border",
+                  row.label === "Σ" && r.v ? "bg-destructive/15 text-ink-danger" : "bg-muted/40"
                 )}
               >
                 {bit}
@@ -168,7 +168,7 @@ export function AluView() {
     <div className="space-y-4">
       <div className="grid gap-3 md:grid-cols-2">
         {CASES.map((c, i) => (
-          <div key={i} className={cn(fr.show === i && "ring-2 ring-sky-500 rounded-xl")}>
+          <div key={i} className={cn(fr.show === i && "ring-2 ring-info rounded-xl")}>
             <CasePanel c={c} />
           </div>
         ))}

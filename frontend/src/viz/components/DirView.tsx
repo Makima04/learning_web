@@ -127,13 +127,13 @@ export function DirView() {
         <div className="rounded-xl border p-3 font-mono text-xs leading-6">
           <div>/</div>
           <div>├── etc/</div>
-          <div>├── var/log/syslog <span className="text-emerald-600">(inode9)</span></div>
+          <div>├── var/log/syslog <span className="text-ink-success">(inode9)</span></div>
           <div>└── home/</div>
           <div>&nbsp;&nbsp;&nbsp;&nbsp;├── ua/</div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp; ├── report.doc <span className="text-emerald-600">(inode5)</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp; ├── docs → /home/ub/share <span className="text-sky-600">(符号链接)</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp; └── sys.hard <span className="text-amber-600">(inode9 硬链接)</span></div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;└── ub/share/notes.txt <span className="text-emerald-600">(inode7)</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp; ├── report.doc <span className="text-ink-success">(inode5)</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp; ├── docs → /home/ub/share <span className="text-ink-info">(符号链接)</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp; └── sys.hard <span className="text-ink-warning">(inode9 硬链接)</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;└── ub/share/notes.txt <span className="text-ink-success">(inode7)</span></div>
         </div>
       )}
       {(fr.show === "resolve" || fr.show === "resolveGone") && (
@@ -142,7 +142,7 @@ export function DirView() {
           {(fr.show === "resolve" ? ok : resolveGone).steps.map((s, i) => (
             <div key={i} className="rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs">{s}</div>
           ))}
-          <div className={cn("rounded-md px-3 py-1.5 text-xs font-semibold", (fr.show === "resolve" ? ok : resolveGone).ok ? "bg-emerald-600 text-white" : "bg-rose-500 text-white")}>
+          <div className={cn("rounded-md px-3 py-1.5 text-xs font-semibold", (fr.show === "resolve" ? ok : resolveGone).ok ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground")}>
             {(fr.show === "resolve" ? ok : resolveGone).ok ? `解析成功：${ok.realPath}` : "解析失败：悬空符号链接"}
           </div>
         </div>
@@ -150,10 +150,10 @@ export function DirView() {
       {fr.show === "hard" && (
         <div className="space-y-1.5">
           {hardLinkRef().map((h, i) => (
-            <div key={h.label} className={cn("flex items-center gap-3 rounded-md border px-3 py-2 text-xs", i === 2 && "ring-2 ring-amber-400")}>
+            <div key={h.label} className={cn("flex items-center gap-3 rounded-md border px-3 py-2 text-xs", i === 2 && "ring-2 ring-warning")}>
               <span className="w-56 shrink-0 font-mono">{h.label}</span>
               <span className="rounded bg-muted px-2 py-0.5 font-mono font-bold">引用计数 {h.ref}</span>
-              <span className={h.alive ? "text-emerald-600" : "text-rose-500"}>{h.alive ? "文件存活 ✓" : "已删除"}</span>
+              <span className={h.alive ? "text-ink-success" : "text-ink-danger"}>{h.alive ? "文件存活 ✓" : "已删除"}</span>
             </div>
           ))}
         </div>

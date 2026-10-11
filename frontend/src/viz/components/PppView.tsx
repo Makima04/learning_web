@@ -96,8 +96,8 @@ export function PppView() {
       {fr.show === "stuff" && (
         <div className="rounded-xl border p-3 font-mono text-xs leading-6">
           <div>原始数据：{DATA.map((b) => b.toString(16).padStart(2, "0").toUpperCase()).join(" ")}</div>
-          <div className="text-rose-500">7E、7D 是特殊字节，需转义 ↓</div>
-          <div className="font-bold text-sky-600">发送字节：{STUFFED.map((b) => b.toString(16).padStart(2, "0").toUpperCase()).join(" ")}</div>
+          <div className="text-ink-danger">7E、7D 是特殊字节，需转义 ↓</div>
+          <div className="font-bold text-ink-info">发送字节：{STUFFED.map((b) => b.toString(16).padStart(2, "0").toUpperCase()).join(" ")}</div>
         </div>
       )}
       {fr.show === "states" && (
@@ -105,7 +105,7 @@ export function PppView() {
           {states.map((s, i) => (
             <div key={s.state} className="flex items-center gap-1.5">
               {i > 0 && <span className="text-muted-foreground">→</span>}
-              <span className={cn("rounded border px-2 py-1 font-semibold", s.state === "open" ? "border-emerald-500 bg-emerald-500/10" : "border-border")} title={s.msg}>
+              <span className={cn("rounded border px-2 py-1 font-semibold", s.state === "open" ? "border-success bg-success/10" : "border-border")} title={s.msg}>
                 {s.state}
               </span>
             </div>

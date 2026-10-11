@@ -191,11 +191,11 @@ export function HuffmanView() {
           );
         })}
         {Array.from(fr.nodes.entries()).map(([id, nd]) => {
-          const fill = nd.state === "hi" ? C.warn : nd.state === "new" ? C.active : nd.kind === "leaf" ? C.node : "#cbd5e1";
-          const txt = nd.state === "normal" && nd.kind === "leaf" ? C.nodeText : "#fff";
+          const fill = nd.state === "hi" ? C.warn : nd.state === "new" ? C.active : nd.kind === "leaf" ? C.node : "var(--viz-line-soft)";
+          const txt = nd.state === "normal" && nd.kind === "leaf" ? C.nodeText : "var(--viz-on)";
           return (
             <g key={id}>
-              <circle cx={nd.x} cy={nd.y} r={19} fill={fill} stroke="#94a3b8" />
+              <circle cx={nd.x} cy={nd.y} r={19} fill={fill} stroke="var(--viz-line)" />
               <text x={nd.x} y={nd.y + 5} textAnchor="middle" fontSize={14} fontWeight={700} fill={txt}>
                 {nd.w}
               </text>

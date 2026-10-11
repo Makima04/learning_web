@@ -108,7 +108,7 @@ export function ChipView() {
                 key={g}
                 className={cn(
                   "rounded-lg border p-2",
-                  fr.hotGroup === g ? "border-sky-500 bg-sky-500/10 ring-2 ring-sky-500" : "border-border"
+                  fr.hotGroup === g ? "border-info bg-info/10 ring-2 ring-info" : "border-border"
                 )}
               >
                 <div className="mb-1 text-center text-[11px] font-semibold">组 {g}（CS{g}）</div>
@@ -118,7 +118,7 @@ export function ChipView() {
                       key={b}
                       className={cn(
                         "flex-1 rounded border py-2 text-center font-mono text-[10px]",
-                        fr.hotGroup === g ? "border-sky-400 bg-white" : "border-border bg-muted/40"
+                        fr.hotGroup === g ? "border-info bg-white" : "border-border bg-muted/40"
                       )}
                     >
                       片{g * PLAN.bitExpand + b}
@@ -142,8 +142,8 @@ export function ChipView() {
                     key={i}
                     className={cn(
                       "flex h-7 w-6 items-center justify-center rounded border font-mono text-xs font-bold",
-                      isCs ? "border-sky-500" : "border-border",
-                      ab.hi[i] ? (isCs ? "bg-sky-500 text-white" : "bg-emerald-600 text-white") : "bg-muted/40"
+                      isCs ? "border-info" : "border-border",
+                      ab.hi[i] ? (isCs ? "bg-info text-info-foreground" : "bg-success text-success-foreground") : "bg-muted/40"
                     )}
                   >
                     {bit}

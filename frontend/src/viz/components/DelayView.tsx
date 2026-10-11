@@ -75,9 +75,9 @@ export function DelayView() {
             <div key={c.name} className="rounded-xl border p-3 text-center">
               <p className="text-xs text-muted-foreground">{c.name} · 1000km</p>
               <p className="my-2 font-mono text-sm font-bold">
-                <span className="text-sky-600">发 {sendDelayMs(c.len, c.bw).toFixed(2)}ms</span>
+                <span className="text-ink-info">发 {sendDelayMs(c.len, c.bw).toFixed(2)}ms</span>
                 {" + "}
-                <span className="text-violet-600">传 {propDelayMs(c.km).toFixed(1)}ms</span>
+                <span className="text-ink-purple">传 {propDelayMs(c.km).toFixed(1)}ms</span>
               </p>
               <p className="text-[11px] text-muted-foreground">共 {(sendDelayMs(c.len, c.bw) + propDelayMs(c.km)).toFixed(2)}ms</p>
             </div>
@@ -88,7 +88,7 @@ export function DelayView() {
         <div className="flex items-center gap-1 rounded-xl border p-3 text-xs">
           {["源", "R1", "R2", "R3", "目的"].map((n, i) => (
             <div key={n} className="flex items-center gap-1">
-              {i > 0 && <div className="h-1 w-12 rounded bg-sky-400" />}
+              {i > 0 && <div className="h-1 w-12 rounded bg-info" />}
               <div className="flex h-8 w-10 items-center justify-center rounded border border-border bg-muted/50 font-mono">{n}</div>
             </div>
           ))}

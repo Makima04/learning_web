@@ -95,7 +95,7 @@ export function GraphStoreView() {
                       const hi =
                         (VS[i] === hiA && VS[j] === hiB) || (VS[i] === hiB && VS[j] === hiA);
                       return (
-                        <td key={j} className={cn("border border-border p-1", hi ? "bg-amber-500 font-bold text-white" : v ? "bg-sky-500/30" : "")}>
+                        <td key={j} className={cn("border border-border p-1", hi ? "bg-warning font-bold text-white" : v ? "bg-info/30" : "")}>
                           {v}
                         </td>
                       );
@@ -122,7 +122,7 @@ export function GraphStoreView() {
                         "rounded border px-1.5 py-0.5 font-mono text-xs",
                         fr.edgeIdx >= 0 &&
                           ((VS[i] === hiA && nb === hiB) || (VS[i] === hiB && nb === hiA))
-                          ? "border-amber-500 bg-amber-500 font-bold text-white"
+                          ? "border-warning bg-warning font-bold text-white"
                           : "border-border bg-muted/40"
                       )}
                     >

@@ -19,12 +19,12 @@ export function WdTags({
   const kindCls = cn(
     pill,
     cls.kind === "big"
-      ? "bg-amber-500/15 text-amber-800 dark:text-amber-200"
-      : "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200"
+      ? "bg-warning/15 text-ink-warning"
+      : "bg-success/15 text-ink-success"
   );
-  const majorCls = cn(pill, "bg-sky-500/15 text-sky-800 dark:text-sky-200");
-  const minorCls = cn(pill, "bg-violet-500/15 text-violet-800 dark:text-violet-200");
-  const examCls = cn(pill, "bg-rose-500/15 text-rose-800 dark:text-rose-200");
+  const majorCls = cn(pill, "bg-info/15 text-ink-info");
+  const minorCls = cn(pill, "bg-app-purple/15 text-ink-purple");
+  const examCls = cn(pill, "bg-destructive/15 text-ink-danger");
   const inner = (
     <>
       <span className={kindCls}>{wdKindLabel(cls.kind)}</span>

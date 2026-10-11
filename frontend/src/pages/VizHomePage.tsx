@@ -21,7 +21,7 @@ export function VizHomePage() {
     <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">图解 408</h1>
+          <h1 className="text-xl font-extrabold">图解 408</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             逐步动画演示 · 单步/播放/变速 · 看完顺手自评（会/模糊/不会），进度汇入知识图谱
           </p>
@@ -50,7 +50,7 @@ export function VizHomePage() {
                       <Link
                         key={kp.id}
                         to={`/viz/${kp.id}`}
-                        className="group rounded-xl border bg-card p-4 shadow-sm transition hover:border-primary/40 hover:shadow"
+                        className="group rounded-2xl border-2 border-transparent bg-card p-4 shadow-edge transition hover:border-primary/40"
                       >
                         <div className="mb-2 flex items-start justify-between gap-2">
                           <h3 className="text-sm font-semibold group-hover:text-primary">{kp.name}</h3>

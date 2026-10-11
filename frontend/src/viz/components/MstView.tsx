@@ -126,11 +126,11 @@ function GraphSvg({ fr }: { fr: MFrame }) {
           <g key={k}>
             <line
               x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke={isTree ? C.done : isTrying ? C.bad : isRej ? "#e2b8bf" : C.line}
+              stroke={isTree ? C.done : isTrying ? C.bad : isRej ? "var(--viz-bad-soft)" : C.line}
               strokeWidth={isTree ? 3 : isTrying ? 2.4 : 1.2}
               opacity={isRej ? 0.6 : 1}
             />
-            <text x={mx} y={my - 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={isTree ? "#047857" : C.text}>
+            <text x={mx} y={my - 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={isTree ? "var(--viz-ink-ok)" : C.text}>
               {e.w}
             </text>
           </g>
@@ -141,8 +141,8 @@ function GraphSvg({ fr }: { fr: MFrame }) {
         const inT = fr.inTree.size ? fr.inTree.has(v) : fr.tree.some((e) => e.a === v || e.b === v);
         return (
           <g key={v}>
-            <circle cx={x} cy={y} r={16} fill={inT ? C.done : C.node} stroke="#94a3b8" />
-            <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={inT ? "#fff" : C.nodeText}>
+            <circle cx={x} cy={y} r={16} fill={inT ? C.done : C.node} stroke="var(--viz-line)" />
+            <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={inT ? "var(--viz-on)" : C.nodeText}>
               {v}
             </text>
           </g>

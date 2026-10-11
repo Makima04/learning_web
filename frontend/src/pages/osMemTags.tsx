@@ -30,10 +30,10 @@ export function OsMemTags({
   if (!topic || !group) return null;
   const cls = compact ? "rounded px-1.5 py-0.5 text-[10px]" : "rounded-md px-2 py-0.5 text-[11px]";
   const major = (
-    <span className={cn(cls, "bg-sky-500/15 text-sky-800 dark:text-sky-200")}>{group.name}</span>
+    <span className={cn(cls, "bg-info/15 text-ink-info")}>{group.name}</span>
   );
   const minor = showMinor ? (
-    <span className={cn(cls, "bg-violet-500/15 text-violet-800 dark:text-violet-200")}>{topic.name}</span>
+    <span className={cn(cls, "bg-app-purple/15 text-ink-purple")}>{topic.name}</span>
   ) : null;
   if (!link) {
     return (
@@ -47,14 +47,14 @@ export function OsMemTags({
     <span className="inline-flex flex-wrap items-center gap-1">
       <Link
         to={osMemSetPath({ group: group.id, q: osMemExamKey(year, n) })}
-        className={cn(cls, "bg-sky-500/15 text-sky-800 hover:underline dark:text-sky-200")}
+        className={cn(cls, "bg-info/15 text-ink-info hover:underline")}
       >
         {group.name}
       </Link>
       {showMinor && (
         <Link
           to={osMemSetPath({ group: group.id, topic: topic.id as OsMemTopicId, q: osMemExamKey(year, n) })}
-          className={cn(cls, "bg-violet-500/15 text-violet-800 hover:underline dark:text-violet-200")}
+          className={cn(cls, "bg-app-purple/15 text-ink-purple hover:underline")}
         >
           {topic.name}
         </Link>

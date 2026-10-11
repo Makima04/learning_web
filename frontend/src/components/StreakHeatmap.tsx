@@ -24,9 +24,9 @@ const WINDOW_DAYS = 183;
 const MAX_LEVEL = 4;
 const BLOCK_MARGIN = 3;
 
-// 与全站绿主色对齐的 5 档色阶（level0 为无活动底色）
-const LIGHT_COLORS = ["#e9efe9", "#c7e5d4", "#8ecfac", "#4fae7f", "#2e8f64"];
-const DARK_COLORS = ["#242b27", "#1c4531", "#216244", "#2a8a5c", "#3fae7a"];
+// 动森草地色阶（level0 为无活动底色，暗色为夜间青绿）
+const LIGHT_COLORS = ["#ece4c8", "#cde8b0", "#9fd27c", "#6bb544", "#3d8a1f"];
+const DARK_COLORS = ["#363e62", "#2d5a55", "#2f8073", "#3aa894", "#7fd6c4"];
 
 function useIsDark(): boolean {
   const mode = useTheme((s) => s.mode);
@@ -129,12 +129,12 @@ export function StreakHeatmap() {
   const windowTotal = useMemo(() => data.reduce((s, d) => s + d.count, 0), [data]);
 
   return (
-    <Card className="border-border/90 shadow-none">
+    <Card>
       <CardContent className="p-5 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="flex items-center gap-2 text-sm font-semibold">
-              <Flame className={cn("h-4 w-4", streaks.current > 0 ? "text-orange-500" : "text-muted-foreground")} />
+              <Flame className={cn("h-4 w-4", streaks.current > 0 ? "text-ink-warning" : "text-muted-foreground")} />
               学习节奏
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -143,12 +143,12 @@ export function StreakHeatmap() {
           </div>
           <div className="flex items-center gap-4 text-sm">
             <span className="flex items-center gap-1.5">
-              <Flame className="h-4 w-4 text-orange-500" />
+              <Flame className="h-4 w-4 text-ink-warning" />
               <b className="tnum text-base">{streaks.current}</b>
               <span className="text-muted-foreground">天连续</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <Trophy className="h-4 w-4 text-amber-500" />
+              <Trophy className="h-4 w-4 text-ink-warning" />
               <b className="tnum text-base">{streaks.longest}</b>
               <span className="text-muted-foreground">天最长</span>
             </span>

@@ -139,7 +139,7 @@ export function MemHierView() {
                   key={k}
                   className={cn(
                     "flex h-12 items-center justify-center rounded-md border font-mono text-xs",
-                    isCur ? "border-sky-500 bg-sky-500 font-bold text-white" : seen ? "border-emerald-500/50 bg-emerald-500/15" : "border-border bg-muted/30"
+                    isCur ? "border-info bg-info font-bold text-white" : seen ? "border-success/50 bg-success/15" : "border-border bg-muted/30"
                   )}
                 >
                   {String(N * i + j).padStart(2, "0")}
@@ -154,7 +154,7 @@ export function MemHierView() {
             <div className="mb-2 flex items-center justify-between text-xs">
               <span className="font-semibold">Cache（{LINES} 行 × 每块 {BLOCK} 元素，直接映射）</span>
               <span className="font-mono">
-                命中 <b className={cn(fr.hit && "text-emerald-600")}>{fr.hits}</b> / 缺失 <b className={cn(fr.hit === false && "text-rose-500")}>{fr.misses}</b>
+                命中 <b className={cn(fr.hit && "text-ink-success")}>{fr.hits}</b> / 缺失 <b className={cn(fr.hit === false && "text-ink-danger")}>{fr.misses}</b>
               </span>
             </div>
             <div className="space-y-1.5">
@@ -187,7 +187,7 @@ export function MemHierView() {
             </thead>
             <tbody>
               {LEVELS.map((l, i) => (
-                <tr key={l.name} className={cn("border-t", i === 1 && "bg-sky-500/5")}>
+                <tr key={l.name} className={cn("border-t", i === 1 && "bg-info/5")}>
                   <td className="py-1 font-semibold">{l.name}</td>
                   <td className="text-center font-mono">{l.cap}</td>
                   <td className="text-center font-mono">{l.speed}</td>

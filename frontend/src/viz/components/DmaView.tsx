@@ -68,18 +68,18 @@ export function DmaView() {
           <div className="flex items-center gap-2 text-xs">
             <span className="w-28 shrink-0 text-muted-foreground">DMA 的 CPU</span>
             <div className="flex flex-1 gap-0.5">
-              <div className="h-6 w-6 rounded-sm bg-emerald-500" title="预处理" />
+              <div className="h-6 w-6 rounded-sm bg-success" title="预处理" />
               {Array.from({ length: 10 }, (_, i) => (
                 <div key={i} className="h-6 flex-1 rounded-sm bg-muted" title="CPU 跑自己的程序（偶尔被窃取一个总线周期）" />
               ))}
-              <div className="h-6 w-6 rounded-sm bg-emerald-500/60" title="后处理中断" />
+              <div className="h-6 w-6 rounded-sm bg-success/60" title="后处理中断" />
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs">
             <span className="w-28 shrink-0 text-muted-foreground">中断的 CPU</span>
             <div className="flex flex-1 gap-0.5">
               {Array.from({ length: 12 }, (_, i) => (
-                <div key={i} className="h-6 flex-1 rounded-sm bg-amber-400" title="每字一次中断服务" />
+                <div key={i} className="h-6 flex-1 rounded-sm bg-warning" title="每字一次中断服务" />
               ))}
             </div>
           </div>
@@ -87,7 +87,7 @@ export function DmaView() {
             <span className="w-28 shrink-0 text-muted-foreground">设备（相同）</span>
             <div className="flex flex-1 gap-0.5">
               {Array.from({ length: 12 }, (_, i) => (
-                <div key={i} className="h-6 flex-1 rounded-sm bg-sky-400" />
+                <div key={i} className="h-6 flex-1 rounded-sm bg-info" />
               ))}
             </div>
           </div>
@@ -97,11 +97,11 @@ export function DmaView() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border p-3 text-center">
             <p className="text-xs text-muted-foreground">DMA：CPU 耗时</p>
-            <p className="font-mono text-lg font-bold text-emerald-600">{COST.dmaCpuUs} µs</p>
+            <p className="font-mono text-lg font-bold text-ink-success">{COST.dmaCpuUs} µs</p>
           </div>
           <div className="rounded-xl border p-3 text-center">
             <p className="text-xs text-muted-foreground">中断：CPU 耗时</p>
-            <p className="font-mono text-lg font-bold text-amber-600">{COST.intrCpuUs} µs</p>
+            <p className="font-mono text-lg font-bold text-ink-warning">{COST.intrCpuUs} µs</p>
           </div>
         </div>
       )}

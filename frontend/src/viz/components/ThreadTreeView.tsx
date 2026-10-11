@@ -143,8 +143,8 @@ export function ThreadTreeView() {
           const hi = fr.hi === nd.id;
           return (
             <g key={nd.id}>
-              <circle cx={nd.x} cy={nd.y} r={18} fill={hi ? C.active : C.node} stroke="#94a3b8" />
-              <text x={nd.x} y={nd.y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={hi ? "#fff" : C.nodeText}>
+              <circle cx={nd.x} cy={nd.y} r={18} fill={hi ? C.active : C.node} stroke="var(--viz-line)" />
+              <text x={nd.x} y={nd.y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={hi ? "var(--viz-on)" : C.nodeText}>
                 {nd.id}
               </text>
               {/* tag 标记：左上 ltag、右上 rtag */}

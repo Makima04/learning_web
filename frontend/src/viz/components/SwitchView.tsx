@@ -64,9 +64,9 @@ function buildFrames(): Frame[] {
 function Bars() {
   const max = Math.max(R.circuit, R.message, R.packet);
   const rows = [
-    { name: "电路交换", v: R.circuit, cls: "bg-violet-400" },
-    { name: "报文交换", v: R.message, cls: "bg-amber-400" },
-    { name: "分组交换", v: R.packet, cls: "bg-emerald-500" },
+    { name: "电路交换", v: R.circuit, cls: "bg-app-purple" },
+    { name: "报文交换", v: R.message, cls: "bg-warning" },
+    { name: "分组交换", v: R.packet, cls: "bg-success" },
   ];
   return (
     <div className="space-y-2">
@@ -95,7 +95,7 @@ export function SwitchView() {
         <div className="flex items-center gap-1 rounded-xl border p-3 text-xs">
           {["源", "R1", "R2", "R3", "目的"].map((n, i) => (
             <div key={n} className="flex items-center gap-1">
-              {i > 0 && <div className="h-1 w-12 rounded bg-sky-400" />}
+              {i > 0 && <div className="h-1 w-12 rounded bg-info" />}
               <div className="flex h-8 w-10 items-center justify-center rounded border border-border bg-muted/50 font-mono">{n}</div>
             </div>
           ))}

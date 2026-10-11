@@ -58,7 +58,7 @@ export function BusPerfView() {
           {CASES.map((c) => (
             <div key={c.name} className="rounded-xl border p-3 text-center">
               <p className="text-xs text-muted-foreground">{c.name}</p>
-              <p className="my-2 font-mono text-xl font-bold text-sky-600">{busBw(c.f, c.w, c.k).toFixed(0)} MB/s</p>
+              <p className="my-2 font-mono text-xl font-bold text-ink-info">{busBw(c.f, c.w, c.k).toFixed(0)} MB/s</p>
               <p className="font-mono text-[11px] text-muted-foreground">{c.f} × {c.w / 8}B × {c.k}</p>
             </div>
           ))}
@@ -72,7 +72,7 @@ export function BusPerfView() {
           ].map((m) => (
             <div key={m.name} className="rounded-xl border p-3 text-center">
               <p className="text-xs text-muted-foreground">{m.name} · 1200 Baud</p>
-              <p className="my-2 font-mono text-xl font-bold text-sky-600">{bitRate(1200, Math.log2(m.states)).toFixed(0)} b/s</p>
+              <p className="my-2 font-mono text-xl font-bold text-ink-info">{bitRate(1200, Math.log2(m.states)).toFixed(0)} b/s</p>
               <p className="font-mono text-[11px] text-muted-foreground">每码元 {Math.log2(m.states)} bit</p>
             </div>
           ))}
