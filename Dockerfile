@@ -13,6 +13,7 @@ RUN npm ci
 COPY frontend/ ./
 COPY web/data.js public/data.js
 COPY web/papers.js public/papers.js
+COPY web/wordinfo.js public/wordinfo.js
 RUN npm run build
 
 # ---- rust build ----

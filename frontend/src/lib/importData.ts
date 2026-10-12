@@ -12,7 +12,15 @@ import type {
 } from "@/lib/journal";
 import type { Meta } from "@/stores/meta";
 import { isSrsMaxIvl } from "@/lib/srs";
-import type { Direction, Settings } from "@/stores/settings";
+import type { Direction, Settings, WORD_INFO_TOGGLE_KEYS } from "@/stores/settings";
+
+const WORD_INFO_TOGGLE_LABELS: [(typeof WORD_INFO_TOGGLE_KEYS)[number], string][] = [
+  ["showWordParts", "显示词根词缀"],
+  ["showSynonyms", "显示同义词"],
+  ["showAntonyms", "显示反义词"],
+  ["showSimilar", "显示形近词"],
+  ["showRelated", "显示同族词"],
+];
 
 export interface JournalImport {
   categories: JournalCategory[];
@@ -170,6 +178,9 @@ function settings(value: unknown): Partial<Settings> {
   }
   if (source.enableCloze !== undefined) {
     result.enableCloze = boolean(source.enableCloze, "重学完型填空");
+  }
+  for (const [key, label] of WORD_INFO_TOGGLE_LABELS) {
+    if (source[key] !== undefined) result[key] = boolean(source[key], label);
   }
   if (source.srsMaxIvl !== undefined) {
     const maxIvl = number(source.srsMaxIvl, "遗忘曲线天数上限", {

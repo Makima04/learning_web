@@ -276,6 +276,11 @@ export function SettingsPage() {
         enableCs408: settings.enableCs408,
         enableMath: settings.enableMath,
         enableCloze: settings.enableCloze,
+        showWordParts: settings.showWordParts,
+        showSynonyms: settings.showSynonyms,
+        showAntonyms: settings.showAntonyms,
+        showSimilar: settings.showSimilar,
+        showRelated: settings.showRelated,
         journalDailyReviewLimits: settings.journalDailyReviewLimits,
         journalKgChapterDailyLimit: settings.journalKgChapterDailyLimit,
       },
@@ -467,6 +472,42 @@ export function SettingsPage() {
                 <p className="text-xs text-muted-foreground -mt-2">
                   默认关闭。关闭时重学三轮（例句 / 词形 / 释义）；开启后末轮增加例句挖空四选一。
                 </p>
+                <div className="border-t pt-4 space-y-4">
+                  <p className="text-sm font-medium">卡片附加信息</p>
+                  <Field label="词根词缀">
+                    <Switch
+                      checked={settings.showWordParts}
+                      onCheckedChange={(v) => setSettings({ showWordParts: v })}
+                    />
+                  </Field>
+                  <Field label="同义词">
+                    <Switch
+                      checked={settings.showSynonyms}
+                      onCheckedChange={(v) => setSettings({ showSynonyms: v })}
+                    />
+                  </Field>
+                  <Field label="反义词">
+                    <Switch
+                      checked={settings.showAntonyms}
+                      onCheckedChange={(v) => setSettings({ showAntonyms: v })}
+                    />
+                  </Field>
+                  <Field label="形近词">
+                    <Switch
+                      checked={settings.showSimilar}
+                      onCheckedChange={(v) => setSettings({ showSimilar: v })}
+                    />
+                  </Field>
+                  <Field label="同族词">
+                    <Switch
+                      checked={settings.showRelated}
+                      onCheckedChange={(v) => setSettings({ showRelated: v })}
+                    />
+                  </Field>
+                  <p className="text-xs text-muted-foreground -mt-2">
+                    翻到答案面时显示。同族词指同根派生或同一领域的词（如 psychology → psychologist）；形近词指拼写易混的词。
+                  </p>
+                </div>
                 <Field label="主题">
                   <select
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm"

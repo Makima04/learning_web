@@ -46,7 +46,7 @@ function swPlugin(): Plugin {
       const assets = Object.values(bundle)
         .map((f) => f.fileName)
         .filter((n) => /\.(js|css)$/.test(n) && n !== "sw.js");
-      const precache = JSON.stringify(["/", "/data.js", ...assets]);
+      const precache = JSON.stringify(["/", "/data.js", "/wordinfo.js", ...assets]);
       this.emitFile({
         type: "asset",
         fileName: "sw.js",

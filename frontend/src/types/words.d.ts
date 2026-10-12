@@ -2,6 +2,13 @@ type Pos = string;
 export type Sense = [Pos, string]; // [pos, cn]
 export type WordEntry = [number, string, Sense[], string?]; // [index, english, senses, phonetic?]
 
+/** 词根拆分片段 [片段, 含义]，前缀 "re-"、后缀 "-tion"、词根不带连字符 */
+export type WordPart = [string, string];
+/** 关联词 [英文, 简短中文] */
+export type RelatedWord = [string, string];
+/** window.WORD_INFO 条目：[拆分, 记忆串讲, 同义, 反义, 形近, 同族] */
+export type WordInfoRow = [WordPart[], string, RelatedWord[], RelatedWord[], RelatedWord[], RelatedWord[]];
+
 export interface PassageWord {
   idx: number;
   english: string;
@@ -48,6 +55,8 @@ declare global {
     WORDS: WordEntry[];
     /** 真题数据：首屏不注入，由 ensurePapersLoaded 按需拉 /papers.js */
     PAPERS?: Paper[];
+    /** 词根词缀 / 关联词：由 ensureWordInfoLoaded 按需拉 /wordinfo.js，键为 english */
+    WORD_INFO?: Record<string, WordInfoRow>;
     EW_VERSION?: string;
     // 旧版可选的 baked 译文文件
     TRANS?: Record<string, string>;

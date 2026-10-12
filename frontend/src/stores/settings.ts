@@ -49,7 +49,22 @@ export interface Settings {
   reminderEnabled: boolean;
   /** 提醒时间 HH:MM（本地时区）。默认 08:30。 */
   reminderTime: string;
+  /** 卡片答案面显示：词根词缀 / 同义词 / 反义词 / 形近词 / 同族词。默认全开。 */
+  showWordParts: boolean;
+  showSynonyms: boolean;
+  showAntonyms: boolean;
+  showSimilar: boolean;
+  showRelated: boolean;
 }
+
+/** 卡片「词根词缀与关联词」各分区开关键 */
+export const WORD_INFO_TOGGLE_KEYS = [
+  "showWordParts",
+  "showSynonyms",
+  "showAntonyms",
+  "showSimilar",
+  "showRelated",
+] as const satisfies readonly (keyof Settings)[];
 
 const KEY_BASE = "ew.set.v1";
 
@@ -75,6 +90,11 @@ export const DEFAULT_SETTINGS: Settings = {
   journalKgChapterDailyLimit: 3,
   reminderEnabled: false,
   reminderTime: "08:30",
+  showWordParts: true,
+  showSynonyms: true,
+  showAntonyms: true,
+  showSimilar: true,
+  showRelated: true,
 };
 
 function saveJSON(key: string, val: unknown) {
@@ -120,7 +140,9 @@ function pickSettingValue(key: keyof Settings, value: unknown): unknown {
     return Math.max(0, Math.min(20, Math.floor(value)));
   }
   if (key === "reminderTime") return normalizeReminderTime(value);
-  if (key === "reminderEnabled") return typeof value === "boolean" ? value : undefined;
+  if (key === "reminderEnabled" || (WORD_INFO_TOGGLE_KEYS as readonly string[]).includes(key)) {
+    return typeof value === "boolean" ? value : undefined;
+  }
   if (key === "srsMaxIvl") {
     if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
     const n = Math.floor(value);

@@ -17,15 +17,16 @@ pub fn router() -> Router<AppState> {
 }
 
 /// 这些文件变了就要立刻生效：入口文档（发版）、sw.js（SW 更新检查）、
-/// manifest（图标/配色）、data/papers（词库/真题更新）。其余带 hash 资产可长缓存。
+/// manifest（图标/配色）、data/papers/wordinfo（词库/真题/词根更新）。其余带 hash 资产可长缓存。
 /// no-cache = 每次条件请求验证，未变则 304，代价可忽略。
-const NO_CACHE_PATHS: [&str; 6] = [
+const NO_CACHE_PATHS: [&str; 7] = [
     "",
     "index.html",
     "sw.js",
     "manifest.webmanifest",
     "data.js",
     "papers.js",
+    "wordinfo.js",
 ];
 
 async fn spa_fallback(State(state): State<AppState>, req: Request<Body>) -> Response {

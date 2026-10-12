@@ -6,6 +6,8 @@ import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
 import { blankTargetHtml } from "@/lib/quiz";
 import { getPhonetic, getWordMap } from "@/lib/words";
+import { WordInfoBlock } from "@/components/WordInfoBlock";
+import { ensureWordInfoLoaded } from "@/lib/wordInfo";
 import { usePapersReady } from "@/lib/papersLoad";
 import { papersRecitePathFromPaperIdx } from "@/lib/papersNav";
 import { esc, cn } from "@/lib/utils";
@@ -78,6 +80,11 @@ export function StudyPage() {
   const spokenKeyRef = useRef("");
   const wordIdx = entry?.[0];
   const wordEn = entry?.[1];
+
+  // 预取词根 / 关联词数据，翻到答案面时即可显示
+  useEffect(() => {
+    ensureWordInfoLoaded().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     setPop(null);
@@ -300,6 +307,7 @@ export function StudyPage() {
         </button>
       ) : null}
       <div className="w-full text-left" dangerouslySetInnerHTML={{ __html: sensesHtml }} />
+      {!hideEnglish ? <WordInfoBlock english={entry[1]} /> : null}
       {!hideEnglish ? (
         <ExampleBlock
           html={exampleHtml}

@@ -5,11 +5,11 @@
 //
 // 策略：
 //   /api/*            不缓存（离线写操作由前端 syncQueue 入队重试，绝不吞 API 响应）
-//   页面导航 / data.js / papers.js / version.js   网络优先，离线回退缓存（词库更新及时可见）
+//   页面导航 / data.js / papers.js / wordinfo.js / version.js   网络优先，离线回退缓存（词库更新及时可见）
 //   /assets/*（带 hash）                          缓存优先（内容变名字变，天然可长存）
 //   其余同源 GET                                   网络优先回退缓存（图标等小文件顺带离线）
 const CACHE = "ew-static-__SW_CACHE_VERSION__";
-const NETWORK_FIRST = ["/data.js", "/papers.js", "/version.js"];
+const NETWORK_FIRST = ["/data.js", "/papers.js", "/wordinfo.js", "/version.js"];
 const ASSETS_PREFIX = "/assets/";
 
 self.addEventListener("install", (event) => {

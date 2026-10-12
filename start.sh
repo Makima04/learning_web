@@ -13,6 +13,7 @@ fi
 mkdir -p frontend/public
 [ -f web/data.js ] && cp -f web/data.js frontend/public/data.js
 [ -f web/papers.js ] && cp -f web/papers.js frontend/public/papers.js
+[ -f web/wordinfo.js ] && cp -f web/wordinfo.js frontend/public/wordinfo.js
 (cd frontend && npm run build)
 
 (cd backend && cargo build --release)
