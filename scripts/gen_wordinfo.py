@@ -91,7 +91,12 @@ def call_llm(conf: dict, words: list[str]) -> dict:
     req = urllib.request.Request(
         conf["url"],
         data=body,
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {conf['key']}"},
+        # 部分网关前置 Cloudflare，会拦截 Python-urllib 默认 UA（error 1010）
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {conf['key']}",
+            "User-Agent": "english-web-wordinfo/1.0",
+        },
     )
     last: Exception | None = None
     for attempt in range(4):
