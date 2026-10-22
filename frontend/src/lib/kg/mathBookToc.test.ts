@@ -24,13 +24,22 @@ describe("bookDrillGroups", () => {
 });
 
 describe("sortBookItems", () => {
-  it("follows page then qno", () => {
+  it("优先用抽取脚本写入的 ord（原书顺序）", () => {
     const qs: WangdaoItem[] = [
-      { id: "b", book: "linear", kind: "big", section: "13", qno: 1, pdf_page: 10, stem: "", kp_ids: [] },
-      { id: "a", book: "linear", kind: "mcq", section: "13", qno: 2, pdf_page: 9, stem: "", kp_ids: [] },
-      { id: "c", book: "linear", kind: "mcq", section: "13", qno: 1, pdf_page: 9, stem: "", kp_ids: [] },
+      { id: "fill-1", book: "calc", kind: "fill", section: "2", qno: 1, pdf_page: 12, stem: "", kp_ids: [], ord: 3 },
+      { id: "mcq-2", book: "calc", kind: "mcq", section: "2", qno: 2, pdf_page: 11, stem: "", kp_ids: [], ord: 2 },
+      { id: "mcq-1", book: "calc", kind: "mcq", section: "2", qno: 1, pdf_page: 11, stem: "", kp_ids: [], ord: 1 },
     ];
-    expect(sortBookItems(qs).map((q) => q.id)).toEqual(["c", "a", "b"]);
+    expect(sortBookItems(qs).map((q) => q.id)).toEqual(["mcq-1", "mcq-2", "fill-1"]);
+  });
+
+  it("没有 ord 时退回页码 → 题号（张宇1000 全书连续编号）", () => {
+    const qs: WangdaoItem[] = [
+      { id: "big-2", book: "calc", kind: "big", section: "hs-1", qno: 2, pdf_page: 11, stem: "", kp_ids: [] },
+      { id: "mcq-3", book: "calc", kind: "mcq", section: "hs-1", qno: 3, pdf_page: 11, stem: "", kp_ids: [] },
+      { id: "mcq-1", book: "calc", kind: "mcq", section: "hs-1", qno: 1, pdf_page: 11, stem: "", kp_ids: [] },
+    ];
+    expect(sortBookItems(qs).map((q) => q.id)).toEqual(["mcq-1", "big-2", "mcq-3"]);
   });
 
   it("filters by source/part/section", () => {

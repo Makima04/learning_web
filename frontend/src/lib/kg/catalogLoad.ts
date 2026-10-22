@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
 
-export const PRACTICE_CATALOG_VER = "split-20260903a";
+export const PRACTICE_CATALOG_VER = "split-20261022a";
 
 export type CatalogId = "wangdao" | "lilin880" | "zhangyu1000";
 export type CatalogWhich = "wangdao" | "math" | "all" | "none";

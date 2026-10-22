@@ -188,13 +188,22 @@ export function matchBookDrill(
   );
 }
 
+const KIND_RANK = (k?: string) => (k === "mcq" ? 0 : k === "fill" ? 1 : 2);
+
+/**
+ * 按原书顺序排。
+ * 抽取脚本写入了 `ord`（章 → 题组 → 题型 → 题号的出现顺序），有它就照它排——
+ * 李林880 的题号在每种题型里各自从头编，光靠 page/qno 会把选择/填空/解答交叉穿插。
+ * 张宇1000 是全书连续编号，没有 ord，继续用「页码 → 题号」。
+ */
 export function sortBookItems(items: WangdaoItem[]): WangdaoItem[] {
-  const kindRank = (k?: string) => (k === "mcq" ? 0 : k === "fill" ? 1 : 2);
+  const byOrd = items.length > 0 && items.every((q) => q.ord != null);
   return [...items].sort((a, b) => {
+    if (byOrd && a.ord !== b.ord) return (a.ord as number) - (b.ord as number);
     const p = (a.pdf_page ?? 10_000) - (b.pdf_page ?? 10_000);
     if (p !== 0) return p;
     if (a.qno !== b.qno) return a.qno - b.qno;
-    const kd = kindRank(a.kind) - kindRank(b.kind);
+    const kd = KIND_RANK(a.kind) - KIND_RANK(b.kind);
     if (kd !== 0) return kd;
     return a.id.localeCompare(b.id);
   });

@@ -86,10 +86,12 @@ describe("split catalogs on disk", () => {
     const zy = JSON.parse(
       readFileSync("public/math/zhangyu1000/index.json", "utf8")
     ) as { items: WangdaoItem[]; count: number };
-    expect(ll.count).toBe(1118);
+    // 李林880 由【A4紧凑版】重建：1120 题（旧 1118，补回漏切的三题）
+    expect(ll.count).toBe(1120);
     expect(zy.count).toBe(1152);
     expect(ll.items[0]?.img).toMatch(/^\/math\/img\//);
     expect(ll.items[0]?.stem).toBeUndefined();
+    expect(ll.items[0]?.ord).toBe(1);
     expect(zy.items[0]?.img).toMatch(/^\/math\/img\//);
   });
 });

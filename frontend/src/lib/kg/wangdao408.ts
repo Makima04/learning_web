@@ -26,6 +26,8 @@ export interface WangdaoItem {
   source?: string;
   /** 基础 base / 强化 hard */
   part?: string;
+  /** 原书题组：基础题 / 综合题 / 拓展题（题号在每组各自从头编） */
+  band?: string;
   /** 原页裁图（数学公式用，优先于 stem 文本） */
   img?: string;
   /** 张宇解析册裁图 */
@@ -34,6 +36,8 @@ export interface WangdaoItem {
   answer?: string;
   /** 题型细类（解析分类，不是图谱考点） */
   facets?: string[];
+  /** 原书顺序（李林880 由抽取脚本写入；有它就不靠 page/qno 猜顺序） */
+  ord?: number;
 }
 
 export interface KpDrillCounts {

@@ -4,7 +4,7 @@ import { prefetchQuestionMedia } from "@/lib/kg/catalogLoad";
 import { canRevealAnswer } from "@/lib/kg/explain";
 import type { MarkLevel } from "@/lib/kg/types";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
-import { practiceKindLabel, practiceSourceLabel } from "@/lib/kg/mathPractice";
+import { practiceBandLabel, practiceKindLabel, practiceSourceLabel } from "@/lib/kg/mathPractice";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ItemNoteField } from "@/pages/itemNoteField";
@@ -153,8 +153,9 @@ export function PracticeQuestionCard({
       <CardContent className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0 flex-1 text-xs text-muted-foreground">
-            {index + 1} / {total} · {practiceSourceLabel(item)} · {kind} · §{item.section} #
-            {item.qno}
+            {index + 1} / {total} · {practiceSourceLabel(item)}
+            {practiceBandLabel(item) ? ` · ${practiceBandLabel(item)}` : ""} · {kind} · §
+            {`${item.section} #${item.qno}`}
             {item.pdf_page ? ` · 做题本 p.${item.pdf_page}` : ""}
             {item.book_ans_page != null ? ` · 原书【P${item.book_ans_page}】` : ""}
             {item.year ? ` · ${item.year}真题` : ""}

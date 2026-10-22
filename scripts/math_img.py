@@ -16,7 +16,13 @@ def page_content_rect(page: fitz.Page, top: float, bottom: float) -> fitz.Rect:
     return fitz.Rect(r.x0 + 36, top, r.x1 - 36, bottom)
 
 
-def render_clips(doc: fitz.Document, clips: list[tuple[int, float, float]], dest: Path) -> bool:
+def render_clips(
+    doc: fitz.Document,
+    clips: list[tuple[int, float, float]],
+    dest: Path,
+    scale: float = SCALE,
+    quality: int = JPEG_QUALITY,
+) -> bool:
     """clips: [(pdf_page_1indexed, y0, y1), ...]，纵向拼成一张 JPEG。"""
     if not clips:
         return False
@@ -25,13 +31,13 @@ def render_clips(doc: fitz.Document, clips: list[tuple[int, float, float]], dest
         if page_no < 1 or page_no > doc.page_count:
             continue
         page = doc[page_no - 1]
-        top = max(page.rect.y0 + 40, min(y0, y1) - PAD_PT)
-        bot = min(page.rect.y1 - 28, max(y0, y1) + PAD_PT)
+        top = max(page.rect.y0 + 18, min(y0, y1) - PAD_PT)
+        bot = min(page.rect.y1 - 16, max(y0, y1) + PAD_PT)
         if bot - top < 16:
             continue
         clip = page_content_rect(page, top, bot)
         pix = page.get_pixmap(
-            matrix=fitz.Matrix(SCALE, SCALE),
+            matrix=fitz.Matrix(scale, scale),
             clip=clip,
             alpha=False,
             colorspace=fitz.csGRAY,
@@ -41,7 +47,7 @@ def render_clips(doc: fitz.Document, clips: list[tuple[int, float, float]], dest
         return False
     dest.parent.mkdir(parents=True, exist_ok=True)
     if len(images) == 1:
-        images[0].save(dest, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+        images[0].save(dest, format="JPEG", quality=quality, optimize=True)
         return True
     width = max(im.width for im in images)
     height = sum(im.height for im in images)

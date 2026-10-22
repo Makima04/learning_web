@@ -161,6 +161,11 @@ export function practiceKindLabel(kind: string | undefined): string {
   return "选择";
 }
 
+/** 原书题组名（李林880 的题号在基础题/综合题/拓展题里各自从头编）。 */
+export function practiceBandLabel(item: WangdaoItem): string {
+  return item.band || "";
+}
+
 /** 题型细类：解析分类，不进图谱。 */
 export const MATH_FACETS: { id: string; name: string }[] = [
   { id: "compute_gauss", name: "消元计算" },
