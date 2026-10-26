@@ -1,5 +1,6 @@
 mod auth;
 mod config;
+mod day;
 mod db;
 mod error;
 mod llm;

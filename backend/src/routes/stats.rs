@@ -145,9 +145,7 @@ async fn stats_today(
     user: AuthUser,
     Query(q): Query<DayQ>,
 ) -> AppResult<Json<Value>> {
-    let day = q
-        .day
-        .unwrap_or_else(|| Utc::now().format("%Y-%m-%d").to_string());
+    let day = q.day.unwrap_or_else(crate::day::today_key);
     let rows = sqlx::query_as::<_, (i32, String, Option<String>, chrono::DateTime<Utc>)>(
         r#"
         SELECT word_idx, event_type, quality, studied_at
@@ -268,9 +266,12 @@ async fn stats_overview(
     .fetch_all(&state.pool)
     .await?;
 
-    // 「今天」按客户端时区换算，与本地时区 day_key 对齐；偏移限制在 ±24h 内
-    let tz = q.tz.unwrap_or(0).clamp(-24 * 60, 24 * 60) as i64;
-    let today = (Utc::now() + chrono::Duration::minutes(tz)).date_naive();
+    // 「今天」按客户端时区换算，与 day_key 对齐；缺省即北京时间（东八区）
+    let tz = q
+        .tz
+        .unwrap_or(crate::day::DAY_TZ_OFFSET_MIN)
+        .clamp(-24 * 60, 24 * 60);
+    let today = crate::day::today_naive_with_offset(tz);
     let (current_streak, longest_streak) = compute_streaks(&days, today);
 
     Ok(Json(json!({

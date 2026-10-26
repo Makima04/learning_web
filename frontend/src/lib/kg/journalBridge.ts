@@ -45,13 +45,6 @@ export function journalCopyForKp(kpId: string): {
   };
 }
 
-/** YYYY-MM-DD → 本地 0 点 ms，用于对齐 kp.due */
-export function dayKeyToLocalMs(day: string): number {
-  const [y, m, d] = day.split("-").map(Number);
-  if (!y || !m || !d) return 0;
-  return new Date(y, m - 1, d).getTime();
-}
-
 export function kgChapterDailyLimit(raw?: number | null): number {
   if (typeof raw === "number" && Number.isFinite(raw)) {
     return Math.max(0, Math.min(20, Math.floor(raw)));

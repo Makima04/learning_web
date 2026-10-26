@@ -47,9 +47,7 @@ async fn get_meta(
     user: AuthUser,
     Query(q): Query<MetaQuery>,
 ) -> AppResult<Json<Value>> {
-    let day = q
-        .day
-        .unwrap_or_else(|| Utc::now().format("%Y-%m-%d").to_string());
+    let day = q.day.unwrap_or_else(crate::day::today_key);
     let row = sqlx::query_as::<
         _,
         (

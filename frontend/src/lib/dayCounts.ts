@@ -1,6 +1,6 @@
 // 每日学习词数历史 —— 热力图 / 连续天数的数据源。
 // 访客本地记（scoped localStorage）；登录后与服务端 /api/stats/daily 按「逐日取大」合并展示。
-import { dayKey } from "@/lib/day";
+import { dayKey, shiftDayKey } from "@/lib/day";
 import { scopedKey } from "@/lib/storageScope";
 
 const KEY_BASE = "ew.dayCounts.v1";
@@ -67,13 +67,9 @@ function trimToWindow(counts: DayCounts) {
   }
 }
 
-/** 本地日期平移：dayKey 加/减 N 天（本地时区） */
+/** 日期平移：dayKey 加/减 N 天（按北京时间，与设备时区无关） */
 export function shiftDay(dk: string, deltaDays: number): string {
-  const m = DAY_KEY_RE.exec(dk);
-  if (!m) return dk;
-  const [y, mo, d] = dk.split("-").map(Number);
-  const date = new Date(y, mo - 1, d + deltaDays);
-  return dayKey(date.getTime());
+  return shiftDayKey(dk, deltaDays);
 }
 
 export interface Streaks {

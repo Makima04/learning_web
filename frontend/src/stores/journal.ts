@@ -4,7 +4,7 @@
 // 也不会把「另一份里多出来、但已被更新墓碑删掉」的 id 补回来。
 import { create } from "zustand";
 import * as api from "@/lib/api";
-import { dayKey } from "@/lib/day";
+import { dayKey, dayKeyStartMs } from "@/lib/day";
 import {
   DEFAULT_CATEGORIES,
   addDays,
@@ -28,7 +28,7 @@ import {
   type WeekStats,
   type WeeklySummary,
 } from "@/lib/journal";
-import { dayKeyToLocalMs, mapReviewToMark } from "@/lib/kg/journalBridge";
+import { mapReviewToMark } from "@/lib/kg/journalBridge";
 import { clearPendingJournal, enqueueJournalRows } from "@/lib/syncQueue";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 
@@ -362,11 +362,8 @@ function isStockCategory(category: JournalCategory): boolean {
 
 function logClock(log: ReviewLog): number {
   if (log.updatedAt && log.updatedAt > 0) return log.updatedAt;
-  const [y, m, d] = log.date.split("-").map(Number);
-  if (y && m && d) {
-    const ms = new Date(y, m - 1, d).getTime();
-    if (ms > 0) return ms;
-  }
+  const ms = dayKeyStartMs(log.date);
+  if (ms > 0) return ms;
   return 1;
 }
 
@@ -1023,7 +1020,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
     // 关联考点：回写图谱熟练度，并用日志下次复盘日对齐 due
     if (entry.kpId) {
       const mark = mapReviewToMark(result);
-      const dueMs = dayKeyToLocalMs(outcome.nextReviewOn);
+      const dueMs = dayKeyStartMs(outcome.nextReviewOn);
       const kpId = entry.kpId;
       // 动态 import 避免 journal ↔ kgProgress 模块循环
       void import("@/stores/kgProgress").then(({ useKgProgress }) => {

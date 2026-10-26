@@ -1,5 +1,5 @@
 // journal.ts —— 学习日志 / 复盘板：固定间隔 1→3→7→14 天（与词库 SM-2 独立）。
-import { dayKey } from "@/lib/day";
+import { dayKey, shiftDayKey, weekdayOf } from "@/lib/day";
 
 export type JournalKind = "learn" | "mistake";
 export type ReviewStep = 1 | 3 | 7 | 14;
@@ -65,12 +65,9 @@ export const DEFAULT_CATEGORIES: JournalCategory[] = [
   { id: "cat-politics", name: "政治", color: "#d97706", order: 3 },
 ];
 
-/** 在 dayKey 上加减天数，返回新的 YYYY-MM-DD（本地时区）。 */
+/** 在 dayKey 上加减天数，返回新的 YYYY-MM-DD（按北京时间） */
 export function addDays(day: string, days: number): string {
-  const [y, m, d] = day.split("-").map(Number);
-  const dt = new Date(y, m - 1, d);
-  dt.setDate(dt.getDate() + days);
-  return dayKey(dt.getTime());
+  return shiftDayKey(day, days);
 }
 
 /** 比较两个 dayKey：a < b → 负，相等 → 0，a > b → 正。 */
@@ -168,14 +165,11 @@ export function newEntryDefaults(
   return entry;
 }
 
-/** 当周周一（本地）的 dayKey，用作周报主键。 */
+/** 当周周一（北京时间）的 dayKey，用作周报主键。 */
 export function weekKeyOf(day: string = dayKey()): string {
-  const [y, m, d] = day.split("-").map(Number);
-  const dt = new Date(y, m - 1, d);
-  const dow = dt.getDay(); // 0=Sun
+  const dow = weekdayOf(day); // 0=Sun
   const offset = dow === 0 ? -6 : 1 - dow;
-  dt.setDate(dt.getDate() + offset);
-  return dayKey(dt.getTime());
+  return shiftDayKey(day, offset);
 }
 
 export function weekRangeLabel(weekKey: string): string {

@@ -123,6 +123,7 @@ export function JournalPage() {
     month: "long",
     day: "numeric",
     weekday: "short",
+    timeZone: "Asia/Shanghai", // 与 dayKey 同口径：北京时间
   }).format(new Date());
 
   function handleCreate(e: FormEvent) {

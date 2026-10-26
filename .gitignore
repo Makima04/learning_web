@@ -42,3 +42,6 @@ frontend/dist/
 
 # Python test cache
 .pytest_cache/
+
+# WorkBuddy 工作目录（本地记忆/缓存）
+.workbuddy/

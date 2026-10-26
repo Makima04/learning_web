@@ -170,7 +170,7 @@ async fn delete_all_cards(
     let day = q
         .day
         .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| Utc::now().format("%Y-%m-%d").to_string());
+        .unwrap_or_else(crate::day::today_key);
     let now = Utc::now();
 
     let mut tx = state.pool.begin().await?;

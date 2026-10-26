@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "@/lib/journal";
-import {
-  dayKeyToLocalMs,
-  journalCopyForKp,
-  mapReviewToMark,
-  planKgChapterDue,
-} from "./journalBridge";
+import { journalCopyForKp, mapReviewToMark, planKgChapterDue } from "./journalBridge";
 import { applyMarkToKp, newKpState } from "./mark";
 
 describe("mapReviewToMark", () => {
@@ -13,17 +8,6 @@ describe("mapReviewToMark", () => {
     expect(mapReviewToMark("pass")).toBe("pass");
     expect(mapReviewToMark("hard")).toBe("fuzzy");
     expect(mapReviewToMark("fail")).toBe("fail");
-  });
-});
-
-describe("dayKeyToLocalMs", () => {
-  it("parses local midnight", () => {
-    const ms = dayKeyToLocalMs("2026-08-06");
-    const d = new Date(ms);
-    expect(d.getFullYear()).toBe(2026);
-    expect(d.getMonth()).toBe(7);
-    expect(d.getDate()).toBe(6);
-    expect(d.getHours()).toBe(0);
   });
 });
 

@@ -5,7 +5,7 @@ import ActivityCalendar from "react-activity-calendar";
 import { Flame, Trophy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import * as api from "@/lib/api";
-import { dayKey } from "@/lib/day";
+import { DAY_TZ_OFFSET_MIN, dayKey, weekdayOf } from "@/lib/day";
 import {
   buildHeatmapDays,
   computeStreaks,
@@ -61,8 +61,8 @@ export function StreakHeatmap() {
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const first = new Date(`${range.from}T00:00:00`);
-    const leading = (first.getDay() + 6) % 7; // weekStart=1，周一为行首
+    // 周一对齐：用北京时间的星期，避免设备在别的时区时行首错位
+    const leading = (weekdayOf(range.from) + 6) % 7;
     const weeks = Math.ceil((leading + WINDOW_DAYS) / 7);
     const apply = () => {
       const w = el.clientWidth;
@@ -92,7 +92,7 @@ export function StreakHeatmap() {
         if (alive) setServerCounts(null);
       });
     api
-      .getOverview(-new Date().getTimezoneOffset())
+      .getOverview(DAY_TZ_OFFSET_MIN)
       .then((o) => {
         if (alive) setServerStreaks({ current: o.current_streak, longest: o.longest_streak });
       })

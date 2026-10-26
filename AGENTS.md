@@ -108,5 +108,5 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- translate "The
 
 - 词库总量 6550，`window.WORDS` 条目 `[index, english, [[pos,cn],...]]`。
 - 卡片主键 `(user_id, word_idx)`，`word_idx` 即 WORDS index。
-- 每日边界本地时区 `YYYY-MM-DD`（`lib/day.ts` / meta `dayKey`）。
+- 每日边界固定按**北京时间（UTC+8）0 点** `YYYY-MM-DD`，与设备时区无关（`lib/day.ts` 唯一口径；后端 `src/day.rs` 兜底一致）。日期平移/起点都走 `shiftDayKey` / `dayKeyStartMs`，别再写 `new Date(y, m-1, d)`。
 - 文件/注释大量中文，保持中文注释风格。

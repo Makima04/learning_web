@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { TodayWordList } from "@/components/TodayWordList";
 import { StreakHeatmap } from "@/components/StreakHeatmap";
 import { Card, CardContent } from "@/components/ui/card";
-import { DAY, dayKey } from "@/lib/day";
+import { DAY, dayKey, dayKeyStartMs } from "@/lib/day";
 import { planDueEntries } from "@/lib/journal";
 import { planKgChapterDue } from "@/lib/kg/journalBridge";
 import { resolveTodayWords } from "@/lib/todayWords";
@@ -135,7 +135,12 @@ export function DashboardPage() {
   const done = stats.planDone;
   const progress = totalToday > 0 ? Math.min(1, done / totalToday) : stats.doneToday > 0 ? 1 : 0;
   const progressLabel = Math.round(progress * 100);
-  const dateLabel = new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "short" }).format(new Date());
+  const dateLabel = new Intl.DateTimeFormat("zh-CN", {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+    timeZone: "Asia/Shanghai", // 日期口径统一按北京时间，与 dayKey 一致
+  }).format(new Date());
 
   const todayPreview = useMemo(() => {
     // 跨日时 store 可能仍挂着昨日 items，展示前以 dayKey 过滤
@@ -159,14 +164,14 @@ export function DashboardPage() {
   }, [todayItems, todayDayKey]);
 
   const forecast = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 预测按北京时间的今天 0 点起算，跨日与 dayKey 一致
+    const todayStart = dayKeyStartMs(dayKey());
     const buckets = new Array<number>(7).fill(0);
     for (const key in cards) {
       const card = cards[Number(key)];
       if (!card || card.state !== "review") continue;
       if (listEntries[Number(key)]?.kind === "known") continue;
-      const day = Math.floor((card.due - today.getTime()) / DAY);
+      const day = Math.floor((card.due - todayStart) / DAY);
       if (day >= 0 && day < buckets.length) buckets[day] += 1;
     }
     return buckets;
