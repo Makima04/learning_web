@@ -6,7 +6,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use chrono::{TimeZone, Utc};
+use chrono::Utc;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::net::SocketAddr;
@@ -16,8 +16,6 @@ use crate::db;
 use crate::error::{AppError, AppResult};
 use crate::llm;
 use crate::state::AppState;
-
-const MAX_PAYLOAD_BYTES: usize = 2 * 1024 * 1024;
 
 #[derive(Deserialize)]
 struct PoliticsPut {
@@ -33,24 +31,14 @@ pub fn router() -> Router<AppState> {
 }
 
 async fn get_politics(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Value>> {
-    let row: Option<(Value, Option<chrono::DateTime<Utc>>)> = sqlx::query_as(
-        r#"
-        SELECT payload, updated_at
-        FROM user_politics
-        WHERE user_id = $1
-        "#,
-    )
-    .bind(user.id)
-    .fetch_optional(&state.pool)
-    .await?;
-
-    match row {
-        Some((payload, updated_at)) => {
-            let ms = updated_at.map(|t| t.timestamp_millis()).unwrap_or(0);
-            Ok(Json(json!({ "politics": payload, "updated_at": ms })))
-        }
-        None => Ok(Json(json!({ "politics": null, "updated_at": 0 }))),
-    }
+    Ok(Json(
+        crate::services::documents::get(
+            &state.pool,
+            user.id,
+            crate::services::documents::DocumentKind::Politics,
+        )
+        .await?,
+    ))
 }
 
 async fn put_politics(
@@ -58,70 +46,16 @@ async fn put_politics(
     user: AuthUser,
     Json(body): Json<PoliticsPut>,
 ) -> AppResult<Json<Value>> {
-    let payload = body.politics;
-    if !payload.is_object() {
-        return Err(AppError::BadRequest("politics must be an object".into()));
-    }
-    let serialized = serde_json::to_vec(&payload)
-        .map_err(|e| AppError::BadRequest(format!("invalid politics json: {e}")))?;
-    if serialized.len() > MAX_PAYLOAD_BYTES {
-        return Err(AppError::BadRequest("politics payload too large".into()));
-    }
-
-    let client_ms = body
-        .updated_at
-        .unwrap_or_else(|| Utc::now().timestamp_millis());
-    if client_ms < 0 {
-        return Err(AppError::BadRequest("updated_at invalid".into()));
-    }
-
-    let existing: Option<Option<chrono::DateTime<Utc>>> =
-        sqlx::query_scalar("SELECT updated_at FROM user_politics WHERE user_id = $1")
-            .bind(user.id)
-            .fetch_optional(&state.pool)
-            .await?;
-
-    if let Some(Some(server_ts)) = existing {
-        if server_ts.timestamp_millis() > client_ms {
-            let row: (Value, Option<chrono::DateTime<Utc>>) =
-                sqlx::query_as("SELECT payload, updated_at FROM user_politics WHERE user_id = $1")
-                    .bind(user.id)
-                    .fetch_one(&state.pool)
-                    .await?;
-            return Ok(Json(json!({
-                "ok": true,
-                "skipped": true,
-                "reason": "server_newer",
-                "politics": row.0,
-                "updated_at": row.1.map(|t| t.timestamp_millis()).unwrap_or(0),
-            })));
-        }
-    }
-
-    let ts = Utc
-        .timestamp_millis_opt(client_ms)
-        .single()
-        .unwrap_or_else(Utc::now);
-
-    sqlx::query(
-        r#"
-        INSERT INTO user_politics (user_id, payload, updated_at)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (user_id) DO UPDATE SET
-            payload = EXCLUDED.payload,
-            updated_at = EXCLUDED.updated_at
-        "#,
-    )
-    .bind(user.id)
-    .bind(&payload)
-    .bind(ts)
-    .execute(&state.pool)
-    .await?;
-
-    Ok(Json(json!({
-        "ok": true,
-        "updated_at": client_ms,
-    })))
+    Ok(Json(
+        crate::services::documents::put(
+            &state.pool,
+            user.id,
+            crate::services::documents::DocumentKind::Politics,
+            body.politics,
+            body.updated_at,
+        )
+        .await?,
+    ))
 }
 
 const XIAO_BRIEF_PROMPT: &str = r#"你是考研政治选择题辅导。把原解析收成三格，让人一眼看到判题标准。
@@ -215,7 +149,11 @@ async fn xiao_brief(
         option_lines.push(format!("{k}. {text}"));
     }
     let answer = normalize_answer(&body.answer);
-    if answer.is_empty() || answer.chars().any(|ch| !letters.iter().any(|k| k == &ch.to_string())) {
+    if answer.is_empty()
+        || answer
+            .chars()
+            .any(|ch| !letters.iter().any(|k| k == &ch.to_string()))
+    {
         return Err(AppError::BadRequest("answer invalid".into()));
     }
     if kind == "single" && answer.chars().count() != 1 {
@@ -234,9 +172,9 @@ async fn xiao_brief(
         return Ok(Json(hit));
     }
 
-    let user = auth::try_user(&state.pool, &headers).await.ok_or_else(|| {
-        AppError::Unauthorized("login required to generate a new brief".into())
-    })?;
+    let user = auth::try_user(&state.pool, &headers)
+        .await
+        .ok_or_else(|| AppError::Unauthorized("login required to generate a new brief".into()))?;
     state.rate.check(&ip, "xiao_brief_llm", 8, 60)?;
     state
         .rate
@@ -258,26 +196,21 @@ async fn xiao_brief(
         option_lines.join("\n"),
     );
 
-    let raw = match llm::chat_completion(
-        &state.http,
-        &llm_conf,
-        &model,
-        XIAO_BRIEF_PROMPT,
-        &user_msg,
-    )
-    .await
-    {
-        Ok(raw) => raw,
-        Err(e) => {
-            tracing::warn!(item_id, error = %e, "xiao brief LLM failed");
-            return Ok(Json(json!({
-                "item_id": item_id,
-                "status": "error",
-                "cached": false,
-                "detail": "llm failed",
-            })));
-        }
-    };
+    let raw =
+        match llm::chat_completion(&state.http, &llm_conf, &model, XIAO_BRIEF_PROMPT, &user_msg)
+            .await
+        {
+            Ok(raw) => raw,
+            Err(e) => {
+                tracing::warn!(item_id, error = %e, "xiao brief LLM failed");
+                return Ok(Json(json!({
+                    "item_id": item_id,
+                    "status": "error",
+                    "cached": false,
+                    "detail": "llm failed",
+                })));
+            }
+        };
 
     let Some(brief) = parse_xiao_brief(&raw, &letters, &answer) else {
         tracing::warn!(item_id, "xiao brief parse failed");
@@ -458,9 +391,8 @@ async fn fetch_xiao_brief(
                 .get("options")
                 .and_then(|v| v.as_array())
                 .and_then(|rows| {
-                    rows.iter().find(|row| {
-                        row.get("k").and_then(|x| x.as_str()) == Some(k.as_str())
-                    })
+                    rows.iter()
+                        .find(|row| row.get("k").and_then(|x| x.as_str()) == Some(k.as_str()))
                 })
                 .and_then(|row| row.get("ok").and_then(|ok| ok.as_bool()))
                 .unwrap_or(false)
@@ -478,7 +410,10 @@ mod tests {
     use super::*;
 
     fn letters() -> Vec<String> {
-        ["A", "B", "C", "D"].into_iter().map(str::to_string).collect()
+        ["A", "B", "C", "D"]
+            .into_iter()
+            .map(str::to_string)
+            .collect()
     }
 
     #[test]

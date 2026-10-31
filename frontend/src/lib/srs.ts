@@ -1,9 +1,10 @@
 // srs.ts — 间隔重复状态机（Anki 风格简化 SM-2），逐行移植自 web/srs.js。
-// 纯函数无依赖。状态住在每个 card 对象上。
-// 新词走「评估 + 3 个时间学习步骤」流程，避免同一会话连续答对造成的
-// 虚假熟练感。quiz（1/2/3）表示下一次待完成的学习步骤。
+// 状态住在每个 card 对象上，按天排期统一使用北京时间零点。
+// 底层保留时间学习步骤；学习页面另走组内重学，完成后再更新间隔。
+// quiz（1/2/3）表示下一次待完成的学习步骤。
+import { DAY, dayKey, dayKeyStartMs, shiftDayKey } from "@/lib/day";
 
-export const DAY = 86400000;
+export { DAY };
 export const MINUTE = 60000;
 export const LEARN_STEPS = [10 * MINUTE, DAY, 3 * DAY] as const;
 
@@ -36,6 +37,22 @@ export interface Card {
   quiz?: number;
   /** 本地最后一次写入时间，用于跨设备合并。 */
   updatedAt?: number;
+}
+
+/** 从本次学习所在的北京时间日期起平移，间隔 1 天即次日 0 点。 */
+export function dueAfterDays(days: number, now: number = Date.now()): number {
+  return dayKeyStartMs(shiftDayKey(dayKey(now), days));
+}
+
+function isDayBased(card: Pick<Card, "state" | "quiz">): boolean {
+  return card.state === "review" || (card.state === "learn" && (card.quiz || 0) >= 2);
+}
+
+/** 兼容旧卡的具体到期时刻；分钟级步骤及 due=0 的遗留数据保持原值。 */
+export function normalizeCardDue(card: Pick<Card, "state" | "quiz" | "due">): number {
+  return isDayBased(card) && card.due > 0
+    ? dayKeyStartMs(dayKey(card.due))
+    : card.due;
 }
 
 function clampEase(e: number): number {
@@ -81,14 +98,15 @@ export function resetReviewToFirstDay(card: Card, now: number = Date.now()): Car
   card.reps = 1;
   card.ivl = 1;
   card.ease = clampEase(card.ease - 0.2);
-  card.due = now + 1 * DAY;
+  card.due = dueAfterDays(1, now);
   return card;
 }
 
 function scheduleLearn(card: Card, quiz: number, now: number) {
   card.state = "learn";
   card.quiz = quiz;
-  card.due = now + LEARN_STEPS[quiz - 1];
+  const interval = LEARN_STEPS[quiz - 1];
+  card.due = interval >= DAY ? dueAfterDays(interval / DAY, now) : now + interval;
 }
 
 // 答题。q ∈ {again, hard, good, easy}。**就地改 card**（旧 rate() 依赖此）。
@@ -111,7 +129,7 @@ export function answer(
       card.reps = 1;
       card.ivl = 1;
       card.quiz = 0;
-      card.due = now + 1 * DAY;
+      card.due = dueAfterDays(1, now);
     } else {
       // easy
       card.state = "review";
@@ -119,7 +137,7 @@ export function answer(
       card.ivl = 4;
       card.quiz = 0;
       card.ease = clampEase(card.ease + 0.15);
-      card.due = now + 4 * DAY;
+      card.due = dueAfterDays(4, now);
     }
   } else if (card.state === "learn") {
     // quiz=1→2→3；每次答对后安排下一时间步骤，第三步答对后毕业。
@@ -133,7 +151,7 @@ export function answer(
         card.reps = Math.max(1, card.reps);
         card.ivl = 7;
         card.quiz = 0;
-        card.due = now + card.ivl * DAY;
+        card.due = dueAfterDays(card.ivl, now);
       } else {
         scheduleLearn(card, (card.quiz || 0) + 1, now);
       }
@@ -144,7 +162,7 @@ export function answer(
       card.ivl = 4;
       card.quiz = 0;
       card.ease = clampEase(card.ease + 0.15);
-      card.due = now + 4 * DAY;
+      card.due = dueAfterDays(4, now);
     }
   } else {
     // review
@@ -167,7 +185,7 @@ export function answer(
       card.ivl = clampIvl(card.ivl * factor, maxIvl);
       card.reps++;
       card.quiz = 0;
-      card.due = now + card.ivl * DAY;
+      card.due = dueAfterDays(card.ivl, now);
     }
   }
   return { card, interval: describe(card, now) };
@@ -175,21 +193,15 @@ export function answer(
 
 // 人类可读的「刚排定的间隔」预览。
 export function describe(card: Card, now: number = Date.now()): string {
-  if (card.state === "learn") {
-    const ms = card.due - now;
-    if (ms <= 0) return "现在";
-    if (ms < DAY) return Math.max(1, round(ms / MINUTE)) + "分";
-    return round(ms / DAY) + "天";
+  const due = normalizeCardDue(card);
+  const ms = due - now;
+  if (ms <= 0) return "现在";
+  if (isDayBased(card)) {
+    const days = round((due - dayKeyStartMs(dayKey(now))) / DAY);
+    return days + "天";
   }
-  const ms = card.due - now;
-  if (ms < 0) return "现在";
-  if (ms < DAY) {
-    const m = Math.max(1, round(ms / 60000));
-    return m + "分";
-  }
-  const d = round(ms / DAY);
-  if (d === 1) return "1天";
-  return d + "天";
+  if (ms < DAY) return Math.max(1, round(ms / MINUTE)) + "分";
+  return round(ms / DAY) + "天";
 }
 
 // 预览「若答 q 会得到的间隔」，不改原 card。

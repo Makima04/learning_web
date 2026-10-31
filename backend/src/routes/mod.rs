@@ -12,6 +12,8 @@ mod sentences;
 mod settings;
 mod spa;
 mod stats;
+mod study;
+pub(crate) mod system_update;
 mod translate;
 mod word_lists;
 
@@ -23,6 +25,8 @@ pub fn api_router() -> Router<AppState> {
     Router::new()
         .merge(auth::router())
         .merge(cards::router())
+        .merge(study::router())
+        .merge(system_update::router())
         .merge(meta::router())
         .merge(settings::router())
         .merge(journal::router())

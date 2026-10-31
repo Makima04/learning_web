@@ -4,37 +4,14 @@ use axum::{
     Json, Router,
 };
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 
 use crate::auth::AuthUser;
 use crate::error::AppResult;
+use crate::services::cards::{normalize_due, upsert_card, CardState};
 use crate::state::AppState;
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct CardState {
-    #[serde(default)]
-    pub learned: Option<bool>,
-    #[serde(default)]
-    pub state: Option<String>,
-    #[serde(default)]
-    pub due: Option<i64>,
-    #[serde(default)]
-    pub ivl: Option<i32>,
-    #[serde(default)]
-    pub ease: Option<f64>,
-    #[serde(default)]
-    pub reps: Option<i32>,
-    #[serde(default)]
-    pub lapses: Option<i32>,
-    #[serde(default)]
-    pub step: Option<i32>,
-    #[serde(default)]
-    pub quiz: Option<i32>,
-    #[serde(default)]
-    pub updated_at: Option<i64>,
-}
 
 #[derive(Deserialize)]
 struct CardPutBody {
@@ -124,6 +101,7 @@ async fn list_cards(
 
     let mut cards = Map::new();
     for (idx, learned, state_s, due, ivl, ease, reps, lapses, step, quiz, updated_at) in rows {
+        let due = normalize_due(due, state_s.as_deref(), quiz);
         cards.insert(
             idx.to_string(),
             json!({
@@ -155,8 +133,10 @@ async fn put_card(
     Path(idx): Path<i32>,
     Json(body): Json<CardPutBody>,
 ) -> AppResult<Json<Value>> {
-    let reset_at = user_reset_at_ms(&state.pool, user.id).await?;
-    upsert_card(&state, user.id, idx, &body.card, reset_at).await?;
+    let mut tx = state.pool.begin().await?;
+    let reset_at = crate::services::study::lock_progress(&mut tx, user.id).await?;
+    upsert_card(&mut *tx, user.id, idx, &body.card, reset_at).await?;
+    tx.commit().await?;
     Ok(Json(json!({ "ok": true })))
 }
 
@@ -174,6 +154,7 @@ async fn delete_all_cards(
     let now = Utc::now();
 
     let mut tx = state.pool.begin().await?;
+    crate::services::study::lock_progress(&mut tx, user.id).await?;
     let cards_res = sqlx::query("DELETE FROM cards WHERE user_id = $1")
         .bind(user.id)
         .execute(&mut *tx)
@@ -228,61 +209,53 @@ async fn bulk_cards(
     user: AuthUser,
     Json(body): Json<BulkBody>,
 ) -> AppResult<Json<Value>> {
-    let reset_at = user_reset_at_ms(&state.pool, user.id).await?;
+    let mut tx = state.pool.begin().await?;
+    let reset_at = crate::services::study::lock_progress(&mut tx, user.id).await?;
     let mut count = 0i64;
     for (k, card) in &body.cards {
         let Ok(idx) = k.parse::<i32>() else { continue };
-        upsert_card(&state, user.id, idx, card, reset_at).await?;
+        upsert_card(&mut *tx, user.id, idx, card, reset_at).await?;
         count += 1;
     }
+    tx.commit().await?;
     Ok(Json(json!({ "ok": true, "count": count })))
 }
 
-async fn upsert_card(
-    state: &AppState,
-    user_id: i64,
-    idx: i32,
-    c: &CardState,
-    reset_at_ms: i64,
-) -> AppResult<()> {
-    let updated_at = c
-        .updated_at
-        .unwrap_or_else(|| Utc::now().timestamp_millis());
-    // 重置前的卡不得 INSERT 复活
-    if reset_at_ms > 0 && updated_at < reset_at_ms {
-        return Ok(());
+#[cfg(test)]
+mod tests {
+    use super::normalize_due;
+
+    fn ms(value: &str) -> i64 {
+        chrono::DateTime::parse_from_rfc3339(value)
+            .unwrap()
+            .timestamp_millis()
     }
-    sqlx::query(
-        r#"
-        INSERT INTO cards (user_id, word_idx, learned, state, due, ivl, ease, reps, lapses, step, quiz, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,to_timestamp($12::DOUBLE PRECISION / 1000))
-        ON CONFLICT (user_id, word_idx) DO UPDATE SET
-            learned = EXCLUDED.learned,
-            state = EXCLUDED.state,
-            due = EXCLUDED.due,
-            ivl = EXCLUDED.ivl,
-            ease = EXCLUDED.ease,
-            reps = EXCLUDED.reps,
-            lapses = EXCLUDED.lapses,
-            step = EXCLUDED.step,
-            quiz = EXCLUDED.quiz,
-            updated_at = EXCLUDED.updated_at
-        WHERE cards.updated_at IS NULL OR EXCLUDED.updated_at >= cards.updated_at
-        "#,
-    )
-    .bind(user_id)
-    .bind(idx)
-    .bind(c.learned.unwrap_or(false))
-    .bind(&c.state)
-    .bind(c.due)
-    .bind(c.ivl)
-    .bind(c.ease)
-    .bind(c.reps)
-    .bind(c.lapses)
-    .bind(c.step)
-    .bind(c.quiz)
-    .bind(updated_at)
-    .execute(&state.pool)
-    .await?;
-    Ok(())
+
+    #[test]
+    fn legacy_day_based_cards_are_due_at_beijing_midnight() {
+        let due = Some(ms("2026-11-01T20:00:00+08:00"));
+        let midnight = Some(ms("2026-11-01T00:00:00+08:00"));
+        assert_eq!(normalize_due(due, Some("review"), None), midnight);
+        assert_eq!(normalize_due(due, Some("learn"), Some(2)), midnight);
+        assert_eq!(normalize_due(due, Some("learn"), Some(3)), midnight);
+        assert_eq!(normalize_due(midnight, Some("review"), None), midnight);
+    }
+
+    #[test]
+    fn uses_beijing_date_even_before_utc_midnight() {
+        let due = Some(ms("2026-10-31T23:00:00Z"));
+        assert_eq!(
+            normalize_due(due, Some("review"), Some(0)),
+            Some(ms("2026-11-01T00:00:00+08:00")),
+        );
+    }
+
+    #[test]
+    fn preserves_minute_steps_and_empty_due_values() {
+        let due = Some(ms("2026-11-01T00:05:00+08:00"));
+        assert_eq!(normalize_due(due, Some("learn"), Some(1)), due);
+        assert_eq!(normalize_due(due, Some("new"), None), due);
+        assert_eq!(normalize_due(None, Some("review"), None), None);
+        assert_eq!(normalize_due(Some(0), Some("review"), None), Some(0));
+    }
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { sessionBar, useStudy, type QueueItem, type UiPhase } from "@/stores/study";
 import { useSettings } from "@/stores/settings";
 import { highlightTarget } from "@/lib/lookup";
@@ -52,17 +53,26 @@ export function StudyPage() {
   const currentEntry = useStudy((state) => state.currentEntry);
   const getExample = useStudy((state) => state.getExample);
   const chooseAssessment = useStudy((state) => state.chooseAssessment);
-  const assessFullNext = useStudy((state) => state.assessFullNext);
+  const assessFullNextAction = useStudy((state) => state.assessFullNext);
   const assessFullMistake = useStudy((state) => state.assessFullMistake);
   const answerRelearning = useStudy((state) => state.answerRelearning);
   const answerCloze = useStudy((state) => state.answerCloze);
-  const confirmRelearning = useStudy((state) => state.confirmRelearning);
+  const confirmRelearningAction = useStudy((state) => state.confirmRelearning);
   const advanceToNextGroup = useStudy((state) => state.advanceToNextGroup);
   const resetSession = useStudy((state) => state.resetSession);
   const startLearn = useStudy((state) => state.startLearn);
   const startReview = useStudy((state) => state.startReview);
   const snapshot = useStudy((state) => state.snapshot);
   const reciteOrigin = useStudy((state) => state.reciteOrigin);
+
+  const assessFullNext = useCallback(() => {
+    try { assessFullNextAction(); }
+    catch (error: unknown) { toast.error(error instanceof Error ? error.message : "学习记录保存失败，请重试"); }
+  }, [assessFullNextAction]);
+  const confirmRelearning = useCallback((known: boolean) => {
+    try { confirmRelearningAction(known); }
+    catch (error: unknown) { toast.error(error instanceof Error ? error.message : "学习记录保存失败，请重试"); }
+  }, [confirmRelearningAction]);
 
   const item = currentItem();
   const entry = currentEntry();

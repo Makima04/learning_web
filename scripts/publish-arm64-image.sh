@@ -50,7 +50,18 @@ esac
 repository="${repository%.git}"
 repository="$(printf '%s' "$repository" | tr '[:upper:]' '[:lower:]')"
 image="ghcr.io/$repository"
-sha="${sha:-$(git rev-parse HEAD)}"
+sha="$(git rev-parse --verify "${sha:-HEAD}^{commit}")"
+
+if [[ "$manifest_only" -eq 0 ]]; then
+  if [[ "$sha" != "$(git rev-parse HEAD)" ]]; then
+    echo "ERROR: 构建提交必须与当前 HEAD 一致，请先切换到 $sha。" >&2
+    exit 1
+  fi
+  if [[ -n "$(git status --porcelain)" ]]; then
+    echo "ERROR: 工作区存在未提交改动；请先提交后构建，保证镜像版本与源码一致。" >&2
+    exit 1
+  fi
+fi
 
 amd_ref="$image:amd64-$sha"
 arm_ref="$image:arm64-$sha"

@@ -3,8 +3,9 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
 import type { Card } from "@/lib/srs";
+import { normalizeCardDue } from "@/lib/srs";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
-import { clearPendingCards, enqueueCard } from "@/lib/syncQueue";
+import { clearPendingCards, enqueueCard, pendingCompletionWordIds } from "@/lib/syncQueue";
 
 const KEY_BASE = "ew.cards.v1";
 const KEY_CURSOR = "ew.cards.syncCursor.v1";
@@ -57,6 +58,7 @@ function loadAll(): Record<number, Card> {
       const card = obj[k];
       out[parseInt(k, 10)] = {
         ...card,
+        due: normalizeCardDue(card),
         learned: card.learned ?? card.state === "review",
       };
     }
@@ -75,11 +77,11 @@ function saveAll(cards: Record<number, Card>) {
   }
 }
 
-function toDto(card: Card): api.CardDTO {
+export function cardToDto(card: Card): api.CardDTO {
   return {
     learned: !!card.learned,
     state: card.state,
-    due: card.due,
+    due: normalizeCardDue(card),
     ivl: card.ivl,
     ease: card.ease,
     reps: card.reps,
@@ -100,7 +102,7 @@ function parseResetAt(raw: unknown): number {
 }
 
 function fromDto(card: api.CardDTO): Card {
-  return {
+  const normalized: Card = {
     learned: !!card.learned,
     state: (card.state || "new") as Card["state"],
     due: card.due ?? 0,
@@ -111,12 +113,14 @@ function fromDto(card: api.CardDTO): Card {
     quiz: card.quiz ?? 0,
     updatedAt: card.updated_at ?? 0,
   };
+  normalized.due = normalizeCardDue(normalized);
+  return normalized;
 }
 
 interface CardsStore {
   cards: Record<number, Card>;
   get: (idx: number) => Card | null;
-  save: (idx: number, card: Card) => void;
+  save: (idx: number, card: Card, opts?: { skipMirror?: boolean }) => void;
   replaceAll: (cards: Record<number, Card>) => void;
   /** 清空本地；登录时走服务端权威清空（失败抛错，不假装成功） */
   clearAll: () => Promise<void>;
@@ -127,15 +131,16 @@ interface CardsStore {
 export const useCards = create<CardsStore>((set, get) => ({
   cards: loadAll(),
   get: (idx) => get().cards[idx] || null,
-  save: (idx, card) => {
+  save: (idx, card, opts) => {
     const saved: Card = {
       ...card,
+      due: normalizeCardDue(card),
       updatedAt: card.updatedAt && card.updatedAt > 0 ? card.updatedAt : Date.now(),
     };
     const all = { ...get().cards, [idx]: saved };
     set({ cards: all });
     saveAll(all);
-    enqueueCard(idx, toDto(saved));
+    if (!opts?.skipMirror) enqueueCard(idx, cardToDto(saved));
   },
   replaceAll: (cards) => {
     const normalized = Object.fromEntries(
@@ -143,6 +148,7 @@ export const useCards = create<CardsStore>((set, get) => ({
         +idx,
         {
           ...card,
+          due: normalizeCardDue(card),
           learned: card.learned ?? card.state === "review",
           updatedAt: card.updatedAt ?? 0,
         },
@@ -153,7 +159,7 @@ export const useCards = create<CardsStore>((set, get) => ({
     // 导入后若已登录，整包入队
     if (api.isLoggedIn()) {
       for (const [idx, card] of Object.entries(normalized)) {
-        enqueueCard(+idx, toDto(card));
+        enqueueCard(+idx, cardToDto(card));
       }
     }
   },
@@ -195,6 +201,8 @@ export const useCards = create<CardsStore>((set, get) => ({
     const partial = !!remote.partial && resetAt <= stored.resetAt;
 
     const pushLocal = async (toPush: Record<string, api.CardDTO>) => {
+      const pending = pendingCompletionWordIds();
+      toPush = Object.fromEntries(Object.entries(toPush).filter(([idx]) => !pending.has(+idx)));
       if (Object.keys(toPush).length === 0) return;
       try {
         await api.bulkCards(toPush);
@@ -218,7 +226,7 @@ export const useCards = create<CardsStore>((set, get) => ({
       for (const [idx, remoteCard] of Object.entries(remoteNum)) {
         const localCard = localCards[+idx];
         if ((localCard?.updatedAt ?? 0) > (remoteCard.updatedAt ?? 0)) {
-          localNewer[idx] = toDto(localCard!);
+          localNewer[idx] = cardToDto(localCard!);
         } else {
           merged[+idx] = remoteCard;
         }
@@ -227,7 +235,7 @@ export const useCards = create<CardsStore>((set, get) => ({
         if (remoteCards[idx]) continue;
         if (resetAt > 0 && !newerThanReset(localCard)) continue;
         if ((localCard.updatedAt ?? 0) > since) {
-          localNewer[idx] = toDto(localCard);
+          localNewer[idx] = cardToDto(localCard);
         }
       }
       if (!stillInScope(epoch)) return { cards: Object.keys(get().cards).length };
@@ -258,7 +266,7 @@ export const useCards = create<CardsStore>((set, get) => ({
         toPush = kept;
       }
       await pushLocal(
-        Object.fromEntries(Object.entries(toPush).map(([idx, card]) => [idx, toDto(card)]))
+        Object.fromEntries(Object.entries(toPush).map(([idx, card]) => [idx, cardToDto(card)]))
       );
     } else {
       const merged = { ...localCards };
@@ -270,12 +278,12 @@ export const useCards = create<CardsStore>((set, get) => ({
           delete merged[+idx];
           continue;
         }
-        localNewer[idx] = toDto(localCard);
+        localNewer[idx] = cardToDto(localCard);
       }
       for (const [idx, remoteCard] of Object.entries(remoteNum)) {
         const localCard = localCards[+idx];
         if ((localCard?.updatedAt ?? 0) > (remoteCard.updatedAt ?? 0)) {
-          localNewer[idx] = toDto(localCard!);
+          localNewer[idx] = cardToDto(localCard!);
         } else {
           merged[+idx] = remoteCard;
         }

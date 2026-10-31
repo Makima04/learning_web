@@ -15,23 +15,30 @@ const apiMocks = vi.hoisted(() => ({
 vi.mock("@/lib/api", () => apiMocks);
 
 import { dayKey } from "@/lib/day";
+import { setScopeUserId } from "@/lib/storageScope";
 import {
   discardPendingKgIfNotNewer,
   discardPendingPoliticsIfNotNewer,
   enqueueCard,
   enqueueJournalRows,
   enqueueKg,
+  enqueueMeta,
   enqueuePolitics,
   enqueueStudyEvent,
   enqueueWordListItem,
   flushPending,
   getSyncStatus,
+  recomputePendingFromStorage,
 } from "@/lib/syncQueue";
 
 describe("syncQueue flushPending", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    setScopeUserId(null);
     const storage = new Map<string, string>();
     vi.stubGlobal("localStorage", {
+      get length() { return storage.size; },
+      key: (index: number) => Array.from(storage.keys())[index] ?? null,
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
@@ -51,7 +58,138 @@ describe("syncQueue flushPending", () => {
 
   afterEach(() => {
     vi.clearAllTimers();
+    vi.useRealTimers();
   });
+
+  it.each([false, true])("stops old-account requests after a scope change (failure=%s)", async (fails) => {
+    setScopeUserId(1);
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    apiMocks.bulkCards.mockImplementationOnce(async () => {
+      await gate;
+      if (fails) throw new Error("offline");
+      return { ok: true };
+    });
+    enqueueCard(1, { state: "review", due: 1, ivl: 1, ease: 2.5, reps: 1, lapses: 0 });
+    enqueueMeta({ day_key: dayKey(), new_today: 1 });
+    const flushing = flushPending();
+    setScopeUserId(2);
+    recomputePendingFromStorage();
+    release();
+    await flushing;
+
+    expect(apiMocks.putMeta).not.toHaveBeenCalled();
+    expect(localStorage.getItem("ew.sync.pending.meta.v1.u1")).not.toBeNull();
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("starts a separate flush for the new account while the old request is pending", async () => {
+    setScopeUserId(1);
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    apiMocks.putKg.mockImplementationOnce(async () => { await gate; return { ok: true }; });
+    enqueueKg({ updatedAt: 1 });
+    const oldFlush = flushPending();
+    setScopeUserId(2);
+    recomputePendingFromStorage();
+    enqueueMeta({ day_key: dayKey(), new_today: 2 });
+    const newFlush = flushPending();
+    const shared = newFlush === oldFlush;
+    release();
+    await Promise.all([oldFlush, newFlush]);
+
+    expect(shared).toBe(false);
+    expect(apiMocks.putMeta).toHaveBeenCalledWith({ day_key: dayKey(), new_today: 2 });
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("stops between bulk chunks when the account changes", async () => {
+    setScopeUserId(1);
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    apiMocks.bulkJournal.mockImplementationOnce(async () => { await gate; return { ok: true }; });
+    enqueueJournalRows({
+      weeklies: Array.from({ length: 2001 }, (_, i) => ({ week_key: `w-${i}`, note: "n", updated_at: 1 })),
+    });
+    const flushing = flushPending();
+    setScopeUserId(2);
+    recomputePendingFromStorage();
+    release();
+    await flushing;
+
+    expect(apiMocks.bulkJournal).toHaveBeenCalledTimes(1);
+    const pending = JSON.parse(localStorage.getItem("ew.sync.pending.journal.v1.u1") || "{}");
+    expect(pending.weeklies["w-2000"]).toBeDefined();
+  });
+
+  it("keeps a word-list edit made at the same millisecond during upload", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    apiMocks.bulkWordLists.mockImplementationOnce(async () => { await gate; return { ok: true }; });
+    enqueueWordListItem(1, { kind: "new", updated_at: 10 });
+    const flushing = flushPending();
+    enqueueWordListItem(1, { kind: "known", updated_at: 10 });
+    release();
+    await flushing;
+
+    expect(apiMocks.bulkWordLists).toHaveBeenLastCalledWith({ "1": { kind: "known", updated_at: 10 } });
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("keeps a card edit with the same timestamp during upload", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    apiMocks.bulkCards.mockImplementationOnce(async () => { await gate; return { ok: true }; });
+    const card = { state: "review", due: 1, ivl: 1, ease: 2.5, reps: 1, lapses: 0, updated_at: 10 };
+    enqueueCard(1, card);
+    const flushing = flushPending();
+    enqueueCard(1, { ...card, reps: 2 });
+    release();
+    await flushing;
+
+    expect(apiMocks.bulkCards).toHaveBeenLastCalledWith({ "1": { ...card, reps: 2 } });
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("keeps a quality change with the same timestamp during event upload", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    apiMocks.postStudyEventsBulk.mockImplementationOnce(async () => { await gate; return { ok: true }; });
+    const event = { word_idx: 1, event_type: "review" as const, quality: "good" as const, day_key: dayKey(), client_at: 10 };
+    enqueueStudyEvent(event);
+    const flushing = flushPending();
+    enqueueStudyEvent({ ...event, quality: "hard" });
+    release();
+    await flushing;
+
+    expect(apiMocks.postStudyEventsBulk).toHaveBeenLastCalledWith([{ ...event, quality: "hard" }]);
+    expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it.each(["entries", "logs", "categories", "weeklies"] as const)(
+    "keeps same-timestamp journal changes during upload (%s)", async (kind) => {
+      let release!: () => void;
+      const gate = new Promise<void>((resolve) => { release = resolve; });
+      apiMocks.bulkJournal.mockImplementationOnce(async () => { await gate; return { ok: true }; });
+      const before = kind === "weeklies"
+        ? { week_key: "w-1", note: "before", updated_at: 10 }
+        : { id: "row-1", entry_id: "entry-1", deleted: false, updated_at: 10 };
+      const after = kind === "weeklies"
+        ? { ...before, note: "after" }
+        : { ...before, deleted: true };
+      enqueueJournalRows({ [kind]: [before] });
+      const flushing = flushPending();
+      enqueueJournalRows({ [kind]: [after] });
+      release();
+      await flushing;
+
+      expect(apiMocks.bulkJournal).toHaveBeenCalledTimes(2);
+      expect(apiMocks.bulkJournal).toHaveBeenLastCalledWith(expect.objectContaining({
+        [kind]: [expect.objectContaining(kind === "weeklies" ? { note: "after" } : { deleted: true })],
+      }));
+      expect(getSyncStatus().pending).toBe(false);
+    }
+  );
 
   it("single-flights concurrent flushPending calls", async () => {
     let release!: () => void;

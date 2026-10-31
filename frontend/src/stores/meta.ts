@@ -4,6 +4,7 @@ import * as api from "@/lib/api";
 import { dayKey } from "@/lib/day";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { enqueueMeta, recomputePendingFromStorage } from "@/lib/syncQueue";
+import { hasPendingCompletions } from "@/features/study/infrastructure/completionQueue";
 
 const KEY_BASE = "ew.meta.v1";
 const RESET_AT_BASE = "ew.meta.resetAt.v1";
@@ -105,7 +106,7 @@ function mirrorMeta(meta: Meta) {
 interface MetaStore {
   meta: Meta;
   get: () => Meta;
-  bump: (field: "newToday" | "reviewToday" | "learnToday" | "doneToday", by?: number) => number;
+  bump: (field: "newToday" | "reviewToday" | "learnToday" | "doneToday", by?: number, opts?: { skipMirror?: boolean }) => number;
   replace: (m: Meta) => void;
   /** skipMirror：服务端已权威置 0，不再走 GREATEST 回写 */
   reset: (opts?: { skipMirror?: boolean }) => void;
@@ -133,12 +134,12 @@ export const useMeta = create<MetaStore>((set, get) => ({
     }
     return m;
   },
-  bump: (field, by = 1) => {
+  bump: (field, by = 1, opts) => {
     const meta = get().get();
     const next = { ...meta, [field]: (meta[field] || 0) + by };
     set({ meta: next });
     saveMeta(next);
-    mirrorMeta(next);
+    if (!opts?.skipMirror) mirrorMeta(next);
     return next[field];
   },
   replace: (m) => {
@@ -170,6 +171,7 @@ export const useMeta = create<MetaStore>((set, get) => ({
   },
   rehydrate: () => set({ meta: loadMeta() }),
   syncMeta: async () => {
+    if (hasPendingCompletions()) return;
     const epoch = getScopeEpoch();
     try {
       const localMeta = get().get();
@@ -177,6 +179,7 @@ export const useMeta = create<MetaStore>((set, get) => ({
       // 先拉 reset_at：若刚被权威清空，采用远端 0，不要 PUT 旧计数（GREATEST 会救活额度）
       const rm = await api.getMeta(today);
       if (!stillInScope(epoch)) return;
+      if (hasPendingCompletions()) return;
       const resetAt = parseResetAt(rm.reset_at);
       const seen = loadProgressResetAt();
       if (resetAt > seen) {

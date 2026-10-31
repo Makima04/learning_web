@@ -4,10 +4,11 @@ const apiMocks = vi.hoisted(() => ({
   isLoggedIn: vi.fn(() => false),
   postStudyEvent: vi.fn().mockResolvedValue({ ok: true }),
   postStudyEventsBulk: vi.fn().mockResolvedValue({ ok: true }),
+  postStudyCompletions: vi.fn().mockResolvedValue({ ok: true, applied: 1, ignored: 0 }),
 }));
 vi.mock("@/lib/api", () => apiMocks);
 
-import { dayKey } from "@/lib/day";
+import { dayKey, dayKeyStartMs, shiftDayKey } from "@/lib/day";
 import { DAY, newCard } from "@/lib/srs";
 import { setScopeUserId } from "@/lib/storageScope";
 import { flushPending } from "@/lib/syncQueue";
@@ -67,6 +68,8 @@ describe("relearning confirmation", () => {
   beforeEach(() => {
     const storage = new Map<string, string>();
     vi.stubGlobal("localStorage", {
+      get length() { return storage.size; },
+      key: (index: number) => Array.from(storage.keys())[index] ?? null,
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
@@ -194,20 +197,21 @@ describe("relearning confirmation", () => {
     expect(useStudy.getState().uiPhase).toBe("relearn-cloze");
   });
 
-  it("enqueues study event when logged in after pass", async () => {
+  it("enqueues one atomic study completion when logged in after pass", async () => {
     apiMocks.isLoggedIn.mockReturnValue(true);
     useSettings.setState({ enableCloze: true });
     startRelearning(4);
     useStudy.getState().answerCloze("proportion");
     useStudy.getState().confirmRelearning(true);
     await flushPending();
-    expect(apiMocks.postStudyEventsBulk).toHaveBeenCalledWith([
+    expect(apiMocks.postStudyCompletions).toHaveBeenCalledWith([
       expect.objectContaining({
         word_idx: 42,
         event_type: "new",
-        quality: "good",
+        card: expect.objectContaining({ learned: true, state: "review", ivl: 1 }),
       }),
     ]);
+    expect(apiMocks.postStudyEventsBulk).not.toHaveBeenCalled();
   });
 
   it("lets word B stay on round 1 after A advances to round 2", () => {
@@ -307,6 +311,8 @@ describe("review due filter + snapshot", () => {
   beforeEach(() => {
     const storage = new Map<string, string>();
     vi.stubGlobal("localStorage", {
+      get length() { return storage.size; },
+      key: (index: number) => Array.from(storage.keys())[index] ?? null,
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
@@ -621,7 +627,7 @@ describe("review due filter + snapshot", () => {
     const saved = useCards.getState().cards[9];
     // good on review: ivl = round(2 * 2.5) = 5
     expect(saved.ivl).toBe(5);
-    expect(saved.due).toBeGreaterThanOrEqual(now + 5 * DAY - 2000);
+    expect(saved.due).toBe(dayKeyStartMs(shiftDayKey(dayKey(saved.updatedAt), 5)));
     expect(saved.reps).toBe(3);
   });
 
@@ -679,8 +685,7 @@ describe("review due filter + snapshot", () => {
       ease: 2.3,
       quiz: 0,
     });
-    expect(saved.due).toBeGreaterThanOrEqual(now + DAY - 2000);
-    expect(saved.due).toBeLessThanOrEqual(now + DAY + 2000);
+    expect(saved.due).toBe(dayKeyStartMs(shiftDayKey(dayKey(saved.updatedAt), 1)));
     expect(useStudy.getState().sessionStats).toMatchObject({ studied: 1, reviewDone: 1 });
   });
 });

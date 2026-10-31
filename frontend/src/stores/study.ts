@@ -4,7 +4,8 @@
 // 复习一次过关按 good 拉长间隔；未一次过关（进重学）完成后间隔打回 1 天。
 import { create } from "zustand";
 import type { Card } from "@/lib/srs";
-import { answer, DAY, isMastered, resetReviewToFirstDay } from "@/lib/srs";
+import { isMastered } from "@/lib/srs";
+import { completeWord } from "@/features/study/application/completeWord";
 import {
   buildClozeOptions,
   examplePoolFor,
@@ -246,42 +247,6 @@ function cloneCard(card?: Card): Card {
     quiz: card?.quiz ?? 0,
     updatedAt: card?.updatedAt || 0,
   };
-}
-
-/**
- * 评估通过 / 重学完成 → 写入间隔。learned 始终置 true。
- * - 一次过关：按 good 推进间隔。
- * - 复习未一次过关：间隔打回 1 天，从记忆曲线第一天重走。
- * - 新词未一次过关：仍按 good（新词本来就是第 1 天）。
- */
-function savePassedCard(idx: number, previous: Card, firstPass: boolean): Card {
-  const now = Date.now();
-  const wasLearned = !!previous.learned;
-  const working = cloneCard(previous);
-  // 已标记 learned 但 state 仍为 new 的脏数据：按 review 推进
-  if (working.learned && working.state === "new") {
-    working.state = "review";
-    working.ivl = Math.max(1, working.ivl || 1);
-    working.reps = Math.max(1, working.reps || 0);
-  }
-  const card =
-    !firstPass && wasLearned
-      ? resetReviewToFirstDay(working, now)
-      : answer(working, "good", now, useSettings.getState().srsMaxIvl).card;
-  card.learned = true;
-  // good 理论上毕业进 review；兜底避免落在 learn
-  if (card.state !== "review") {
-    card.state = "review";
-    card.quiz = 0;
-    card.ivl = Math.max(1, card.ivl || 1);
-    card.due = now + card.ivl * DAY;
-  }
-  card.updatedAt = now;
-  useCards.getState().save(idx, card);
-  // 今日词表：本地即时可见；登录时 record 内入队 study_events，sync 以服务端为准
-  const eventType = wasLearned ? "review" : "new";
-  useTodayLog.getState().record(idx, eventType);
-  return card;
 }
 
 /** 开启完型时 4 轮，否则 3 轮（到释义结束即过关） */
@@ -744,16 +709,13 @@ export const useStudy = create<StudyState>((set, get) => ({
       const pending: QueueItem = { ...item, card: cloneCard(item.card), round: 1, needsRelearning: true };
       set({ relearnPending: [...state.relearnPending, pending] });
     } else {
-      const card = savePassedCard(item.idx, item.card, true);
+      const card = completeWord(item.idx, item.card, true);
       const stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
       if (item.group === "new") {
-        useMeta.getState().bump("newToday");
         stats.newDone++;
       } else {
-        useMeta.getState().bump("reviewToday");
         stats.reviewDone++;
       }
-      useMeta.getState().bump("doneToday");
       const queue = [...state.queue];
       queue[state.qpos] = { ...item, card };
       set({ queue, sessionStats: stats });
@@ -800,6 +762,7 @@ export const useStudy = create<StudyState>((set, get) => ({
     const item = state.relearnReveal;
     if (!item || !item.round || state.relearnAnswerKnown === null) return;
     const confirmedKnown = state.relearnAnswerKnown && known;
+    if (confirmedKnown && item.round >= maxRelearnRounds()) completeWord(item.idx, item.card, false);
     const queue = [...state.queue];
     queue.splice(state.qpos, 1);
     let groupEnd = state.groupEnd - 1;
@@ -818,16 +781,12 @@ export const useStudy = create<StudyState>((set, get) => ({
       });
       groupEnd++;
     } else {
-      savePassedCard(item.idx, item.card, false);
       stats = { ...state.sessionStats, studied: state.sessionStats.studied + 1 };
       if (item.group === "new") {
-        useMeta.getState().bump("newToday");
         stats.newDone++;
       } else {
-        useMeta.getState().bump("reviewToday");
         stats.reviewDone++;
       }
-      useMeta.getState().bump("doneToday");
     }
 
     set({

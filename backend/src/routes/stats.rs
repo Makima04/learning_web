@@ -99,8 +99,10 @@ async fn post_event(
     user: AuthUser,
     Json(body): Json<StudyEventBody>,
 ) -> AppResult<Json<Value>> {
-    let reset_at_ms = super::cards::user_reset_at_ms(&state.pool, user.id).await?;
-    let outcome = insert_study_event(&state.pool, user.id, &body, reset_at_ms).await?;
+    let mut tx = state.pool.begin().await?;
+    let reset_at_ms = crate::services::study::lock_progress(&mut tx, user.id).await?;
+    let outcome = insert_study_event(&mut *tx, user.id, &body, reset_at_ms).await?;
+    tx.commit().await?;
     if outcome == "stale" {
         return Ok(Json(json!({ "ok": true, "ignored": "stale_after_reset" })));
     }
@@ -120,10 +122,10 @@ async fn post_events_bulk(
     if body.events.is_empty() {
         return Ok(Json(json!({ "ok": true, "inserted": 0, "ignored": 0 })));
     }
-    let reset_at_ms = super::cards::user_reset_at_ms(&state.pool, user.id).await?;
     let mut inserted = 0i64;
     let mut ignored = 0i64;
     let mut tx = state.pool.begin().await?;
+    let reset_at_ms = crate::services::study::lock_progress(&mut tx, user.id).await?;
     for event in &body.events {
         let outcome = insert_study_event(&mut *tx, user.id, event, reset_at_ms).await?;
         if outcome == "stale" {
@@ -267,10 +269,9 @@ async fn stats_overview(
     .await?;
 
     // 「今天」按客户端时区换算，与 day_key 对齐；缺省即北京时间（东八区）
-    let tz = q
-        .tz
-        .unwrap_or(crate::day::DAY_TZ_OFFSET_MIN)
-        .clamp(-24 * 60, 24 * 60);
+    let tz =
+        q.tz.unwrap_or(crate::day::DAY_TZ_OFFSET_MIN)
+            .clamp(-24 * 60, 24 * 60);
     let today = crate::day::today_naive_with_offset(tz);
     let (current_streak, longest_streak) = compute_streaks(&days, today);
 

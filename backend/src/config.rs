@@ -14,6 +14,9 @@ pub struct Config {
     pub host: String,
     pub port: u16,
     pub static_dir: PathBuf,
+    /// 仅连接本机更新服务，不给 Web 容器 Docker 权限。
+    pub update_socket: Option<PathBuf>,
+    pub update_maintenance_file: Option<PathBuf>,
     /// Resend API key（https://resend.com）；空则仅开发模式可发码
     pub resend_api_key: String,
     /// 发件地址，如 "红宝书 <noreply@example.com>"
@@ -103,6 +106,8 @@ impl Config {
             host,
             port,
             static_dir,
+            update_socket: env_nonempty("EW_UPDATE_SOCKET").map(PathBuf::from),
+            update_maintenance_file: env_nonempty("EW_UPDATE_MAINTENANCE_FILE").map(PathBuf::from),
             resend_api_key,
             mail_from,
             mail_dev,

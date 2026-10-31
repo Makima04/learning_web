@@ -33,6 +33,20 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: english_test
+          POSTGRES_PASSWORD: english_test
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U english_test -d postgres"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgres://english_test:english_test@localhost:5432/postgres
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -54,7 +68,10 @@ jobs:
         working-directory: frontend
         run: npm test
 
-      # —— Backend（cargo test；现有用例均为纯单元测试，无需 Postgres）——
+      - name: 更新服务故障恢复测试
+        run: python3 -m unittest discover -s scripts/web_updater -p 'test_*.py'
+
+      # —— Backend：纯单元测试 + SQLx 自动创建/清理隔离数据库的集成测试 ——
       - name: 设置 Rust
         uses: dtolnay/rust-toolchain@stable
 

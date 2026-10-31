@@ -100,10 +100,12 @@ async fn put_meta(
         .filter(|s| !s.is_empty())
         .ok_or_else(|| AppError::BadRequest("day_key required".into()))?;
 
-    let reset_at_ms = super::cards::user_reset_at_ms(&state.pool, user.id).await?;
+    let mut tx = state.pool.begin().await?;
+    let reset_at_ms = crate::services::study::lock_progress(&mut tx, user.id).await?;
     let client_at = m.client_at.unwrap_or(0);
     if reset_at_ms > 0 && client_at < reset_at_ms && m.reset_today != Some(true) {
         // 重置前入队的旧计数，不能 GREATEST 救活额度
+        tx.commit().await?;
         return Ok(Json(json!({ "ok": true, "ignored": "stale_after_reset" })));
     }
 
@@ -129,8 +131,9 @@ async fn put_meta(
         .bind(m.done_today.unwrap_or(0))
         .bind(&m.data_version)
         .bind(Utc::now())
-        .execute(&state.pool)
+        .execute(&mut *tx)
         .await?;
+        tx.commit().await?;
         return Ok(Json(json!({ "ok": true })));
     }
 
@@ -156,8 +159,8 @@ async fn put_meta(
     .bind(m.done_today.unwrap_or(0))
     .bind(&m.data_version)
     .bind(Utc::now())
-    .execute(&state.pool)
+    .execute(&mut *tx)
     .await?;
-
+    tx.commit().await?;
     Ok(Json(json!({ "ok": true })))
 }

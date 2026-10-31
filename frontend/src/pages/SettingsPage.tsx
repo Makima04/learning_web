@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import * as api from "@/lib/api";
 import { useAuth } from "@/stores/auth";
+import { AdminUpdatePanel } from "@/features/system-update/AdminUpdatePanel";
 import { useSettings, type Direction } from "@/stores/settings";
 import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
@@ -34,6 +35,7 @@ const TABS = [
   { id: "llm", label: "翻译" },
   { id: "account", label: "账号" },
   { id: "data", label: "数据" },
+  { id: "update", label: "系统更新" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -369,7 +371,7 @@ export function SettingsPage() {
       <h1 className="text-xl font-semibold mb-4">设置</h1>
       <div className="flex flex-col md:flex-row gap-4">
         <nav className="flex md:flex-col gap-1 overflow-x-auto shrink-0 md:w-36">
-          {TABS.map((t) => (
+          {TABS.filter((t) => t.id !== "update" || auth.user?.is_admin).map((t) => (
             <button
               key={t.id}
               className={cn(
@@ -386,6 +388,9 @@ export function SettingsPage() {
         </nav>
 
         <div className="flex-1 space-y-4">
+          {tab === "update" && (auth.user?.is_admin ? <AdminUpdatePanel /> : (
+            <p className="text-sm text-muted-foreground">请使用管理员账号查看系统更新。</p>
+          ))}
           {tab === "study" && (
             <Card>
               <CardHeader>

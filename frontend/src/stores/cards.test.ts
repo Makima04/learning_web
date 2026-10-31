@@ -32,6 +32,8 @@ describe("cards sync", () => {
   beforeEach(() => {
     const storage = new Map<string, string>();
     vi.stubGlobal("localStorage", {
+      get length() { return storage.size; },
+      key: (index: number) => Array.from(storage.keys())[index] ?? null,
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
@@ -160,5 +162,37 @@ describe("cards sync", () => {
     expect(apiMocks.bulkCards).toHaveBeenCalledWith({
       "2": expect.objectContaining({ updated_at: 400 }),
     });
+  });
+
+  it("aligns cached legacy review cards to midnight without changing their revision or minute steps", () => {
+    const updatedAt = Date.parse("2026-10-31T20:00:00+08:00");
+    const oldCard = { ...card(updatedAt), due: Date.parse("2026-11-01T20:00:00+08:00") };
+    const minuteCard = { ...oldCard, state: "learn" as const, quiz: 1, due: Date.parse("2026-11-01T00:05:00+08:00") };
+    localStorage.setItem("ew.cards.v1", JSON.stringify({ 1: oldCard, 2: minuteCard }));
+    useCards.getState().rehydrate();
+
+    expect(useCards.getState().cards[1]).toEqual({ ...oldCard, due: Date.parse("2026-11-01T00:00:00+08:00") });
+    expect(useCards.getState().cards[2]).toEqual(minuteCard);
+  });
+
+  it("aligns legacy cards received from the server while preserving server revisions", async () => {
+    const updatedAt = Date.parse("2026-10-31T20:00:00+08:00");
+    apiMocks.getCards.mockResolvedValue({
+      cards: { "1": { ...card(updatedAt), due: Date.parse("2026-11-01T20:00:00+08:00"), updated_at: updatedAt } },
+    });
+    await useCards.getState().sync();
+
+    expect(useCards.getState().cards[1]).toMatchObject({ updatedAt, due: Date.parse("2026-11-01T00:00:00+08:00") });
+    expect(apiMocks.bulkCards).not.toHaveBeenCalled();
+  });
+
+  it("aligns imported legacy cards before they enter the sync queue", () => {
+    const updatedAt = Date.parse("2026-10-31T20:00:00+08:00");
+    const oldCard = { ...card(updatedAt), due: Date.parse("2026-11-01T20:00:00+08:00") };
+    useCards.getState().replaceAll({ 1: oldCard });
+
+    expect(useCards.getState().cards[1]).toEqual({ ...oldCard, due: Date.parse("2026-11-01T00:00:00+08:00") });
+    const pending = JSON.parse(localStorage.getItem("ew.sync.pending.cards.v1") || "{}");
+    expect(pending["1"]).toMatchObject({ updated_at: updatedAt, due: Date.parse("2026-11-01T00:00:00+08:00") });
   });
 });

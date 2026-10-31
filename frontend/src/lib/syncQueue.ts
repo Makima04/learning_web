@@ -2,6 +2,8 @@
 // cards、生词表、学习日志按条 bulk；meta / settings / kg / politics 走 PUT；study_events 按词入队后 POST。
 
 import * as api from "@/lib/api";
+import { clearPendingCompletions, flushCompletions, hasPendingCompletions, saveCompletion } from "@/features/study/infrastructure/completionQueue";
+export { pendingCompletionWordIds } from "@/features/study/infrastructure/completionQueue";
 import type {
   CardDTO,
   JournalBulkBody,
@@ -10,6 +12,7 @@ import type {
   JournalLogSyncRow,
   JournalWeeklySyncRow,
   StudyEventBody,
+  StudyCompletionDTO,
   WordListItemDTO,
 } from "@/lib/api";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
@@ -83,6 +86,7 @@ const listeners = new Set<Listener>();
 
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushInFlight: Promise<SyncStatus> | null = null;
+let flushInFlightEpoch = -1;
 let status: SyncStatus = loadStatus();
 
 function loadJSON<T>(key: string, fallback: T): T {
@@ -136,6 +140,7 @@ function recomputePending() {
   const journal = loadPendingJournal(keyJournal());
   const wordLists = loadJSON<PendingWordLists>(keyWordLists(), {});
   const pending =
+    hasPendingCompletions() ||
     Object.keys(cards).length > 0 ||
     meta != null ||
     settings != null ||
@@ -157,10 +162,19 @@ export function recomputePendingFromStorage() {
 export function clearPendingCards() {
   try {
     localStorage.removeItem(keyCards());
+    clearPendingCompletions();
   } catch {
     /* ignore */
   }
   recomputePending();
+}
+
+/** 学习队列独立持久化，公共同步器只负责调度与状态。 */
+export function enqueueStudyCompletion(command: StudyCompletionDTO) {
+  if (!api.isLoggedIn()) return;
+  saveCompletion(command);
+  recomputePending();
+  scheduleFlush();
 }
 
 export function enqueueCard(idx: number, card: CardDTO) {
@@ -532,6 +546,7 @@ function sameJson(a: unknown, b: unknown): boolean {
 async function flushOnce(): Promise<void> {
   let error: string | null = null;
   const epoch = getScopeEpoch();
+  const isCurrentScope = () => api.isLoggedIn() && stillInScope(epoch);
   // 登出会切作用域：读写都钉在本轮开始时的 key 上，避免写进访客缓存
   const cardsKey = keyCards();
   const metaKey = keyMeta();
@@ -543,15 +558,22 @@ async function flushOnce(): Promise<void> {
   const wordListsKey = keyWordLists();
   const statusKey = keyStatus();
 
+  if (hasPendingCompletions()) {
+    error = await flushCompletions(epoch);
+    if (!isCurrentScope()) return;
+  }
+
   const cards = loadJSON<PendingCards>(cardsKey, {});
   if (Object.keys(cards).length > 0) {
     try {
       await api.bulkCards(cards);
+      if (!isCurrentScope()) return;
       const current = loadJSON<PendingCards>(cardsKey, {});
       const leftover: PendingCards = {};
       for (const [k, v] of Object.entries(current)) {
         const sent = cards[k];
-        if (!sent || (v.updated_at || 0) > (sent.updated_at || 0)) leftover[k] = v;
+        // 同毫秒也可能有新修改；只清掉与本次上传内容完全相同的项。
+        if (!sameJson(v, sent)) leftover[k] = v;
       }
       if (Object.keys(leftover).length === 0) localStorage.removeItem(cardsKey);
       else saveJSON(cardsKey, leftover);
@@ -562,8 +584,10 @@ async function flushOnce(): Promise<void> {
 
   const meta = loadJSON<api.MetaDTO | null>(metaKey, null);
   if (meta) {
+    if (!isCurrentScope()) return;
     try {
       await api.putMeta(meta);
+      if (!isCurrentScope()) return;
       const current = loadJSON<api.MetaDTO | null>(metaKey, null);
       if (!current || sameJson(current, meta)) localStorage.removeItem(metaKey);
     } catch (e: unknown) {
@@ -573,8 +597,10 @@ async function flushOnce(): Promise<void> {
 
   const settings = loadJSON<Record<string, unknown> | null>(settingsKey, null);
   if (settings) {
+    if (!isCurrentScope()) return;
     try {
       await api.putSettings(settings);
+      if (!isCurrentScope()) return;
       const current = loadJSON<Record<string, unknown> | null>(settingsKey, null);
       if (!current || sameJson(current, settings)) localStorage.removeItem(settingsKey);
     } catch (e: unknown) {
@@ -584,8 +610,10 @@ async function flushOnce(): Promise<void> {
 
   const kg = loadJSON<Record<string, unknown> | null>(kgKey, null);
   if (kg) {
+    if (!isCurrentScope()) return;
     try {
       await api.putKg(kg);
+      if (!isCurrentScope()) return;
       const current = loadJSON<Record<string, unknown> | null>(kgKey, null);
       if (!current || sameJson(current, kg)) localStorage.removeItem(kgKey);
     } catch (e: unknown) {
@@ -595,8 +623,10 @@ async function flushOnce(): Promise<void> {
 
   const politics = loadJSON<Record<string, unknown> | null>(politicsKey, null);
   if (politics) {
+    if (!isCurrentScope()) return;
     try {
       await api.putPolitics(politics);
+      if (!isCurrentScope()) return;
       const current = loadJSON<Record<string, unknown> | null>(politicsKey, null);
       if (!current || sameJson(current, politics)) localStorage.removeItem(politicsKey);
     } catch (e: unknown) {
@@ -619,6 +649,7 @@ async function flushOnce(): Promise<void> {
     ];
     const posted = new Set<string>();
     for (let i = 0; i < pieces.length; i += JOURNAL_CHUNK) {
+      if (!isCurrentScope()) return;
       const slice = pieces.slice(i, i + JOURNAL_CHUNK);
       const body: JournalBulkBody = { entries: [], logs: [], categories: [], weeklies: [] };
       for (const piece of slice) {
@@ -629,6 +660,7 @@ async function flushOnce(): Promise<void> {
       }
       try {
         await api.bulkJournal(body);
+        if (!isCurrentScope()) return;
         for (const piece of slice) posted.add(`${piece.kind}:${piece.id}`);
       } catch (e: unknown) {
         error = e instanceof Error ? e.message : String(e);
@@ -641,28 +673,28 @@ async function flushOnce(): Promise<void> {
       if (!posted.has(`entries:${id}`)) leftover.entries[id] = row;
       else {
         const sent = journal.entries[id];
-        if (!sent || row.updated_at > sent.updated_at) leftover.entries[id] = row;
+        if (!sameJson(row, sent)) leftover.entries[id] = row;
       }
     }
     for (const [id, row] of Object.entries(current.logs)) {
       if (!posted.has(`logs:${id}`)) leftover.logs[id] = row;
       else {
         const sent = journal.logs[id];
-        if (!sent || row.updated_at > sent.updated_at) leftover.logs[id] = row;
+        if (!sameJson(row, sent)) leftover.logs[id] = row;
       }
     }
     for (const [id, row] of Object.entries(current.categories)) {
       if (!posted.has(`categories:${id}`)) leftover.categories[id] = row;
       else {
         const sent = journal.categories[id];
-        if (!sent || row.updated_at > sent.updated_at) leftover.categories[id] = row;
+        if (!sameJson(row, sent)) leftover.categories[id] = row;
       }
     }
     for (const [id, row] of Object.entries(current.weeklies)) {
       if (!posted.has(`weeklies:${id}`)) leftover.weeklies[id] = row;
       else {
         const sent = journal.weeklies[id];
-        if (!sent || row.updated_at > sent.updated_at) leftover.weeklies[id] = row;
+        if (!sameJson(row, sent)) leftover.weeklies[id] = row;
       }
     }
     if (journalPendingCount(leftover) === 0) {
@@ -681,10 +713,12 @@ async function flushOnce(): Promise<void> {
   if (eventKeys.length > 0) {
     const postedOk = new Set<string>();
     for (let i = 0; i < eventKeys.length; i += STUDY_EVENT_CHUNK) {
+      if (!isCurrentScope()) return;
       const chunkKeys = eventKeys.slice(i, i + STUDY_EVENT_CHUNK);
       const chunk = chunkKeys.map((k) => studyEvents[k]);
       try {
         await api.postStudyEventsBulk(chunk);
+        if (!isCurrentScope()) return;
         for (const k of chunkKeys) postedOk.add(k);
       } catch (e: unknown) {
         error = e instanceof Error ? e.message : String(e);
@@ -700,13 +734,7 @@ async function flushOnce(): Promise<void> {
       }
       const sent = studyEvents[k];
       // flush 期间同 key 又入了更新事件：保留
-      if (
-        sent &&
-        (now.client_at || 0) === (sent.client_at || 0) &&
-        now.event_type === sent.event_type
-      ) {
-        continue;
-      }
+      if (sameJson(now, sent)) continue;
       remaining[k] = now;
     }
     if (Object.keys(remaining).length === 0) {
@@ -725,11 +753,13 @@ async function flushOnce(): Promise<void> {
   if (wordListKeys.length > 0) {
     const postedOk = new Set<string>();
     for (let i = 0; i < wordListKeys.length; i += WORD_LIST_CHUNK) {
+      if (!isCurrentScope()) return;
       const chunkKeys = wordListKeys.slice(i, i + WORD_LIST_CHUNK);
       const chunk: PendingWordLists = {};
       for (const k of chunkKeys) chunk[k] = wordLists[k];
       try {
         await api.bulkWordLists(chunk);
+        if (!isCurrentScope()) return;
         for (const k of chunkKeys) postedOk.add(k);
       } catch (e: unknown) {
         error = e instanceof Error ? e.message : String(e);
@@ -744,7 +774,7 @@ async function flushOnce(): Promise<void> {
         continue;
       }
       const sent = wordLists[k];
-      if (!sent || (v.updated_at || 0) > (sent.updated_at || 0)) leftover[k] = v;
+      if (!sameJson(v, sent)) leftover[k] = v;
     }
     if (Object.keys(leftover).length === 0) {
       try {
@@ -766,6 +796,7 @@ async function flushOnce(): Promise<void> {
   const stillJournal = loadPendingJournal(journalKey);
   const stillWordLists = loadJSON<PendingWordLists>(wordListsKey, {});
   const pending =
+    hasPendingCompletions() ||
     Object.keys(stillCards).length > 0 ||
     stillMeta != null ||
     stillSettings != null ||
@@ -775,7 +806,7 @@ async function flushOnce(): Promise<void> {
     journalPendingCount(stillJournal) > 0 ||
     Object.keys(stillWordLists).length > 0;
 
-  if (!stillInScope(epoch)) return;
+  if (!isCurrentScope()) return;
 
   const next: SyncStatus = error
     ? { ...status, lastError: error, pending }
@@ -788,10 +819,12 @@ async function flushOnce(): Promise<void> {
 /** 立即刷出待同步项（登录后 / 上线 / 定时）。并发调用共用同一次 flush。 */
 export function flushPending(): Promise<SyncStatus> {
   if (!api.isLoggedIn()) return Promise.resolve(getSyncStatus());
-  if (flushInFlight) return flushInFlight;
-
   const epoch = getScopeEpoch();
-  flushInFlight = (async () => {
+  if (flushInFlight && flushInFlightEpoch === epoch) return flushInFlight;
+
+  // 新账号不能复用旧账号的请求；旧请求结束时也不能清掉新账号的并发锁。
+  flushInFlightEpoch = epoch;
+  const flight = (async () => {
     await flushOnce();
     // 本轮期间新入队且上一轮无错误：再刷一轮（覆盖「刚过关就被 sync 撞上」）
     if (
@@ -804,9 +837,10 @@ export function flushPending(): Promise<SyncStatus> {
     }
     return getSyncStatus();
   })().finally(() => {
-    flushInFlight = null;
+    if (flushInFlight === flight) flushInFlight = null;
   });
-  return flushInFlight;
+  flushInFlight = flight;
+  return flight;
 }
 
 // 启动时若有残留，标记 pending

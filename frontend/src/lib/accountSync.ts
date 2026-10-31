@@ -11,15 +11,20 @@ import { useTodayLog } from "@/stores/todayLog";
 import { useWordLists } from "@/stores/wordLists";
 
 let syncInFlight: Promise<void> | null = null;
+let syncInFlightEpoch = -1;
 
 export function syncAccountData(): Promise<void> {
   if (!api.isLoggedIn()) return Promise.resolve();
-  if (syncInFlight) return syncInFlight;
-
   const epoch = getScopeEpoch();
-  syncInFlight = (async () => {
+  if (syncInFlight && syncInFlightEpoch === epoch) return syncInFlight;
+
+  // 并发只在同一账号作用域内复用，切换账号立即启动自己的同步。
+  syncInFlightEpoch = epoch;
+  const flight = (async () => {
     // 先刷出离线队列，再合并；有服务端权威的模块以服务端为准
-    await flushPending();
+    const status = await flushPending();
+    // 有未提交的学习事务时保留本地投影，等待重试成功后再采用服务端快照。
+    if (status?.pending && status.lastError) return;
     if (!api.isLoggedIn() || !stillInScope(epoch)) return;
     await Promise.all([
       useCards.getState().sync(),
@@ -34,8 +39,8 @@ export function syncAccountData(): Promise<void> {
     if (!api.isLoggedIn() || !stillInScope(epoch)) return;
     await flushPending();
   })().finally(() => {
-    syncInFlight = null;
+    if (syncInFlight === flight) syncInFlight = null;
   });
-
-  return syncInFlight;
+  syncInFlight = flight;
+  return flight;
 }

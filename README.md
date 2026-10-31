@@ -4,6 +4,10 @@
 
 **前端**：`frontend/`（Vite + React 18 + TS + Tailwind + Zustand）。`web/` 仅存放生成的 `data.js` / `papers.js`。
 
+模块边界、学习事务、同步协议与数据库测试方式见 [架构说明](docs/architecture.md)。
+
+管理员可在「设置 → 系统更新」检查并安装已发布版本；[首次安装与发布说明](docs/web-updates.md)。
+
 ## 功能
 
 - **间隔重复背词**：SM-2 风格状态机，新词「评估 → 3 次练习 → 复习」

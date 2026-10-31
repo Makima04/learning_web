@@ -6,6 +6,7 @@ import { dayKey } from "@/lib/day";
 import { noteTodayCount } from "@/lib/dayCounts";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { enqueueStudyEvent, flushPending, recomputePendingFromStorage } from "@/lib/syncQueue";
+import { hasPendingCompletions } from "@/features/study/infrastructure/completionQueue";
 
 const KEY_BASE = "ew.todayLog.v1";
 
@@ -150,7 +151,7 @@ interface TodayLogStore {
   items: () => TodayLogItem[];
   counts: () => TodayCounts;
   /** 通过一张卡时记录；同词去重，「新」优先于「复」；登录则入队 study_events */
-  record: (wordIdx: number, type: TodayLogType) => void;
+  record: (wordIdx: number, type: TodayLogType, opts?: { skipMirror?: boolean; at?: number }) => void;
   /** 最近 N 条（最近在前） */
   recent: (limit: number) => TodayLogItem[];
   clear: () => void;
@@ -174,10 +175,10 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
 
   counts: () => countsOf(get().items()),
 
-  record: (wordIdx, type) => {
+  record: (wordIdx, type, opts) => {
     if (!Number.isSafeInteger(wordIdx) || wordIdx < 1) return;
     let log = ensureToday(get().log);
-    const now = Date.now();
+    const now = opts?.at ?? Date.now();
     const idx = log.items.findIndex((it) => it.wordIdx === wordIdx);
     let items: TodayLogItem[];
     if (idx >= 0) {
@@ -196,7 +197,7 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
     // 同步一份当日计数，供热力图 / 连续天数使用
     noteTodayCount(items.length);
     // 登录：入队镜像服务端（失败可重试）；本地先写，最终以 sync 拉回的服务端为准
-    if (api.isLoggedIn()) {
+    if (api.isLoggedIn() && !opts?.skipMirror) {
       enqueueStudyEvent({
         word_idx: wordIdx,
         event_type: type,
@@ -244,6 +245,8 @@ export const useTodayLog = create<TodayLogStore>((set, get) => ({
         await flushPending();
         if (!stillInScope(epoch) || !api.isLoggedIn()) return;
       }
+      // 未提交命令已有完整事件，不能再从本地词表回放一份旧式事件。
+      if (hasPendingCompletions()) return;
       let resp = await api.getToday(today);
       if (!stillInScope(epoch) || !api.isLoggedIn()) return;
       let serverItems = resp.items || [];

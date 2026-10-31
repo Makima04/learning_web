@@ -7,7 +7,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use chrono::{TimeZone, Utc};
+use chrono::Utc;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::net::SocketAddr;
@@ -18,7 +18,6 @@ use crate::error::{AppError, AppResult};
 use crate::llm;
 use crate::state::AppState;
 
-const MAX_PAYLOAD_BYTES: usize = 4 * 1024 * 1024; // 4 MiB
 const MAX_EXPLAIN_STEM_CHARS: usize = 8000;
 const MAX_ITEM_ID_CHARS: usize = 64;
 
@@ -86,24 +85,14 @@ pub fn router() -> Router<AppState> {
 }
 
 async fn get_kg(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Value>> {
-    let row: Option<(Value, Option<chrono::DateTime<Utc>>)> = sqlx::query_as(
-        r#"
-        SELECT payload, updated_at
-        FROM user_kg
-        WHERE user_id = $1
-        "#,
-    )
-    .bind(user.id)
-    .fetch_optional(&state.pool)
-    .await?;
-
-    match row {
-        Some((payload, updated_at)) => {
-            let ms = updated_at.map(|t| t.timestamp_millis()).unwrap_or(0);
-            Ok(Json(json!({ "kg": payload, "updated_at": ms })))
-        }
-        None => Ok(Json(json!({ "kg": null, "updated_at": 0 }))),
-    }
+    Ok(Json(
+        crate::services::documents::get(
+            &state.pool,
+            user.id,
+            crate::services::documents::DocumentKind::Kg,
+        )
+        .await?,
+    ))
 }
 
 async fn put_kg(
@@ -111,71 +100,16 @@ async fn put_kg(
     user: AuthUser,
     Json(body): Json<KgPut>,
 ) -> AppResult<Json<Value>> {
-    let payload = body.kg;
-    if !payload.is_object() {
-        return Err(AppError::BadRequest("kg must be an object".into()));
-    }
-    let serialized = serde_json::to_vec(&payload)
-        .map_err(|e| AppError::BadRequest(format!("invalid kg json: {e}")))?;
-    if serialized.len() > MAX_PAYLOAD_BYTES {
-        return Err(AppError::BadRequest("kg payload too large".into()));
-    }
-
-    let client_ms = body
-        .updated_at
-        .unwrap_or_else(|| Utc::now().timestamp_millis());
-    if client_ms < 0 {
-        return Err(AppError::BadRequest("updated_at invalid".into()));
-    }
-
-    // LWW：仅当客户端更新或不存在行时写入
-    let existing: Option<Option<chrono::DateTime<Utc>>> =
-        sqlx::query_scalar("SELECT updated_at FROM user_kg WHERE user_id = $1")
-            .bind(user.id)
-            .fetch_optional(&state.pool)
-            .await?;
-
-    if let Some(Some(server_ts)) = existing {
-        if server_ts.timestamp_millis() > client_ms {
-            let row: (Value, Option<chrono::DateTime<Utc>>) =
-                sqlx::query_as("SELECT payload, updated_at FROM user_kg WHERE user_id = $1")
-                    .bind(user.id)
-                    .fetch_one(&state.pool)
-                    .await?;
-            return Ok(Json(json!({
-                "ok": true,
-                "skipped": true,
-                "reason": "server_newer",
-                "kg": row.0,
-                "updated_at": row.1.map(|t| t.timestamp_millis()).unwrap_or(0),
-            })));
-        }
-    }
-
-    let ts = Utc
-        .timestamp_millis_opt(client_ms)
-        .single()
-        .unwrap_or_else(Utc::now);
-
-    sqlx::query(
-        r#"
-        INSERT INTO user_kg (user_id, payload, updated_at)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (user_id) DO UPDATE SET
-            payload = EXCLUDED.payload,
-            updated_at = EXCLUDED.updated_at
-        "#,
-    )
-    .bind(user.id)
-    .bind(&payload)
-    .bind(ts)
-    .execute(&state.pool)
-    .await?;
-
-    Ok(Json(json!({
-        "ok": true,
-        "updated_at": client_ms,
-    })))
+    Ok(Json(
+        crate::services::documents::put(
+            &state.pool,
+            user.id,
+            crate::services::documents::DocumentKind::Kg,
+            body.kg,
+            body.updated_at,
+        )
+        .await?,
+    ))
 }
 
 /// 按槽位生成 408 大题（结构已由前端蓝图固定；此处只填内容）

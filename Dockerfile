@@ -19,17 +19,23 @@ RUN npm run build
 # ---- rust build ----
 FROM rust:1-bookworm AS rust
 WORKDIR /app/backend
+ARG EW_BUILD_JOBS=2
+ENV CARGO_BUILD_JOBS=$EW_BUILD_JOBS
 # 依赖缓存层：仅 toml/lock + 空 main
 COPY backend/Cargo.toml backend/Cargo.lock ./
 RUN mkdir -p src && echo 'fn main(){}' > src/main.rs \
  && cargo build --release \
  && rm -rf src
 COPY backend/ ./
+ARG EW_VERSION=dev
+ENV EW_VERSION=$EW_VERSION
 RUN touch src/main.rs && cargo build --release \
  && strip target/release/english_web_server
 # ---- runtime ----
 FROM debian:bookworm-slim AS runtime
+ARG EW_VERSION=dev
 LABEL org.opencontainers.image.title="english_web" \
+      org.opencontainers.image.revision=$EW_VERSION \
       org.opencontainers.image.description="考研英语背词 · 红宝书乱序 6550 · Rust+PG"
 
 RUN apt-get update \

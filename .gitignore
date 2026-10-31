@@ -34,6 +34,7 @@ frontend/dist/
 
 # 构建缓存
 *.tsbuildinfo
+releases/
 
 # Claude Code / Codegraph / ZCode 工作目录
 .claude/

@@ -7,6 +7,7 @@ mod llm;
 mod mail;
 mod rate_limit;
 mod routes;
+mod services;
 mod state;
 
 use std::net::SocketAddr;
@@ -30,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let config = Config::from_env();
-    tracing::info!(url = %config.database_url, "connecting database");
+    tracing::info!("connecting database");
 
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(10)
@@ -60,6 +61,9 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .merge(routes::api_router())
         .merge(routes::spa_router())
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(), routes::system_update::maintenance,
+        ))
         .layer(CompressionLayer::new())
         .layer(TraceLayer::new_for_http())
         .with_state(state);

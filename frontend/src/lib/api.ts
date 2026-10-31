@@ -1,6 +1,7 @@
 // api.ts — backend client，镜像 web/api.js + 新增 study-events/stats 端点。
 // 同源 /api，无 CORS；自动带 Bearer token；JSON in/out；错误抛 Error(status,data)。
 import type { JournalCategory, JournalEntry, ReviewLog } from "@/lib/journal";
+import { submitImport, type ImportData } from "@/features/study/infrastructure/importSnapshot";
 
 const BASE = ""; // 同源
 const KEY_TOKEN = "ew.token.v1";
@@ -78,6 +79,38 @@ export interface StudyEventBody {
   client_at?: number;
 }
 
+/** 一次学习过关作为一个幂等命令提交，服务端事务保存卡片、事件和统计。 */
+export interface StudyCompletionDTO {
+  operation_id: string;
+  word_idx: number;
+  card: CardDTO;
+  event_type: "new" | "review";
+  day_key: string;
+  client_at: number;
+}
+
+export interface StudySnapshotDTO {
+  operation_id: string;
+  client_at: number;
+  cards?: Record<string, CardDTO>;
+  events?: StudyEventBody[];
+  meta?: MetaDTO;
+}
+
+export async function importStudy(snapshot: StudySnapshotDTO): Promise<{ok: boolean; duplicate?: boolean}> {
+  return req("/api/study/import", { method:"POST", body:JSON.stringify(snapshot) });
+}
+
+export function importStudyData(data: ImportData) {
+  return submitImport(data, importStudy);
+}
+
+export async function postStudyCompletions(completions: StudyCompletionDTO[]) {
+  return req<{ ok: boolean; applied: number; ignored: number }>("/api/study/completions/bulk", {
+    method: "POST", body: JSON.stringify({ completions }),
+  });
+}
+
 export interface TodayItem {
   word_idx: number;
   english: string;
@@ -146,7 +179,7 @@ export function isAdmin(): boolean {
 }
 
 // ---- 统一请求 ----
-async function req<T>(path: string, opts: ReqOpts = {}): Promise<T> {
+export async function request<T>(path: string, opts: ReqOpts = {}): Promise<T> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, signal, headers: optHeaders, ...rest } = opts;
   const headers: Record<string, string> = { ...((optHeaders as Record<string, string>) || {}) };
   const t = getToken();
@@ -196,6 +229,8 @@ async function req<T>(path: string, opts: ReqOpts = {}): Promise<T> {
   }
   return data as T;
 }
+
+const req = request;
 
 // ---- auth ----
 export async function register(username: string, password: string) {
@@ -394,16 +429,10 @@ export async function getCards(since?: number): Promise<{
   return req("/api/cards" + q);
 }
 export async function putCard(idx: number, card: CardDTO) {
-  return req(`/api/cards/${idx}`, {
-    method: "PUT",
-    body: JSON.stringify({ card }),
-  });
+  return importStudyData({cards:{[String(idx)]:card}});
 }
 export async function bulkCards(cards: Record<string, CardDTO>) {
-  return req("/api/cards/bulk", {
-    method: "POST",
-    body: JSON.stringify({ cards }),
-  });
+  return importStudyData({cards});
 }
 export type WordListKind = "new" | "known" | "none";
 
@@ -449,7 +478,7 @@ export async function getMeta(day?: string): Promise<{
   return req(`/api/meta${q}`);
 }
 export async function putMeta(meta: MetaDTO) {
-  return req("/api/meta", { method: "PUT", body: JSON.stringify({ meta }) });
+  return importStudyData({meta});
 }
 
 // ---- settings（需登录，账号级持久化；不含 llm——LLM 仅管理员经 /api/llm/* 配置）----
@@ -526,16 +555,10 @@ export async function deleteJournal(): Promise<{ ok: boolean; reset_at: number }
 
 // ---- study events / stats（新）----
 export async function postStudyEvent(body: StudyEventBody) {
-  return req<{ ok: boolean }>("/api/study-events", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  return importStudyData({events:[body]});
 }
 export async function postStudyEventsBulk(events: StudyEventBody[]) {
-  return req<{ ok: boolean; inserted?: number; ignored?: number }>("/api/study-events/bulk", {
-    method: "POST",
-    body: JSON.stringify({ events }),
-  });
+  return importStudyData({events});
 }
 export async function getToday(day: string): Promise<TodayResp> {
   return req(`/api/stats/today?day=${encodeURIComponent(day)}`);
