@@ -4,27 +4,49 @@ import { useSettings } from "@/stores/settings";
 import type { RelatedWord } from "@/types/words";
 import { cn } from "@/lib/utils";
 
-export function WordInfoBlock({ english, className }: { english: string; className?: string }) {
+export function WordInfoBlock({
+  english,
+  className,
+  section = "all",
+}: {
+  english: string;
+  className?: string;
+  /** all=整块（默认）；parts=只出词根词缀；lists=只出同/反/形近/同族。
+   *  大屏卡片把两部分分放到左右两栏，避免左栏留白、右栏过长。 */
+  section?: "all" | "parts" | "lists";
+}) {
   const showParts = useSettings((s) => s.showWordParts);
   const showSyn = useSettings((s) => s.showSynonyms);
   const showAnt = useSettings((s) => s.showAntonyms);
   const showSim = useSettings((s) => s.showSimilar);
   const showRel = useSettings((s) => s.showRelated);
-  const anyOn = showParts || showSyn || showAnt || showSim || showRel;
+  const wantParts = section !== "lists" && showParts;
+  const wantLists =
+    section !== "parts" && (showSyn || showAnt || showSim || showRel);
+  const anyOn = wantParts || wantLists;
   const info = useWordInfo(english, anyOn);
   if (!info) return null;
 
-  const hasParts = showParts && (info.parts.length > 0 || !!info.note);
+  const hasParts = wantParts && (info.parts.length > 0 || !!info.note);
   const lists: [string, RelatedWord[]][] = [];
-  if (showSyn) lists.push(["同义", info.syn]);
-  if (showAnt) lists.push(["反义", info.ant]);
-  if (showSim) lists.push(["形近", info.sim]);
-  if (showRel) lists.push(["同族", info.rel]);
+  if (wantLists && showSyn) lists.push(["同义", info.syn]);
+  if (wantLists && showAnt) lists.push(["反义", info.ant]);
+  if (wantLists && showSim) lists.push(["形近", info.sim]);
+  if (wantLists && showRel) lists.push(["同族", info.rel]);
   const shownLists = lists.filter(([, words]) => words.length > 0);
   if (!hasParts && shownLists.length === 0) return null;
 
   return (
-    <div className={cn("mt-4 w-full space-y-2 border-t border-border/60 pt-3 text-left text-sm", className)}>
+    <div
+      className={cn(
+        "w-full space-y-2 text-left text-sm md:text-[15px]",
+        // lists 单独成块时（跟随在词根后面）不再画顶部分隔线，免得手机上出现两条横线
+        section === "lists"
+          ? "mt-2"
+          : "mt-4 border-t border-border/60 pt-3",
+        className
+      )}
+    >
       {hasParts ? (
         <div>
           {info.parts.length > 0 ? (

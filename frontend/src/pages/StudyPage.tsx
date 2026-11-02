@@ -283,58 +283,77 @@ export function StudyPage() {
   const phonetic = getPhonetic(entry);
   const chinese = senses.map((sense) => sense[1]).join("；");
   const sensesHtml = senses
-    .map((sense) => `<div class="flex gap-2 py-0.5"><span class="shrink-0 text-sm text-muted-foreground">${esc(sense[0])}</span><span>${esc(sense[1])}</span></div>`)
+    .map((sense) => `<div class="flex gap-2 py-0.5"><span class="shrink-0 text-sm text-muted-foreground md:text-[15px]">${esc(sense[0])}</span><span>${esc(sense[1])}</span></div>`)
     .join("");
   const exampleHtml = example ? highlightTarget(example, entry[1], esc) : "";
   const exampleBlankHtml = example ? blankTargetHtml(example, entry[1], esc) : "";
   const bar = sessionBar(sessionStats.studied, sessionTotal);
   const groupName = item.group === "review" ? "复习组" : "新词组";
 
+  // 大屏（xl）双列：单词 + 释义在左，词根词缀 / 关联词 / 真题例句在右，
+  // 避免长内容在窄单列里溢出、被卡片底部裁掉。
   const fullCard = (
-    <div className="relative min-h-[360px] p-6 md:min-h-[460px] md:p-8" onClick={hideEnglish ? undefined : onCardClick}>
-      <CardHeader
-        label={
-          uiPhase === "relearn-reveal"
-            ? `${groupName} · 答案确认${relearnAnswerKnown === false ? " · 未通过" : relearnAnswerKnown ? " · 通过" : ""}`
-            : groupName
-        }
-        word={hideEnglish ? "······" : entry[1]}
-        phonetic={hideEnglish ? undefined : phonetic}
-        onSpeak={hideEnglish ? undefined : () => speakEnglish(entry[1], settings.rate)}
-        hideSpeak={hideEnglish}
-      />
-      {canHideEnglish ? (
-        <button
-          type="button"
-          className="absolute right-12 top-3 text-xs text-muted-foreground hover:text-foreground"
-          onClick={(e) => {
-            e.stopPropagation();
-            setHideEnglish((v) => !v);
-          }}
-          title="快捷键 H"
-        >
-          {hideEnglish ? "显示英文 H" : "藏英文 H"}
-        </button>
-      ) : null}
-      <div className="w-full text-left" dangerouslySetInnerHTML={{ __html: sensesHtml }} />
-      {!hideEnglish ? <WordInfoBlock english={entry[1]} /> : null}
+    <div
+      className={cn(
+        "relative grid min-h-[360px] content-center gap-0 p-6 md:min-h-[460px] md:p-8",
+        !hideEnglish && "xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] xl:gap-8"
+      )}
+      onClick={hideEnglish ? undefined : onCardClick}
+    >
+      <div className="min-w-0">
+        <CardHeader
+          label={
+            uiPhase === "relearn-reveal"
+              ? `${groupName} · 答案确认${relearnAnswerKnown === false ? " · 未通过" : relearnAnswerKnown ? " · 通过" : ""}`
+              : groupName
+          }
+          word={hideEnglish ? "······" : entry[1]}
+          phonetic={hideEnglish ? undefined : phonetic}
+          onSpeak={hideEnglish ? undefined : () => speakEnglish(entry[1], settings.rate)}
+          hideSpeak={hideEnglish}
+        />
+        {canHideEnglish ? (
+          <button
+            type="button"
+            className="absolute right-12 top-3 text-xs text-muted-foreground hover:text-foreground"
+            onClick={(e) => {
+              e.stopPropagation();
+              setHideEnglish((v) => !v);
+            }}
+            title="快捷键 H"
+          >
+            {hideEnglish ? "显示英文 H" : "藏英文 H"}
+          </button>
+        ) : null}
+        <div
+          className="w-full text-left text-base leading-relaxed md:text-[17px]"
+          dangerouslySetInnerHTML={{ __html: sensesHtml }}
+        />
+        {/* 词根词缀属于「这个词怎么构成」，跟单词放同栏；大屏左栏也就不会空一半 */}
+        {!hideEnglish ? <WordInfoBlock english={entry[1]} section="parts" /> : null}
+      </div>
       {!hideEnglish ? (
-        <ExampleBlock
-          html={exampleHtml}
-          onClick={onExampleWordClick}
-          translation={exampleTranslation}
-          translating={isExampleTranslating}
-          translationError={exampleTranslationError}
-        />
+        <div className="min-w-0 xl:border-l xl:border-border/60 xl:pl-8">
+          <WordInfoBlock english={entry[1]} section="lists" className="xl:mt-0" />
+          <ExampleBlock
+            html={exampleHtml}
+            onClick={onExampleWordClick}
+            translation={exampleTranslation}
+            translating={isExampleTranslating}
+            translationError={exampleTranslationError}
+          />
+        </div>
       ) : exampleBlankHtml ? (
-        <ExampleBlock
-          html={exampleBlankHtml}
-          label="例句（目标词已遮）"
-          onClick={() => undefined}
-          translation=""
-          translating={false}
-          translationError=""
-        />
+        <div className="min-w-0">
+          <ExampleBlock
+            html={exampleBlankHtml}
+            label="例句（目标词已遮）"
+            onClick={() => undefined}
+            translation=""
+            translating={false}
+            translationError=""
+          />
+        </div>
       ) : null}
     </div>
   );
@@ -461,7 +480,7 @@ export function StudyPage() {
         <div className="shrink-0 text-sm text-muted-foreground tnum">{bar.done} / {bar.total}</div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden p-4 md:justify-center md:p-8">
-        <div className="min-h-0 max-h-full w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl bg-card shadow-edge md:max-w-2xl">{body}</div>
+        <CardScroll>{body}</CardScroll>
       </div>
       <div className="shrink-0 border-t bg-background p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">{controls}</div>
       {pop && (
@@ -480,6 +499,45 @@ export function StudyPage() {
 
 function EmptyState({ onBack }: { onBack: () => void }) {
   return <div className="p-8 text-center"><Button onClick={onBack}>回首页</Button></div>;
+}
+
+/**
+ * 答题卡外壳：
+ * - 宽度按断点递进放宽（手机 → md → lg），大屏不再固定挤在 672px 里
+ * - 内容超出卡片高度时，底部给一条渐隐，提示「下面还有」，避免被硬切一刀
+ */
+function CardScroll({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [more, setMore] = useState(false);
+  // 无依赖：每次渲染后同步一次（换词、翻译回填、宽度变化都走这里）
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const sync = () => setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 8);
+    sync();
+    el.addEventListener("scroll", sync, { passive: true });
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    return () => {
+      el.removeEventListener("scroll", sync);
+      ro.disconnect();
+    };
+  });
+  return (
+    <div
+      ref={ref}
+      className="min-h-0 max-h-full w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl bg-card shadow-edge md:max-w-2xl lg:max-w-4xl"
+    >
+      {children}
+      {more ? (
+        <div
+          aria-hidden
+          className="pointer-events-none sticky bottom-0 -mt-12 h-12 bg-gradient-to-t from-card to-transparent"
+        />
+      ) : null}
+    </div>
+  );
 }
 
 /**
@@ -620,7 +678,7 @@ function SettleView({
   );
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh_-_4rem_-_var(--nav-reserve,0px))] w-full max-w-lg flex-col gap-3 p-4 md:h-[calc(100vh-4rem)] md:max-w-2xl md:gap-4 md:p-6">
+    <div className="mx-auto flex h-[calc(100dvh_-_4rem_-_var(--nav-reserve,0px))] w-full max-w-lg flex-col gap-3 p-4 md:h-[calc(100vh-4rem)] md:max-w-2xl md:gap-4 md:p-6 lg:max-w-3xl">
       <div className="flex shrink-0 flex-col items-center gap-1 pt-1 text-center">
         <div className="text-3xl md:text-4xl" aria-hidden>
           {isPassageBrowse ? "📖" : isSessionEnd ? "🎉" : "✅"}
@@ -743,10 +801,10 @@ function CardHeader({
         </button>
       ) : null}
       <div className="mb-3">
-        <div className={cn("text-3xl font-semibold", word === "······" && "tracking-widest text-muted-foreground")}>
+        <div className={cn("text-3xl font-semibold md:text-4xl xl:text-5xl", word === "······" && "tracking-widest text-muted-foreground")}>
           {word}
         </div>
-        {word !== "······" ? <PhoneticLine value={phonetic} className="mt-1" /> : null}
+        {word !== "······" ? <PhoneticLine value={phonetic} className="mt-1 md:text-lg" /> : null}
       </div>
     </>
   );
@@ -771,10 +829,10 @@ function ExampleBlock({
   return (
     <div className="mt-5 w-full text-left" onClick={onClick}>
       <div className="mb-1 text-xs text-muted-foreground">{label}</div>
-      <div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />
+      <div className="text-sm leading-relaxed md:text-[15px] md:leading-7" dangerouslySetInnerHTML={{ __html: html }} />
       {translating && <div className="mt-2 text-sm text-muted-foreground">例句翻译中…</div>}
       {translation && (
-        <div className="mt-2 border-l-2 border-primary/30 pl-2 text-sm text-muted-foreground">{translation}</div>
+        <div className="mt-2 border-l-2 border-primary/30 pl-2 text-sm leading-relaxed text-muted-foreground md:text-[15px]">{translation}</div>
       )}
       {translationError && (
         <div className="mt-2 text-sm text-destructive">{translationError}，点击卡片空白处或按空格重试</div>
@@ -866,19 +924,19 @@ const ACTION_TONE = {
 
 function ActionRow({ columns, actions }: { columns: string; actions: { key: string; label: string; onClick: () => void; tone?: "good" | "hard" | "again" }[] }) {
   return (
-    <div className={cn("mx-auto grid max-w-lg gap-2.5 md:max-w-2xl", columns)}>
+    <div className={cn("mx-auto grid max-w-lg gap-2.5 md:max-w-2xl lg:max-w-4xl", columns)}>
       {actions.map((action) => (
         <button
           key={action.key + action.label}
           type="button"
           onClick={action.onClick}
           className={cn(
-            "flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2.5 transition-[transform,box-shadow,filter] hover:brightness-105 active:translate-y-[3px] active:shadow-none",
+            "flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2.5 transition-[transform,box-shadow,filter] hover:brightness-105 active:translate-y-[3px] active:shadow-none md:py-3",
             action.tone ? ACTION_TONE[action.tone] : "bg-primary text-primary-foreground shadow-edge-primary"
           )}
         >
           <span className="text-[11px] font-semibold opacity-70">{action.key}</span>
-          <span className="text-sm font-bold">{action.label}</span>
+          <span className="text-sm font-bold md:text-[15px]">{action.label}</span>
         </button>
       ))}
     </div>
