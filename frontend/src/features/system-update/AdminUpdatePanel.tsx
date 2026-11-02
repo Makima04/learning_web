@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { flushPending } from "@/lib/syncQueue";
 import { checkUpdate, installUpdate, updateStatus, type UpdateStatus } from "./api";
+import { checkFreshness } from "./freshness";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -18,6 +19,14 @@ export function AdminUpdatePanel() {
   const busy = launching || running;
   const needsAttention = status?.job?.status === "needs_attention";
   const installed = status?.job?.action === "install" && status.job.status === "succeeded";
+  // 只缓存最近一次检查结果：旧快照不能当成「已是最新」。
+  const fresh = checkFreshness(status?.available?.checked_at);
+  const canAutoCheck =
+    !!status &&
+    status.enabled !== false &&
+    status.job?.status !== "running" &&
+    status.job?.status !== "needs_attention" &&
+    !installed;
 
   useEffect(() => {
     alive.current = true;
@@ -47,6 +56,16 @@ export function AdminUpdatePanel() {
       clearTimeout(timer);
     };
   }, []);
+
+  // 缓存超过 30 分钟（或从未检查）时自动复查一次，避免旧结论被读成「已是最新」。
+  const autoChecked = useRef(false);
+  useEffect(() => {
+    if (!canAutoCheck || fresh.stale === false || autoChecked.current) return;
+    autoChecked.current = true;
+    void start("check");
+    // start 依赖组件内状态，这里只在首次过期时触发一次。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canAutoCheck, fresh.stale]);
 
   async function start(action: "check" | "install") {
     if (acting.current || running) return;
@@ -83,6 +102,13 @@ export function AdminUpdatePanel() {
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt className="text-muted-foreground">当前版本</dt>
           <dd className="break-all font-mono">{status?.current_version || window.EW_VERSION || "dev"}</dd>
+          {status?.enabled !== false && <>
+            <dt className="text-muted-foreground">上次检查</dt>
+            <dd className="text-muted-foreground">
+              {fresh.label}
+              {fresh.stale && <span className="ml-1">· 已过期</span>}
+            </dd>
+          </>}
           {status?.available && <>
             <dt className="text-muted-foreground">可用版本</dt>
             <dd className="break-all font-mono">{status.available.version}</dd>
@@ -104,7 +130,9 @@ export function AdminUpdatePanel() {
         <div aria-live="polite" className="space-y-2 text-sm">
           {status?.job && <p role="status">{status.job.message}</p>}
           {status?.available && !status.available.update_available && !busy && !installed && (
-            <p className="text-muted-foreground">当前已是最新发布版本。</p>
+            <p className="text-muted-foreground">
+              {fresh.stale ? "上次检查结果已过期，请点“检查更新”重新确认。" : "当前已是最新发布版本。"}
+            </p>
           )}
           {error && <p role="alert" className={running ? "text-muted-foreground" : "text-destructive"}>
             {running ? "正在等待服务恢复连接，更新进度会自动刷新。" : error}
