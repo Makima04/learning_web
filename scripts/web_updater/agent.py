@@ -55,6 +55,18 @@ def environment(container):
     return dict(item.split("=", 1) for item in container["Config"].get("Env", []) if "=" in item)
 
 
+def probe_mount(path):
+    """候选容器以 nobody 运行且没有附加组，挂载目录必须对 other 可 traverse。
+
+    服务以 UMask=0027 启动，mkdir 的 0o755 会被压成 0750，此时容器 stat
+    维护标志位得到 EACCES，应用的维护中间件会把非 ENOENT 的错误当成"正在更新"，
+    预检的所有业务请求都会 503。因此显式 chmod 覆盖 umask。
+    """
+    path.mkdir(mode=0o755, parents=True)
+    path.chmod(0o755)
+    return path
+
+
 class Updater:
     def __init__(self, config, helper):
         self.config, self.helper = config, helper
@@ -275,8 +287,7 @@ class Updater:
         h, c = self.helper, self.config
         database, container = "ew_update_check_" + secrets.token_hex(6), "ew-update-check-" + secrets.token_hex(6)
         env_file = work / "test.env"
-        maintenance = work / "maintenance-probe"
-        maintenance.mkdir(mode=0o755)
+        maintenance = probe_mount(work / "maintenance-probe")
         resources = work / "preflight.json"
         atomic_json(resources, dict(database=database, container=container))
         try:

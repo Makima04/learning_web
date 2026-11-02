@@ -2,7 +2,9 @@
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
+import stat
 import tempfile
 import types
 import unittest
@@ -190,6 +192,14 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(len(service["volumes"]), 1)
         self.assertTrue(service["volumes"][0]["read_only"])
         self.assertNotIn("docker.sock", json.dumps(service))
+
+    def test_probe_mount_stays_traversable_under_service_umask(self):
+        # 服务以 UMask=0027 运行；候选容器以 nobody 运行且没有附加组，
+        # 目录若是 0750 就会 EACCES，维护中间件随即把所有业务接口打成 503。
+        previous = os.umask(0o027)
+        self.addCleanup(os.umask, previous)
+        mount = agent.probe_mount(self.root / "work" / "maintenance-probe")
+        self.assertEqual(stat.S_IMODE(mount.stat().st_mode), 0o755)
 
 
 if __name__ == "__main__":

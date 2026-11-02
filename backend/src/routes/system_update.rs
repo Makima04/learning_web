@@ -40,8 +40,15 @@ pub async fn maintenance(State(state): State<AppState>, req: Request, next: Next
     if path.starts_with("/api/") && !control && !health {
         if let Some(flag) = &state.config.update_maintenance_file {
             match tokio::fs::metadata(flag).await {
+                Ok(_) => return unavailable("系统正在更新，请稍后重试；待同步学习记录会保留"),
                 Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-                _ => return unavailable("系统正在更新，请稍后重试；待同步学习记录会保留"),
+                // 权限/IO 异常说明标志位不可判定，不能据此把整站业务接口打成 503：
+                // 更新服务的隔离预检就曾因候选容器读不到该路径而全部 503。
+                Err(e) => tracing::warn!(
+                    path = %flag.display(),
+                    %e,
+                    "maintenance flag unreadable, treating service as available"
+                ),
             }
         }
     }
@@ -315,6 +322,36 @@ mod tests {
             assert_eq!(control.status(), StatusCode::UNAUTHORIZED);
         }
         tokio::fs::remove_dir(dir).await.unwrap();
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn unreadable_maintenance_flag_does_not_block_business_api(pool: PgPool) {
+        let dir = std::env::temp_dir().join(format!("ew-flag-{}", crate::auth::gen_salt()));
+        tokio::fs::create_dir(&dir).await.unwrap();
+        // 父路径是普通文件：metadata 返回 NotADirectory 而不是 NotFound。
+        // 权限/IO 异常不应该让业务接口全部 503（隔离预检曾因此失败）。
+        let blocker = dir.join("not-a-directory");
+        tokio::fs::write(&blocker, b"x").await.unwrap();
+        let mut state = state(pool);
+        state.config.update_maintenance_file = Some(blocker.join("maintenance.json"));
+        let app = Router::new()
+            .route("/api/business", get(|| async { "ok" }))
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                maintenance,
+            ))
+            .with_state(state);
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/api/business")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        tokio::fs::remove_dir_all(dir).await.unwrap();
     }
 
     #[sqlx::test(migrations = "./migrations")]
