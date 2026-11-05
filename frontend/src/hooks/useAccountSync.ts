@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { isAuthExpired } from "@/lib/authSession";
 import { syncAccountData } from "@/lib/accountSync";
 import { flushPending } from "@/lib/syncQueue";
 import { useAuth } from "@/stores/auth";
@@ -19,6 +20,8 @@ export function useAccountSync() {
     }
 
     const sync = () => {
+      // 登录已过期：交给全局弹窗引导重新登录，这里不再空转
+      if (isAuthExpired()) return;
       if (document.visibilityState === "hidden") return;
       const now = Date.now();
       if (now - lastSyncAt.current < SYNC_COOLDOWN) return;
@@ -44,7 +47,7 @@ export function useAccountSync() {
       SYNC_INTERVAL + Math.floor(Math.random() * SYNC_JITTER)
     );
     const flushId = window.setInterval(() => {
-      void flushPending();
+      if (!isAuthExpired()) void flushPending();
     }, FLUSH_INTERVAL);
 
     return () => {

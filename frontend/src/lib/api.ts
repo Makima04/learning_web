@@ -2,6 +2,21 @@
 // 同源 /api，无 CORS；自动带 Bearer token；JSON in/out；错误抛 Error(status,data)。
 import type { JournalCategory, JournalEntry, ReviewLog } from "@/lib/journal";
 import { submitImport, type ImportData } from "@/features/study/infrastructure/importSnapshot";
+import {
+  AUTH_EXPIRED_MESSAGE,
+  clearAuthExpired,
+  isAuthExpired,
+  markAuthExpired,
+} from "@/lib/authSession";
+
+// 会话状态单独成模块，这里转出一份方便调用方统一从 api 取
+export {
+  AUTH_EXPIRED_EVENT,
+  OPEN_AUTH_DIALOG_EVENT,
+  AUTH_EXPIRED_MESSAGE,
+  isAuthExpired,
+  clearAuthExpired,
+} from "@/lib/authSession";
 
 const BASE = ""; // 同源
 const KEY_TOKEN = "ew.token.v1";
@@ -151,13 +166,38 @@ export class ApiError extends Error {
   }
 }
 
+// ---- 登录态失效（状态本体见 authSession.ts）----
+/**
+ * 这些端点本身就会用 401 表达「密码/验证码错误」，不能误判成会话过期；
+ * 另外几个按文本查询的公开端点无需登录，过期期间仍应可用。
+ */
+const AUTH_BYPASS_PATHS = new Set([
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/logout",
+  "/api/auth/email/send-code",
+  "/api/auth/email/login",
+  "/api/auth/email/register",
+  "/api/translate",
+  "/api/lookup",
+  "/api/sentences",
+  "/api/sentences/stats",
+]);
+
+function isAuthBypassPath(path: string): boolean {
+  return AUTH_BYPASS_PATHS.has(path.split("?")[0]);
+}
+
 // ---- token ----
 export function getToken(): string {
   return localStorage.getItem(KEY_TOKEN) || "";
 }
 export function setToken(t: string | null) {
-  if (t) localStorage.setItem(KEY_TOKEN, t);
-  else localStorage.removeItem(KEY_TOKEN);
+  if (t) {
+    localStorage.setItem(KEY_TOKEN, t);
+    // 拿到新 token 即视为会话恢复
+    clearAuthExpired();
+  } else localStorage.removeItem(KEY_TOKEN);
 }
 export function getUser(): User | null {
   try {
@@ -181,6 +221,10 @@ export function isAdmin(): boolean {
 // ---- 统一请求 ----
 export async function request<T>(path: string, opts: ReqOpts = {}): Promise<T> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, signal, headers: optHeaders, ...rest } = opts;
+  // 会话已失效：除登录相关 / 公开端点外一律短路，别拿旧 token 反复刷 401
+  if (isAuthExpired() && !isAuthBypassPath(path)) {
+    throw new ApiError(AUTH_EXPIRED_MESSAGE, 401, null);
+  }
   const headers: Record<string, string> = { ...((optHeaders as Record<string, string>) || {}) };
   const t = getToken();
   if (t) headers["Authorization"] = "Bearer " + t;
@@ -225,6 +269,12 @@ export async function request<T>(path: string, opts: ReqOpts = {}): Promise<T> {
           data.error)) ||
       text ||
       "HTTP " + res.status;
+    if (res.status === 401 && !isAuthBypassPath(path) && getToken()) {
+      // 服务端已不认这张 token（会话过期 / 别处登出 / 数据库回滚）。
+      // 统一收口：标记过期、派发事件，由全局弹窗引导重新登录。
+      markAuthExpired();
+      throw new ApiError(AUTH_EXPIRED_MESSAGE, res.status, data);
+    }
     throw new ApiError(String(msg).slice(0, 300), res.status, data);
   }
   return data as T;
@@ -294,6 +344,8 @@ export async function loginWithEmail(email: string, code: string) {
 
 export async function logout() {
   const token = getToken();
+  // 主动登出要解除过期标记，否则下次进页面还会弹窗
+  clearAuthExpired();
   setToken(null);
   setUser(null);
   if (!token) return;

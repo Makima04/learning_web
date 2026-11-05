@@ -1,4 +1,5 @@
 import * as api from "@/lib/api";
+import { isAuthExpired } from "@/lib/authSession";
 import { getScopeEpoch, stillInScope } from "@/lib/storageScope";
 import { flushPending } from "@/lib/syncQueue";
 import { useCards } from "@/stores/cards";
@@ -14,6 +15,7 @@ let syncInFlight: Promise<void> | null = null;
 let syncInFlightEpoch = -1;
 
 export function syncAccountData(): Promise<void> {
+  if (isAuthExpired()) return Promise.resolve();
   if (!api.isLoggedIn()) return Promise.resolve();
   const epoch = getScopeEpoch();
   if (syncInFlight && syncInFlightEpoch === epoch) return syncInFlight;

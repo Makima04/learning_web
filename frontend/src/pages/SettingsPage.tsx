@@ -73,6 +73,7 @@ export function SettingsPage() {
   const [llmConcurrency, setLlmConcurrency] = useState(4);
   const [llmSaving, setLlmSaving] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(getSyncStatus);
+  const [authExpired, setAuthExpired] = useState(api.isAuthExpired);
   const [accountBusy, setAccountBusy] = useState<"sync" | "flush" | "logout" | "login" | null>(
     null
   );
@@ -85,6 +86,12 @@ export function SettingsPage() {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   useEffect(() => subscribeSyncStatus(setSyncStatus), []);
+
+  useEffect(() => {
+    const update = () => setAuthExpired(api.isAuthExpired());
+    window.addEventListener(api.AUTH_EXPIRED_EVENT, update);
+    return () => window.removeEventListener(api.AUTH_EXPIRED_EVENT, update);
+  }, []);
 
   useEffect(() => {
     if (tab === "llm" && auth.loggedIn) {
@@ -223,7 +230,16 @@ export function SettingsPage() {
     }
   }
 
+  function openAuthDialog() {
+    window.dispatchEvent(new CustomEvent(api.OPEN_AUTH_DIALOG_EVENT));
+  }
+
   async function forceSync() {
+    if (api.isAuthExpired()) {
+      setMsg(api.AUTH_EXPIRED_MESSAGE);
+      openAuthDialog();
+      return;
+    }
     setAccountBusy("sync");
     setMsg("同步中…");
     try {
@@ -243,6 +259,11 @@ export function SettingsPage() {
   }
 
   async function retryUpload() {
+    if (api.isAuthExpired()) {
+      setMsg(api.AUTH_EXPIRED_MESSAGE);
+      openAuthDialog();
+      return;
+    }
     setAccountBusy("flush");
     setMsg("上传中…");
     try {
@@ -781,6 +802,19 @@ export function SettingsPage() {
                     {auth.user?.email && (
                       <p className="text-sm text-muted-foreground">{auth.user.email}</p>
                     )}
+                    {authExpired && (
+                      <div className="rounded-md border-2 border-destructive/40 bg-destructive/10 px-3 py-2 space-y-2">
+                        <p className="text-sm font-semibold text-destructive">
+                          登录已过期，进度暂时无法上传
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          本地记录仍保留，重新登录后会自动继续同步。
+                        </p>
+                        <Button size="sm" onClick={openAuthDialog}>
+                          重新登录
+                        </Button>
+                      </div>
+                    )}
                     <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground space-y-1">
                       <p>
                         进度同步：
@@ -797,7 +831,7 @@ export function SettingsPage() {
                           上次成功：{new Date(syncStatus.lastOkAt).toLocaleString()}
                         </p>
                       )}
-                      {syncStatus.lastError && (
+                      {syncStatus.lastError && !authExpired && (
                         <p className="text-destructive">{syncStatus.lastError}</p>
                       )}
                     </div>

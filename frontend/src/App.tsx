@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
+import { AuthExpiredDialog } from "@/components/AuthExpiredDialog";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { StudyPage } from "@/pages/StudyPage";
 import { useAccountSync } from "@/hooks/useAccountSync";
@@ -95,59 +96,63 @@ export default function App() {
   useReminder();
 
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="study" element={<StudyPage />} />
-          <Route path="today" element={<TodayPage />} />
-          <Route path="lists" element={<WordListsPage />} />
-          <Route path="journal" element={<JournalPage />} />
-          <Route path="journal/chapter/:moduleId" element={<JournalChapterPage />} />
-          <Route path="journal/:tab" element={<JournalPage />} />
-          <Route path="kg" element={<KgIndexRedirect />} />
-          <Route path="kg/predict" element={<KgPredictPage />} />
-          <Route path="kg/exams" element={<KgExamsPage />} />
-          <Route path="kg/wd" element={<WdSetPage />} />
-          <Route path="kg/wd/:group" element={<WdSetPage />} />
-          <Route path="kg/exams/set" element={<ExamSetPage />} />
-          <Route path="kg/exams/set/:group" element={<ExamSetPage />} />
-          <Route path="kg/exams/os-mem" element={<OsMemExamSetPage />} />
-          <Route path="kg/exams/os-mem/:group" element={<OsMemExamSetPage />} />
-          <Route path="kg/exams/:year" element={<KgExamsPage />} />
-          <Route path="kg/module/:bookId/:moduleId" element={<KgLegacyModuleRedirect />} />
-          <Route path="kg/kp/:kpId" element={<KgLegacyKpRedirect />} />
-          <Route path="kg/:subject" element={<KgMapPage />} />
-          <Route path="kg/:subject/module/:bookId/:moduleId" element={<KgModulePage />} />
-          <Route
-            path="kg/:subject/module/:bookId/:moduleId/book"
-            element={<KgBookDrillPage />}
-          />
-          <Route path="kg/:subject/kp/:kpId" element={<KgKpPage />} />
-          <Route path="viz" element={<VizHomePage />} />
-          <Route path="viz/:kpId" element={<VizKpPage />} />
-          <Route path="politics" element={<PoliticsPage />} />
-          <Route path="politics/xiao" element={<PoliticsXiaoPage />} />
-          <Route path="politics/xiao/:subject" element={<PoliticsXiaoPage />} />
-          <Route path="politics/xiao/:subject/chapter/:chapterNo" element={<PoliticsXiaoPage />} />
-          <Route path="politics/xiao/:subject/:kpId" element={<PoliticsXiaoPage />} />
-          <Route path="politics/q/:qid" element={<PoliticsPage />} />
-          <Route path="politics/:tab" element={<PoliticsPage />} />
-          <Route path="papers" element={<PapersPage />} />
-          <Route path="papers/:variant" element={<PapersPage />} />
-          <Route path="papers/:variant/:year" element={<PapersPage />} />
-          <Route path="papers-recite" element={<PapersRecitePage />} />
-          <Route path="papers-recite/:variant" element={<PapersRecitePage />} />
-          <Route path="papers-recite/:variant/:year" element={<PapersRecitePage />} />
-          {/* 深链：/reader/en1/2006/Text%202 — 刷新可从 PAPERS 还原 */}
-          <Route path="reader/:variant/:year/:label" element={<ReaderPage />} />
-          <Route path="reader" element={<Navigate to="/papers/en1" replace />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="settings/:tab" element={<SettingsPage />} />
-          <Route path="transmgr" element={<TransMgrPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </Suspense>
+    <>
+      {/* 全局登录过期弹窗：任何页面、任何接口 401 都能唤起 */}
+      <AuthExpiredDialog />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="study" element={<StudyPage />} />
+            <Route path="today" element={<TodayPage />} />
+            <Route path="lists" element={<WordListsPage />} />
+            <Route path="journal" element={<JournalPage />} />
+            <Route path="journal/chapter/:moduleId" element={<JournalChapterPage />} />
+            <Route path="journal/:tab" element={<JournalPage />} />
+            <Route path="kg" element={<KgIndexRedirect />} />
+            <Route path="kg/predict" element={<KgPredictPage />} />
+            <Route path="kg/exams" element={<KgExamsPage />} />
+            <Route path="kg/wd" element={<WdSetPage />} />
+            <Route path="kg/wd/:group" element={<WdSetPage />} />
+            <Route path="kg/exams/set" element={<ExamSetPage />} />
+            <Route path="kg/exams/set/:group" element={<ExamSetPage />} />
+            <Route path="kg/exams/os-mem" element={<OsMemExamSetPage />} />
+            <Route path="kg/exams/os-mem/:group" element={<OsMemExamSetPage />} />
+            <Route path="kg/exams/:year" element={<KgExamsPage />} />
+            <Route path="kg/module/:bookId/:moduleId" element={<KgLegacyModuleRedirect />} />
+            <Route path="kg/kp/:kpId" element={<KgLegacyKpRedirect />} />
+            <Route path="kg/:subject" element={<KgMapPage />} />
+            <Route path="kg/:subject/module/:bookId/:moduleId" element={<KgModulePage />} />
+            <Route
+              path="kg/:subject/module/:bookId/:moduleId/book"
+              element={<KgBookDrillPage />}
+            />
+            <Route path="kg/:subject/kp/:kpId" element={<KgKpPage />} />
+            <Route path="viz" element={<VizHomePage />} />
+            <Route path="viz/:kpId" element={<VizKpPage />} />
+            <Route path="politics" element={<PoliticsPage />} />
+            <Route path="politics/xiao" element={<PoliticsXiaoPage />} />
+            <Route path="politics/xiao/:subject" element={<PoliticsXiaoPage />} />
+            <Route path="politics/xiao/:subject/chapter/:chapterNo" element={<PoliticsXiaoPage />} />
+            <Route path="politics/xiao/:subject/:kpId" element={<PoliticsXiaoPage />} />
+            <Route path="politics/q/:qid" element={<PoliticsPage />} />
+            <Route path="politics/:tab" element={<PoliticsPage />} />
+            <Route path="papers" element={<PapersPage />} />
+            <Route path="papers/:variant" element={<PapersPage />} />
+            <Route path="papers/:variant/:year" element={<PapersPage />} />
+            <Route path="papers-recite" element={<PapersRecitePage />} />
+            <Route path="papers-recite/:variant" element={<PapersRecitePage />} />
+            <Route path="papers-recite/:variant/:year" element={<PapersRecitePage />} />
+            {/* 深链：/reader/en1/2006/Text%202 — 刷新可从 PAPERS 还原 */}
+            <Route path="reader/:variant/:year/:label" element={<ReaderPage />} />
+            <Route path="reader" element={<Navigate to="/papers/en1" replace />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="settings/:tab" element={<SettingsPage />} />
+            <Route path="transmgr" element={<TransMgrPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </>
   );
 }

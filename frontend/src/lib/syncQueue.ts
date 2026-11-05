@@ -2,6 +2,7 @@
 // cards、生词表、学习日志按条 bulk；meta / settings / kg / politics 走 PUT；study_events 按词入队后 POST。
 
 import * as api from "@/lib/api";
+import { AUTH_EXPIRED_MESSAGE, isAuthExpired } from "@/lib/authSession";
 import { clearPendingCompletions, flushCompletions, hasPendingCompletions, saveCompletion } from "@/features/study/infrastructure/completionQueue";
 export { pendingCompletionWordIds } from "@/features/study/infrastructure/completionQueue";
 import type {
@@ -543,7 +544,19 @@ function sameJson(a: unknown, b: unknown): boolean {
   }
 }
 
+/** 401 统一成人话，别把后端的 invalid token 原样摆给用户 */
+function describeError(e: unknown): string {
+  const status =
+    typeof e === "object" && e !== null ? (e as { status?: number }).status : undefined;
+  if (isAuthExpired() || status === 401) {
+    return AUTH_EXPIRED_MESSAGE;
+  }
+  return e instanceof Error ? e.message : String(e);
+}
+
 async function flushOnce(): Promise<void> {
+  // 登录已过期：不发请求，待上传队列原样保留，重新登录后再刷
+  if (isAuthExpired()) return;
   let error: string | null = null;
   const epoch = getScopeEpoch();
   const isCurrentScope = () => api.isLoggedIn() && stillInScope(epoch);
@@ -578,7 +591,7 @@ async function flushOnce(): Promise<void> {
       if (Object.keys(leftover).length === 0) localStorage.removeItem(cardsKey);
       else saveJSON(cardsKey, leftover);
     } catch (e: unknown) {
-      error = e instanceof Error ? e.message : String(e);
+      error = describeError(e);
     }
   }
 
@@ -591,7 +604,7 @@ async function flushOnce(): Promise<void> {
       const current = loadJSON<api.MetaDTO | null>(metaKey, null);
       if (!current || sameJson(current, meta)) localStorage.removeItem(metaKey);
     } catch (e: unknown) {
-      error = e instanceof Error ? e.message : String(e);
+      error = describeError(e);
     }
   }
 
@@ -604,7 +617,7 @@ async function flushOnce(): Promise<void> {
       const current = loadJSON<Record<string, unknown> | null>(settingsKey, null);
       if (!current || sameJson(current, settings)) localStorage.removeItem(settingsKey);
     } catch (e: unknown) {
-      error = e instanceof Error ? e.message : String(e);
+      error = describeError(e);
     }
   }
 
@@ -617,7 +630,7 @@ async function flushOnce(): Promise<void> {
       const current = loadJSON<Record<string, unknown> | null>(kgKey, null);
       if (!current || sameJson(current, kg)) localStorage.removeItem(kgKey);
     } catch (e: unknown) {
-      error = e instanceof Error ? e.message : String(e);
+      error = describeError(e);
     }
   }
 
@@ -630,7 +643,7 @@ async function flushOnce(): Promise<void> {
       const current = loadJSON<Record<string, unknown> | null>(politicsKey, null);
       if (!current || sameJson(current, politics)) localStorage.removeItem(politicsKey);
     } catch (e: unknown) {
-      error = e instanceof Error ? e.message : String(e);
+      error = describeError(e);
     }
   }
 
@@ -663,7 +676,7 @@ async function flushOnce(): Promise<void> {
         if (!isCurrentScope()) return;
         for (const piece of slice) posted.add(`${piece.kind}:${piece.id}`);
       } catch (e: unknown) {
-        error = e instanceof Error ? e.message : String(e);
+        error = describeError(e);
         break;
       }
     }
@@ -721,7 +734,7 @@ async function flushOnce(): Promise<void> {
         if (!isCurrentScope()) return;
         for (const k of chunkKeys) postedOk.add(k);
       } catch (e: unknown) {
-        error = e instanceof Error ? e.message : String(e);
+        error = describeError(e);
         break;
       }
     }
@@ -762,7 +775,7 @@ async function flushOnce(): Promise<void> {
         if (!isCurrentScope()) return;
         for (const k of chunkKeys) postedOk.add(k);
       } catch (e: unknown) {
-        error = e instanceof Error ? e.message : String(e);
+        error = describeError(e);
         break;
       }
     }
@@ -818,6 +831,8 @@ async function flushOnce(): Promise<void> {
 
 /** 立即刷出待同步项（登录后 / 上线 / 定时）。并发调用共用同一次 flush。 */
 export function flushPending(): Promise<SyncStatus> {
+  // 过期期间每 30 秒的定时刷出直接跳过，避免空转刷错误
+  if (isAuthExpired()) return Promise.resolve(getSyncStatus());
   if (!api.isLoggedIn()) return Promise.resolve(getSyncStatus());
   const epoch = getScopeEpoch();
   if (flushInFlight && flushInFlightEpoch === epoch) return flushInFlight;
