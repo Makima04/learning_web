@@ -217,13 +217,46 @@ pub async fn chat_completion(
     Ok(out)
 }
 
+/// 译文必须含足够汉字。部分中转网关会丢掉 system 消息，模型便把原句当成
+/// 「用户贴了一段引文」来自由发挥，返回英文分析/反问；这类结果绝不能 status=ok
+/// 落库（ok 译文永不重翻）。
+pub fn is_chinese_translation(s: &str) -> bool {
+    let total = s.chars().count();
+    if total == 0 {
+        return false;
+    }
+    let han = s
+        .chars()
+        .filter(|c| ('\u{4e00}'..='\u{9fff}').contains(c))
+        .count();
+    // 至少两个汉字，且汉字占比 ≥ 10%（允许译文里保留长串英文专名、缩写、标点）
+    han >= 2 && han * 10 >= total
+}
+
+/// 翻译指令同时塞进 user 消息：丢 system 的渠道仍能收到任务指令。
+const TRANSLATE_USER_PREFIX: &str =
+    "把下面这句英文翻译成简体中文，只输出译文，不要原文、不要解释、不要多余内容：\n";
+
+/// 翻译并校验；非中文结果最多再试一次（网关多渠道轮询，重试常能换到正常渠道）。
 pub async fn translate_text(
     http: &Client,
     conf: &Config,
     model: &str,
     text: &str,
 ) -> Result<String, anyhow::Error> {
-    chat_completion(http, conf, model, SYS_PROMPT, text).await
+    let user = format!("{TRANSLATE_USER_PREFIX}{text}");
+    let mut last = String::new();
+    for _ in 0..2 {
+        let out = chat_completion(http, conf, model, SYS_PROMPT, &user).await?;
+        if is_chinese_translation(&out) {
+            return Ok(out);
+        }
+        last = out;
+    }
+    let snippet: String = last.chars().take(120).collect();
+    Err(anyhow::anyhow!(
+        "模型返回的不是中文译文（网关可能丢了 system 提示词）：{snippet}"
+    ))
 }
 
 /// Parse SSE `data:` lines from a byte stream into content deltas.
@@ -362,6 +395,19 @@ pub async fn fetch_models(http: &Client, conf: &Config) -> Result<Vec<String>, a
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn chinese_translation_guard() {
+        assert!(is_chinese_translation("与男性相比，女性更容易患抑郁症。"));
+        assert!(is_chinese_translation("Dr. Yehuda 说：女性更容易抑郁。"));
+        assert!(!is_chinese_translation(
+            "That quote attributes the claim to Dr. Yehuda: women are more likely than men."
+        ));
+        assert!(!is_chinese_translation(
+            "What would you like me to do with it—paraphrase, analyze, or cite?"
+        ));
+        assert!(!is_chinese_translation(""));
+    }
 
     #[test]
     fn join_url_adds_v1() {
