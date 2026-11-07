@@ -79,21 +79,23 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- translate "The
 
 `study` store 的 `mode`: `learn` | `review` | `passage`。passage 复用同一套 SRS 卡片；背完可进 reader 读原文，命中词高亮（`lookup.ts` 词形还原）。
 
-### Docker / CI / 部署（CI 只建 amd64，arm 本地推）
+### Docker / CI / 部署（multi-arch 全部在 CI 构建）
 
 - 镜像：`ghcr.io/makima04/learning_web`（仓库名小写）。
-- **分工**（避免 GHA 上 QEMU multi-arch + GHA cache 踩坑）：
-  1. **CI**（`.github/workflows/docker.yml`）只构建 `linux/amd64`，推：
-     - `:amd64-latest` / `:amd64-<sha>`
-  2. **本地 Mac arm64**：`./scripts/publish-arm64-image.sh`
-     - 推 `:arm64-latest` / `:arm64-<sha>`
-     - 再 `imagetools` 把 amd64+arm64 合成 multi-arch 的 `:latest` / `:<sha>`
+- **构建只在 GitHub Actions 做**（`.github/workflows/docker.yml`），本地不再构建任何架构：
+  1. `build` matrix，两个**原生** runner 并行（`provenance/sbom` 关闭，保持单平台 manifest 干净）
+     - `linux/amd64` @ `ubuntu-24.04` → `:amd64-latest` / `:amd64-<sha>`
+     - `linux/arm64` @ `ubuntu-24.04-arm` → `:arm64-latest` / `:arm64-<sha>`
+  2. `manifest` job 用 `imagetools create` 合成 multi-arch `:latest` / `:<sha>`
+- 刻意**不用 QEMU**：Rust release 在 QEMU 下会慢十倍以上。仓库是 public，GitHub 托管 arm64 runner 免费。
 - 构建时传入 `EW_VERSION=<git-sha>`，设置页显示的版本即该 sha。
-- 推荐发版顺序：`git push origin main` → 等 CI 成功 → 本地跑 arm 脚本 → 板子 pull。
+- 发版顺序：`git push origin main` → 等 CI 全绿 → 板子 pull。
+- 应急：`manifest` 失败但 per-arch 已推成功时，Re-run failed jobs，或本机只做合成：
+  `docker buildx imagetools create --tag ghcr.io/makima04/learning_web:latest --tag …:<sha> …:amd64-<sha> …:arm64-<sha>`
 - **生产板（如 `192.168.1.161` Orange Pi arm64）** 用 compose 拉镜像跑，**不是**服务器上的 git 工作树：
   - 目录示例：`/home/orangepi/learning_web`，`image: ghcr.io/makima04/learning_web:latest`，端口 `8800:8000`。
   - 在板子上 `git pull` **不会**更新容器；必须 `docker pull` + `docker compose up -d app`。
-  - 板子应 pull **`:latest`（multi-arch）**；若只跑了 CI、没跑 arm 脚本，`:latest` 不会更新，可临时 pin `:arm64-latest`。
+  - 板子 pull `:latest`（multi-arch）即可，不再有「等本地 arm 推送」这一步。
 
 ## 跨设备同步（硬约定）
 

@@ -65,29 +65,42 @@ docker run -d \
   ghcr.io/makima04/learning_web:latest
 ```
 
-### 发布镜像到 ghcr.io（CI amd64 + 本地 arm64）
+### 发布镜像到 ghcr.io（全部由 CI 构建 multi-arch）
 
-GitHub Actions 只构建 **linux/amd64**（`:amd64-latest` / `:amd64-<sha>`），避免 multi-arch QEMU 与 GHA cache 失败。arm64 在本机 Mac 推：
+镜像只在 GitHub Actions 上构建，本地不需要跑任何构建命令：
 
 ```bash
-# 1. 推 main，等 Actions 成功
-git push origin main
-
-# 2. 登录 ghcr（token 需 write:packages）
-echo "$GHCR_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
-
-# 3. 本地构建 arm64，并合成 multi-arch :latest / :<sha>
-./scripts/publish-arm64-image.sh
+git push origin main   # 之后什么都不用做，等 Actions 跑完
 ```
 
-生产板（arm64）再：
+`.github/workflows/docker.yml` 的三段结构：
+
+1. `lint` + `test`
+2. `build`（matrix，两个**原生** runner 并行，不走 QEMU）
+   - `linux/amd64` @ `ubuntu-24.04` → `:amd64-latest` / `:amd64-<sha>`
+   - `linux/arm64` @ `ubuntu-24.04-arm` → `:arm64-latest` / `:arm64-<sha>`
+3. `manifest` → `imagetools create` 合成 multi-arch `:latest` / `:<sha>`
+
+仓库是 public，GitHub 托管的 arm64 runner 免费，也不占 ARM 计费分钟。arm64 是原生编译，Rust release 构建耗时和 amd64 同级（QEMU 下会慢十倍以上，所以刻意避开）。
+
+生产板（arm64）更新：
 
 ```bash
 docker pull ghcr.io/makima04/learning_web:latest
 docker compose up -d app
 ```
 
-若 CI 已好、arm 已推、只需重合成 manifest：`./scripts/publish-arm64-image.sh --manifest-only`。
+应急：若 `manifest` job 失败（per-arch 镜像已推成功），本机只需合成、不用构建：
+
+```bash
+docker buildx imagetools create \
+  --tag ghcr.io/makima04/learning_web:latest \
+  --tag ghcr.io/makima04/learning_web:<sha> \
+  ghcr.io/makima04/learning_web:amd64-<sha> \
+  ghcr.io/makima04/learning_web:arm64-<sha>
+```
+
+或者在 Actions 页面直接 Re-run failed jobs。
 
 ## 环境变量
 

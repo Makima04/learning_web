@@ -1,21 +1,34 @@
-name: build-and-push-amd64-image
+name: build-and-push-image
 
 # 触发：push main 或手动 Dispatch
 #
-# 分工：
-#   - CI（本 workflow）只构建并推送 linux/amd64 标签：:amd64-latest / :amd64-<sha>
-#   - arm64 在本地 macOS 构建：./scripts/publish-arm64-image.sh
-#     该脚本再把 amd64+arm64 合成 multi-arch 的 :latest / :<sha>
+# 镜像全部在 GitHub 上构建，本地不再参与（不需要 Docker Desktop，也不需要
+# docker.io 可访问的镜像加速做法）：
 #
-# 生产 Orange Pi（arm64）应 pull :latest（multi-arch），不要只依赖 CI 产物。
+#   1. lint / test
+#   2. build（matrix，两个原生 runner 并行）
+#        linux/amd64  @ ubuntu-24.04      → :amd64-latest / :amd64-<sha>
+#        linux/arm64  @ ubuntu-24.04-arm  → :arm64-latest / :arm64-<sha>
+#      两个架构都是**原生编译**，不走 QEMU —— Rust release 构建耗时接近本机
+#   3. manifest：docker buildx imagetools 把两个单平台镜像合成 multi-arch
+#        → :latest / :<sha>
+#
+# 生产 Orange Pi（arm64）直接 pull :latest（multi-arch）即可。
+# 仓库是 public，GitHub 托管的 arm64 runner 免费，不占 ARM 计费分钟。
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+# 同一 ref 串行发布，避免两次 push 交错覆盖 :latest（不做 cancel-in-progress，
+# 发布中途取消会留下半套 per-arch 标签）
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -32,7 +45,7 @@ jobs:
         run: ruff check .
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16-alpine
@@ -83,16 +96,33 @@ jobs:
       - name: 后端单元测试
         run: cargo test --manifest-path backend/Cargo.toml
 
+  # 按架构并行构建单平台镜像。原生 runner 上 4 vCPU 可全开 cargo 并行。
   build:
     needs: [lint, test]
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
-      packages: write   # 推到 ghcr.io 需要的权限
+      packages: write # 推到 ghcr.io 需要的权限
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+
+      - name: 计算镜像名（小写仓库名）
+        id: meta
+        run: |
+          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${REPO_LC}" >> "$GITHUB_OUTPUT"
 
       - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -104,26 +134,66 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 计算镜像名（小写仓库名）
-        id: meta
-        run: |
-          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${REPO_LC}"
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
-          echo "构建镜像: $IMAGE (linux/amd64 only；arm64 见 scripts/publish-arm64-image.sh)"
-
-      # 只打 :amd64-*，不要覆盖 :latest / :<sha>
-      # multi-arch :latest 由本地 arm 脚本 imagetools 合成。
-      - name: 构建并推送 AMD64 镜像
+      # 只推 :<arch>-* 标签；multi-arch 的 :latest / :<sha> 由 manifest job 合成，
+      # 避免两个 arch 互相覆盖。
+      # provenance / sbom 关闭：per-arch 产物保持纯单平台 manifest，合成后干净。
+      - name: 构建并推送 ${{ matrix.arch }} 镜像
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           push: true
-          build-args: EW_VERSION=${{ github.sha }}
+          provenance: false
+          sbom: false
+          build-args: |
+            EW_VERSION=${{ github.sha }}
+            EW_BUILD_JOBS=4
           tags: |
-            ${{ steps.meta.outputs.image }}:amd64-latest
-            ${{ steps.meta.outputs.image }}:amd64-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max,ignore-error=true
+            ${{ steps.meta.outputs.image }}:${{ matrix.arch }}-latest
+            ${{ steps.meta.outputs.image }}:${{ matrix.arch }}-${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }},ignore-error=true
+
+      - name: 输出摘要
+        run: |
+          {
+            echo "### ${{ matrix.arch }}"
+            echo ""
+            echo "- platform: \`${{ matrix.platform }}\`（原生 runner: \`${{ matrix.runner }}\`）"
+            echo "- digest: \`${{ steps.build.outputs.digest }}\`"
+            echo "- tags: \`${{ matrix.arch }}-latest\`, \`${{ matrix.arch }}-${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # 把两个单平台镜像合成 multi-arch（这一步只操作 manifest，不构建、秒级完成）
+  manifest:
+    needs: [build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 合成 multi-arch :latest / :<sha>
+        run: |
+          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/${REPO_LC}"
+          SHA="${{ github.sha }}"
+          docker buildx imagetools create \
+            --tag "${IMAGE}:latest" \
+            --tag "${IMAGE}:${SHA}" \
+            "${IMAGE}:amd64-${SHA}" \
+            "${IMAGE}:arm64-${SHA}"
+          echo "### multi-arch \`:latest\` / \`:${SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+          docker buildx imagetools inspect "${IMAGE}:latest" >> "$GITHUB_STEP_SUMMARY"

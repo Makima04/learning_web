@@ -33,7 +33,7 @@
 SQLx 集成测试需要可创建数据库的测试账号，会自动创建并清理隔离数据库；不要使用生产环境账号。
 CI 提供 PostgreSQL 服务，实际执行迁移、并发写入、事务回滚、重试幂等和账号隔离测试。
 
-ARM64 发布脚本要求工作区已提交且目标 SHA 等于 HEAD；manifest-only 可独立合并已有镜像。
+镜像由 CI 在 `linux/amd64` / `linux/arm64` 两个原生 runner 上并行构建（不走 QEMU），再由独立的 manifest job 合成 multi-arch `:latest` / `:<sha>`；本地不参与构建。per-arch 标签（`:amd64-<sha>`、`:arm64-<sha>`）保留用于排查与手动补合成。
 
 ## 后续边界
 

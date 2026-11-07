@@ -27,11 +27,12 @@ python3 /Users/makima/program/web/english_web/scripts/setup-production-web-updat
 
 ## 发布新版本
 
-网页安装的是已发布版本。继续沿用仓库的双架构发布流程：
+网页安装的是已发布版本。双架构镜像全部在 GitHub Actions 构建，本地无需参与：
 
-1. 提交并推送 `main`，等待 CI 推送 AMD64 镜像。
-2. Mac 执行 `./scripts/publish-arm64-image.sh`，发布 ARM64 并合并 multi-arch `latest`。
-3. 管理员在网页检查更新并点击安装。
+1. 提交并推送 `main`，等待 CI 的 `lint` / `test` / `build`（amd64+arm64 原生并行）/ `manifest` 全部通过。
+2. 管理员在网页检查更新并点击安装。
+
+若 `manifest` job 失败而两个 per-arch 镜像已推成功，可在 Actions 页面 Re-run failed jobs，或本机只做合成（`docker buildx imagetools create`），无需重新构建。
 
 镜像必须包含 `org.opencontainers.image.revision` 标签，值与 Rust 编译版本、前端版本一致；Dockerfile 已设置。
 安装固定到检查时的仓库摘要，即使后续 `latest` 改变，也不会偷偷安装另一版。
