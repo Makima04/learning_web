@@ -1,0 +1,3278 @@
+{
+  "version": "20261106b",
+  "scope": "2009–2026 共 18 套统考卷的综合应用题（41–47 题，共 126 道）",
+  "note": "人工归纳的解题范式，不是标准答案；模板是卷面写法骨架，具体数值与结论以原卷参考答案为准。2026 为考后回忆整理版（无官方卷），答案键已与来源页逐题核对、该卷不参与考频校准，题干与选项措辞仍可能有出入；2024/2025 源答案页只有答案键与大题要点，已在前端挂原版答案页图供校对。",
+  "total": 126,
+  "type_count": 18,
+  "years": [
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "families": [
+    {
+      "id": "ds",
+      "name": "数据结构",
+      "color": "blue"
+    },
+    {
+      "id": "co",
+      "name": "组成原理",
+      "color": "violet"
+    },
+    {
+      "id": "os",
+      "name": "操作系统",
+      "color": "amber"
+    },
+    {
+      "id": "cn",
+      "name": "计算机网络",
+      "color": "emerald"
+    }
+  ],
+  "types": [
+    {
+      "id": "ds-linear",
+      "family": "ds",
+      "name": "线性结构算法设计",
+      "subtitle": "数组 / 单链表上的最优算法",
+      "paradigm": "算法设计题（思想 + 代码 + 复杂度）",
+      "template": [
+        "①【基本设计思想】先一句话点破核心技巧（双指针 / 快慢指针 / 原地标记 / 分治舍半 / 贪心 / 递推），再说明它为什么能把时间压到题目要求，并明确是否允许改变原数据。",
+        "②【算法步骤】按「初始化 → 主循环（写清循环不变量）→ 收尾输出」分 (1)(2)(3) 列出；单独交代边界情形：空表、k 超长、n=1、值域含负数、候选需二次验证。",
+        "③【代码】给出结构体定义与 C/C++ 函数，关键处加注释。链表题写明有无头结点、前驱指针、断链与释放顺序；数组题写明原地交换或辅助数组的大小与值域依据。",
+        "④【复杂度】时间与空间分别写，标明平均 / 最坏；若用标记数组，写出空间与值域的关系（如 |data|≤n ⇒ O(n)）。",
+        "⑤【正确性】用一句话给出不变量或「不会漏解」的理由，卷面上这一步常能拿到步骤分。"
+      ],
+      "ideas": [
+        "链表找倒数第 k 个、求公共后缀：双指针先拉开 k 步或长度差，再同步后移，O(n) 时间 O(1) 空间。",
+        "「未出现的最小正整数」「按 |data| 去重」「主元素」：利用 0≤ai<n 或 |data|≤n 做下标原地标记；主元素用 Boyer-Moore 摩尔投票 + 二次计数验证。",
+        "序列循环左移用三次逆置；集合划分用快排一次划分找第 n/2 小元素（平均 O(n)）；两升序序列中位数用分治每次各舍一半，O(log n)。",
+        "数组后缀最大值、三元组最小距离这类题：先找单调性或递推式，从右往左维护最大/最小值，或用多指针「当前最小者前进」贪心推进。",
+        "链表重排 a1,an,a2,an−1… 的固定套路：快慢指针找中点 → 逆置后半段 → 交叉归并，空间 O(1)。"
+      ],
+      "pitfalls": [
+        "摩尔投票只产生候选，必须再扫一遍确认出现次数 > n/2，否则「无主元素」的情形会误输出。",
+        "题干写「不改变链表 / 序列」时不能用破坏性原地标记，要改用辅助空间或先还原。",
+        "复杂度别只写 O(n)：空间复杂度、平均与最坏情况要分开写（快排划分平均 O(n)、最坏 O(n²)）。"
+      ],
+      "kpIds": [
+        "ds.algo.design",
+        "ds.linear.linked",
+        "ds.linear.seq",
+        "ds.algo.dp",
+        "ds.algo.greedy",
+        "ds.sort.swap"
+      ],
+      "familyName": "数据结构",
+      "count": 11,
+      "years": [
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2015,
+        2016,
+        2018,
+        2019,
+        2020,
+        2025
+      ],
+      "kpNames": [
+        {
+          "id": "ds.algo.design",
+          "name": "综合题算法设计与复杂度"
+        },
+        {
+          "id": "ds.linear.linked",
+          "name": "单链表/双链表/循环链表"
+        },
+        {
+          "id": "ds.linear.seq",
+          "name": "顺序表与操作复杂度"
+        },
+        {
+          "id": "ds.algo.dp",
+          "name": "动态规划（408 尺度）"
+        },
+        {
+          "id": "ds.algo.greedy",
+          "name": "贪心"
+        },
+        {
+          "id": "ds.sort.swap",
+          "name": "交换类（冒泡/快排）"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2009,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "单链表找倒数第 k 个结点：双指针先拉开 k 步再同步后移",
+          "note": "",
+          "kps": [
+            "ds.linear.linked",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知一个带有表头结点的单链表，结点结构为： 假设该链表只给出了头指针list。在不改变链表的前提下，请设计一个尽可能高效的算法，查找链表中 倒数第k 个位置上的结点( k 为正整数)。若查找成"
+        },
+        {
+          "year": 2010,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "数组循环左移 p 位：三次逆置做到 O(n) / O(1)",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.linear.seq"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "设将n（n>1）个整数存放到一维数组R 中。试设计一个在时间和空间两方面都尽可能高效的算 法。将R 中保存的序列循环左移p（0<p<n）个位置，即将R 中的数据由（X0, X1…Xn-1）变换"
+        },
+        {
+          "year": 2011,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "两个等长升序序列的中位数：分治每次各舍一半 O(log n)",
+          "note": "",
+          "kps": [
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "一个长度为L（L≥1）的升序序列S，处在第  2 / L 个位置的数称为S 的中位数。 例如，若序列S1=（11,13,15,17,19），则S1 的中位数是15，两个序列的中位数是含它 "
+        },
+        {
+          "year": 2012,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "两单链表求共同后缀起始位置：对齐长度后同步后移",
+          "note": "",
+          "kps": [
+            "ds.linear.linked",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定采用带头结点的单链表保存单词， 当两个单词有相同的后缀时，则可共享相同的后 缀存储空间， 例如，\"loadi ng\"和\"bei ng\" 的存储映像如下图所示。 设strl 和str2 分别"
+        },
+        {
+          "year": 2013,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "主元素：摩尔投票找候选 + 二次计数验证是否 > n/2",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.linear.seq"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知一个整数序列A = (a0, a1, …, an－1)，其中0≤ai＜n（0≤i＜n）。若存在：ap1＝ap2＝… apm＝x 且m > n / 2（0≤pk＜n，1≤k≤m），则称x 为"
+        },
+        {
+          "year": 2015,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "单链表按 |data| 去重：值域 n 的辅助数组标记 O(m)",
+          "note": "",
+          "kps": [
+            "ds.linear.linked",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "用单链表保存m 个整数，结点的结构为[data][link]，且| data |≤n （n 为正整数）。现要求 设计一个时间复杂度尽可能高效的算法，对于链表中data 的绝对值相等的结点，仅保"
+        },
+        {
+          "year": 2016,
+          "n": 43,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "集合划分使 |n1−n2| 最小、|S1−S2| 最大：快排一次划分",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.sort.swap"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知由n（n≥2）个正整数构成的集合A = {ak | 0≤k＜n}，将其划分为两个不相交的子 集A1和A2，元素个数分别是n1和n2，A1和A2中元素之和分别为S1和S2。设计一个尽可能高效"
+        },
+        {
+          "year": 2018,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "数组中未出现的最小正整数：原地置换 O(n) / O(1)",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.linear.seq"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "给定一个含n（n≥1）个整数的数组，请设计一个在时间上尽可能高效的算法，找出数 组中未出现的最小正整数。例如，数组{－5, 3, 2, 3}中未出现的最小正整数是1；数组{1, 2, 3}中 "
+        },
+        {
+          "year": 2019,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "单链表原地重排 a1,an,a2,an−1…：找中点 + 逆置 + 交叉归并",
+          "note": "",
+          "kps": [
+            "ds.linear.linked",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "设线性表L = (a1, a2, a3, …, an – 2, an – 1, an)采用带头结点的单链表保存，链表中的结点定 义如下： typedef struct node { int d"
+        },
+        {
+          "year": 2020,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "三数组三元组最小距离 D：三指针按最小者前进贪心",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.algo.greedy",
+            "ds.linear.seq"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "定义三元组(a, b, c)（其中a, b, c 均为正数）的距离。D = |a – b| + |b – c|。给定3 个非空 整数集合S1、S2和S3，按升序分别存储在3 个数组中。设计一个"
+        },
+        {
+          "year": 2025,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "calMulMax：从右往左维护最大/最小值求后缀最大乘积",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.algo.dp",
+            "ds.linear.seq"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "（本题13 分）设有两个长度均为n 的一维整型数组A 和res，对数组A 中的每个元素A[i]，计算 A[i]与A[j]（0 ≤ i ≤ j ≤ n – 1）乘积的最大值，并将其保存到res["
+        }
+      ]
+    },
+    {
+      "id": "ds-tree",
+      "family": "ds",
+      "name": "树与二叉树",
+      "subtitle": "性质推导 / 遍历算法 / 哈夫曼与编码 / BST",
+      "paradigm": "推导题 + 算法设计题混合",
+      "template": [
+        "①先判断题型：性质推导、算法设计，还是编码构造。推导题先设变量（结点数 n、叶结点 n0、度为 k 的结点 nk、高度 h）。",
+        "②推导型写出两条基本关系：n = Σni 与 边数 = n−1 = Σ i·ni，联立消元得结论；再给出「最多 / 最少」的具体构造（满树 / 单链）。",
+        "③算法型给出存储结构定义，选定遍历框架（递归带深度参数 / 层次遍历带层号 / 中序遍历带括号），说明状态如何在递归中传递。",
+        "④按问作答：WPL 在叶结点累加 depth×weight；中缀表达式按「左 → 根 → 右」并按需加括号；前缀码说明用字典树 / 哈夫曼树保存。",
+        "⑤最后写复杂度（时间 O(n)、空间 O(h) 递归栈），并核对是否回答了所有小问。"
+      ],
+      "ideas": [
+        "WPL = Σ(叶权 × 深度)：递归把 depth 作参数，或自底向上返回 (权重和, WPL) 二元组。",
+        "正则 k 叉树：n0 = (k−1)m + 1；高度 h 时最多 (k^h−1)/(k−1) 个结点，最少 1 + (h−1)k。",
+        "前缀码：用 Trie 保存，任一编码不是另一编码的前缀；判定时若插入到终端结点之下或经过终端结点即失败；译码沿 0/1 到叶结点输出字符再回根。",
+        "顺序存储二叉树：下标从 1 开始时 2i / 2i+1 为孩子，−1 表示空结点且空结点同样占数组位置，ElemNum 不等于实际结点数。",
+        "BST 找与 K 差最小的所有结点：中序遍历维护 pred/succ 与最小差值集合；或用 BST 性质在查找路径上更新，遇相等立即收集。"
+      ],
+      "pitfalls": [
+        "哈夫曼 / 最佳归并必须每次取最小的两个合并，不能按输入顺序；总比较次数是各次合并长度之和减去合并次数。",
+        "中缀表达式加括号要判断子树优先级，不能无脑全加；单目负号与二元减号要区分。",
+        "顺序存储题里空结点也占位置，容易把数组长度当成实际结点数。"
+      ],
+      "kpIds": [
+        "ds.tree.bt",
+        "ds.tree.trav",
+        "ds.tree.huffman",
+        "ds.algo.design",
+        "ds.search.bst",
+        "ds.algo.recur"
+      ],
+      "familyName": "数据结构",
+      "count": 7,
+      "years": [
+        2012,
+        2014,
+        2016,
+        2017,
+        2020,
+        2022,
+        2026
+      ],
+      "kpNames": [
+        {
+          "id": "ds.tree.bt",
+          "name": "二叉树性质与存储"
+        },
+        {
+          "id": "ds.tree.trav",
+          "name": "遍历（递归/非递归/层次）"
+        },
+        {
+          "id": "ds.tree.huffman",
+          "name": "哈夫曼树与编码"
+        },
+        {
+          "id": "ds.algo.design",
+          "name": "综合题算法设计与复杂度"
+        },
+        {
+          "id": "ds.search.bst",
+          "name": "二叉排序树"
+        },
+        {
+          "id": "ds.algo.recur",
+          "name": "递归与分治"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2012,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "6 个有序表最优合并：哈夫曼/最佳归并树与最少比较次数",
+          "note": "",
+          "kps": [
+            "ds.tree.huffman",
+            "ds.algo.greedy",
+            "ds.sort.merge"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "设有6 个有序表A、B、C、D、E、F, 分别含有10、35、40、50、60 和200 个数据元 素，各表中元素按升序排列。要求通过5 次两两合并，将6 个表最终合并成1 个升序表，并在最 "
+        },
+        {
+          "year": 2014,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "二叉树 WPL 算法：递归带深度或层次遍历累加叶权",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.tree.trav",
+            "ds.tree.huffman",
+            "ds.tree.bt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "二叉树的带权路径长度 （WPL）是二叉树中所有叶结点的带权路径长度之和。给定一棵 二叉树T ,采用二叉链表存储， 结点结构如下： left weight right 其中叶结点的weight "
+        },
+        {
+          "year": 2016,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "正则 k 叉树：叶结点数与高度 h 下结点数上下界推导",
+          "note": "",
+          "kps": [
+            "ds.tree.bt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "如果一棵非空k（k≥2）叉树T 中每个非叶结点都有k 个孩子，则称T 为正则k 叉树。 请回答下列问题并给出推导过程。 （1）若T 有m 个非叶结点，则T 中的叶结点有多少个？ （2）若T 的"
+        },
+        {
+          "year": 2017,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "表达式树转中缀表达式：中序遍历 + 按优先级加括号",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.tree.trav",
+            "ds.tree.bt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "请设计一个算法，将给定的表达式树（二叉树）转换为等价的中缀表达式（通过括号 反映操作符的计算次序）并输出。例如，当下列两棵表达式树作为算法的输入时，输出的等价中 缀表达式分别为(a+b)*(c"
+        },
+        {
+          "year": 2020,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "前缀编码：字典树保存、译码过程与前缀特性判定",
+          "note": "",
+          "kps": [
+            "ds.tree.huffman",
+            "ds.tree.bt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "若任一个字符的编码都不是其他字符编码的前缀，则称这种编码具有前缀特性。现有 某字符集（字符个数≥2）的不等长编码，每个字符的编码均为二进制的0、1 序列，最长为L 位，且具有前缀特性。请回答下"
+        },
+        {
+          "year": 2022,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "顺序存储二叉树：由数组还原树并求指定统计量的算法",
+          "note": "",
+          "kps": [
+            "ds.algo.design",
+            "ds.search.bst",
+            "ds.tree.bt",
+            "ds.tree.trav"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知非空二叉树T 的结点值均为正整数，采用顺序存储方式保存，数据结构定义如 下： typedef struct{ //MAX_SIZE 为已定义常量 int SqBiTNode[MAX_SIZ"
+        },
+        {
+          "year": 2026,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "BST 中找与 K 差最小的所有结点：中序维护 pred/succ",
+          "note": "",
+          "kps": [
+            "ds.search.bst",
+            "ds.algo.design"
+          ],
+          "hasAnswer": true,
+          "hasExplanation": false,
+          "stemBrief": "（本题满分 13 分） 假定二叉搜索树使用二叉链表存储，存储结构如下： typedef struct BSTNode{ int data; struct BSTNode *left,*righ"
+        }
+      ]
+    },
+    {
+      "id": "ds-graph",
+      "family": "ds",
+      "name": "图算法与图的应用",
+      "subtitle": "最短路 / MST / 拓扑与 AOE / 邻接矩阵 / 图算法设计",
+      "paradigm": "手算模拟 + 结论证明 + 算法设计",
+      "template": [
+        "①先把图/表还原清楚：邻接矩阵还是邻接表、顶点编号、有向无向、带权与否；有图必先画出或抄出结构。",
+        "②指明算法并写出执行表：Dijkstra 每轮列「已确定集合 S / dist / 前驱」；Prim/Kruskal 每轮列「候选边 / 选中边 / 累计代价」；拓扑/AOE 列「入度序列 / ve / vl / 关键活动」。",
+        "③涉及 A²/邻接矩阵幂：明确 A^m[i][j] 表示「从 i 到 j 长度恰为 m 的通路条数」（无权图），有向图注意方向。",
+        "④算法设计题写清遍历框架、visited / 度数统计方式、返回值含义；图不连通时要遍历所有顶点，别只从 0 号出发。",
+        "⑤结论题给反例或证明要点：贪心正确性、MST 唯一性、欧拉路径存在条件都要有依据，不能只写「不能 / 唯一」。"
+      ],
+      "ideas": [
+        "Dijkstra 的正确性依赖每轮选当前 dist 最小的未确定顶点；2009-41 的「沿路径逐点选最近邻」是局部贪心，用三角形反例即可否定。",
+        "关键路径：拓扑求 ve（取最大）→ 逆拓扑求 vl（取最小）→ e(i)=ve(起点)、l(i)=vl(终点)−耗时，e=l 即关键活动；工期是从源到汇的最长路径。",
+        "EL 路径即欧拉路径：无向连通图奇度顶点数为 0 或 2；邻接矩阵逐行统计度数即可 O(n²)。",
+        "K 顶点逐行求出度、逐列求入度再比较；拓扑序列是否唯一看每轮入度为 0 的顶点是否始终唯一。",
+        "MST 唯一的充分条件是各边权互不相同（更一般地：每个割的最小权边唯一）；Prim 从指定点出发的边序列可能不唯一，按题目规则写。"
+      ],
+      "pitfalls": [
+        "A² 元素含义是「长度为 2 的通路条数」，不是「距离为 2」。",
+        "AOE 网求最短工期看最长路径，不是最短路径；时间余量 = l(i) − e(i)。",
+        "有向图邻接矩阵的行是出边、列是入边，出度/入度别写反。"
+      ],
+      "kpIds": [
+        "ds.graph.store",
+        "ds.graph.sp",
+        "ds.graph.mst",
+        "ds.graph.topo",
+        "ds.graph.dfs-bfs",
+        "ds.algo.greedy"
+      ],
+      "familyName": "数据结构",
+      "count": 10,
+      "years": [
+        2009,
+        2011,
+        2014,
+        2015,
+        2017,
+        2018,
+        2021,
+        2023,
+        2024,
+        2025
+      ],
+      "kpNames": [
+        {
+          "id": "ds.graph.store",
+          "name": "邻接矩阵/邻接表"
+        },
+        {
+          "id": "ds.graph.sp",
+          "name": "最短路径（Dijkstra/Floyd）"
+        },
+        {
+          "id": "ds.graph.mst",
+          "name": "最小生成树（Prim/Kruskal）"
+        },
+        {
+          "id": "ds.graph.topo",
+          "name": "拓扑排序与关键路径"
+        },
+        {
+          "id": "ds.graph.dfs-bfs",
+          "name": "DFS/BFS 与应用"
+        },
+        {
+          "id": "ds.algo.greedy",
+          "name": "贪心"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2009,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "逐点选最近邻的贪心能否求最短路径：判断可行性并给反例或证明",
+          "note": "",
+          "kps": [
+            "ds.graph.sp"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "带权图（权值非负，表示边连接的两顶点间的距离）的最短路径问题是找出从初始顶点到目标顶 点之间的一条最短路径。假设从初始顶点到目标顶点之间存在路径，现有一种解决该问题的方法： ①设最短路径初始时"
+        },
+        {
+          "year": 2011,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "上三角邻接矩阵还原有向带权图并求关键路径长度",
+          "note": "",
+          "kps": [
+            "ds.graph.topo",
+            "ds.graph.store",
+            "ds.linear.seq"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知有6 个顶点（顶点编号为0～5）的有向带权图G，其邻接矩阵A 为上三角 矩阵，按行为主序（行优先）保存在如下的一维数组中。 4 6 ∞ ∞ ∞ 5 ∞ ∞ ∞ 4 3 ∞ ∞ 3 3 要求"
+        },
+        {
+          "year": 2014,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "OSPF 链路状态信息还原拓扑 + Dijkstra 最短路径",
+          "note": "与 43 题连题：43 题沿用本题拓扑继续填路由表",
+          "kps": [
+            "ds.graph.sp",
+            "ds.graph.store",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某网络中的路由器运行OSPF 路由协议，题42 表是路由器R1 维护的主要链路状态信 息（LSI）,题42 图是根据题42 表及R1 的接口名构造出来的网络拓扑。 题42 表 R1 所维护的L"
+        },
+        {
+          "year": 2015,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "邻接矩阵 A² 元素含义与 A^m 的通路条数解释",
+          "note": "",
+          "kps": [
+            "ds.graph.store"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知含有5 个顶点的图G 如下图所示。 请回答下列问题： （1）写出图G 的邻接矩阵A（行、列下标从0 开始）。 （2）求A 2，矩阵A 2中位于0 行3 列元素值的含义是什么？ （3）若已知"
+        },
+        {
+          "year": 2017,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "Prim 求 MST 的选边序列、唯一性及唯一性条件",
+          "note": "",
+          "kps": [
+            "ds.graph.mst",
+            "ds.algo.greedy"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "使用Prim （普里姆）算法求带权连通图的最小（代价）生成树（MST）。请回答下列问 题。 （1）对下列图G，从顶点A 开始求G 的MST, 依次给出按算法选出的边。 （2）图G 的MST 是"
+        },
+        {
+          "year": 2018,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "8 城光纤 MST 方案 + 存储结构 + TTL 能否到达",
+          "note": "",
+          "kps": [
+            "ds.graph.mst",
+            "ds.graph.store",
+            "cn.net.ip"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "拟建设一个光通信骨干网络连通BJ、CS、XA、QD、JN、NJ、TL 和WH 等8 个城 市，题42 图中无向边上的权值表示两个城市间备选光纤的铺设费用。 题42 图 请回答下列问题。 （1）"
+        },
+        {
+          "year": 2021,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "邻接矩阵判 EL（欧拉）路径：奇度顶点计数与算法设计",
+          "note": "",
+          "kps": [
+            "ds.graph.store",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知无向连通图G 由顶点集V 和边集E 组成，|E| > 0 ,当G 中度为奇数的顶点个数为不 大于2 的偶数时，G 存在包含所有边且长度为|E|的路径（称为EL 路径）。设图G 采用邻接矩阵"
+        },
+        {
+          "year": 2023,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "有向图输出所有 K 顶点（出度 > 入度）的算法设计",
+          "note": "",
+          "kps": [
+            "ds.graph.store",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知有向图G 采用邻接矩阵存储，类型定义如下： typedef struct //图的类型定义 { int numVertices, numEdges; //图的顶点数和有向边数 char V"
+        },
+        {
+          "year": 2024,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "前导子工程抽象为拓扑序列：邻接矩阵上的拓扑排序",
+          "note": "",
+          "kps": [
+            "ds.graph.topo",
+            "ds.graph.store",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "2023 年10 月26 日，神舟十七号载人飞船发射取得圆满成功，再次彰显了中国航天事 业的辉煌成就。载人航天工程是包含众多子工程的复杂系统工程，为了保证工程的有序开展，需 要明确各子工程的前"
+        },
+        {
+          "year": 2025,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "AOE 网最短工期、关键活动、时间余量与工期压缩",
+          "note": "",
+          "kps": [
+            "ds.graph.topo"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "（本题10 分）某工程包含12 个活动，使用题42 图所示的AOE 网描述，图中各边上标注了活动 及其持续时间。 题42 图 请回答下列问题（活动均用活动名表示）。 （1）完成该工程的最短时间"
+        }
+      ]
+    },
+    {
+      "id": "ds-search-sort",
+      "family": "ds",
+      "name": "查找与排序",
+      "subtitle": "散列建表 / ASL / TOP-K / 外部排序",
+      "paradigm": "手算模拟 + 结果分析",
+      "template": [
+        "①先分清「手算模拟」还是「算法分析/设计」：手算题必须画出最终表或归并段，并给出每一步的比较/探查过程。",
+        "②散列表：写出 H(key)、表长、冲突探查序列，逐关键字列「初始地址 → 冲突 → 最终地址 → 比较次数」，再算装填因子 α = n/m。",
+        "③ASL：成功 ASL = Σ(各关键字比较次数)/n；失败 ASL 按每个初始散列地址逐一探测到空位求和后除以散列地址数（模/表长），分母不要混用。",
+        "④排序/选择分析题：说明算法思想（计数比较排序、大根堆 TOP-K、置换-选择），再写时间/空间复杂度与稳定性。",
+        "⑤把题目所有小问逐条回扣：查找某关键字的比较序列、查找失败的散列地址、初始归并段个数与内容都单独列一行。"
+      ],
+      "ideas": [
+        "线性探测 H_i=(H0+i)%m；平方探查按题给 Hk=(H0+k²)%m，注意平方探查只能覆盖约一半地址。",
+        "降低 ASL：按查找概率降序排列 + 顺序查找，或构造判定树/最优二叉排序树；链式存储把高概率结点放链首。",
+        "TOP-K 最小 K 个数：建大小为 K 的大根堆，遍历时比堆顶小则替换，O(n log K)，远优于全排序。",
+        "置换-选择排序：每次从工作区输出「不小于刚输出记录的最小者」，更小的记录冻结到下一归并段，工作区全冻结即成一段。",
+        "计数比较排序用 O(n²) 次比较统计每个元素的排名，注意相等元素处理会影响稳定性。"
+      ],
+      "pitfalls": [
+        "题给装填因子 α=0.7 时要先由 n/α 推出表长，不能直接拿模数当表长。",
+        "失败 ASL 的分母是散列地址数（表长/模），不是关键字个数。",
+        "外部排序第一个初始归并段的长度可以远大于工作区 m（输入已升序时一段可含全部记录）。"
+      ],
+      "kpIds": [
+        "ds.search.hash",
+        "ds.search.seq-bin",
+        "ds.sort.select",
+        "ds.sort.compare",
+        "ds.sort.external",
+        "ds.algo.design"
+      ],
+      "familyName": "数据结构",
+      "count": 6,
+      "years": [
+        2010,
+        2013,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "kpNames": [
+        {
+          "id": "ds.search.hash",
+          "name": "散列查找与冲突处理"
+        },
+        {
+          "id": "ds.search.seq-bin",
+          "name": "顺序/折半查找"
+        },
+        {
+          "id": "ds.sort.select",
+          "name": "选择类（简单选择/堆排）"
+        },
+        {
+          "id": "ds.sort.compare",
+          "name": "排序稳定性与复杂度对比"
+        },
+        {
+          "id": "ds.sort.external",
+          "name": "外部排序要点"
+        },
+        {
+          "id": "ds.algo.design",
+          "name": "综合题算法设计与复杂度"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2010,
+          "n": 41,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "线性探测散列表构造、装填因子与成功/失败 ASL",
+          "note": "",
+          "kps": [
+            "ds.linear.seq",
+            "ds.search.hash"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "将关键字序列（7、8、30、11、18、9、14）散列存储到散列表中。散列表的存储空间是一个下 标从0 开始的一维数组，散列函数为：H(key) = (keyx3) MOD 7，处理冲突采用线"
+        },
+        {
+          "year": 2013,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "按查找概率重排 + 顺序/折半查找使 ASL 更小",
+          "note": "",
+          "kps": [
+            "ds.search.seq-bin",
+            "ds.linear.seq",
+            "ds.linear.linked"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "设包含4 个数据元素的集合S={ “do”，“for”， “repeat”, “while”}，各元素的查找概率 依次为p1 = 0.35，p2 = 0.15，p3=0.15，p4=0.35。"
+        },
+        {
+          "year": 2021,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "计数比较排序：模拟执行、复杂度与稳定性分析",
+          "note": "",
+          "kps": [
+            "ds.sort.compare",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知某排序算法如下： void cmpCountSort(int a[], int b[], int n) { int i,j,*count; count=(int *)malloc(size"
+        },
+        {
+          "year": 2022,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "n>10 万中找最小 10 个数：大小为 10 的大根堆",
+          "note": "",
+          "kps": [
+            "ds.sort.select",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "现有n（n＞100000）个数保存在一维数组M 中，需要查找M 中最小的10 个数，请回 答下列问题： （1）设计一个完成上述查找任务的算法，要求平均情况下的比较次数尽可能少，简述算法思想 （"
+        },
+        {
+          "year": 2023,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "置换-选择排序生成初始归并段与段长极值",
+          "note": "",
+          "kps": [
+            "ds.sort.external"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "对含有n（n > 0）个记录的文件进行外部排序，采用置换-选择排序生成初始归并段时 需要使用一个工作，工作区中能保存m 个记录，请回答下列问题： （1）若文件中含有19 个记录，其关键字依次是"
+        },
+        {
+          "year": 2024,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "平方探查散列表构造、装填因子与查找比较序列",
+          "note": "",
+          "kps": [
+            "ds.search.hash"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "将关键字序列20, 3, 11, 18, 9, 14, 7 依次存储到初始为空、长度为11 的散列表HT 中， 散列函数H(key) = (key×3)%11。H(key)计算出的初始散列地址"
+        }
+      ]
+    },
+    {
+      "id": "ds-stack-queue",
+      "family": "ds",
+      "name": "栈与队列综合应用",
+      "subtitle": "出栈序列合法性 / Catalan 计数 / 队列结构设计",
+      "paradigm": "构造判定 + 性质推导 + 结构设计",
+      "template": [
+        "①明确操作约束：入栈序列固定 1..n、出队空间可复用、队空/队满判据、操作必须 O(1)。",
+        "②合法性判定：用栈模拟给定出栈序列（能 push 就 push，栈顶等于下一个出栈元素才 pop）；或直接用禁形判据。",
+        "③计数题用 Catalan 数 H_n = C(2n,n)/(n+1)；限定开头元素时按「第一个出栈元素为 k」拆成左右独立子问题相乘。",
+        "④结构设计题：说明选链式还是顺序，画初始态与第一个元素入队后的状态，写队空/队满判据，再给出入队/出队基本过程。",
+        "⑤收尾确认每个操作 O(1)，并解释「占用空间只增不减」与「空间可复用」如何同时满足。"
+      ],
+      "ideas": [
+        "出栈序列禁形：存在 i<j<k 且 Pj < Pk < Pi 时，该序列不可能由栈得到。",
+        "以 2 开头意味着 1 压在栈底，之后 3..n 的出栈序列仍是一个合法子问题，可用 Catalan 递推计数。",
+        "循环队列 (rear+1)%M == front 判满会浪费一个单元；若要全复用且只增不减，用链式队列 + 出队结点回收到空闲链。"
+      ],
+      "pitfalls": [
+        "栈模拟时别忘了「后续元素还可以继续入栈」，只看当前栈顶会误判合法序列。",
+        "队空/队满不能只写 front == rear，循环队列需留空位、加计数器或 tag 区分。"
+      ],
+      "kpIds": [
+        "ds.sq.stack",
+        "ds.sq.queue",
+        "ds.sq.apply",
+        "ds.algo.design"
+      ],
+      "familyName": "数据结构",
+      "count": 2,
+      "years": [
+        2019,
+        2026
+      ],
+      "kpNames": [
+        {
+          "id": "ds.sq.stack",
+          "name": "栈与表达式求值/括号匹配"
+        },
+        {
+          "id": "ds.sq.queue",
+          "name": "循环队列与双端队列"
+        },
+        {
+          "id": "ds.sq.apply",
+          "name": "栈队列综合应用"
+        },
+        {
+          "id": "ds.algo.design",
+          "name": "综合题算法设计与复杂度"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2019,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "空间只增不减、出入队均 O(1) 的链式队列设计",
+          "note": "",
+          "kps": [
+            "ds.sq.queue",
+            "ds.linear.seq",
+            "ds.algo.design"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": false,
+          "stemBrief": "请设计一个队列，要求满足：①初始时队列为空；②入队时，允许增加队列占用空 间；③出队后，出队元素所占用的空间可重复使用，即整个队列所占用的空间只增不减；④入队 操作和出队操作的时间复杂度始终保"
+        },
+        {
+          "year": 2026,
+          "n": 42,
+          "book": "ds",
+          "bookName": "数据结构",
+          "topic": "出栈序列合法性（禁形 Pj<Pk<Pi）与 Catalan 计数",
+          "note": "",
+          "kps": [
+            "ds.sq.stack",
+            "ds.sq.apply"
+          ],
+          "hasAnswer": true,
+          "hasExplanation": false,
+          "stemBrief": "（本题满分 10 分） 栈的基本操作有出栈和入栈。将序列 1,2,3,…,n 依次入栈，回答下列问题： (1) 当 n=9 时，可以得到出栈序列 {2,3,1,6,4,7,5,8} 吗？可以得"
+        }
+      ]
+    },
+    {
+      "id": "co-perf-io",
+      "family": "co",
+      "name": "性能计算与 I/O 方式",
+      "subtitle": "CPI / 主频 / 查询·中断·DMA / 总线 / 磁盘时间",
+      "paradigm": "计算题（必须写过程）",
+      "template": [
+        "①抄已知量并统一单位：主频 f、CPI、时钟周期 T=1/f、传输率、每次传送字节数、中断/查询/DMA 开销（指令数 × CPI 或直接给时钟周期）。",
+        "②算「每秒中断/查询次数」= 数据传输率 ÷ 每次传送单位；位→字节要换算，异步串行要计入起始位、校验位、停止位。",
+        "③算 CPU 占用率 = 每秒次数 × 每次开销时钟周期 ÷ 主频；查询方式还要回答「最长查询间隔 = 缓冲寄存器装满所需时间」。",
+        "④判定 I/O 方式可行性：比较设备要求的中断频率与 CPU 能承受的最大频率，不满足就改 DMA；DMA 再算预处理/后处理开销与周期挪用的总线请求次数。",
+        "⑤磁盘题先算容量与平均访问时间（平均寻道 + 平均旋转延迟 + 传输时间），再按 SSTF/CSCAN 排访问顺序，并写清簇号→(柱面, 磁道, 扇区) 的整除取余换算。"
+      ],
+      "ideas": [
+        "传送 1 次 32 位 = 4B；MB 按 2^20 还是 10^6 依题目口径，位/字节先统一。",
+        "中断开销 = (中断服务指令数 + 其他开销折算指令数) × CPI；DMA 只按「块」计预处理/后处理，再分摊到每字节。",
+        "突发传送一次总线事务 = 送地址/命令 + 存储器准备 + 逐字传数据，按总线时钟周期计数；带宽 = 数据线宽度 × 总线频率。",
+        "平均旋转延迟 = 60/(2×RPM) 秒；簇号换算用「每柱面磁道数 × 每磁道扇区数 ÷ 每簇扇区数」逐层整除取余。",
+        "周期挪用 DMA 的总线请求次数 = 本次传送数据量 ÷ DMA 缓冲寄存器宽度，按扇区数算是错的。"
+      ],
+      "pitfalls": [
+        "MB/s 与 Mb/s、位与字节混淆是最高频失分点；ASCII 串行帧别忘了起始/校验/停止位。",
+        "「CPU 用于 I/O 的时间百分比」分母是 CPU 总时间，中断响应与指令执行别重复计入。",
+        "查询方式的「至少」占用对应最长查询间隔，题目常问两个量，别只答一个。"
+      ],
+      "kpIds": [
+        "co.intro.perf",
+        "co.io.query",
+        "co.io.dma",
+        "co.bus.perf",
+        "co.bus.arb",
+        "os.io.disk"
+      ],
+      "familyName": "组成原理",
+      "count": 7,
+      "years": [
+        2009,
+        2012,
+        2013,
+        2016,
+        2018,
+        2019,
+        2022
+      ],
+      "kpNames": [
+        {
+          "id": "co.intro.perf",
+          "name": "性能指标（CPI/MIPS/主频）"
+        },
+        {
+          "id": "co.io.query",
+          "name": "程序查询与中断"
+        },
+        {
+          "id": "co.io.dma",
+          "name": "DMA"
+        },
+        {
+          "id": "co.bus.perf",
+          "name": "总线性能指标"
+        },
+        {
+          "id": "co.bus.arb",
+          "name": "总线仲裁与定时"
+        },
+        {
+          "id": "os.io.disk",
+          "name": "磁盘调度"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2009,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "中断方式 vs DMA：CPU 用于该外设 I/O 的时间占比",
+          "note": "",
+          "kps": [
+            "co.intro.perf",
+            "co.io.query"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机的CPU 主频为500MHz，CPI 为5（即执行每条指令平均需5 个时钟周期）。假定某外设 data link 的数据传输率为0.5MB/s，采用中断方式与主机进行数据传送，以32 "
+        },
+        {
+          "year": 2012,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "MIPS、Cache 缺失率、主存带宽、缺页率与 DMA 周期挪用",
+          "note": "",
+          "kps": [
+            "co.intro.perf",
+            "co.mem.cache",
+            "co.io.dma",
+            "co.mem.sram-dram"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定某计算机的CPU 主频为80MHz，CPI 为4，平均每条指令访存1.5 次，主存与Cache 之间交换的块大小为16B, Cache 的命中率为99%, 存储器总线宽度为32 位。请回答"
+        },
+        {
+          "year": 2013,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "CPU/总线时钟周期、突发传送带宽与 Cache 缺失事务数",
+          "note": "",
+          "kps": [
+            "co.intro.perf",
+            "co.mem.cache",
+            "co.bus.perf"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某32 位计算机，CPU 主频为800MHz，Cache 命中时的CPI 为4，Cache 块大小为32 字 节；主存采用8 体交叉存储方式，每个体的存储字长为32 位、存储周期为40ns；存"
+        },
+        {
+          "year": 2016,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "异步串行帧格式 + 中断方式 CPU 时间占比",
+          "note": "",
+          "kps": [
+            "co.io.query",
+            "co.intro.perf"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定CPU 主频为50MHz，CPI 为4。设备D 采用异步串行通信方式向主机传送7 位 ASCII 字符，通信规程中有1 位奇校验位和1 位停止位，从D 接收启动命令到字符送入I/O 端口 "
+        },
+        {
+          "year": 2018,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "定时查询 / 中断 / DMA 三种方式的可行性判定与计算",
+          "note": "",
+          "kps": [
+            "co.io.query",
+            "co.io.dma",
+            "co.intro.perf"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定计算机的主频为500MHz，CPI 为4。现有设备A 和B，其数据传输率分别为 2MB/s 和40MB/s，对应I/O 接口中各有一个32 位数据缓冲寄存器。请回答下列问题，要求给出 计算"
+        },
+        {
+          "year": 2019,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "磁盘容量、SSTF 访问次序与簇号 → 物理地址换算",
+          "note": "",
+          "kps": [
+            "co.io.dma",
+            "os.io.disk",
+            "os.file.alloc"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": false,
+          "stemBrief": "某计算机系统中的磁盘有300 个柱面，每个柱面有10 个磁道，每个磁道有200 个扇 区，扇区大小为512B。文件系统的每个簇包含2 个扇区。请回答下列问题： （1）磁盘的容量是多少？ （2）"
+        },
+        {
+          "year": 2022,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "磁盘扇区地址字段、平均访问时间与 DMA 总线请求次数",
+          "note": "",
+          "kps": [
+            "co.io.dma",
+            "co.bus.arb"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假设某磁盘驱动器中有4 个双面盘片，每个盘面有20000 个磁道，每个磁道有500 个扇 区，每个扇区可记录512 字节的数据，盘片转速为7200RPM（转/分），平均寻道时间为5ms。请 回"
+        }
+      ]
+    },
+    {
+      "id": "co-isa-datapath",
+      "family": "co",
+      "name": "指令格式与数据通路",
+      "subtitle": "字段编码 / 寻址方式 / 控制信号 / ALU 标志",
+      "paradigm": "字段拆解 + 节拍表 + 编码题",
+      "template": [
+        "①按字段拆指令字：从高位到低位列出 OP / 寻址方式位 / 寄存器号 / 立即数 / 偏移量，标注每个字段位数与可编码数量。",
+        "②「最多多少条指令」用操作码位数取 2^k，并扣除已占用的保留编码；寻址方式位数同理。",
+        "③写机器码：逐字段转二进制再合并成十六进制，寄存器编号按题给映射，立即数/偏移量用补码并注意按字或按字节编址下的 PC 增量。",
+        "④数据通路题按「取指 → 译码/取操作数 → 执行 → 访存 → 写回」逐节拍列出功能说明 + 有效控制信号（Xin/Xout、MemR/MemW、ALUop、PC+1），照题目表格格式写。",
+        "⑤涉及标志位：用最高位写 SF / OF 的逻辑表达式（加法 OF = A15·B15·¬F15 + ¬A15·¬B15·F15），并解释暂存器 T、MUX、三态门的作用。"
+      ],
+      "ideas": [
+        "相对寻址目标地址 = (PC) + 位移量；PC 已指向下一条指令，按字编址 +1、按字节编址 + 指令字长/编址单位。",
+        "单总线数据通路一个节拍只能有一个部件向总线输出，所以 ALU 需要暂存器 T 锁存一个操作数。",
+        "控制信号看箭头方向：Xin 是总线→X，Xout 是 X→总线；同一节拍互斥输出只能有一个。",
+        "R/I/J 型指令先看操作码空间是否重叠，再判断立即数是否需要符号扩展、J 型 target 拼到 PC 的哪几位。"
+      ],
+      "pitfalls": [
+        "偏移量补码要符号扩展，目标地址按「指令字长/编址单位」计算增量，容易漏乘 2。",
+        "寄存器间接寻址 ((Rn)) 要先访存取操作数地址、再访存取数据，节拍数别少写。",
+        "控制信号表要逐列对齐，漏一个 MemR / MDRinE 就丢分。"
+      ],
+      "kpIds": [
+        "co.isa.format",
+        "co.cpu.datapath",
+        "co.data.alu",
+        "co.cpu.hardsoft",
+        "co.isa.ciscrisc",
+        "co.data.int"
+      ],
+      "familyName": "组成原理",
+      "count": 10,
+      "years": [
+        2009,
+        2010,
+        2013,
+        2015,
+        2021,
+        2022,
+        2024,
+        2026
+      ],
+      "kpNames": [
+        {
+          "id": "co.isa.format",
+          "name": "指令格式与寻址方式"
+        },
+        {
+          "id": "co.cpu.datapath",
+          "name": "数据通路与控制器"
+        },
+        {
+          "id": "co.data.alu",
+          "name": "ALU 与加减乘除实现"
+        },
+        {
+          "id": "co.cpu.hardsoft",
+          "name": "硬布线/微程序控制器"
+        },
+        {
+          "id": "co.isa.ciscrisc",
+          "name": "CISC/RISC"
+        },
+        {
+          "id": "co.data.int",
+          "name": "定点数原反补移码"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2009,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "ADD (R1),R0 执行阶段逐节拍的功能与控制信号表",
+          "note": "",
+          "kps": [
+            "co.cpu.datapath",
+            "co.isa.format"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机字长16 位，采用16 位定长指令字结构，部分数据通路结构如下图所示，图中所有控制 信号为1 时表示有效、为0 时表示无效。例如控制信号MDRinE 为1 表示允许数据从DB 打入MD"
+        },
+        {
+          "year": 2010,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "16 位指令格式、寻址方式与补码相对转移目标地址",
+          "note": "",
+          "kps": [
+            "co.isa.format",
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机字长为16 位，主存地址空间大小为128KB，按字编址。采用单字长指令格式，指令各 字段定义如下： 15 12 11 6 5 0 OP Ms Rs Md Rd 源操作数 目的操作数 转"
+        },
+        {
+          "year": 2013,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "条件转移指令格式：CF/ZF/NF 检测位与补码 OFFSET",
+          "note": "",
+          "kps": [
+            "co.isa.format",
+            "co.cpu.datapath",
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机采用16 位定长指令字格式，其CPU 中有一个标志寄存器，其中包含进位/借位 标志CF、零标志ZF 和符号标志NF。假定为该机设计了条件转移指令，其格式如下： 15 11 10 9 8"
+        },
+        {
+          "year": 2015,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "单总线 CPU：程序员可见寄存器、暂存器 T 与控制信号",
+          "note": "",
+          "kps": [
+            "co.cpu.datapath",
+            "co.data.alu"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某16 位计算机的主存按字节编码，存取单位为16 位；采用16 位定长指令字格式； CPU 采用单总线结构，主要部分如下图所示。图中R0～R3 为通用寄存器：T 为暂存器；SR 为 移位寄存器"
+        },
+        {
+          "year": 2015,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "指令编码：最多指令数、三条指令的机器码与寻址方式位",
+          "note": "与 43 题连题，共用同一数据通路",
+          "kps": [
+            "co.isa.format",
+            "co.cpu.datapath"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "题43 中描述的计算机，其部分指令执行过程的控制信号如题44 图a 所示。 该机指令格式如题44 图b 所示，支持寄存器直接和寄存器间接两种寻址方式，寻址方式位分别 为0 和1，通用寄存器R0"
+        },
+        {
+          "year": 2021,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "R/I/J 型指令格式、操作数类型与寻址范围",
+          "note": "",
+          "kps": [
+            "co.isa.format",
+            "co.data.alu",
+            "co.cpu.datapath"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定计算机M 字长为16 位，按字节编址，连接CPU 和主存的系统总线中地址线为20 位、数据线为8 位，采用16 位定长指令字，指令格式及其说明如下： 格式 6 位 2 位 2 位 2 位 "
+        },
+        {
+          "year": 2022,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "ALU 标志位 SF/OF 逻辑表达式与数据通路部件作用",
+          "note": "",
+          "kps": [
+            "co.cpu.datapath",
+            "co.data.alu",
+            "co.cpu.hardsoft"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某CPU 中部分数据通路如题43 图所示，其中，GPRs 为通用寄存器组；FR 为标志寄 存器，用于存放ALU 产生的标志信息；带箭头虚线表示控制信号，如控制信号Read、Write 分 别表"
+        },
+        {
+          "year": 2024,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "RISC-V 风格 add/slli/lw 指令格式与字段编码",
+          "note": "与 44 题连题",
+          "kps": [
+            "co.cpu.datapath",
+            "co.isa.format",
+            "co.data.alu",
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定计算机M 字长为32 位，按字节编址，采用32 位定长指令字，指令add、slli 和lw 的格式、编码和功能说明如题43 图（a）所示。 指令 31 25 24 20 19 15 14 "
+        },
+        {
+          "year": 2026,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "R/I/M 型指令格式、功能说明与编码",
+          "note": "与 44 题连题",
+          "kps": [
+            "co.isa.format"
+          ],
+          "hasAnswer": true,
+          "hasExplanation": false,
+          "stemBrief": "（本题满分 10 分） 某 16 位计算机按字节编址，通用寄存器 R0～R15 的编号为 0～15，存储器地址为 16 位，采用定长指令字，指令格式有 R 型、I 型、M 型三种，如下表所示。"
+        },
+        {
+          "year": 2026,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "取指/执行周期的数据通路与控制信号序列",
+          "note": "承接 2026-43 的计算机 C",
+          "kps": [
+            "co.cpu.datapath",
+            "co.isa.format"
+          ],
+          "hasAnswer": true,
+          "hasExplanation": false,
+          "stemBrief": "（本题满分 15 分） 假定 43 题中计算机 C 的部分数据通路如题 44 所示。 计算机考研杂货铺GPRs通用寄存器组RaRbMUXMUX01012ABALUPCMDRMUX01ARLA "
+        }
+      ]
+    },
+    {
+      "id": "co-mem-hier",
+      "family": "co",
+      "name": "Cache / TLB / 虚存地址换算",
+      "subtitle": "字段拆分、容量计算、命中与替换",
+      "paradigm": "字段计算 + 查表推地址",
+      "template": [
+        "①先拆地址字段：块内地址 = log2(块大小)；组号/行号 = log2(组数/行数)，组相联先算 组数 = 行数 ÷ 路数；Tag = 地址位数 − 前两者。",
+        "②算容量：数据区 = 行数 × 块大小；每行附加位 = Tag + 有效位 + (回写时 1 位修改位) + (LRU 位：2 路 1 位 / 4 路 2 位 / 8 路 3 位)；总容量 = 数据区 + 所有行附加位。",
+        "③地址变换四步走：虚地址 → 查 TLB/页表得页框号 → 物理地址 = 页框号 || 页内偏移 → 按 Cache 字段判命中；对照题目给的页表/Cache 表逐项核对。",
+        "④映射与替换：组号 = 主存块号 mod 组数，Tag = 主存块号 ÷ 组数；按访问序列逐步更新组内容，指出被替换的表项。",
+        "⑤命中率/性能：按循环步长与块大小算「每块首次缺失 + 块内命中数」；别忘了指令 Cache 与数据 Cache 分离、直写不需要修改位。"
+      ],
+      "ideas": [
+        "数组按行优先存放而循环按列访问时会每次跳过一个块，命中率骤降；先定位起始地址所在块，再按元素大小递推。",
+        "TLB 全相联时虚页号整体作 Tag、组相联时低位作组号；TLB 用 SRAM 实现。",
+        "直写（Write Through）行内无脏位；回写（Write Back）需 1 位修改位 + 替换算法位。",
+        "虚页号位数 = 虚地址位数 − 页内偏移位数；物理地址位数由主存容量决定，与虚地址长度无关。"
+      ],
+      "pitfalls": [
+        "按字节编址 vs 按字编址会让块内地址位数差 2 位，先确认编址单位。",
+        "「数据区容量」≠「Cache 总容量」，后者要加 Tag/有效位/LRU/修改位。",
+        "缺页与 Cache 缺失是两级不同概念：先查页表再查 Cache，缺页处理开销远大于 Cache 缺失。"
+      ],
+      "kpIds": [
+        "co.mem.cache",
+        "co.mem.virt",
+        "co.mem.hier",
+        "co.mem.sram-dram",
+        "os.mem.page",
+        "co.intro.perf"
+      ],
+      "familyName": "组成原理",
+      "count": 7,
+      "years": [
+        2010,
+        2011,
+        2018,
+        2020,
+        2021,
+        2023,
+        2025
+      ],
+      "kpNames": [
+        {
+          "id": "co.mem.cache",
+          "name": "Cache 映射/替换/写策略"
+        },
+        {
+          "id": "co.mem.virt",
+          "name": "虚拟存储器与 TLB"
+        },
+        {
+          "id": "co.mem.hier",
+          "name": "存储层次与局部性"
+        },
+        {
+          "id": "co.mem.sram-dram",
+          "name": "SRAM/DRAM 与芯片扩展"
+        },
+        {
+          "id": "os.mem.page",
+          "name": "分页/分段/段页"
+        },
+        {
+          "id": "co.intro.perf",
+          "name": "性能指标（CPI/MIPS/主频）"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2010,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "分离 Cache 直接映射：总容量、行号与程序 A/B 命中率",
+          "note": "",
+          "kps": [
+            "co.mem.cache",
+            "co.intro.perf",
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机的主存地址空间大小为256MB，按字节编址。指令Cache 和数据Cache 分离，均有8 个Cache 行，每个Cache 行大小为64B，数据Cache 采用直接映射方式。现有两个"
+        },
+        {
+          "year": 2011,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "页表 + 直接映射 Cache：虚地址到物理地址与命中判断",
+          "note": "",
+          "kps": [
+            "co.mem.cache",
+            "co.mem.virt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机存储器按字节编址，虚拟（逻辑）地址空间大小为16MB，主存（物 理）地址空间大小为1MB，页面大小为4KB；Cache 采用直接映射方式，共8 行；主 存与Cache 之间交换的块大小"
+        },
+        {
+          "year": 2018,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "虚存访问图：物理地址位数、TLB/Cache 映射与总容量",
+          "note": "与 45 题连题",
+          "kps": [
+            "co.mem.cache",
+            "co.mem.virt",
+            "co.mem.sram-dram"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机采用页式虚拟存储管理方式，按字节编址。CPU 进行存储访问的过程如题44 图所示。 题44 图 根据题44 图回答下列问题。 （1）主存物理地址占多少位？ （2）TLB 采用什么映射方"
+        },
+        {
+          "year": 2020,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "8 路组相联直写 Cache：Tag/LRU 位、命中率与直写代价",
+          "note": "",
+          "kps": [
+            "co.mem.cache"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定主存地址为32 位，按字节编址，指令Cache 和数据Cache 与主存之间均采用8 路 组相联映射方式，直写（Write Through）写策略和LRU 替换算法，主存块大小为64B，数"
+        },
+        {
+          "year": 2021,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "TLB 2 路组相联 LRU：字段拆分与被替换表项",
+          "note": "",
+          "kps": [
+            "co.mem.virt",
+            "co.mem.cache"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假设计算机M 的主存地址为24 位，按字节编址；采用分页存储管理方式，虚拟地址为 30 位，页大小为4KB；TLB 采用2 路组相联方式和LRU 替换策略，共8 组。请回答下列问题。 （1）虚"
+        },
+        {
+          "year": 2023,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "请求调页 + 4 路组相联 Cache：数组分布页数与缺失率",
+          "note": "与 44 题连题",
+          "kps": [
+            "co.mem.cache",
+            "co.mem.virt",
+            "co.mem.hier"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知计算机M 字长为32 位，按字节编址，采用请求调页策略的虚拟存储管理方式， 虚拟地址32 位，页面大小为4KB；数据Cache 采用4 路组相联映射方式，数据区大小为8KB， 主存块大小为"
+        },
+        {
+          "year": 2025,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "d[i]=d[i]/x 的 Cache 字段、命中率与缺失损失",
+          "note": "与 44 题连题",
+          "kps": [
+            "co.mem.cache",
+            "co.mem.virt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "（本题 12 分）现有C 语言程序P 的部分代码如题43 图所示。假定运行程序P 的计算机M 字长 为32 位，按字节编址，数据Cache 的数据区大小为32KB，采用8 路组相联映射方式，主"
+        }
+      ]
+    },
+    {
+      "id": "co-data-alu",
+      "family": "co",
+      "name": "数据表示与运算",
+      "subtitle": "补码 / IEEE754 / ALU 乘除实现",
+      "paradigm": "机器数推导 + 运算过程",
+      "template": [
+        "①先定字长与表示法：8/16/32 位、无符号 vs 补码、IEEE 754 单精度（1 符号 + 8 阶码 + 23 尾数）。",
+        "②逐变量写机器数：十进制转二进制/十六进制，减法用补码加法实现；有符号溢出看最高位进位与次高位进位异或，或用「同号相加变号」判断。",
+        "③浮点题按 (−1)^s × 1.M × 2^(E−127) 展开，说明精度丢失、死循环或与整型结果差异的根源（float 只有 24 位有效位）。",
+        "④乘除实现题：说明用「加法 + 移位」原码一位乘或补码 Booth 算法，并写清控制逻辑的作用（按乘数位决定加/减/移位）；补码除法按恢复余数或不恢复余数法逐列商与余数。",
+        "⑤最后把每个小问要的具体值（寄存器内容、是否溢出、商/余数）用十六进制或二进制写清。"
+      ],
+      "ideas": [
+        "unsigned 与 int 的加减共用同一套加法器，区别只在溢出判定与结果解释；z1 = x−y 直接按补码加法算。",
+        "n=0 时 `i <= n−1` 因无符号下溢变成一个极大值，导致死循环，这是高频陷阱。",
+        "无乘法指令时用移位 + 加法循环；有乘法指令时控制逻辑负责生成「加 / 不加 / 移位」的微操作序列。",
+        "被除数需符号扩展成双倍字长（如 {R0,R1}），除法器才能做补码除法。"
+      ],
+      "pitfalls": [
+        "补码溢出 OF 与无符号进位 CF 是两回事，别混用。",
+        "float 阶码有 127 偏移，别把移码当原码；int ↔ float 转换会丢低位精度。"
+      ],
+      "kpIds": [
+        "co.data.int",
+        "co.data.float",
+        "co.data.alu",
+        "co.isa.format",
+        "co.cpu.datapath"
+      ],
+      "familyName": "组成原理",
+      "count": 4,
+      "years": [
+        2011,
+        2017,
+        2020,
+        2025
+      ],
+      "kpNames": [
+        {
+          "id": "co.data.int",
+          "name": "定点数原反补移码"
+        },
+        {
+          "id": "co.data.float",
+          "name": "IEEE754 浮点表示与运算"
+        },
+        {
+          "id": "co.data.alu",
+          "name": "ALU 与加减乘除实现"
+        },
+        {
+          "id": "co.isa.format",
+          "name": "指令格式与寻址方式"
+        },
+        {
+          "id": "co.cpu.datapath",
+          "name": "数据通路与控制器"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2011,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "8 位机 unsigned / int 补码运算、寄存器内容与溢出",
+          "note": "",
+          "kps": [
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定在一个8 位字长的计算机中运行如下类C 程序段： unsigned int x = 134; unsigned int y = 246; int m = x; int n = y; uns"
+        },
+        {
+          "year": 2017,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "f(n)=2^(n+1)−1 的 int/float 差异：死循环、精度与溢出",
+          "note": "与 44、45 题三连题",
+          "kps": [
+            "co.data.float",
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "已知 f(n) = ෍ 2i n i=0 =2n+1-1= 11…1 ᇩᇪᇫ n+1 位 B，计算f(n)的C 语言函数f1 如下： int f1(unsigned n){ int sum=1"
+        },
+        {
+          "year": 2020,
+          "n": 43,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "无乘法指令用加法/移位实现乘法与乘法指令控制逻辑",
+          "note": "",
+          "kps": [
+            "co.data.alu",
+            "co.data.int",
+            "co.cpu.datapath"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "有实现x×y 的两个C 语言函数如下： unsigned umul (unsigned x, unsigned y) { return x*y; } int imul (int x, int "
+        },
+        {
+          "year": 2025,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "补码除法器：idiv 执行过程与商/余数推导",
+          "note": "承接 2025-43 的程序 P",
+          "kps": [
+            "co.data.alu",
+            "co.data.int",
+            "co.cpu.datapath"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "（本题11 分）对于题43 中计算机M 和程序P，假定P 的部分机器级代码如题44 图（a）所 示，其中，R0～R4 为通用寄存器，SEXT 表示按符号扩展；M 中补码除法器逻辑结构如题44 "
+        }
+      ]
+    },
+    {
+      "id": "co-c-asm",
+      "family": "co",
+      "name": "C 程序与机器级代码",
+      "subtitle": "汇编对应 / 流水线 / 异常 / 与虚存联动",
+      "paradigm": "代码阅读 + 跨层综合题",
+      "template": [
+        "①把 C 语句与汇编逐行对应：先找出循环变量、数组首地址、累加器分别在哪个寄存器，注意 `sll r4, r2, 2` 是按 int 大小（4B）缩放下标。",
+        "②算地址：指令地址按字节递增（16 位机 +2、32 位机 +4），由起始虚拟地址递推每条指令；PC 相对跳转按当前 PC 计算目标。",
+        "③流水线/异常：标出 5 段 IF/ID/EX/MEM/WB 中的数据相关、控制相关与转发/阻塞；区分 add 溢出、除零、lw 越界各属哪类异常。",
+        "④与虚存联动：把指令虚拟地址拆成页目录号/页表索引/页内偏移，判断前后指令是否同页；scanf() 期间写清进程状态与内核态切换。",
+        "⑤按小问逐条回答「哪条指令 / 第几个表项 / 命中哪一组」，给出十六进制或编号并写理由。"
+      ],
+      "ideas": [
+        "机器代码行一般给出「行号 / 虚拟地址 / 机器码 / 汇编」，先用汇编语义还原寄存器用途，再算地址与页数。",
+        "指令 Cache 命中率 = 1 − 缺失次数 / 总取指次数；缺失只在每个主存块第一次取指时发生，循环体指令数决定分母。",
+        "页大小 4KB ⇒ 低 12 位页内偏移、高 10/10 位页目录号/页表索引。",
+        "溢出异常只在有符号运算结果越界时发生；无符号运算不产生溢出异常。"
+      ],
+      "pitfalls": [
+        "数组下标缩放容易忽略元素大小（int 为 4B ⇒ 左移 2 位）。",
+        "指令地址与字节地址混淆：16 位定长指令按字节编址每条 +2。",
+        "「进程状态变化」要按 阻塞 → 就绪 → 运行 与中断/系统调用顺序写，别漏内核态。"
+      ],
+      "kpIds": [
+        "co.isa.format",
+        "co.cpu.pipeline",
+        "co.data.int",
+        "os.mem.virt",
+        "co.mem.cache",
+        "os.intro.int"
+      ],
+      "familyName": "组成原理",
+      "count": 6,
+      "years": [
+        2012,
+        2014,
+        2017,
+        2019,
+        2023,
+        2024
+      ],
+      "kpNames": [
+        {
+          "id": "co.isa.format",
+          "name": "指令格式与寻址方式"
+        },
+        {
+          "id": "co.cpu.pipeline",
+          "name": "流水线原理与冒险"
+        },
+        {
+          "id": "co.data.int",
+          "name": "定点数原反补移码"
+        },
+        {
+          "id": "os.mem.virt",
+          "name": "虚拟内存与页面置换"
+        },
+        {
+          "id": "co.mem.cache",
+          "name": "Cache 映射/替换/写策略"
+        },
+        {
+          "id": "os.intro.int",
+          "name": "中断与系统调用"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2012,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "5 段流水线执行循环代码：指令格式、数据相关与冒险",
+          "note": "",
+          "kps": [
+            "co.cpu.pipeline",
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某16 位计算机中，带符号整数用补码表示，数据Cache 和指令Cache 分离。题44 表给 出了指令系统中部分指令格式， 其中Rs 和Rd 表示寄存器， mem 表示存储单元地址，(x)表"
+        },
+        {
+          "year": 2014,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "循环 sum+=A[i] 的机器码/汇编与 5 段流水线分析",
+          "note": "与 45 题连题：45 题基于本题机器代码分析虚存与 Cache",
+          "kps": [
+            "co.cpu.pipeline",
+            "co.isa.format"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某程序中有如下循环代码段P：“for(int i = 0; i < N; i++) sum+=A[i];”。假设编译时变量 sum 和i 分别分配在寄存器R1 和R2 中。常量N 在寄存器R6"
+        },
+        {
+          "year": 2017,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "f1 机器级代码：虚拟地址、指令编码与循环结构对应",
+          "note": "承接 2017-43 的函数 f1",
+          "kps": [
+            "co.isa.ciscrisc",
+            "co.isa.format",
+            "co.data.alu"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "在按字节编址的计算机M 上， 题43 中f1 的部分源程序（阴影部分）与对应的机器 级代码（包括指令的虚拟地址）如下图所示。 int f1(unsigned n) 1 00401020 55 "
+        },
+        {
+          "year": 2019,
+          "n": 45,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "n! 递归函数的机器级代码：指令地址与虚拟地址",
+          "note": "与 46 题连题",
+          "kps": [
+            "co.isa.format",
+            "co.data.int",
+            "co.data.alu"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": false,
+          "stemBrief": "已知f(n) = n! = n×(n – 1)×(n – 2)×…×2×1，计算f(n)的C 语言函数f1 的源程序（带 框部分）及其在32 位计算机M 上的部分机器级代码如下： int f1"
+        },
+        {
+          "year": 2023,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "a[i][j]=10 的机器级代码：数组地址计算与指令序列",
+          "note": "承接 2023-43 的程序段",
+          "kps": [
+            "co.isa.format",
+            "co.mem.virt",
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "43 题中C 程序段在计算机M 上的部分机器级代码如下，每个机器级代码行中依次包含 指令序号、虚拟地址、机器指令和汇编指令。 for (i=0; i<24; i++) 1 00401072 C"
+        },
+        {
+          "year": 2024,
+          "n": 44,
+          "book": "co",
+          "bookName": "组成原理",
+          "topic": "sum+=a[i] 指令序列 S：寄存器分配、机器码与执行过程",
+          "note": "承接 2024-43 的计算机 M",
+          "kps": [
+            "co.isa.format",
+            "co.mem.virt",
+            "co.data.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "对于题43 中的计算机M，C 语言程序P 包含的语句“sum+=a[i];”在M 中对应的指令 序列S 如下。 slli r4, r2, 2 //R[r4]←R[r2]<<2 add r4, "
+        }
+      ]
+    },
+    {
+      "id": "os-sync",
+      "family": "os",
+      "name": "PV 同步与互斥",
+      "subtitle": "生产者-消费者变体 / 前驱图 / 经典同步问题",
+      "paradigm": "信号量设计题",
+      "template": [
+        "①列资源与约束：缓冲区容量 N、互斥资源（取号机 / 出入口 / 铁锹 / 水桶 / 信箱）、先后关系、批量约束（连续取 10 件、树坑数 <3 才挖）。",
+        "②定义信号量并逐一写含义与初值：mutex=1（互斥）、empty=N / full=0（容量同步）、每条前驱关系一条 S=0、资源计数如 spade=1 / bowl=m。",
+        "③写伪代码：操作前 wait(前驱/资源)，操作后 signal(后继)；互斥信号量只包住临界区，尽量短。",
+        "④检查顺序：先 wait(empty) 再 wait(mutex)（反向会死锁）；多类资源按固定顺序一次性取齐（哲学家防死锁）。",
+        "⑤题目要求「尽可能少信号量」时说明哪些关系可由已有信号量表达，并补一句死锁/饥饿与并发度分析。"
+      ],
+      "ideas": [
+        "前驱图（A、B→C，C、D→E）：每个前驱一条初值 0 的信号量，C 前 wait 两条、E 前 wait 两条。",
+        "奇偶取数、三人植树、信箱辩论本质都是「容量 + 互斥 + 分类同步」三件套，再加分类计数信号量。",
+        "批量连续操作要额外一个 mutex 把整批包住，防止被同类进程插队；读者-写者用额外锁保护计数器。",
+        "硬件实现题（swap / 开中断）：判断忙等是否让出 CPU、关中断期间忙等是否永久阻塞、退出区是否把 lock 复位。"
+      ],
+      "pitfalls": [
+        "初值最容易错：互斥=1、同步=0、资源计数=可用个数（空座位 10、信箱空位 M−x）。",
+        "哲学家类题必须限制同时就餐人数或一次性取齐资源，否则死锁；只答「加 mutex」往往并发度不达标。",
+        "只写互斥不写同步（或反之）会漏约束；signal() 落在条件分支里会造成死等。"
+      ],
+      "kpIds": [
+        "os.proc.sync",
+        "os.proc.classic",
+        "os.proc.deadlock",
+        "os.proc.pcb",
+        "os.intro.int"
+      ],
+      "familyName": "操作系统",
+      "count": 12,
+      "years": [
+        2009,
+        2011,
+        2013,
+        2014,
+        2015,
+        2017,
+        2019,
+        2020,
+        2021,
+        2022,
+        2024,
+        2025
+      ],
+      "kpNames": [
+        {
+          "id": "os.proc.sync",
+          "name": "同步互斥与信号量/管程"
+        },
+        {
+          "id": "os.proc.classic",
+          "name": "经典同步问题"
+        },
+        {
+          "id": "os.proc.deadlock",
+          "name": "死锁（条件/避免/银行家/检测）"
+        },
+        {
+          "id": "os.proc.pcb",
+          "name": "进程与 PCB/线程"
+        },
+        {
+          "id": "os.intro.int",
+          "name": "中断与系统调用"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2009,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "三进程共享 N 单元缓冲区：奇偶分类取数的 PV 设计",
+          "note": "",
+          "kps": [
+            "os.proc.sync",
+            "os.io.spool"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "三个进程P1、P2、P3 互斥使用一个包含N(N>0)个单元的缓冲区。P1 每次用produce()生成一个正 整数并用put()送入缓冲区某一空单元中；P2 每次用getodd()从该缓冲区"
+        },
+        {
+          "year": 2011,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "银行叫号：座位容量 + 取号机互斥 + 顾客/营业员同步",
+          "note": "",
+          "kps": [
+            "os.proc.sync"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某银行提供1 个服务窗口和10 个供顾客等待的座位。顾客到达银行时，若有空 座位，则到取号机上领取一个号，等待叫号。取号机每次仅允许一位顾客使用。当营业 员空闲时，通过叫号选取一位顾客，并为其"
+        },
+        {
+          "year": 2013,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "博物馆 500 人容量 + 出入口互斥：信号量设计",
+          "note": "",
+          "kps": [
+            "os.proc.sync",
+            "os.proc.classic"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某博物馆最多可容纳500 人同时参观，有一个出入口，该出入口一次仅允许一个人通过。 参观者的活动描述如下： cobegin 参观者进程i: { … 进门； … 参观； … 出门； … } co"
+        },
+        {
+          "year": 2014,
+          "n": 47,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "多生产者多消费者 + 消费者连续取 10 件的批量互斥",
+          "note": "",
+          "kps": [
+            "os.proc.sync",
+            "os.proc.classic"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "系统中有多个生产者进程和多个消费者进程，共享一个能存放1000 件产品的环形缓冲区 （初始为空）。当缓冲区未满时，生产者进程可以放入其生产的一件产品，否则等待；当缓冲区未 空时，消费者进程可以"
+        },
+        {
+          "year": 2015,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "A/B 双信箱辩论：两个容量不等的生产者-消费者互锁",
+          "note": "",
+          "kps": [
+            "os.proc.classic",
+            "os.proc.sync"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "有A、B 两人通过信箱进行辩论，每个人都从自己的信箱中取得对方的问题。将答案和 向对方提出的新问题组成一个邮件放入对方的邮箱中。假设A 的信箱最多放M 个邮件，B 的信 箱最多放N 个邮件。初"
+        },
+        {
+          "year": 2017,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "三线程伪代码补 PV：互斥临界资源且最大限度并发",
+          "note": "",
+          "kps": [
+            "os.proc.sync",
+            "os.proc.classic"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某进程中有3 个并发执行的线程thread1、thread2 和thread3, 其伪代码如下所示。 请添加必要的信号量和P、V(或wait()、signal())操作，要求确保线程互斥访问临"
+        },
+        {
+          "year": 2019,
+          "n": 43,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "n 位哲学家 m 个碗：防死锁且并发度最大的 PV 方案",
+          "note": "",
+          "kps": [
+            "os.proc.classic",
+            "os.proc.sync"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "有n（n≥3）位哲学家围坐在一张圆桌边，每位哲学家交替地就餐和思考。在圆桌中心 有m（m≥1）个碗，每两位哲学家之间有一根筷子。每位哲学家必须取到一个碗和两侧的筷子 后，才能就餐，进餐完毕，将"
+        },
+        {
+          "year": 2020,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "A、B→C，C、D→E 前驱图：最少信号量与 PV 描述",
+          "note": "",
+          "kps": [
+            "os.proc.sync"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "现有5 个操作A、B、C、D 和E，操作C 必须在A 和B 完成后执行，操作E 必须在C 和D 完成后执行，请使用信号量的wait()、signal()操作（P、V 操作）描述上述操作之间的同"
+        },
+        {
+          "year": 2021,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "开/关中断实现 wait/signal 的两种方法与正确性判断",
+          "note": "",
+          "kps": [
+            "os.proc.sync",
+            "os.intro.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "下表给出了整型信号量S 的wait()和signal()操作的功能描述，以及采用开/关中断指令实 现信号量操作互斥的两种方法。 功能描述 方法1 方法2 Semaphore S; wait(S"
+        },
+        {
+          "year": 2022,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "T1/T2 六个操作前驱图：最少信号量与同步描述",
+          "note": "",
+          "kps": [
+            "os.proc.sync",
+            "os.proc.classic"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某进程的两个线程T1 和T2 并发执行A、B、C、 D、E 和F 共6 个操作，其中T1 执行A、E 和F，T2 执行 B、C 和D。题46 图表示上述6 个操作的执行顺序所必须满 足的约束；"
+        },
+        {
+          "year": 2024,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "缓冲区 C1/C2/C3：临界区判定与最少信号量设计",
+          "note": "",
+          "kps": [
+            "os.proc.sync"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "计算机系统中的进程之间往往需要相互协作以完成一个任务。在某网络系统中，缓冲区 B 用于存放一个数据分组，对B 的操作有C1、C2 和C3。C1 将一个数据分组写入B 中，C2 从 B 中读出一"
+        },
+        {
+          "year": 2025,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "三人植树：铁锹/水桶互斥 + 树坑计数约束",
+          "note": "",
+          "kps": [
+            "os.proc.sync",
+            "os.proc.classic"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "（本题7 分）甲、乙、丙三人一起植树，甲负责挖树坑，乙负责将树苗放入树坑中并填土，丙负 责为新种的树苗浇水。植树的步骤依次为：挖树坑、放树苗、填土和浇水。现有铁锹和水桶各1 个，铁锹用于挖树坑"
+        }
+      ]
+    },
+    {
+      "id": "os-mem",
+      "family": "os",
+      "name": "分页 / 虚存 / 地址变换",
+      "subtitle": "页表 / TLB / 置换 / 与 Cache 交叉",
+      "paradigm": "地址推导 + 状态模拟",
+      "template": [
+        "①拆虚拟地址：页内偏移 = log2(页大小)，页号/页目录号/页表索引按题给位数；页表项大小决定每页能放 页大小 ÷ 表项大小 个表项。",
+        "②算页表占用：一级 = 2^页号位数 × 表项大小；二级 = 页目录 1 页 + 实际建立的页表页数 × 页大小，注意页表按需建立。",
+        "③地址变换：十六进制地址按位拆三段 → 查页表/页目录得页框号 → 物理地址 = 页框号 || 页内偏移；TLB 命中可省一次访存。",
+        "④置换与缺页：按 FIFO / LRU / CLOCK / 题设扫描策略逐步写驻留集状态；注意「空闲页框内容未清空可重用」能避免重新调页。",
+        "⑤回扣小问：访问时间（TLB 命中 / 缺失 / 缺页各几次访存）、改进型 CLOCK 需要访问位 + 修改位、PDBR 在进程/线程切换时是否变化。"
+      ],
+      "ideas": [
+        "有效位为 0 即缺页；访问时间 = TLB 命中 (t_TLB + t_mem) / TLB 缺失 (t_TLB + 2·t_mem) / 缺页 (+ t_disk)。",
+        "页表项虚拟地址 = 页表起始虚拟地址 + 页号 × 表项大小；再对该地址本身做一次变换才得到物理地址（多级映射的递归）。",
+        "同一进程的线程共享地址空间 ⇒ PDBR 不变；进程切换才换成新进程页目录的物理地址。",
+        "Cache/TLB/页表交叉题按「虚地址 → TLB/页表 → 物理地址 → Cache 组号/Tag」四步走，别跳步。"
+      ],
+      "pitfalls": [
+        "页内偏移位数由页大小决定，与虚拟地址总长无关；页框号位数由物理地址空间决定。",
+        "「页表最大占用」与「实际占用」不同；二级页表常问「访问两个地址共访问多少个二级页表」，看页目录号是否相同。",
+        "十六进制地址别按字符数硬切，要按二进制位数对齐。"
+      ],
+      "kpIds": [
+        "os.mem.page",
+        "os.mem.virt",
+        "os.mem.thrash",
+        "co.mem.virt",
+        "co.mem.cache",
+        "os.intro.int"
+      ],
+      "familyName": "操作系统",
+      "count": 12,
+      "years": [
+        2009,
+        2010,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2024
+      ],
+      "kpNames": [
+        {
+          "id": "os.mem.page",
+          "name": "分页/分段/段页"
+        },
+        {
+          "id": "os.mem.virt",
+          "name": "虚拟内存与页面置换"
+        },
+        {
+          "id": "os.mem.thrash",
+          "name": "抖动与工作集"
+        },
+        {
+          "id": "co.mem.virt",
+          "name": "虚拟存储器与 TLB"
+        },
+        {
+          "id": "co.mem.cache",
+          "name": "Cache 映射/替换/写策略"
+        },
+        {
+          "id": "os.intro.int",
+          "name": "中断与系统调用"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2009,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "请求分页 + TLB + LRU 局部置换：地址变换与访问时间",
+          "note": "源 PDF 抽取时混入相邻页表格，以原卷为准",
+          "kps": [
+            "os.mem.page",
+            "os.mem.virt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "请求分页管理系统中，假设某进程的页表内容如下表所示： 时钟 功能 有效控制信号 C1 MAR(PC) PCout, MARin C2 MDRM(MDR) PC(PC)+1 MemR, M"
+        },
+        {
+          "year": 2010,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "FIFO / LRU 置换下逻辑地址 17CAH 的页号与物理地址",
+          "note": "",
+          "kps": [
+            "os.mem.page"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "设某计算机的逻辑地址空间和物理地址空间均为64KB，按字节编址。若某进程最多需要6 页(Page) 数据存储空间，页的大小为1KB，操作系统采用固定分配局部置换策略为此进程分配4 个页框(Pa"
+        },
+        {
+          "year": 2012,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "定时扫描驻留集 + 空闲页框链表的缺页与回收模拟",
+          "note": "",
+          "kps": [
+            "os.mem.virt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某请求分页系统的局部页面置换策略如下：系统从0 时刻开始扫描， 每隔5 个时间单位 扫描一轮驻留集（扫描时间忽略不计），本轮没有被访问过的页框将被系统回收， 并放入到空闲 页框链尾，其中内容在"
+        },
+        {
+          "year": 2013,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "一级/二级页表：页大小、页表占用与页目录号表达式",
+          "note": "",
+          "kps": [
+            "os.mem.page"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机主存按字节编址，逻辑地址和物理地址都是32 位，页表项大小为4 字节。请回 答下列问题。 （1）若使用一级页表的分页存储管理方式，逻辑地址结构如下： 页号（20 位） 页内偏移量（12"
+        },
+        {
+          "year": 2014,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "承接 44 题：指令 Cache 命中率、缺页与溢出异常",
+          "note": "承接 2014-44 的程序 P",
+          "kps": [
+            "os.mem.virt",
+            "co.mem.cache",
+            "co.mem.virt",
+            "co.intro.perf"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假设对于44 题中的计算机M 和程序P 的机器代码， M 采用页式虚拟存储管理； P 开 始执行时，(R1)=(R2)=0，(R6)=1000，其机器代码已调入主存但不在Cache 中；数组A"
+        },
+        {
+          "year": 2015,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "二级页表：页/页框大小、页表占用与两地址访问的页表数",
+          "note": "",
+          "kps": [
+            "os.mem.page"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机系统按字节编址，采用二级页表的分页存储管理方式，虚拟地址格式如下所示： 10 位 10 位 12 位 页目录号 页表索引 页内偏移量 请回答下列问题。 （1）页和页框的大小各为多少字节"
+        },
+        {
+          "year": 2016,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "TLB 全相联 + 2 路组相联 Cache：字段位数、组号与写策略",
+          "note": "",
+          "kps": [
+            "os.mem.virt",
+            "co.mem.cache",
+            "co.mem.virt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机采用页式虚拟存储管理方式，按字节编址，虚拟地址为32 位，物理地址为24 位，页大小为8KB；TLB 采用全相联映射：Cache 数据区大小为64KB，按2 路组相联方式组 织，主存块"
+        },
+        {
+          "year": 2017,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "二级分页：f1 代码占页数、页目录/页表表项与 scanf 状态",
+          "note": "承接 2017-43/44 的机器代码",
+          "kps": [
+            "os.mem.page",
+            "os.intro.int",
+            "os.proc.pcb"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假定题44 给出的计算机M 采用二级分页虚拟存储管理方式，虚拟地址格式如下： 页目录号（10 位） 页表索引（10 位） 页内偏移量（12 位） 请针对题43 的函数f1 和题44 中的机器指"
+        },
+        {
+          "year": 2018,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "承接 44 题：虚拟地址十六进制、PDBR 与改进型 CLOCK 字段",
+          "note": "承接 2018-44 的存储管理方式",
+          "kps": [
+            "os.mem.page",
+            "os.mem.virt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "请根据题44 图给出的虚拟存储管理方式，回答下列问题。 （1）某虚拟地址对应的页目录号为6，在相应的页表中对应的页号为6，页内偏移量为8，该虚 拟地址的十六进制表示是什么？ （2）寄存器PDB"
+        },
+        {
+          "year": 2019,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "分页 + 4 路组相联指令 Cache：块内地址/组号/Tag 拆分",
+          "note": "承接 2019-45 的机器代码",
+          "kps": [
+            "os.mem.page",
+            "co.mem.cache"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": false,
+          "stemBrief": "对于题45，若计算机M 的主存地址为32 位，釆用分页存储管理方式，页大小为4KB， 则第1 行的push 指令和第30 行的ret 指令是否在同一页中（说明理由）？若指令Cache 有64 "
+        },
+        {
+          "year": 2020,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "a[1024][1024] 的虚地址、页目录项物理地址与页表占用",
+          "note": "",
+          "kps": [
+            "os.mem.page",
+            "os.mem.virt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某32 位系统采用基于二级页表的请求分页存储管理方式，按字节编址，页目录项和页 表项长度均为4 字节，虚拟地址结构如下所示。 页目录号（10 位） 页号（10 位） 页内偏移量（12 位） 某"
+        },
+        {
+          "year": 2024,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "4MB 页 + 缺页异常：页表项虚拟地址与物理地址推导",
+          "note": "",
+          "kps": [
+            "os.mem.page",
+            "os.mem.virt"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机按字节编址，采用页式虚拟存储管理方式，虚拟地址和物理地址的长度均为32 位，页表项的大小为4 字节，页大小为4 MB，虚拟地址结构如下。 页号（10 位） 页内偏移量（22 位） 进程"
+        }
+      ]
+    },
+    {
+      "id": "os-file",
+      "family": "os",
+      "name": "文件系统与磁盘管理",
+      "subtitle": "分配方式 / 索引节点 / FAT / 目录 / 容量上限",
+      "paradigm": "容量计算 + 访问次数分析",
+      "template": [
+        "①列已知量：盘块/簇大小、盘块号长度、索引节点大小、直接与各级间接地址项个数、目录结构、FAT 表项位数。",
+        "②最大文件长度 = (直接项数 + 每块地址项数 + 每块地址项数² + 每块地址项数³) × 块大小，其中每块地址项数 = 块大小 ÷ 地址项大小，按题给间接层数截断。",
+        "③算容量与数量：索引节点表占多少块、每块放几个索引节点 ⇒ 最多文件数；文件数 × 每文件占用簇数不得超过数据区簇数，最终取两者较小值。",
+        "④目录与 FAT：目录项 = 文件名 + 首簇号/索引节点号；FAT 表项数 = 总簇数，表项位数决定 FAT 最大长度与可寻址簇数（2^位数）。",
+        "⑤插入/访问次数题：分别按连续、链接、索引分配数「读块 + 写块」次数，注意 FCB/索引节点是否需要回写，最后说明 FCB 哪些字段变化。"
+      ],
+      "ideas": [
+        "位示图：2KB = 16384 bit 恰好表示 16384 个磁盘块；空闲块管理可用位示图或成组链接。",
+        "一次性写入、不可修改的文件适合连续分配，FCB 只需「起始块号 + 块数/文件长度」，检索快且目录项小。",
+        "找最后一簇：小文件落在直接地址项（读索引节点即可），大文件要经一级/二级间接多级访盘，所以用时不同。",
+        "簇号 → 磁盘物理地址（柱面/磁道/扇区）由磁盘设备驱动程序完成。"
+      ],
+      "pitfalls": [
+        "块大小 vs 簇大小、地址项字节数别混；三级间接要写到三次方，容易少一层。",
+        "「最多能存多少个文件」常受索引节点数与数据簇数双重限制，要取 min。",
+        "链接分配插入只改前驱指针，连续分配要移动后续所有记录，磁盘访问次数差别很大。"
+      ],
+      "kpIds": [
+        "os.file.alloc",
+        "os.file.struct",
+        "os.file.dir",
+        "os.file.fs",
+        "os.io.disk",
+        "os.mem.page"
+      ],
+      "familyName": "操作系统",
+      "count": 8,
+      "years": [
+        2010,
+        2011,
+        2012,
+        2014,
+        2016,
+        2018,
+        2022,
+        2026
+      ],
+      "kpNames": [
+        {
+          "id": "os.file.alloc",
+          "name": "磁盘分配（连续/链接/索引）"
+        },
+        {
+          "id": "os.file.struct",
+          "name": "文件逻辑/物理结构"
+        },
+        {
+          "id": "os.file.dir",
+          "name": "目录结构与文件共享"
+        },
+        {
+          "id": "os.file.fs",
+          "name": "文件系统实现与空闲管理"
+        },
+        {
+          "id": "os.io.disk",
+          "name": "磁盘调度"
+        },
+        {
+          "id": "os.mem.page",
+          "name": "分页/分段/段页"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2010,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "位示图管理空闲块 + CSCAN 磁盘调度时间 + 闪存对比",
+          "note": "",
+          "kps": [
+            "os.io.disk",
+            "os.file.fs",
+            "os.proc.sched"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假设计算机系统采用CSCAN（循环扫描）磁盘调度策略，使用2KB 的内存空间记录16 384 个磁 盘块的空闲状态。 (1) 请说明在上述条件下如何进行磁盘块空闲状态的管理。 (2) 设某单面"
+        },
+        {
+          "year": 2011,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "一次性写入、不可修改文件的分配方式与 FCB 字段设计",
+          "note": "",
+          "kps": [
+            "os.file.fs",
+            "os.file.struct",
+            "os.file.alloc"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某文件系统为一级目录结构，文件的数据一次性写入磁盘，已写入的文件不可 修改，但可多次创建新文件。请回答如下问题。 （1）在连续、链式、索引三种文件的数据块组织方式中，哪种更合适？要求说明理由。"
+        },
+        {
+          "year": 2012,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "FCB 512B 索引表区：直接 / 连续+索引结构下的最大文件长度",
+          "note": "",
+          "kps": [
+            "os.file.alloc",
+            "os.file.struct"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某文件系统空间的最大容量为4TB （1TB = 2 40B）, 以磁盘块为基本分配单位。磁盘块大 小为1KB。文件控制块(FCB)包含一个512B 的索引表区。请回答下列问题。 （1）假设索引"
+        },
+        {
+          "year": 2014,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "连续 / 链接分配下插入第 30 条记录的磁盘访问次数",
+          "note": "",
+          "kps": [
+            "os.file.alloc",
+            "os.file.struct"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "文件F 由200 条记录组成，记录从1 开始编号。用户打开文件后，欲将内存中的一条记 录插入到文件F 中，作为其第30 条记录。请回答下列问题，并说明理由。 （1）若文件系统采用连续分配方式，"
+        },
+        {
+          "year": 2016,
+          "n": 47,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "FAT + 目录树：目录文件内容、FAT 最大长度与簇号定位",
+          "note": "",
+          "kps": [
+            "os.file.alloc",
+            "os.file.dir",
+            "os.file.struct"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某磁盘文件系统使用链接分配方式组织文件，簇大小为4KB。目录文件的每个目录项 包括文件名和文件的第一个簇号，其他簇号存放在文件分配表FAT 中。 （1）假定目录树如下图所示，各文件占用的簇号及"
+        },
+        {
+          "year": 2018,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "索引节点 8 直接 + 3 级间接：最大文件长度与图像文件数量",
+          "note": "",
+          "kps": [
+            "os.file.alloc",
+            "os.file.struct"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某文件系统采用索引节点存放文件的属性和地址信息，簇大小为4KB。每个文件索引节 点占64B，有11 个地址项，其中直接地址项8 个，一级、二级和三级间接地址项各1 个，每个 地址项长度为4B。"
+        },
+        {
+          "year": 2022,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "目录项 + 索引节点：目录内容、块号 x 与打开文件访盘次数",
+          "note": "",
+          "kps": [
+            "os.file.alloc",
+            "os.file.dir",
+            "os.file.struct"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某文件系统的磁盘块大小为4KB，目录项由文件名和索引结点号 构成，每个索引结点占256 字节，其中包含直接地址项10 个，一级、二 级和三级间接地址项各1 个，每个地址项占4 字节。该文件系统"
+        },
+        {
+          "year": 2026,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "索引节点表 + 位示图 + 30KB 文件的盘块占用",
+          "note": "",
+          "kps": [
+            "os.file.fs",
+            "os.file.struct",
+            "os.file.dir"
+          ],
+          "hasAnswer": true,
+          "hasExplanation": false,
+          "stemBrief": "（本题满分 8 分） 文件系统的目录项包括文件名和索引节点号。磁盘包含索引节点表、位图、目录、文件数据等元数据。若盘块大小为 4 KB，盘块号占 4 B，索引节点表存放了系统的所有文件，从 0"
+        }
+      ]
+    },
+    {
+      "id": "os-proc",
+      "family": "os",
+      "name": "进程调度 / 状态 / 中断 / 引导",
+      "subtitle": "调度甘特图 / 系统调用链 / 互斥实现纠错",
+      "paradigm": "时间轴模拟 + 流程排序",
+      "template": [
+        "①调度题先画时间轴：列到达时刻、优先级、CPU 运行时间、时间片与抢占触发条件（本题仅时钟中断触发抢占）。",
+        "②逐时钟中断间隔推进：写当前运行进程、剩余时间片、优先级变化（时间片用完 −1 / 被抢占不变）、就绪队列顺序（同优先级按到达先后）。",
+        "③给出每个进程的开始/结束时刻、周转与等待时间，并核对 CPU 时间总和等于各进程运行时间之和。",
+        "④状态/中断题按「系统调用 → 阻塞 → 设备中断 → 唤醒 → 就绪 → 调度 → 返回」排序，指出哪步后必定切换进程、哪步由中断处理/设备驱动/系统调用程序完成、是否进入内核态。",
+        "⑤引导题按 ROM 引导程序 → 磁盘引导程序(MBR) → 分区引导程序 → OS 初始化 排序，并写出制作启动盘四步：物理格式化 → 分区 → 逻辑格式化 → 安装 OS。"
+      ],
+      "ideas": [
+        "动态优先数避免饥饿：priority = nice − k·waitTime + k'·cpuTime（数值越小越优先时），等待越久优先级提高、占用 CPU 越久优先级降低。",
+        "swap 实现互斥：key=TRUE 与共享 lock 交换，只有换回 FALSE 的线程能进临界区；退出区必须把 lock 复位为 FALSE。",
+        "虚拟地址空间布局：PCB 在内核区、malloc 在堆、局部变量在栈、代码在只读段；scanf 等待输入时进程阻塞。",
+        "被抢占的进程优先级保持不变，时间片是否重置看题设；别与「时间片用完」混为一谈。"
+      ],
+      "pitfalls": [
+        "抢占只在时钟中断发生，进程到达时刻若不对齐中断边界不会立即抢占。",
+        "swap 题要检查忙等循环里是否重置 key，否则 lock=TRUE 后永远出不来。",
+        "状态变化顺序别漏「中断处理程序 → 唤醒 → 插入就绪队列」之间的先后。"
+      ],
+      "kpIds": [
+        "os.proc.sched",
+        "os.proc.pcb",
+        "os.intro.int",
+        "os.intro.feat",
+        "os.mem.virt",
+        "os.proc.sync"
+      ],
+      "familyName": "操作系统",
+      "count": 6,
+      "years": [
+        2016,
+        2021,
+        2023,
+        2025,
+        2026
+      ],
+      "kpNames": [
+        {
+          "id": "os.proc.sched",
+          "name": "调度算法（FCFS/SJF/RR/多级反馈）"
+        },
+        {
+          "id": "os.proc.pcb",
+          "name": "进程与 PCB/线程"
+        },
+        {
+          "id": "os.intro.int",
+          "name": "中断与系统调用"
+        },
+        {
+          "id": "os.intro.feat",
+          "name": "特征/功能/运行环境"
+        },
+        {
+          "id": "os.mem.virt",
+          "name": "虚拟内存与页面置换"
+        },
+        {
+          "id": "os.proc.sync",
+          "name": "同步互斥与信号量/管程"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2016,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "nice + cpuTime/waitTime 动态优先数避免饥饿",
+          "note": "",
+          "kps": [
+            "os.proc.sched"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某进程调度程序采用基于优先数（priority）的调度策略，即选择优先数最小的进程运 行，进程创建时由用户指定一个nice 作为静态优先数。为了动态调整优先数，引入运行时间 cpuTime 和"
+        },
+        {
+          "year": 2021,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "多阶段引导顺序与制作启动盘的四步流程",
+          "note": "",
+          "kps": [
+            "os.intro.feat",
+            "os.file.fs"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某计算机用硬盘作为启动盘，硬盘第一个扇区存放主引导记录，其中包含磁盘引导程序 和分区表。磁盘引导程序用于选择引导哪个分区的操作系统，分区表记录硬盘上各分区的位置等 描述信息。硬盘被划分成若干个"
+        },
+        {
+          "year": 2023,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "swap 指令 + lock 实现临界区互斥的伪代码纠错",
+          "note": "",
+          "kps": [
+            "os.proc.sync"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "现要求学生使用swap 指令和布尔型变量lock，实现临界区互斥。lock 为线程间共享的 变量。lock 的值为TRUE 时线程不能进入临界区，为FALSE 时，线程能进入临界区。某同学编 "
+        },
+        {
+          "year": 2023,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "键盘输入系统调用：操作顺序、进程状态与内核态",
+          "note": "",
+          "kps": [
+            "os.intro.int",
+            "os.proc.sched",
+            "os.proc.pcb",
+            "os.io.hw"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "进程P 通过执行系统调用从键盘接收一个字符的输入，已知此过程中与进程P 相关的操 作包括： ①将进程P 插入就绪队列；②将进程P 插入阻塞队列；③将字符从键盘控制器读入系统缓冲 区；④启动键盘"
+        },
+        {
+          "year": 2025,
+          "n": 46,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "虚拟地址空间布局：PCB/堆/栈位置与 scanf 阻塞态",
+          "note": "",
+          "kps": [
+            "os.proc.pcb",
+            "os.mem.virt",
+            "os.intro.int"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "（本题8 分）某系统中进程的虚拟地址空间包括内核区、用户栈运行时堆、可读写数据段、只读 代码段等区域，其布局如题46 图所示，图中阴影部分表示未占用区域。现有C 语言程序的部分 代码如下。 c"
+        },
+        {
+          "year": 2026,
+          "n": 45,
+          "book": "os",
+          "bookName": "操作系统",
+          "topic": "优先级 + 时间片轮转：仅时钟中断抢占的调度甘特图",
+          "note": "",
+          "kps": [
+            "os.proc.sched",
+            "os.intro.int"
+          ],
+          "hasAnswer": true,
+          "hasExplanation": false,
+          "stemBrief": "（本题满分 7 分） 系统采用优先级（优先级越大表示优先级越高）与时间片轮转调度算法，仅当发生时钟中断时才触发抢占 CPU 操作，时钟中断间隔为 10 ms。进程首次进入就绪队列时，其时间片为"
+        }
+      ]
+    },
+    {
+      "id": "cn-ip",
+      "family": "cn",
+      "name": "IP 规划与路由转发",
+      "subtitle": "子网划分 / 路由表与聚合 / NAT / 分片 / 设备选型",
+      "paradigm": "地址计算 + 表项填写",
+      "template": [
+        "①算子网：把地址块写成二进制，按子网数/主机数确定借位，逐个写「子网地址 / 掩码 / 可用主机范围 / 广播地址」。",
+        "②填路由表：目的网络写「子网地址/前缀」，逐项给下一跳与接口；连续子网用路由聚合并说明合并后的前缀长度。",
+        "③转发判定：目的 IP 与各掩码做 AND，最长前缀匹配优先；别忘默认路由 0.0.0.0/0 与 TTL 每跳减 1。",
+        "④分片：先算 MTU 可容纳的数据长度并向下取 8 的倍数，填「片偏移 = 已传数据字节数/8、MF、总长度、标识」，最后一片 MF=0。",
+        "⑤NAT/设备题：写内外网 IP/端口映射、哪些接口需要 IP、交换机/路由器/集线器选择依据（冲突域/广播域），并检查默认网关与 DNS 配置。"
+      ],
+      "ideas": [
+        "/24 均分两个子网 → /25；可用主机数 = 2^主机位 − 2。",
+        "路由聚合把连续子网写成二进制找最长公共前缀，先对齐地址块边界再合并。",
+        "帧/分组十六进制解析：以太网前 6B 目的 MAC、后 6B 源 MAC、类型 0800=IPv4；IP 首字节 45 ⇒ 版本 4、首部 20B；协议 06=TCP、11=UDP、01=ICMP。",
+        "同一 IP 子网用交换机/Hub 互联，不同子网之间必须路由器；Hub 共享冲突域、交换机每端口一个冲突域。"
+      ],
+      "pitfalls": [
+        "分片片偏移以 8 字节为单位，除最后一片外数据长度必须是 8 的倍数。",
+        "私有地址经 NAT 后源 IP 才变；同局域网通信目的 MAC 是对端主机，跨网时是下一跳路由器接口。",
+        "子网广播地址是主机位全 1，别写成上一层 /24 的广播地址。"
+      ],
+      "kpIds": [
+        "cn.net.ip",
+        "cn.net.route",
+        "cn.dll.eth",
+        "cn.net.icmp",
+        "cn.intro.layer",
+        "cn.app.other"
+      ],
+      "familyName": "计算机网络",
+      "count": 8,
+      "years": [
+        2009,
+        2011,
+        2013,
+        2014,
+        2018,
+        2019,
+        2020,
+        2024
+      ],
+      "kpNames": [
+        {
+          "id": "cn.net.ip",
+          "name": "IP 地址/子网/CIDR"
+        },
+        {
+          "id": "cn.net.route",
+          "name": "路由算法与协议（RIP/OSPF/BGP）"
+        },
+        {
+          "id": "cn.dll.eth",
+          "name": "以太网与交换机"
+        },
+        {
+          "id": "cn.net.icmp",
+          "name": "ICMP/ARP"
+        },
+        {
+          "id": "cn.intro.layer",
+          "name": "OSI/TCP-IP 分层与封装"
+        },
+        {
+          "id": "cn.app.other",
+          "name": "FTP/DHCP 等"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2009,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "202.118.1.0/24 划两个子网 + R1/R2 路由表与聚合",
+          "note": "",
+          "kps": [
+            "cn.net.route",
+            "cn.net.ip",
+            "cn.app.dns"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某网络拓扑如下图所示，路由器R1 通过接口E1、E2 分别连接局域网1、局域网2，通过接口L0 连接路由器R2，并通过路由器R2 连接域名服务器与互联网。R1 的L0 接口的IP 地址是202"
+        },
+        {
+          "year": 2011,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "以太网帧十六进制解析：MAC/IP/TCP 首部与 Web 请求",
+          "note": "",
+          "kps": [
+            "cn.app.http",
+            "cn.net.ip",
+            "cn.net.route"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某主机的MAC 地址为00-15-C5-C1-5E-28，IP 地址为10.2.128.100（私有地址）。 题47-a 图是网络拓扑，题47-b 图是该主机进行Web 请求的1 个以太网数据"
+        },
+        {
+          "year": 2013,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "AS 间路由聚合：R2 路由表、最长前缀匹配与 RIP/OSPF",
+          "note": "",
+          "kps": [
+            "cn.net.route",
+            "cn.net.ip",
+            "cn.trans.tcp"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假设Internet 的两个自治系统构成的网络如题47 图所示，自治系统ASI 由路由器R1 连 接两个子网构成；自治系统AS2 由路由器R2、R3 互联并连接3 个子网构成。各子网地址、R2"
+        },
+        {
+          "year": 2014,
+          "n": 43,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "承接 42 题：R1 路由表聚合、TTL 递减与 LSI 新增项",
+          "note": "承接 2014-42 的网络拓扑",
+          "kps": [
+            "cn.net.route",
+            "cn.net.ip"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "请根据题42 描述的网络， 继续回答下列问题。 （1）假设路由表结构如下表所示， 请给出题42 图中R1 的路由表， 要求包括到达题42 图中 子网192.1.x.x 的路由，且路由表中的路由"
+        },
+        {
+          "year": 2018,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "/24 均分子网、广播地址与 MTU 800B 下的分片",
+          "note": "",
+          "kps": [
+            "cn.net.ip"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某公司的网络如题47 图所示。IP 地址空间192.168.1.0/24 被均分给销售部和技术部两个 子网，并已分别为部分主机和路由器接口分配了IP 地址，销售部子网的MTU = 1500B，"
+        },
+        {
+          "year": 2019,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "交换机 / 路由器选型、接口 IP 配置与广播域判定",
+          "note": "",
+          "kps": [
+            "cn.net.ip",
+            "cn.dll.eth"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某网络拓扑如题47 图所示，其中R 为路由器，主机H1～H4 的IP 地址配置以及R 的各 接口IP 地址配置如图中所示。现有若干以太网交换机（无VLAN 功能）和路由器两类网络互连 设备可供"
+        },
+        {
+          "year": 2020,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "NAT 转换表：H2 访问 Web 前后的源/目的 IP 与端口号",
+          "note": "",
+          "kps": [
+            "cn.net.ip",
+            "cn.net.route"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某校园网有两个局域网，通过路由器R1、R2 和R3 互联后接入Internet，S1 和S2 为以 太网交换机。局域网采用静态IP 地址配置，路由器部分接口以及各主机的IP 地址如下图所示。 "
+        },
+        {
+          "year": 2024,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "RIP/OSPF/BGP 选型、AS 间路由与 IP 分组字段",
+          "note": "",
+          "kps": [
+            "cn.net.route",
+            "cn.net.ip"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "网络空间是继陆海空天之后的“第五疆域”，网络技术是网络疆域建设与治理的基础。 路由算法与协议是网络核心技术之一，对其准确认知、合理选择与应用，对于网络建设十分重 要。假设现有互联网中的4 个自"
+        }
+      ]
+    },
+    {
+      "id": "cn-tcp",
+      "family": "cn",
+      "name": "TCP 连接与拥塞控制",
+      "subtitle": "三次握手 / 序号与确认号 / cwnd 与 rwnd / 传输时间",
+      "paradigm": "逐 RTT 列表推演",
+      "template": [
+        "①抄已知量：MSS、双方初始序号、ssthresh、接收窗口 rwnd、RTT、文件/缓存大小，统一单位（KB 与 MSS 换算，K=1024）。",
+        "②三次握手：SYN=1,ACK=0 → SYN=1,ACK=1,ack_seq=客户端ISN+1 → ACK=1；SYN/FIN 各占 1 个序号，纯 ACK 不占。",
+        "③建表逐 RTT 推进：每轮写 cwnd（以 MSS 计）、本轮可发段数 = min(cwnd, rwnd)、各段 seq 区间、累计字节、ack_seq；慢开始每 RTT 翻倍，到 ssthresh 后每 RTT +1。",
+        "④算时间/吞吐：轮数 × RTT（题目要求时再加握手 1 RTT）；若接收缓存只进不出，按 rwnd 递减算何时窗口归零与吞吐上限。",
+        "⑤收尾：按题设处理重传/丢包/乱序；核对最后一段是否不足 MSS、序号是否连续；FTP 控制连接持久、数据连接非持久。"
+      ],
+      "ideas": [
+        "cwnd 以 MSS 为单位：1→2→4→8… 慢开始，达 ssthresh 后拥塞避免线性 +1；丢包则 ssthresh = cwnd/2。",
+        "确认号 = 期望收到的下一字节序号；每收到一个段立即确认时可用累计确认反推已正确接收的字节数。",
+        "发送窗口 = min(cwnd, rwnd)，两者单位要统一成字节或 MSS。",
+        "用「累计字节 ≥ 文件大小」判断传完所需 RTT 轮数，最后一轮只发剩余字节。"
+      ],
+      "pitfalls": [
+        "SYN、FIN 各占 1 个序号，把初始序号直接当第一个数据字节序号会整体偏移。",
+        "cwnd 与 rwnd 单位不同（MSS vs 字节），不换算会算错每轮段数。",
+        "接收缓存只进不出时 rwnd 会缩小到 0，不能一直按初始窗口算吞吐。"
+      ],
+      "kpIds": [
+        "cn.trans.tcp",
+        "cn.trans.cong",
+        "cn.intro.perf",
+        "cn.app.other",
+        "cn.net.ip"
+      ],
+      "familyName": "计算机网络",
+      "count": 4,
+      "years": [
+        2012,
+        2016,
+        2023,
+        2026
+      ],
+      "kpNames": [
+        {
+          "id": "cn.trans.tcp",
+          "name": "TCP 连接/可靠/流量控制"
+        },
+        {
+          "id": "cn.trans.cong",
+          "name": "TCP 拥塞控制"
+        },
+        {
+          "id": "cn.intro.perf",
+          "name": "时延/带宽/吞吐量"
+        },
+        {
+          "id": "cn.app.other",
+          "name": "FTP/DHCP 等"
+        },
+        {
+          "id": "cn.net.ip",
+          "name": "IP 地址/子网/CIDR"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2012,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "IP 分组十六进制解析 + TCP 三次握手与连接建立",
+          "note": "",
+          "kps": [
+            "cn.trans.tcp",
+            "cn.net.ip",
+            "cn.dll.eth"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "主机H 通过快速以太网连接Internet，IP 地址为192.168.0.8, 服务器S 的IP 地址为 211.68.71.80。H 与S 使用TCP 通信时，在H 上捕获的其中5 个IP"
+        },
+        {
+          "year": 2016,
+          "n": 41,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "TCP 三次握手、接收缓存 20KB 与拥塞窗口逐轮推进",
+          "note": "题干拓扑与 33–41 题共用",
+          "kps": [
+            "cn.trans.tcp",
+            "cn.trans.cong"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "假设题33～41 图中的H3 访问Web 服务器S 时，S 为新建的TCP 连接分配了20KB（K = 1024）的接收缓存，最大段长MSS=1KB，平均往返时间RTT = 200ms。H3 "
+        },
+        {
+          "year": 2023,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "FTP 上传 18000B：seq/ack、cwnd 轮次与传输时间",
+          "note": "",
+          "kps": [
+            "cn.trans.tcp",
+            "cn.trans.cong",
+            "cn.app.other",
+            "cn.intro.perf"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某网络拓扑如题47 图所示，主机H 登录FTP 服务器后，向服务器上传一个大小为 18000B 的文件F。假设H 为传输F 建立数据连接时，选择的初始序号为100，MSS=1000B，拥 塞控"
+        },
+        {
+          "year": 2026,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "2000B 上传：双方初始序号、cwnd 与接收窗口推进",
+          "note": "",
+          "kps": [
+            "cn.trans.tcp",
+            "cn.trans.cong",
+            "cn.intro.perf"
+          ],
+          "hasAnswer": true,
+          "hasExplanation": false,
+          "stemBrief": "（本题满分 9 分） 假设客户端 C 建立一条 TCP 连接，向服务器 Si 上传一个总长度为 2000 B 的计算任务描述文件。已知 C 的拥塞窗口初始阈值为 8 MSS，MSS = 500"
+        }
+      ]
+    },
+    {
+      "id": "cn-dll",
+      "family": "cn",
+      "name": "链路层与局域网 / 滑动窗口",
+      "subtitle": "CSMA/CD / GBN / Hub 与交换机 / 长时延链路",
+      "paradigm": "时延计算 + 时序推断",
+      "template": [
+        "①先画传播时序：写发送速率、距离、传播速度，算单程传播时延 τ = d/v 与发送时延 = 帧长/速率。",
+        "②CSMA/CD：最短冲突检测时间 τ、最长 2τ；最小帧长 = 2τ × 速率；有效吞吐 = 一帧数据 / (发送时延 + τ + 确认帧发送时延 + τ)。",
+        "③滑动窗口/GBN：由序号比特数得窗口上限（GBN ≤ 2^k−1，SR ≤ 2^(k−1)），再按捎带确认的 ack_seq「期望下一帧」语义推断已正确接收帧数，或按时间轴画 S/R 帧序列。",
+        "④设备题：Hub 所有端口同一冲突域、交换机每端口一个冲突域、路由器隔离广播域；按题给「同广播域/不同冲突域」反推设备类型，必要时算最小帧长与最大跨距。",
+        "⑤长时延链路：先算单程传播时延（卫星要算上下行两段），再算一个 RTT 内可发数据量与所需窗口，说明哪种重传策略能撑满链路。"
+      ],
+      "ideas": [
+        "争用期 = 2τ；以太网 10Mbps 下 51.2μs 对应 64B 最小帧长。",
+        "GBN 中 ack_seq=n 表示 n−1 及以前全部正确收到；超时或重复 ACK 从最早未确认帧重发。",
+        "帧发送时间必须 ≥ 2τ；加入中继器/设备时延后要相应加长帧或缩短距离。",
+        "双向持续数据 + 捎带确认时，对方的确认号是「希望收到己方下一帧的序号」，与己方发送序号不同。"
+      ],
+      "pitfalls": [
+        "最短/最长冲突检测时间别写反：一端发送后另一端在 τ 时刻才发，冲突信号再传 τ 回来 ⇒ 最长 2τ。",
+        "100BaseT 的速率与帧长换算用 bit 而非 byte；Hub 会放大冲突域，交换机不会。",
+        "同步卫星链路要算「36000km × 2（上行+下行）」，只算一段会少一半时延。"
+      ],
+      "kpIds": [
+        "cn.dll.mac",
+        "cn.dll.eth",
+        "cn.dll.framing",
+        "cn.intro.perf",
+        "cn.trans.tcp",
+        "cn.phy.media"
+      ],
+      "familyName": "计算机网络",
+      "count": 4,
+      "years": [
+        2010,
+        2017,
+        2022,
+        2025
+      ],
+      "kpNames": [
+        {
+          "id": "cn.dll.mac",
+          "name": "CSMA/CD/CA 与 MAC"
+        },
+        {
+          "id": "cn.dll.eth",
+          "name": "以太网与交换机"
+        },
+        {
+          "id": "cn.dll.framing",
+          "name": "成帧/差错/流量控制"
+        },
+        {
+          "id": "cn.intro.perf",
+          "name": "时延/带宽/吞吐量"
+        },
+        {
+          "id": "cn.trans.tcp",
+          "name": "TCP 连接/可靠/流量控制"
+        },
+        {
+          "id": "cn.phy.media",
+          "name": "传输介质与交换"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2010,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "CSMA/CD 最短/最长冲突检测时间与有效数据率",
+          "note": "",
+          "kps": [
+            "cn.dll.mac",
+            "cn.dll.eth"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某局域网采用CSMA/CD 协议实现介质访问控制，数据传输速率为10Mbps，主机甲和主机乙之间 的距离为2 km，信号传播速度是200 000 km/s。请回答下列问题，要求说明理由或写出计"
+        },
+        {
+          "year": 2017,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "GBN 双向捎带确认：序号位数、确认语义与场景推断",
+          "note": "",
+          "kps": [
+            "cn.dll.framing",
+            "cn.intro.perf"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "甲乙双方均采用后退N 帧协议(GBN)进行持续的双向数据传输， 且双方始终采用捎带 确认，帧长均为1000B。Sx, y 和Rx, y 分别表示甲方和乙方发送的数据帧，其中x 是发送序号，y "
+        },
+        {
+          "year": 2022,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "Hub/交换机选型、冲突域/广播域与最小帧长/跨距",
+          "note": "",
+          "kps": [
+            "cn.dll.mac",
+            "cn.dll.eth",
+            "cn.app.other"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某网络拓扑如题47 图所示，R 为路由器，S 为以太网交换机，AP 是802.11 接入点，路 由器的E0 接口和DHCP 服务器的IP 地址配置如图中所示；H1 与H2 属于同一个广播域，但"
+        },
+        {
+          "year": 2025,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "天通一号卫星链路：传播时延、滑动窗口与链路利用率",
+          "note": "",
+          "kps": [
+            "cn.dll.framing",
+            "cn.intro.perf",
+            "cn.net.ip"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "（本题9 分）某公司在承建国家重大工程项目时，工程部需要较长时间驻扎在偏远山区，工程部 网络需要连接公司总部网络。假设综合考虑方案的技术可行性、安全性与经济成本等因素后，决 定租用我国自主建设"
+        }
+      ]
+    },
+    {
+      "id": "cn-app",
+      "family": "cn",
+      "name": "应用层协议与地址解析",
+      "subtitle": "DNS / DHCP / ARP / HTTP 与帧封装",
+      "paradigm": "访问流程排序 + 逐层填地址",
+      "template": [
+        "①按访问流程排序：DNS 解析域名 → ARP 找下一跳 MAC → TCP 三次握手 → HTTP 请求/响应；说明 HTTP→TCP→IP→以太网帧的封装。",
+        "②逐层写地址：DNS 用 UDP/53、HTTP 用 TCP/80；IP 层源/目的 IP；链路层源/目的 MAC；跨网时目的 MAC 填默认网关接口 MAC。",
+        "③DHCP：Discover 的源 IP = 0.0.0.0、目的 IP = 255.255.255.255，目的 MAC = FF-FF-FF-FF-FF-FF；可分配范围由地址池减去已静态占用地址。",
+        "④ARP/交换机自学习：写清 t0→t1 期间哪几帧经过交换机、交换表新增哪些「源 MAC ↔ 端口」表项、ARP 表新增哪条映射；ARP 请求广播、应答单播。",
+        "⑤回答小问：第一个以太网帧的目的 MAC、IP 头字段变化（TTL/源目的 IP/校验和），以及路由器需提供的 NAT/DHCP/DNS 服务。"
+      ],
+      "ideas": [
+        "主机用自身掩码对目的 IP 做 AND 判断是否同子网，不同则交给默认网关 → ARP 请求网关 MAC。",
+        "交换机收到未知目的 MAC 会洪泛，收到帧时学习源 MAC 与入端口；ARP 应答是单播，只沿已知端口转发。",
+        "DNS 递归查询：本地域名服务器先查缓存，无则迭代查根/顶级/权威，返回 A 记录给主机。",
+        "帧十六进制结合 ASCII 区可读出 HTTP 请求行与 Host 字段，用来反推域名与请求方法。"
+      ],
+      "pitfalls": [
+        "访问外网时第一个帧的目的 MAC 是默认网关的 MAC，不是 Web 服务器的 MAC。",
+        "DHCP Discover 的源 IP 不是私有地址——主机此时还没有 IP；目的 IP 是受限广播。",
+        "每经过一个路由器 TTL 减 1、源/目的 MAC 重写，但无 NAT 时源/目的 IP 不变。"
+      ],
+      "kpIds": [
+        "cn.app.dns",
+        "cn.app.http",
+        "cn.app.other",
+        "cn.net.icmp",
+        "cn.dll.eth",
+        "cn.intro.layer"
+      ],
+      "familyName": "计算机网络",
+      "count": 2,
+      "years": [
+        2015,
+        2021
+      ],
+      "kpNames": [
+        {
+          "id": "cn.app.dns",
+          "name": "DNS"
+        },
+        {
+          "id": "cn.app.http",
+          "name": "HTTP/HTTPS/邮件"
+        },
+        {
+          "id": "cn.app.other",
+          "name": "FTP/DHCP 等"
+        },
+        {
+          "id": "cn.net.icmp",
+          "name": "ICMP/ARP"
+        },
+        {
+          "id": "cn.dll.eth",
+          "name": "以太网与交换机"
+        },
+        {
+          "id": "cn.intro.layer",
+          "name": "OSI/TCP-IP 分层与封装"
+        }
+      ],
+      "questions": [
+        {
+          "year": 2015,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "DHCP 地址池与 Discover 源/目的 IP、ARP 与首帧目的 MAC",
+          "note": "",
+          "kps": [
+            "cn.app.other",
+            "cn.net.ip",
+            "cn.net.icmp"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某网络拓扑如下图所示，其中路由器内网接口、DHCP 服务器、www 服务器与主机1 均 采用静态IP 地址配置，相关地址信息见图中标注；主机2～主机N 通过DHCP 服务器动态获取 IP 地址"
+        },
+        {
+          "year": 2021,
+          "n": 47,
+          "book": "cn",
+          "bookName": "计算机网络",
+          "topic": "DNS + ARP + 交换机自学习：t0→t1 的帧与表项变化",
+          "note": "",
+          "kps": [
+            "cn.app.dns",
+            "cn.dll.eth",
+            "cn.net.icmp",
+            "cn.intro.layer"
+          ],
+          "hasAnswer": false,
+          "hasExplanation": true,
+          "stemBrief": "某网络拓扑如题47 图所示，以太网交换机S 通过路由器R 与Internet 互联。路由器部分 接口、本地域名服务器、H1、H2 的IP 地址和MAC 地址如图中所示。在t0时刻H1 的ARP"
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "by_family": {
+      "ds": 36,
+      "co": 34,
+      "os": 38,
+      "cn": 18
+    },
+    "by_year": {
+      "2009": 7,
+      "2010": 7,
+      "2011": 7,
+      "2012": 7,
+      "2013": 7,
+      "2014": 7,
+      "2015": 7,
+      "2016": 7,
+      "2017": 7,
+      "2018": 7,
+      "2019": 7,
+      "2020": 7,
+      "2021": 7,
+      "2022": 7,
+      "2023": 7,
+      "2024": 7,
+      "2025": 7,
+      "2026": 7
+    },
+    "with_answer": 7,
+    "with_explanation": 115
+  }
+}

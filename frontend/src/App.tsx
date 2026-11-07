@@ -53,11 +53,26 @@ const KgPredictPage = lazy(() =>
 const KgExamsPage = lazy(() =>
   import("@/pages/KgExamsPage").then((m) => ({ default: m.KgExamsPage }))
 );
+const Cs408PracticePage = lazy(() =>
+  import("@/pages/Cs408PracticePage").then((m) => ({ default: m.Cs408PracticePage }))
+);
+const Cs408MistakesPage = lazy(() =>
+  import("@/pages/Cs408MistakesPage").then((m) => ({ default: m.Cs408MistakesPage }))
+);
+const Cs408HistoryPage = lazy(() =>
+  import("@/pages/Cs408HistoryPage").then((m) => ({ default: m.Cs408HistoryPage }))
+);
 const OsMemExamSetPage = lazy(() =>
   import("@/pages/OsMemExamSetPage").then((m) => ({ default: m.OsMemExamSetPage }))
 );
 const ExamSetPage = lazy(() =>
   import("@/pages/ExamSetPage").then((m) => ({ default: m.ExamSetPage }))
+);
+const KgBigGuidePage = lazy(() =>
+  import("@/pages/KgBigGuidePage").then((m) => ({ default: m.KgBigGuidePage }))
+);
+const Cs408OverviewPage = lazy(() =>
+  import("@/pages/Cs408OverviewPage").then((m) => ({ default: m.Cs408OverviewPage }))
 );
 const WdSetPage = lazy(() =>
   import("@/pages/WdSetPage").then((m) => ({ default: m.WdSetPage }))
@@ -112,6 +127,11 @@ export default function App() {
             <Route path="kg" element={<KgIndexRedirect />} />
             <Route path="kg/predict" element={<KgPredictPage />} />
             <Route path="kg/exams" element={<KgExamsPage />} />
+            <Route path="kg/exams/mistakes" element={<Cs408MistakesPage />} />
+            <Route path="kg/exams/history" element={<Cs408HistoryPage />} />
+            <Route path="kg/exams/practice/:year" element={<Cs408PracticePage />} />
+            <Route path="kg/exams/overview" element={<Cs408OverviewPage />} />
+            <Route path="kg/exams/big-guide" element={<KgBigGuidePage />} />
             <Route path="kg/wd" element={<WdSetPage />} />
             <Route path="kg/wd/:group" element={<WdSetPage />} />
             <Route path="kg/exams/set" element={<ExamSetPage />} />

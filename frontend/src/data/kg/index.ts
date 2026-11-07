@@ -19,7 +19,7 @@ export {
   applyCs408ExamStats,
 } from "./cs408ExamStats";
 
-/** 408 图谱：freq/bigWeight 已用 2012–2026 真题 LLM 标注校准 */
+/** 408 图谱：freq/bigWeight 已用 2012–2025 重构卷 LLM 标注校准；2009–2011 规则标注、2026 回忆版不计入 */
 export const CS408_BOOKS: KgBook[] = CS408_BOOKS_BASE.map((book) => ({
   ...book,
   modules: book.modules.map((mod) => ({

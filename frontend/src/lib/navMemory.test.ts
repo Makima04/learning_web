@@ -35,11 +35,14 @@ describe("navMemory", () => {
     expect(sectionForPath("/kg/math")?.id).toBe("/kg");
     expect(sectionForPath("/kg/math/module/calc/calc-limit")?.id).toBe("/kg");
     expect(sectionForPath("/kg/cs408/kp/ds.sort.insert")?.id).toBe("/kg");
-    expect(sectionForPath("/kg/exams/2024")?.id).toBe("/kg");
-    expect(sectionForPath("/kg/exams/os-mem")?.id).toBe("/kg");
-    expect(sectionForPath("/kg/exams/os-mem/all")?.id).toBe("/kg");
-    expect(sectionForPath("/kg/exams/set")?.id).toBe("/kg");
-    expect(sectionForPath("/kg/exams/set/ds-tree")?.id).toBe("/kg");
+    // 408 真题已升为独立一级入口，其子路由归 /kg/exams 分区
+    expect(sectionForPath("/kg/exams/2024")?.id).toBe("/kg/exams");
+    expect(sectionForPath("/kg/exams/os-mem")?.id).toBe("/kg/exams");
+    expect(sectionForPath("/kg/exams/os-mem/all")?.id).toBe("/kg/exams");
+    expect(sectionForPath("/kg/exams/set")?.id).toBe("/kg/exams");
+    expect(sectionForPath("/kg/exams/set/ds-tree")?.id).toBe("/kg/exams");
+    expect(sectionForPath("/kg/exams/practice/2025")?.id).toBe("/kg/exams");
+    expect(sectionForPath("/kg/exams/mistakes")?.id).toBe("/kg/exams");
     expect(sectionForPath("/kg/wd")?.id).toBe("/kg");
     expect(sectionForPath("/kg/wd/ds-tree")?.id).toBe("/kg");
     expect(sectionForPath("/politics/q/2026-34")?.id).toBe("/politics");
@@ -53,10 +56,17 @@ describe("navMemory", () => {
     rememberNavPath("/settings");
     expect(hrefForNavRoot("/kg")).toBe("/kg/module/ds/tree");
     expect(hrefForNavRoot("/settings")).toBe("/settings");
+    // 408 真题独立记住自己的上次路径，不占用知识图谱的记忆
+    rememberNavPath("/kg/exams/2025");
+    expect(hrefForNavRoot("/kg/exams")).toBe("/kg/exams/2025");
+    expect(hrefForNavRoot("/kg")).toBe("/kg/module/ds/tree");
   });
 
   it("section active covers children", () => {
     expect(isNavSectionActive("/kg", "/kg/predict")).toBe(true);
+    // 「知识图谱」不能再抢「408 真题」的高亮
+    expect(isNavSectionActive("/kg", "/kg/exams/2025")).toBe(false);
+    expect(isNavSectionActive("/kg/exams", "/kg/exams/practice/2025")).toBe(true);
     expect(isNavSectionActive("/papers", "/reader")).toBe(true);
     expect(isNavSectionActive("/papers", "/papers/en1/2006")).toBe(true);
     expect(isNavSectionActive("/papers", "/papers-recite")).toBe(false);

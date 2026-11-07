@@ -1,7 +1,10 @@
-import { Archive, Check, ChevronRight, HelpCircle, Trash2, X } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Archive, Check, ChevronDown, ChevronRight, HelpCircle, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dayKey } from "@/lib/day";
+import { isExamItemId, parseExamItemId } from "@/lib/kg/examJournal";
 import type { JournalEntry, JournalKind, ReviewResult } from "@/lib/journal";
 import type { KgChapterCard } from "@/lib/kg/journalBridge";
 import { cn } from "@/lib/utils";
@@ -159,6 +162,56 @@ export function EntryCard({
   );
 }
 
+/** 章节大卡展开后的一条到期条目：真题给重做/解析深链，其它走章节页逐题复盘 */
+function ChapterEntryRow({
+  entry,
+  onOpenChapter,
+}: {
+  entry: JournalEntry;
+  onOpenChapter: () => void;
+}) {
+  const today = dayKey();
+  const pos = isExamItemId(entry.sourceItemId)
+    ? parseExamItemId(entry.sourceItemId as string)
+    : null;
+  const overdue = entry.nextReviewOn < today;
+  const actionCls =
+    "inline-flex min-h-[32px] shrink-0 items-center rounded-full border border-border/80 px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1";
+
+  return (
+    <li className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-muted/60 px-2.5 py-2">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-medium" title={entry.title}>
+          {entry.title}
+        </p>
+        <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
+          {pos ? "真题" : "知识图谱"} · 间隔 {entry.step} 天 ·{" "}
+          {overdue ? (
+            <span className="font-medium text-ink-danger">逾期 · 应复 {entry.nextReviewOn}</span>
+          ) : (
+            `下次 ${entry.nextReviewOn}`
+          )}
+          {entry.lapses > 0 && ` · 遗忘 ${entry.lapses} 次`}
+        </p>
+      </div>
+      {pos ? (
+        <div className="flex shrink-0 gap-1">
+          <Link to={`/kg/exams/practice/${pos.year}?q=${pos.n}&mode=practice`} className={actionCls}>
+            重做
+          </Link>
+          <Link to={`/kg/exams/${pos.year}#q${pos.n}`} className={actionCls}>
+            解析
+          </Link>
+        </div>
+      ) : (
+        <button type="button" onClick={onOpenChapter} className={actionCls}>
+          逐题复习
+        </button>
+      )}
+    </li>
+  );
+}
+
 export function ChapterReviewCard({
   chapter,
   onOpen,
@@ -166,9 +219,19 @@ export function ChapterReviewCard({
   chapter: KgChapterCard;
   onOpen: () => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const examCount = chapter.entries.filter((e) => isExamItemId(e.sourceItemId)).length;
+  const listId = `chapter-due-${chapter.moduleId.replace(/[^\w-]/g, "-")}`;
+
   return (
-    <button type="button" className="w-full text-left" onClick={onOpen}>
-      <Card className="transition-colors hover:bg-muted/40">
+    <Card>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={listId}
+        onClick={() => setOpen((v) => !v)}
+        className="w-full rounded-2xl text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      >
         <CardHeader className="space-y-3 pb-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-2">
@@ -183,6 +246,11 @@ export function ChapterReviewCard({
                     ? `${chapter.entries.length} 道错题`
                     : `${chapter.entries.length} 个知识点`}
                 </span>
+                {examCount > 0 && (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">
+                    真题 {examCount}
+                  </span>
+                )}
                 {chapter.firstReviewCount > 0 && (
                   <span>首次 {chapter.firstReviewCount}</span>
                 )}
@@ -191,12 +259,32 @@ export function ChapterReviewCard({
                     逾期 {chapter.overdueCount}
                   </span>
                 )}
+                <span className="text-ink-info">{open ? "收起" : "展开看具体题目"}</span>
               </div>
             </div>
-            <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" />
+            <ChevronDown
+              className={cn(
+                "mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform",
+                open && "rotate-180"
+              )}
+            />
           </div>
         </CardHeader>
-      </Card>
-    </button>
+      </button>
+
+      {open && (
+        <CardContent id={listId} className="space-y-3 pt-0">
+          <ul className="space-y-1.5">
+            {chapter.entries.map((entry) => (
+              <ChapterEntryRow key={entry.id} entry={entry} onOpenChapter={onOpen} />
+            ))}
+          </ul>
+          <Button size="sm" variant="outline" onClick={onOpen} className="gap-1">
+            进入章节逐题复盘
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </CardContent>
+      )}
+    </Card>
   );
 }

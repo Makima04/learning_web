@@ -38,13 +38,16 @@ interface NavItem {
   /** NookPhone 式图标底色（bg-app-*），黄色底用深色图标 */
   tile: string;
   end?: boolean;
+  /** 手机底栏是否展示（默认展示）；低频入口可只留在桌面侧栏 */
+  mobile?: boolean;
 }
 
 const NAV: NavItem[] = [
   { to: "/", label: "学习概览", icon: LayoutDashboard, tile: "bg-app-teal text-white", end: true },
   { to: "/lists", label: "生熟词表", icon: Bookmark, tile: "bg-app-pink text-white" },
   { to: "/kg", label: "知识图谱", icon: Network, tile: "bg-app-purple text-white" },
-  { to: "/viz", label: "图解 408", icon: Clapperboard, tile: "bg-app-blue text-white" },
+  { to: "/kg/exams", label: "408 真题", icon: BookOpen, tile: "bg-primary text-primary-foreground" },
+  { to: "/viz", label: "图解 408", icon: Clapperboard, tile: "bg-app-blue text-white", mobile: false },
   { to: "/journal", label: "学习日志", icon: NotebookPen, tile: "bg-app-green text-white" },
   { to: "/papers", label: "真题阅读", icon: FileText, tile: "bg-app-orange text-white" },
   { to: "/papers-recite", label: "真题记词", icon: LibraryBig, tile: "bg-app-yellow text-[#725d42]" },
@@ -134,6 +137,8 @@ export function AppLayout() {
   // memTick：确保记忆更新后重新计算 href
   void memTick;
   const navItems = NAV.filter((item) => item.to !== "/viz" || enableCs408);
+  // 手机底栏固定 5 列 × 2 排：新增「408 真题」后，低频的「图解 408」只留在桌面侧栏
+  const mobileNavItems = navItems.filter((item) => item.mobile !== false);
   const activeItem = navItems.find((item) => isNavSectionActive(item.to, location.pathname));
 
   return (
@@ -251,7 +256,15 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-auto"><Outlet /></main>
+        {/* 手机底栏是 fixed 的，内容区要给底部让位，否则滚到底最后一行会被压住 */}
+        <main
+          className={cn(
+            "min-h-0 flex-1 overflow-auto transition-[padding] duration-200 md:pb-0",
+            mobileNavHidden ? "pb-4" : "pb-[calc(7.5rem+env(safe-area-inset-bottom))]"
+          )}
+        >
+          <Outlet />
+        </main>
       </div>
 
       {/* 手机底栏：NookPhone 式两排小图标 */}
@@ -271,7 +284,7 @@ export function AppLayout() {
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
         <div className="grid grid-cols-5 px-1 pt-1.5">
-          {navItems.map((item) => {
+          {mobileNavItems.map((item) => {
             const href = navHref(item.to);
             const active = item === activeItem;
             return (
@@ -307,7 +320,8 @@ export function AppLayout() {
           mobileNavScroll.show();
         }}
         className={cn(
-          "fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-30 grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-edge-primary transition-all duration-200 md:hidden",
+          // 底栏藏起后的小唤回钮：尺寸与贴边都收一档，别压住卡片右下角的文字
+          "fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] right-3 z-30 grid h-9 w-9 place-items-center rounded-full bg-primary/90 text-primary-foreground shadow-edge ring-1 ring-primary-foreground/25 backdrop-blur-sm transition-all duration-200 hover:bg-primary md:hidden",
           mobileNavHidden ? "scale-100 opacity-100" : "pointer-events-none scale-75 opacity-0"
         )}
       >

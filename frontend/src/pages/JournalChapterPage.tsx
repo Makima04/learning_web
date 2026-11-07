@@ -7,6 +7,7 @@ import { findModule } from "@/data/kg";
 import { dayKey } from "@/lib/day";
 import { sortDueEntries } from "@/lib/journal";
 import { isKgChapterReviewEntry, moduleIdOfJournalEntry } from "@/lib/kg/journalBridge";
+import { isExamItemId, parseExamItemId } from "@/lib/kg/examJournal";
 import { useHydratedItems } from "@/lib/kg/catalogLoad";
 import { itemById } from "@/lib/kg/wangdao408";
 import { practiceKindLabel, practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
@@ -133,6 +134,47 @@ export function JournalChapterPage() {
                         移出错题集
                       </button>
                     </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+            // 真题错题：不在这里直接给答案，先回练习页重做，再核对解析
+            if (isExamItemId(entry.sourceItemId)) {
+              const pos = parseExamItemId(entry.sourceItemId as string);
+              return (
+                <Card key={entry.id}>
+                  <CardContent className="space-y-3 p-5">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {pos ? `${pos.year} 年真题 · 第 ${pos.n} 题` : "408 真题"}
+                        {" · "}间隔 {entry.step} 天
+                        {entry.lastReviewedOn ? ` · 上次练习 ${entry.lastReviewedOn}` : ""}
+                        {entry.nextReviewOn < today ? " · 逾期" : ""}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold leading-snug">{entry.title}</p>
+                    </div>
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      这道题以真题形式复习：先重做，再回去核对解析；答对会自动推进复习曲线。
+                    </p>
+                    {pos && (
+                      <div className="flex flex-wrap gap-2">
+                        <Button asChild size="sm">
+                          <Link to={`/kg/exams/practice/${pos.year}?q=${pos.n}&mode=practice`}>
+                            重做这道题
+                          </Link>
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/kg/exams/${pos.year}#q${pos.n}`}>看解析</Link>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => archiveEntry(entry.id)}
+                        >
+                          已掌握
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );

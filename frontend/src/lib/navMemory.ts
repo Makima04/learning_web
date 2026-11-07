@@ -23,7 +23,13 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     id: "/kg",
     root: "/kg",
-    match: (p) => p === "/kg" || p.startsWith("/kg/"),
+    // /kg/exams 已升为独立一级入口，不能再抢它的高亮与「上次路径」记忆
+    match: (p) => p === "/kg" || (p.startsWith("/kg/") && !p.startsWith("/kg/exams")),
+  },
+  {
+    id: "/kg/exams",
+    root: "/kg/exams",
+    match: (p) => p === "/kg/exams" || p.startsWith("/kg/exams/"),
   },
   {
     id: "/viz",

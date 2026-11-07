@@ -7,6 +7,14 @@ import { applyItemMark, applyMarkToKp, markCovered } from "@/lib/kg/mark";
 import { findKp } from "@/data/kg";
 import { journalCopyForKp } from "@/lib/kg/journalBridge";
 import { upsertItemNotes } from "@/lib/kg/itemNote";
+import {
+  ATTEMPTS_LIMIT,
+  SESSIONS_LIMIT,
+  dueFor,
+  nextReviewStep,
+  type ExamAttempt,
+  type ExamSession,
+} from "@/lib/kg/examAttempts";
 import type {
   MarkLevel,
   PredictPaper,
@@ -26,12 +34,27 @@ export interface KgDoc {
   /** 题目思路备注（itemId → 文本），与会/模糊/不会独立 */
   itemNotes: Record<string, string>;
   papers: PredictPaper[];
+  /** 408 真题逐题作答记录（随 /api/kg 整包同步） */
+  attempts: ExamAttempt[];
+  /** 收藏的真题 itemId */
+  favorites: string[];
+  /** 练习 / 模考会话，用于复盘 */
+  examSessions: ExamSession[];
   /** 文档版本 ms */
   updatedAt: number;
 }
 
 function emptyDoc(): KgDoc {
-  return { states: {}, itemMarks: [], itemNotes: {}, papers: [], updatedAt: 0 };
+  return {
+    states: {},
+    itemMarks: [],
+    itemNotes: {},
+    papers: [],
+    attempts: [],
+    favorites: [],
+    examSessions: [],
+    updatedAt: 0,
+  };
 }
 
 function toPayload(doc: KgDoc): KgDoc {
@@ -40,6 +63,9 @@ function toPayload(doc: KgDoc): KgDoc {
     itemMarks: doc.itemMarks,
     itemNotes: doc.itemNotes ?? {},
     papers: doc.papers,
+    attempts: doc.attempts ?? [],
+    favorites: doc.favorites ?? [],
+    examSessions: doc.examSessions ?? [],
     updatedAt: doc.updatedAt,
   };
 }
@@ -69,6 +95,9 @@ function loadDoc(): KgDoc {
     itemMarks: raw.itemMarks ?? [],
     itemNotes: raw.itemNotes ?? {},
     papers: raw.papers ?? [],
+    attempts: raw.attempts ?? [],
+    favorites: raw.favorites ?? [],
+    examSessions: raw.examSessions ?? [],
     updatedAt: raw.updatedAt ?? 0,
   };
 }
@@ -103,6 +132,21 @@ interface KgStore extends KgDoc {
     opts?: { dueMs?: number; ivl?: number; now?: number }
   ) => void;
   savePaper: (paper: PredictPaper) => void;
+  /** 408 真题：提交一次作答，自动推进 1/3/7/14 复习队列 */
+  recordAttempt: (args: {
+    itemId: string;
+    year: number;
+    n: number;
+    kind: "mcq" | "big";
+    book: string;
+    chosen?: string;
+    outcome: ExamAttempt["outcome"];
+    sessionId?: string;
+    now?: number;
+  }) => void;
+  toggleFavorite: (itemId: string) => void;
+  saveExamSession: (session: ExamSession) => void;
+  finishExamSession: (id: string, durationMs: number, now?: number) => void;
   syncFromServer: () => Promise<void>;
   replaceAll: (doc: KgDoc) => void;
   clearAll: () => void;
@@ -215,6 +259,63 @@ export const useKgProgress = create<KgStore>((set, get) => ({
     set(doc);
   },
 
+  recordAttempt: (args) => {
+    const now = args.now ?? Date.now();
+    const prev = get()
+      .attempts.filter((a) => a.itemId === args.itemId)
+      .at(-1);
+    const reviewStep = nextReviewStep(prev?.reviewStep, args.outcome);
+    const record: ExamAttempt = {
+      itemId: args.itemId,
+      year: args.year,
+      n: args.n,
+      kind: args.kind,
+      book: args.book,
+      chosen: args.chosen,
+      outcome: args.outcome,
+      sessionId: args.sessionId,
+      reviewStep,
+      dueMs: dueFor(now, reviewStep),
+      ts: now,
+    };
+    const attempts = [...get().attempts, record].slice(-ATTEMPTS_LIMIT);
+    const doc: KgDoc = { ...get(), attempts, updatedAt: now };
+    persist(doc);
+    set(doc);
+  },
+
+  toggleFavorite: (itemId) => {
+    const cur = get().favorites ?? [];
+    const favorites = cur.includes(itemId)
+      ? cur.filter((x) => x !== itemId)
+      : [...cur, itemId];
+    const now = Date.now();
+    const doc: KgDoc = { ...get(), favorites, updatedAt: now };
+    persist(doc);
+    set(doc);
+  },
+
+  saveExamSession: (session) => {
+    const examSessions = [
+      session,
+      ...get().examSessions.filter((s) => s.id !== session.id),
+    ].slice(0, SESSIONS_LIMIT);
+    const now = Date.now();
+    const doc: KgDoc = { ...get(), examSessions, updatedAt: now };
+    persist(doc);
+    set(doc);
+  },
+
+  finishExamSession: (id, durationMs, now) => {
+    const t = now ?? Date.now();
+    const examSessions = get().examSessions.map((s) =>
+      s.id === id ? { ...s, finishedAt: t, durationMs } : s
+    );
+    const doc: KgDoc = { ...get(), examSessions, updatedAt: t };
+    persist(doc);
+    set(doc);
+  },
+
   syncFromServer: async () => {
     if (!api.isLoggedIn()) return;
     const epoch = getScopeEpoch();
@@ -238,6 +339,9 @@ export const useKgProgress = create<KgStore>((set, get) => ({
           itemMarks: remote.itemMarks ?? [],
           itemNotes: remote.itemNotes ?? {},
           papers: remote.papers ?? [],
+          attempts: remote.attempts ?? [],
+          favorites: remote.favorites ?? [],
+          examSessions: remote.examSessions ?? [],
           updatedAt: remote.updatedAt ?? 0,
         };
         saveJSON(storageKey(), doc);
