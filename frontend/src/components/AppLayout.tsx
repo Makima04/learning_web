@@ -22,7 +22,7 @@ import {
   Sun,
   UserRound,
 } from "lucide-react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { useTheme } from "@/stores/theme";
 import { useAuth } from "@/stores/auth";
 import { useSettings } from "@/stores/settings";
@@ -133,6 +133,32 @@ export function AppLayout() {
     rememberNavPath(location.pathname, location.search);
     setMemTick((n) => n + 1);
   }, [location.pathname, location.search]);
+
+  // 换页复位滚动位置：文档是滚动容器（侧栏/顶栏走 sticky），SPA 换路由不会自动回顶，
+  // 从长列表点进详情会落在半截。带 hash 时改为定位锚点（如 #q1），
+  // 目标可能在路由切换后才渲染，短暂轮询等它出现。
+  // 浏览器前进/后退（POP）不强制回顶，交给浏览器恢复原位置。
+  const navigationType = useNavigationType();
+  useEffect(() => {
+    const hash = location.hash.replace(/^#/, "");
+    if (!hash) {
+      if (navigationType !== "POP") window.scrollTo(0, 0);
+      return;
+    }
+    const id = decodeURIComponent(hash);
+    let tries = 0;
+    let timer = 0;
+    const locate = () => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ block: "start" });
+        return;
+      }
+      if (tries++ < 40) timer = window.setTimeout(locate, 50);
+    };
+    timer = window.setTimeout(locate, 0);
+    return () => window.clearTimeout(timer);
+  }, [location.pathname, location.search, location.hash, navigationType]);
 
   // memTick：确保记忆更新后重新计算 href
   void memTick;
@@ -256,13 +282,9 @@ export function AppLayout() {
           </div>
         </header>
 
-        {/* 手机底栏是 fixed 的，内容区要给底部让位，否则滚到底最后一行会被压住 */}
-        <main
-          className={cn(
-            "min-h-0 flex-1 overflow-auto transition-[padding] duration-200 md:pb-0",
-            mobileNavHidden ? "pb-4" : "pb-[calc(7.5rem+env(safe-area-inset-bottom))]"
-          )}
-        >
+        {/* 底栏让位由父容器的 --nav-reserve 负责（116px ≥ 实测底栏 114px），
+            这里只补一点呼吸间距，别再叠一层底栏高度 */}
+        <main className="min-h-0 flex-1 overflow-auto pb-4 md:pb-0">
           <Outlet />
         </main>
       </div>
