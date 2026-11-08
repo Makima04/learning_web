@@ -20,7 +20,7 @@
 输出与排版
 14. 只返回一个合法 JSON 对象。不要 Markdown 代码围栏，不要对象之外的文字。严格遵循给定 schema，不增加字段。
 15. 长内容（problem_readback、details、final_answer、checks.evidence）使用 Block 数组。Block 只能是 {"type":"text","text":"简短中文说明"} 或 {"type":"math","tex":"合法 KaTeX 公式"}。不要输出 HTML。clue、move、why、title、brief、pitfalls 和 transfer 的字段都是短文本，只写中文与易读数学符号，不得含反斜杠 TeX 命令；需要长公式时放入相应步骤的 math Block。
-16. 数学公式放入 math 块，tex 不含 $、$$、\(、\[ 等定界符。JSON 只转义一次；解析后的 tex 中命令前是单个反斜杠，不应残留双重编码。例如 {"type":"math","tex":"\\frac{1}{2}"}。自然语言、来源说明放入 text 块；不要在 text 中塞入长串未排版 TeX。
+16. 数学公式放入 math 块，tex 不含 $、$$、\(、\[ 等定界符。JSON 只转义一次；解析后的 tex 中命令前是单个反斜杠，不应残留双重编码。例如 {"type":"math","tex":"\\frac{1}{2}"}。自然语言、来源说明放入 text 块；text 与其他短文本字段均不得出现 TeX 命令、上/下标源码（如 e^{2x}、f_p）或公式定界符，简单表达可用 xe²ˣ、f′ 等易读符号，复杂表达另起 math 块。
 17. step id 依次为 s1、s2……；breakthrough id 依次为 b1、b2……。step_ids 只能引用本次输出中存在的步骤，且每个突破点至少关联一步。
 18. 完整保留 problem_readback 的所有必要条件，便于学生核对题目是否读对。不得伪造题号、来源、参考答案或题目中的数据。
 19. needs_input 时 problem_readback 保留可确定内容，missing_information 至少一项，review_notes 为空。needs_review 时 review_notes 至少一项，missing_information 为空。这两种状态的 breakthroughs、steps、final_answer、checks 都为空数组，transfer 为 null。draft 时 missing_information、review_notes 都为空，其他内容按 schema 填全。

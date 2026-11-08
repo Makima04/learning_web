@@ -145,7 +145,7 @@
         "details": [
           {
             "type": "text",
-            "text": "非齐次项为 x e^{2x}，指数 2 是特征单根，故设"
+            "text": "非齐次项为 xe²ˣ，指数 2 是特征单根，故设"
           },
           {
             "type": "math",
@@ -161,7 +161,7 @@
           },
           {
             "type": "text",
-            "text": "它与 x e^{2x} 比较系数："
+            "text": "它与 xe²ˣ 比较系数："
           },
           {
             "type": "math",
@@ -263,7 +263,7 @@
         "evidence": [
           {
             "type": "text",
-            "text": "由最终 f 整理得 f''−5f'+6f=x e^{2x}，即 f''−5f'=x e^{2x}−6f，于是"
+            "text": "由最终 f 整理得 f″−5f′+6f=xe²ˣ，即 f″−5f′=xe²ˣ−6f，于是"
           },
           {
             "type": "math",
