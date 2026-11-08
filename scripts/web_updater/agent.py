@@ -18,13 +18,91 @@ import threading
 import time
 import urllib.parse
 import urllib.error
+import urllib.request
 
 LOG = logging.getLogger("english-web-updater")
 REVISION = "org.opencontainers.image.revision"
+MANIFEST_TYPES = ", ".join([
+    "application/vnd.oci.image.index.v1+json", "application/vnd.oci.image.manifest.v1+json",
+    "application/vnd.docker.distribution.manifest.list.v2+json",
+    "application/vnd.docker.distribution.manifest.v2+json",
+])
 
 
 class UpdateRejected(RuntimeError):
     """可直接向管理员展示的固定文案，不包含子进程输出或凭据。"""
+
+
+class Registry:
+    """只读取公开仓库的 manifest 和 config，不下载镜像层，也不依赖 Buildx。"""
+
+    def __init__(self, repository):
+        host, name = repository.split("/", 1)
+        self.base = f"https://{host}/v2/{name}"
+        self.token = None
+
+    def get(self, path, digest=None):
+        headers = {"Accept": MANIFEST_TYPES}
+        if self.token:
+            headers["Authorization"] = "Bearer " + self.token
+        request = urllib.request.Request(self.base + path, headers=headers)
+        try:
+            response = urllib.request.urlopen(request, timeout=30)
+        except urllib.error.HTTPError as error:
+            challenge = error.headers.get("WWW-Authenticate", "")
+            error.close()
+            if error.code != 401 or self.token or not challenge.lower().startswith("bearer "):
+                raise
+            fields = urllib.request.parse_keqv_list(urllib.request.parse_http_list(challenge[7:]))
+            realm = fields.get("realm", "")
+            if urllib.parse.urlsplit(realm).scheme != "https":
+                raise RuntimeError("镜像仓库认证地址不合法") from error
+            query = urllib.parse.urlencode({key: fields[key] for key in ("service", "scope") if key in fields})
+            with urllib.request.urlopen(realm + ("&" if "?" in realm else "?") + query, timeout=30) as auth:
+                credentials = json.loads(auth.read(1024 * 1024))
+            self.token = credentials.get("token") or credentials.get("access_token")
+            if not self.token:
+                raise RuntimeError("镜像仓库未返回访问令牌") from error
+            return self.get(path, digest)
+        with response:
+            # config 通常只有数 KB；限制元数据大小，避免误下载镜像层。
+            raw = response.read(4 * 1024 * 1024 + 1)
+        if len(raw) > 4 * 1024 * 1024:
+            raise RuntimeError("镜像元数据过大")
+        actual = "sha256:" + hashlib.sha256(raw).hexdigest()
+        if digest and actual != digest:
+            raise RuntimeError("云端镜像元数据摘要不匹配")
+        return json.loads(raw), actual
+
+    @staticmethod
+    def digest(descriptor):
+        digest = descriptor.get("digest", "")
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+            raise RuntimeError("云端镜像摘要不合法")
+        return digest
+
+    def image(self, channel, current):
+        manifest, digest = self.get("/manifests/" + channel)
+        if "manifests" in manifest:
+            matches = []
+            for item in manifest["manifests"]:
+                platform = item.get("platform", {})
+                if platform.get("os") != "linux" or platform.get("architecture") != current["Architecture"]:
+                    continue
+                # arm64 无 Variant 时等价于 v8；有多个变种时不能随意选择。
+                variant = current.get("Variant") or ("v8" if current["Architecture"] == "arm64" else "")
+                if platform.get("variant", variant) == variant:
+                    matches.append(item)
+            if len(matches) != 1:
+                raise UpdateRejected("发布镜像未包含唯一匹配的服务器架构")
+            digest = self.digest(matches[0])
+            manifest, _ = self.get("/manifests/" + digest, digest)
+        config_digest = self.digest(manifest["config"])
+        config, _ = self.get("/blobs/" + config_digest, config_digest)
+        if config.get("architecture") != current["Architecture"] or config.get("os") != "linux":
+            raise RuntimeError("候选镜像架构不匹配")
+        return dict(digest=digest, image_id=config_digest,
+                    version=(config.get("config", {}).get("Labels") or {}).get(REVISION, ""))
 
 
 def atomic_json(path, value, mode=0o600):
@@ -177,26 +255,21 @@ class Updater:
         return json.loads(run(["docker", "image", "inspect", reference]))[0]
 
     def check(self):
-        self.phase("download", "正在检查并下载已发布镜像，首次检查可能需要几分钟")
+        self.phase("check", "正在读取云端版本信息并比较当前版本")
+        with self.lock:
+            self.state["available"] = None
+            self.save()
         c = self.config
-        reference = c["repository"] + ":" + c["channel"]
-        try:
-            run(["docker", "pull", "--quiet", reference], timeout=1800)
-        except (subprocess.SubprocessError, OSError) as error:
-            raise UpdateRejected("无法拉取发布镜像，请检查服务器网络与镜像仓库登录状态") from error
-        image = self.inspect_image(reference)
         current = self.inspect_image(self.context()["app"]["Image"])
-        version = image["Config"].get("Labels", {}).get(REVISION, "")
+        try:
+            image = Registry(c["repository"]).image(c["channel"], current)
+        except (OSError, ValueError, KeyError) as error:
+            raise UpdateRejected("无法读取云端版本信息，请检查服务器网络与公开镜像仓库状态") from error
+        version = image["version"]
         if not re.fullmatch(r"[A-Za-z0-9._-]{1,128}", version) or version == "dev":
             raise UpdateRejected("已发布镜像尚未支持网页更新，请先发布包含更新功能的新镜像")
-        if image["Architecture"] != current["Architecture"] or image["Os"] != "linux":
-            raise RuntimeError("候选镜像架构不匹配")
-        prefix = c["repository"] + "@sha256:"
-        pinned = next((ref for ref in image.get("RepoDigests", []) if ref.startswith(prefix)), None)
-        if not pinned or not re.fullmatch(r"sha256:[0-9a-f]{64}", pinned.split("@", 1)[1]):
-            raise RuntimeError("无法固定候选镜像摘要")
-        available = dict(version=version, digest=pinned.split("@", 1)[1], image=pinned,
-                         image_id=image["Id"], update_available=image["Id"] != current["Id"],
+        available = dict(image, image=c["repository"] + "@" + image["digest"],
+                         update_available=image["image_id"] != current["Id"],
                          checked_at=dt.datetime.now(dt.timezone.utc).isoformat())
         with self.lock:
             self.state["available"] = available
@@ -338,8 +411,14 @@ class Updater:
 
     def install(self, candidate):
         h, c = self.helper, self.config
+        self.phase("download", "正在下载已确认版本的镜像")
+        try:
+            run(["docker", "pull", "--quiet", candidate["image"]], timeout=1800)
+        except (subprocess.SubprocessError, OSError) as error:
+            raise UpdateRejected("无法下载发布镜像，请检查服务器网络与镜像仓库登录状态") from error
         image = self.inspect_image(candidate["image"])
-        if image["Id"] != candidate["image_id"]:
+        if (image["Id"] != candidate["image_id"] or
+                (image["Config"].get("Labels") or {}).get(REVISION) != candidate["version"]):
             raise RuntimeError("镜像摘要检查失败")
         ctx = self.context()
         if ctx["app"]["Image"] == image["Id"]:

@@ -35,8 +35,18 @@ python3 /Users/makima/program/web/english_web/scripts/setup-production-web-updat
 若 `manifest` job 失败而两个 per-arch 镜像已推成功，可在 Actions 页面 Re-run failed jobs，或本机只做合成（`docker buildx imagetools create`），无需重新构建。
 
 镜像必须包含 `org.opencontainers.image.revision` 标签，值与 Rust 编译版本、前端版本一致；Dockerfile 已设置。
-安装固定到检查时的仓库摘要，即使后续 `latest` 改变，也不会偷偷安装另一版。
-检查阶段会提前下载镜像，首次检查可能较慢。只有镜像 ID 与运行版本不同才显示更新按钮。
+检查阶段通过 Registry API 只读取公开仓库的镜像清单与配置，获取服务器对应架构的摘要和版本标签，
+不下载镜像层。只有云端配置摘要（镜像 ID）与当前运行镜像不同才显示更新按钮。
+点击安装后才下载镜像，固定到检查时选定架构的 manifest 摘要，即使后续 `latest` 改变，
+也不会安装另一版。下载后再次校验镜像 ID 与版本标签，通过后才开始备份、预检和切换。
+检查需要仓库支持公开读取（当前 GHCR 仓库为公开）；认证使用仓库返回的匿名 Bearer token。
+
+### 已安装主机服务的更新
+
+本次检查逻辑在主机的 `agent.py` 中，单独发布或安装应用镜像不会更新它。
+将新版 `scripts/web_updater/agent.py` 上传到主机后，在没有检查、安装或恢复任务运行时，
+由 root 备份并替换 `/opt/english-web-updater/agent.py`（权限保持 `0600`），
+再执行 `systemctl restart english-web-updater.service`。无需重新构建镜像或迁移数据库。
 
 ## 更新事务
 
