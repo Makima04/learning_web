@@ -4,7 +4,7 @@ import { prefetchQuestionMedia } from "@/lib/kg/catalogLoad";
 import { canRevealAnswer } from "@/lib/kg/explain";
 import type { MarkLevel } from "@/lib/kg/types";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
-import { practiceBandLabel, practiceKindLabel, practiceSourceLabel } from "@/lib/kg/mathPractice";
+import { mathBookLabel, practiceBandLabel, practiceKindLabel } from "@/lib/kg/mathPractice";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ItemNoteField } from "@/pages/itemNoteField";
@@ -146,6 +146,10 @@ export function PracticeQuestionCard({
   }, [canReveal, item.id]);
 
   const kind = practiceKindLabel(item.kind);
+  const source = item.source === "lilin880" || item.source === "zhangyu1000"
+    ? mathBookLabel(item.source)
+    : "王道";
+  const part = item.part === "base" ? "基础" : item.part === "hard" ? "强化" : "";
   return (
     <Card
       className={cn(canReveal && !showAns && "cursor-pointer", large && "ring-1 ring-border/60")}
@@ -156,17 +160,27 @@ export function PracticeQuestionCard({
     >
       <CardContent className={cn("space-y-4", large ? "p-6 md:p-7" : "p-5")}>
         <div className="flex items-start justify-between gap-3">
-          {/* 大屏作答台的表头已经显示题号与出处，这里不再重复 */}
-          {!large && (
-            <p className="min-w-0 flex-1 text-xs text-muted-foreground">
-              {index + 1} / {total} · {practiceSourceLabel(item)}
-              {practiceBandLabel(item) ? ` · ${practiceBandLabel(item)}` : ""} · {kind} · §
-              {`${item.section} #${item.qno}`}
-              {item.pdf_page ? ` · 做题本 p.${item.pdf_page}` : ""}
-              {item.book_ans_page != null ? ` · 原书【P${item.book_ans_page}】` : ""}
-              {item.year ? ` · ${item.year}真题` : ""}
-            </p>
-          )}
+          <div className="min-w-0 flex-1">
+            {/* 出处和阶段贴近题面，大屏作答时也能直接辨认。 */}
+            <div className="flex flex-wrap items-center gap-2 text-sm font-bold" aria-label="题目来源与阶段">
+              <span className="rounded-md bg-primary/10 px-2.5 py-1 text-primary">{source}</span>
+              {part && <span className={cn(
+                "rounded-md px-2.5 py-1",
+                item.part === "hard" ? "bg-warning/15 text-ink-warning" : "bg-primary/10 text-primary"
+              )}>{part}</span>}
+            </div>
+            {/* 大屏作答台表头已显示题号，卡片内只保留醒目的来源与阶段。 */}
+            {!large && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {index + 1} / {total}
+                {practiceBandLabel(item) ? ` · ${practiceBandLabel(item)}` : ""} · {kind} · §
+                {`${item.section} #${item.qno}`}
+                {item.pdf_page ? ` · 做题本 p.${item.pdf_page}` : ""}
+                {item.book_ans_page != null ? ` · 原书【P${item.book_ans_page}】` : ""}
+                {item.year ? ` · ${item.year}真题` : ""}
+              </p>
+            )}
+          </div>
           <button
             type="button"
             className={cn("shrink-0 text-xs text-muted-foreground hover:underline", large && "ml-auto")}
