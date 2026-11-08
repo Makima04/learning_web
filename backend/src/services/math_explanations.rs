@@ -6,7 +6,7 @@ use crate::{
     state::AppState,
 };
 use base64::Engine;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::PgPool;
 use std::{path::Path, time::Duration};
@@ -84,6 +84,105 @@ struct Solution {
     final_answer_tex: String,
     source_checks: Vec<SourceCheck>,
     issues: Vec<String>,
+}
+
+#[derive(Debug)]
+struct GenerationFailure {
+    stage: &'static str,
+    reason: &'static str,
+    http_status: Option<u16>,
+}
+impl GenerationFailure {
+    fn new(stage: &'static str, reason: &'static str) -> Self {
+        Self {
+            stage,
+            reason,
+            http_status: None,
+        }
+    }
+    fn message(&self) -> String {
+        let stage = if self.stage == "formatting" {
+            "解析整理"
+        } else {
+            "题图解答"
+        };
+        match (self.reason, self.http_status) {
+            ("request", Some(code)) => format!("{stage}阶段的模型网关请求失败（HTTP {code}），请稍后重试；若持续失败，请管理员检查模型配置。"),
+            ("request", None) => format!("{stage}阶段的模型请求超时或网络中断，自动重试后仍未完成，请稍后再试。"),
+            ("json", _) => format!("{stage}阶段的模型连续两次未返回有效 JSON，当前结果未发布，请重试生成。"),
+            ("schema", _) => format!("{stage}阶段的模型连续两次返回了不合格的解析结构，当前结果未发布，请重试生成。"),
+            ("storage", _) => "解析结果暂未保存成功，请稍后重试生成。".into(),
+            _ => "题目或模型配置已更新，或题图暂不可用，请刷新后重新生成。".into(),
+        }
+    }
+}
+
+/// 只兼容包裹整个 JSON 的单个围栏，不截取夹在说明文字中的对象，也不修补公式或数学内容。
+fn parse_reply<T: DeserializeOwned>(
+    raw: &str,
+    valid: fn(&T) -> bool,
+) -> Result<(T, Value), &'static str> {
+    let raw = raw.trim().trim_start_matches('\u{feff}');
+    let raw = if let Some(rest) = raw
+        .strip_prefix("```json\n")
+        .or_else(|| raw.strip_prefix("```\n"))
+    {
+        rest.strip_suffix("```").ok_or("json")?.trim()
+    } else {
+        raw
+    };
+    let value: Value = serde_json::from_str(raw).map_err(|_| "json")?;
+    let parsed: T = serde_json::from_value(value.clone()).map_err(|_| "schema")?;
+    if !valid(&parsed) {
+        return Err("schema");
+    }
+    Ok((parsed, value))
+}
+
+async fn structured_reply<T: DeserializeOwned>(
+    state: &AppState,
+    job: &Job,
+    conf: &Config,
+    stage: &'static str,
+    system: &str,
+    mut user: Value,
+    valid: fn(&T) -> bool,
+) -> Result<(T, Value, String), GenerationFailure> {
+    // 每阶段至多两次；教学阶段纠正格式时复用同一份解题稿，不重做解题或无限循环。
+    for attempt in 0..2 {
+        let issue = match llm::chat_reply(&state.http, conf, &job.model, system, user.clone()).await
+        {
+            Ok((raw, model)) => match parse_reply(&raw, valid) {
+                Ok((parsed, value)) => return Ok((parsed, value, model)),
+                Err(reason) => GenerationFailure::new(stage, reason),
+            },
+            Err(error) => {
+                let status = error
+                    .to_string()
+                    .strip_prefix("model HTTP ")
+                    .and_then(|s| s.parse::<u16>().ok());
+                let issue = GenerationFailure {
+                    stage,
+                    reason: "request",
+                    http_status: status,
+                };
+                if status.is_some_and(|s| !matches!(s, 429 | 500 | 502 | 503 | 504)) {
+                    return Err(issue);
+                }
+                issue
+            }
+        };
+        tracing::warn!(item_id=%job.item_id, stage, reason=issue.reason, http_status=?issue.http_status, attempt=attempt+1, "math explanation stage failed");
+        if attempt == 1 {
+            return Err(issue);
+        }
+        if issue.reason == "request" {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        } else if let Some(blocks) = user.as_array_mut() {
+            blocks.push(json!({"type":"text","text":"上一次回复未通过 JSON 或结构校验。请重新核对 system 的固定字段和给定 schema，只输出一个完整 JSON 对象；不加代码围栏、额外字段或说明文字。保留原题全部分问，步骤与突破点编号、引用、字段类型、数组数量和长度均须符合要求。不要更换题目，不省略必要字段。"}));
+        }
+    }
+    unreachable!()
 }
 
 fn text(s: &str, max: usize) -> bool {
@@ -320,7 +419,7 @@ pub async fn enqueue(
     }
     let key = cache_key(&q, &model, &conf);
     ensure_seed(&state.pool, &q, &key, &model).await?;
-    sqlx::query("INSERT INTO math_explanations(cache_key,item_id,source_hash,prompt_version,model,status,requested_by) VALUES($1,$2,$3,$4,$5,'queued',$6) ON CONFLICT(cache_key) DO UPDATE SET status='queued',phase='queued',message='',attempts=0,updated_at=NOW() WHERE (math_explanations.status IN ('error','needs_input','needs_review') OR ($7 AND math_explanations.status='ready' AND math_explanations.review_status='model_draft')) AND math_explanations.updated_at<NOW()-INTERVAL '15 seconds'")
+    sqlx::query("INSERT INTO math_explanations(cache_key,item_id,source_hash,prompt_version,model,status,requested_by) VALUES($1,$2,$3,$4,$5,'queued',$6) ON CONFLICT(cache_key) DO UPDATE SET status='queued',phase='queued',message='',attempts=0,solution=NULL,explanation=NULL,returned_models='[]',updated_at=NOW() WHERE (math_explanations.status IN ('error','needs_input','needs_review') OR ($7 AND math_explanations.status='ready' AND math_explanations.review_status='model_draft')) AND math_explanations.updated_at<NOW()-INTERVAL '15 seconds'")
         .bind(&key).bind(id).bind(&q.source_hash).bind(prompt_version()).bind(&model).bind(user_id).bind(regenerate).execute(&state.pool).await?;
     response(&state.pool, &q, &key, &model, true).await
 }
@@ -421,24 +520,19 @@ pub fn start_worker(state: AppState) {
         }
     });
 }
-async fn phase(state: &AppState, job: &Job, name: &str) -> AppResult<()> {
-    sqlx::query("UPDATE math_explanations SET phase=$3,updated_at=NOW() WHERE cache_key=$1 AND attempt_id=$2 AND status='processing'")
-        .bind(&job.cache_key).bind(&job.attempt_id).bind(name).execute(&state.pool).await?;
-    Ok(())
-}
 async fn run_leased(state: AppState, job: Job) {
     let work = generate(&state, &job);
     tokio::pin!(work);
     loop {
         tokio::select! {
             result=&mut work=>{
-                let (status,data,message,models,solution)=match result {
-                    Ok((data,models,solution))=>if data.status=="draft" {("ready",Some(data),String::new(),models,Some(solution))}
-                        else {let status=if data.status=="needs_input"{"needs_input"}else{"needs_review"};let msg=data.missing_information.iter().chain(data.review_notes.iter()).cloned().collect::<Vec<_>>().join("；");(status,None,msg,models,Some(solution))},
-                    Err(_)=>{tracing::warn!(item_id=%job.item_id,"math explanation generation failed validation or request");("error",None,"生成未完成，当前模型可能未能读取题图或返回合格解析；请稍后重试或检查模型配置。".into(),json!([]),None)}
+                let (status,data,message,models,solution,finish_phase)=match result {
+                    Ok((data,models,solution))=>if data.status=="draft" {("ready",Some(data),String::new(),models,Some(solution),"complete")}
+                        else {let status=if data.status=="needs_input"{"needs_input"}else{"needs_review"};let msg=data.missing_information.iter().chain(data.review_notes.iter()).cloned().collect::<Vec<_>>().join("；");(status,None,msg,models,Some(solution),"complete")},
+                    Err(issue)=>{tracing::warn!(item_id=%job.item_id,stage=issue.stage,reason=issue.reason,http_status=?issue.http_status,"math explanation generation failed");let message=issue.message();("error",None,message,json!([]),None,issue.stage)}
                 };
-                let _=sqlx::query("UPDATE math_explanations SET status=$3,phase='complete',explanation=$4,message=$5,returned_models=$6,solution=$7,lease_until=NULL,attempt_id=NULL,updated_at=NOW() WHERE cache_key=$1 AND attempt_id=$2 AND status='processing'")
-                    .bind(&job.cache_key).bind(&job.attempt_id).bind(status).bind(data.map(|d|serde_json::to_value(d).unwrap())).bind(message).bind(models).bind(solution).execute(&state.pool).await;
+                let _=sqlx::query("UPDATE math_explanations SET status=$3,phase=$8,explanation=$4,message=$5,returned_models=CASE WHEN $6='[]'::jsonb THEN returned_models ELSE $6 END,solution=COALESCE($7,solution),lease_until=NULL,attempt_id=NULL,updated_at=NOW() WHERE cache_key=$1 AND attempt_id=$2 AND status='processing'")
+                    .bind(&job.cache_key).bind(&job.attempt_id).bind(status).bind(data.map(|d|serde_json::to_value(d).unwrap())).bind(message).bind(models).bind(solution).bind(finish_phase).execute(&state.pool).await;
                 return;
             },
             _=tokio::time::sleep(Duration::from_secs(15))=>{
@@ -468,26 +562,26 @@ fn unresolved(status: String, readback: String, issues: Vec<String>) -> Explanat
         transfer: None,
     }
 }
-async fn generate(state: &AppState, job: &Job) -> AppResult<(Explanation, Value, Value)> {
-    let q = question(&state.config.static_dir, &job.item_id).await?;
+async fn generate(
+    state: &AppState,
+    job: &Job,
+) -> Result<(Explanation, Value, Value), GenerationFailure> {
+    let q = question(&state.config.static_dir, &job.item_id)
+        .await
+        .map_err(|_| GenerationFailure::new("solving", "source"))?;
     let conf = state.llm_config().await;
     let current = llm::active_model(&state.pool, &state.config.llm_model).await;
     if q.source_hash != job.source_hash
         || current != job.model
         || cache_key(&q, &current, &conf) != job.cache_key
     {
-        return Err(AppError::BadRequest("题目或模型配置已更新".into()));
+        return Err(GenerationFailure::new("solving", "source"));
     }
     let input = json!({"task":"请以附图为原题完成解答与原条件核对，只输出指定 JSON；不要使用不可靠的 OCR 文本。","problem":{"item_id":job.item_id,"kind":q.item["kind"],"stem_text":"原题见附图，请完整读取全部分问和数学符号。"}});
     let image = base64::engine::general_purpose::STANDARD.encode(&q.image);
-    let (raw,first_model)=llm::chat_reply(&state.http,&conf,&job.model,SOLVE,json!([
+    let (solved,solution,first_model)=structured_reply(state,job,&conf,"solving",SOLVE,json!([
         {"type":"text","text":input.to_string()},{"type":"image_url","image_url":{"url":format!("data:{};base64,{image}",q.mime)}}
-    ])).await.map_err(AppError::Internal)?;
-    let solved: Solution = serde_json::from_str(&raw).map_err(|e| AppError::Internal(e.into()))?;
-    if !solved.valid() {
-        return Err(AppError::BadRequest("解题稿格式不合格".into()));
-    }
-    let solution: Value = serde_json::from_str(&raw).unwrap();
+    ]),Solution::valid).await?;
     if solved.status != "solved" {
         return Ok((
             unresolved(solved.status, solved.problem_readback, solved.issues),
@@ -496,16 +590,12 @@ async fn generate(state: &AppState, job: &Job) -> AppResult<(Explanation, Value,
         ));
     }
     // 教学阶段同时保留原图，防止把第一阶段读错的题目反过来当成原题。
-    phase(state, job, "formatting").await?;
+    sqlx::query("UPDATE math_explanations SET phase='formatting',solution=$3,returned_models=$4,updated_at=NOW() WHERE cache_key=$1 AND attempt_id=$2 AND status='processing'")
+        .bind(&job.cache_key).bind(&job.attempt_id).bind(&solution).bind(json!([first_model])).execute(&state.pool).await.map_err(|_| GenerationFailure::new("formatting", "storage"))?;
     let teaching = json!({"task":"依据原题和先行解题稿组织分层教学解析。校对后输出符合 schema 的 JSON。","problem":{"item_id":job.item_id,"stem_text":solved.problem_readback},"source_solution":solution,"output_schema":serde_json::from_str::<Value>(SCHEMA).unwrap()});
-    let (raw,second_model)=llm::chat_reply(&state.http,&conf,&job.model,TEACH,json!([
+    let (explanation,_,second_model)=structured_reply(state,job,&conf,"formatting",TEACH,json!([
         {"type":"text","text":teaching.to_string()},{"type":"image_url","image_url":{"url":format!("data:{};base64,{image}",q.mime)}}
-    ])).await.map_err(AppError::Internal)?;
-    let explanation: Explanation =
-        serde_json::from_str(&raw).map_err(|e| AppError::Internal(e.into()))?;
-    if !explanation.validate() {
-        return Err(AppError::BadRequest("教学解析结构不合格".into()));
-    }
+    ]),Explanation::validate).await?;
     Ok((explanation, json!([first_model, second_model]), solution))
 }
 
@@ -627,10 +717,7 @@ mod tests {
         std::fs::remove_dir_all(root).unwrap();
     }
 
-    #[sqlx::test(migrations = "./migrations")]
-    async fn generation_uses_configured_model_and_images_without_promoting_model_checks(
-        pool: PgPool,
-    ) {
+    async fn run_network_fixture(pool: PgPool, outputs: Vec<String>) -> (Value, Option<Value>) {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
         let root = std::env::temp_dir().join(format!(
             "math-network-test-{}",
@@ -642,8 +729,6 @@ mod tests {
         std::fs::write(root.join("math/lilin880/index.json"),json!({"items":[{"id":"ll-network-test","source":"lilin880","kind":"big","img":"/math/img/test/q.jpg"}]}).to_string()).unwrap();
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let url = format!("http://{}", listener.local_addr().unwrap());
-        let seed: Value = serde_json::from_str(SEED).unwrap();
-        let outputs=[json!({"status":"solved","problem_readback":"题图中的题目","derivation":["可核对的推导"],"final_answer_tex":"1","source_checks":[{"original_condition":"原条件","substitution":"具体代入","result":"成立"}],"issues":[]}).to_string(),seed["explanation"].to_string()];
         let server = tokio::spawn(async move {
             for output in outputs {
                 let (mut stream, _) = listener.accept().await.unwrap();
@@ -701,12 +786,71 @@ mod tests {
         run_leased(state.clone(), job).await;
         server.await.unwrap();
         let result = get(&state, "ll-network-test").await.unwrap();
+        let partial = sqlx::query_scalar::<_, Option<Value>>(
+            "SELECT solution FROM math_explanations WHERE item_id='ll-network-test'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+        (result, partial)
+    }
+    fn solution_fixture() -> String {
+        json!({"status":"solved","problem_readback":"题图中的题目","derivation":["可核对的推导"],"final_answer_tex":"1","source_checks":[{"original_condition":"原条件","substitution":"具体代入","result":"成立"}],"issues":[]}).to_string()
+    }
+    #[test]
+    fn only_accepts_a_complete_json_or_its_single_fence() {
+        let good = solution_fixture();
+        assert!(parse_reply(&good, Solution::valid).is_ok());
+        assert!(parse_reply(&format!("```json\n{good}\n```"), Solution::valid).is_ok());
+        assert!(parse_reply(&format!("```\n{good}\n```"), Solution::valid).is_ok());
+        assert!(parse_reply(&format!("说明\n{good}"), Solution::valid).is_err());
+        assert!(parse_reply(&format!("```json\n{good}\n```\n附言"), Solution::valid).is_err());
+        assert!(parse_reply::<Solution>("{}", Solution::valid).is_err());
+    }
+    #[sqlx::test(migrations = "./migrations")]
+    async fn generation_retries_each_stage_without_promoting_model_checks(pool: PgPool) {
+        let seed: Value = serde_json::from_str(SEED).unwrap();
+        let mut invalid = seed["explanation"].clone();
+        invalid["breakthroughs"][0]["step_ids"] = json!(["s99"]);
+        let (result, partial) = run_network_fixture(
+            pool,
+            vec![
+                "not JSON".into(),
+                solution_fixture(),
+                invalid.to_string(),
+                seed["explanation"].to_string(),
+            ],
+        )
+        .await;
         assert_eq!(result["status"], "ready");
         assert_eq!(result["review_status"], "model_draft");
+        assert!(partial.is_some());
         assert_eq!(
             result["returned_models"],
             json!(["returned-test-model", "returned-test-model"])
         );
-        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[sqlx::test(migrations = "./migrations")]
+    async fn failed_teaching_keeps_solution_and_reports_safe_stage_error(pool: PgPool) {
+        let (result, partial) = run_network_fixture(
+            pool,
+            vec![
+                solution_fixture(),
+                "secret-provider-body".into(),
+                "{}".into(),
+            ],
+        )
+        .await;
+        assert_eq!(result["status"], "error");
+        assert_eq!(result["phase"], "formatting");
+        assert!(result["explanation"].is_null());
+        assert_eq!(partial.unwrap()["final_answer_tex"], "1");
+        assert_eq!(result["returned_models"], json!(["returned-test-model"]));
+        assert!(result["message"].as_str().unwrap().contains("解析整理"));
+        assert!(!result["message"]
+            .as_str()
+            .unwrap()
+            .contains("secret-provider-body"));
     }
 }
