@@ -25,6 +25,8 @@ export function completeStudy(previous: Card, firstPass: boolean, maxIvl: number
     card.ivl = Math.max(1, card.ivl || 1);
     card.due = dueAfterDays(card.ivl, now);
   }
+  // 旧 learn 卡还没有成功复习次数；本次过关至少记为第 1 次。
+  card.reps = Math.max(1, card.reps || 0);
   card.updatedAt = now;
   return { card, eventType: wasLearned ? "review" : "new" };
 }

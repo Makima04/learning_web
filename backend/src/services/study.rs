@@ -18,8 +18,13 @@ pub struct Completion {
     pub client_at: i64,
 }
 
-fn validate(command: &Completion) -> AppResult<()> {
-    let card = &command.card;
+fn validate(command: &Completion) -> AppResult<CardState> {
+    let mut card = command.card.clone();
+    // 旧前端把 learn 卡过关后转成 review，却留下 reps=0。
+    // 仅补齐这一次成功次数；其他完成约束仍全部校验。
+    if card.reps == Some(0) {
+        card.reps = Some(1);
+    }
     let date = DateTime::from_timestamp_millis(command.client_at)
         .and_then(|at| {
             at.checked_add_signed(Duration::minutes(i64::from(crate::day::DAY_TZ_OFFSET_MIN)))
@@ -49,7 +54,7 @@ fn validate(command: &Completion) -> AppResult<()> {
     {
         return Err(AppError::BadRequest("invalid study completion".into()));
     }
-    Ok(())
+    Ok(card)
 }
 
 /// 同一账号的进度写入与权威清空共用行锁，清空期间不允许旧学习复活。
@@ -70,19 +75,21 @@ pub async fn complete(pool: &PgPool, user_id: i64, commands: &[Completion]) -> A
     if commands.len() > 200 {
         return Err(AppError::BadRequest("max 200 completions".into()));
     }
-    for command in commands {
-        validate(command)?;
-    }
+    let cards = commands
+        .iter()
+        .map(validate)
+        .collect::<AppResult<Vec<_>>>()?;
     let mut tx = pool.begin().await?;
     let reset_at = lock_progress(&mut tx, user_id).await?;
     let mut applied = 0;
     let mut ignored = 0;
     let mut days = BTreeSet::new();
-    for command in commands {
+    for (command, card) in commands.iter().zip(&cards) {
         if command.client_at < reset_at {
             ignored += 1;
             continue;
         }
+        // 幂等凭据保留原始请求，旧标签页重传 reps=0 时仍能匹配同一操作。
         let payload = serde_json::to_value(command).map_err(|e| AppError::Internal(e.into()))?;
         let inserted: Option<String> = sqlx::query_scalar(r#"
             INSERT INTO study_commands (user_id, operation_id, client_at, payload) VALUES ($1,$2,$3,$4)
@@ -105,7 +112,7 @@ pub async fn complete(pool: &PgPool, user_id: i64, commands: &[Completion]) -> A
             ignored += 1;
             continue;
         }
-        upsert_card(&mut *tx, user_id, command.word_idx, &command.card, reset_at).await?;
+        upsert_card(&mut *tx, user_id, command.word_idx, card, reset_at).await?;
         // 操作 ID 已幂等去重；client_at 留空，避免同毫秒的两个有效操作被旧索引误合并。
         sqlx::query("INSERT INTO study_events (user_id,word_idx,event_type,quality,day_key,studied_at) VALUES ($1,$2,$3,'good',$4,$5)")
             .bind(user_id).bind(command.word_idx).bind(&command.event_type).bind(&command.day_key)

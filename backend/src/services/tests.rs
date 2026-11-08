@@ -108,6 +108,69 @@ async fn study_retries_are_idempotent_and_commit_all_projections(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "./migrations")]
+async fn legacy_zero_reps_completions_recover_without_changing_retry_identity(pool: PgPool) {
+    let id = user(&pool, "legacy-completion").await;
+    let mut legacy = command("legacy-zero", 1);
+    legacy.card.reps = Some(0);
+    let batch = [legacy.clone(), command("normal", 2)];
+    let result = study::complete(&pool, id, &batch).await.unwrap();
+    assert_eq!(result["applied"], 2);
+    let retry = study::complete(&pool, id, &batch).await.unwrap();
+    assert_eq!(retry["ignored"], 2);
+    let saved: (i32, bool, String) =
+        sqlx::query_as("SELECT reps,learned,state FROM cards WHERE user_id=$1 AND word_idx=1")
+            .bind(id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(saved, (1, true, "review".into()));
+    let payload: serde_json::Value = sqlx::query_scalar(
+        "SELECT payload FROM study_commands WHERE user_id=$1 AND operation_id='legacy-zero'",
+    )
+    .bind(id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(payload["card"]["reps"], 0);
+    legacy.card.reps = Some(1);
+    assert!(study::complete(&pool, id, &[legacy]).await.is_err());
+    let counts: (i64, i64, i64) = sqlx::query_as(
+        "SELECT (SELECT COUNT(*) FROM cards),(SELECT COUNT(*) FROM study_events),(SELECT COUNT(*) FROM study_commands)",
+    ).fetch_one(&pool).await.unwrap();
+    assert_eq!(counts, (2, 2, 2));
+    let meta: (i32, i32) = sqlx::query_as("SELECT new_today,done_today FROM meta WHERE user_id=$1")
+        .bind(id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(meta, (2, 2));
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn legacy_zero_reps_does_not_bypass_other_completion_validation(pool: PgPool) {
+    let id = user(&pool, "invalid-legacy").await;
+    let mut invalid = command("invalid-zero", 1);
+    invalid.card.reps = Some(0);
+    invalid.card.learned = Some(false);
+    assert!(study::complete(&pool, id, &[invalid.clone()])
+        .await
+        .is_err());
+    invalid.card.learned = Some(true);
+    invalid.card.quiz = Some(1);
+    assert!(study::complete(&pool, id, &[invalid.clone()])
+        .await
+        .is_err());
+    invalid.card.quiz = Some(0);
+    invalid.card.reps = Some(-1);
+    assert!(study::complete(&pool, id, &[invalid]).await.is_err());
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM study_commands")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(count, 0);
+}
+
+#[sqlx::test(migrations = "./migrations")]
 async fn study_batch_rolls_back_when_operation_id_is_reused(pool: PgPool) {
     let id = user(&pool, "rollback").await;
     assert!(

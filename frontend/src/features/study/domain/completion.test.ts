@@ -32,4 +32,14 @@ describe("学习过关领域规则", () => {
     expect(completeStudy({ ...newCard(), learned: true }, true, 15, now).card)
       .toMatchObject({ state: "review", ivl: 3, reps: 2 });
   });
+
+  it.each([0, 1, 2, 3])("旧 learn 卡 quiz=%i 过关后满足服务端的完成记录约束", (quiz) => {
+    const previous = { ...newCard(), state: "learn" as const, quiz };
+    const { card, eventType } = completeStudy(previous, false, 15, now);
+    expect(eventType).toBe("new");
+    expect(card).toMatchObject({ learned: true, state: "review", quiz: 0, reps: 1, updatedAt: now });
+    expect(card.due).toBeGreaterThan(now);
+    expect(previous.reps).toBe(0);
+    expect(previous.state).toBe("learn");
+  });
 });
