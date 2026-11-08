@@ -131,7 +131,7 @@ export function JournalChapterPage() {
                         onClick={() => toggleWangdaoCollect(q, false)}
                       >
                         <Bookmark className="h-4 w-4 fill-current" />
-                        移出错题集
+                        设为永久学会
                       </button>
                     </div>
                   </CardContent>

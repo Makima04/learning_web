@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bookmark, BookOpen, Clock3 } from "lucide-react";
+import { BookOpen, Check, Clock3 } from "lucide-react";
 import { prefetchQuestionMedia } from "@/lib/kg/catalogLoad";
 import { canRevealAnswer } from "@/lib/kg/explain";
 import type { MarkLevel } from "@/lib/kg/types";
@@ -209,8 +209,8 @@ export function PracticeQuestionCard({
                 : "text-muted-foreground hover:bg-muted"
             )}
           >
-            <Bookmark className={cn("h-4 w-4", collected && "fill-current")} />
-            {collected ? "已收藏" : "错题集"}
+            {collected ? <Check className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+            {collected ? "设为永久学会" : "加入复习计划"}
           </button>
         </div>
       </CardContent>

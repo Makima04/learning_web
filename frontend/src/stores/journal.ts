@@ -19,6 +19,7 @@ import {
   weekKeyOf,
   type JournalCategory,
   type JournalEntry,
+  type EntryStatus,
   type JournalKind,
   type JournalLogTombstone,
   type JournalTombstone,
@@ -712,6 +713,7 @@ interface JournalStore extends JournalSnapshot {
     kpId?: string;
     fromKg?: boolean;
     sourceItemId?: string;
+    status?: EntryStatus;
   }) => JournalEntry | null;
   /** 错题集：同一 sourceItemId 仅一条 active */
   collectWrongItem: (input: {
@@ -736,6 +738,8 @@ interface JournalStore extends JournalSnapshot {
   ) => void;
   deleteEntry: (id: string) => void;
   archiveEntry: (id: string) => void;
+  /** 永久学会 / 复习计划切换；重新入队从明日第 1 天开始，不修改作答履历。 */
+  setEntryReviewStatus: (id: string, status: EntryStatus) => void;
   /** 归档某考点关联的全部 active 日志（取消已学） */
   archiveEntriesByKpId: (kpId: string) => void;
   reviewEntry: (id: string, result: ReviewResult, note?: string) => void;
@@ -854,6 +858,7 @@ export const useJournal = create<JournalStore>((set, get) => ({
       kpId: input.kpId,
       fromKg: input.fromKg,
       sourceItemId: input.sourceItemId,
+      status: input.status,
     });
     commit(set, get, { entries: [entry, ...get().entries] });
     return entry;
@@ -972,6 +977,18 @@ export const useJournal = create<JournalStore>((set, get) => ({
     const entries = get().entries.map((e) =>
       e.id === id ? { ...e, status: "archived" as const, updatedAt: now } : e
     );
+    commit(set, get, { entries });
+  },
+
+  setEntryReviewStatus: (id, status) => {
+    const entry = get().entries.find((e) => e.id === id);
+    if (!entry || entry.status === status) return;
+    const entries = get().entries.map((e) => e.id !== id ? e : {
+      ...e,
+      status,
+      ...(status === "active" ? { step: 1 as const, nextReviewOn: addDays(dayKey(), 1) } : {}),
+      updatedAt: Math.max(Date.now(), e.updatedAt + 1),
+    });
     commit(set, get, { entries });
   },
 

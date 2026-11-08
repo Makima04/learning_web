@@ -1,5 +1,5 @@
 // 王道题：会/不会/模糊 → 掌握度 + 错题集（日志 1/3/7/14）
-import type { ReviewResult } from "@/lib/journal";
+import type { EntryStatus, ReviewResult } from "@/lib/journal";
 import type { MarkLevel } from "@/lib/kg/types";
 import {
   journalCopyForWangdao,
@@ -66,25 +66,35 @@ export function applyWangdaoPractice(item: WangdaoItem, mark: MarkLevel): void {
 }
 
 export function toggleWangdaoCollect(item: WangdaoItem, collected: boolean): void {
-  const journal = useJournal.getState();
-  if (!collected) {
-    journal.uncollectWrongItem(item.id);
-    return;
-  }
-  const copy = journalCopyForWangdao(item);
-  if (!copy) return;
-  journal.collectWrongItem({
-    id: wangdaoJournalId(item.id),
-    sourceItemId: item.id,
-    kpId: copy.kpId,
-    title: copy.title,
-    body: copy.body,
-    categoryId: copy.categoryId,
-  });
+  if (!collected && !isCollected(item.id)) return;
+  setWangdaoReviewStatus(item, collected ? "active" : "archived");
 }
 
 export function isCollected(itemId: string): boolean {
   return useJournal
     .getState()
     .entries.some((e) => e.sourceItemId === itemId && e.status === "active");
+}
+
+/** 只切换复习安排，不把手动调整伪记为一次「会」或复盘。 */
+export function setWangdaoReviewStatus(item: WangdaoItem, status: EntryStatus): void {
+  const journal = useJournal.getState();
+  const existing = journal.entries.find((e) => e.sourceItemId === item.id);
+  if (existing) {
+    journal.setEntryReviewStatus(existing.id, status);
+    return;
+  }
+  const copy = journalCopyForWangdao(item);
+  if (!copy) return;
+  journal.addEntry({
+    id: wangdaoJournalId(item.id),
+    sourceItemId: item.id,
+    kpId: copy.kpId,
+    title: copy.title,
+    body: copy.body,
+    categoryId: copy.categoryId,
+    kind: "mistake",
+    fromKg: true,
+    status,
+  });
 }

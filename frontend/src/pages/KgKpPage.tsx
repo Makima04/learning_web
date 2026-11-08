@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { LearnReviewButtons, PracticeQuestionCard } from "@/pages/practiceQuestion";
+import { PracticeStateManager } from "@/pages/PracticeStateManager";
 
 type DrillMode = "learn" | "review";
 
@@ -280,6 +281,8 @@ export function KgKpPage() {
           <Link to={`/viz/${kp.id}`}>▶ 图解演示</Link>
         </Button>
       )}
+
+      {items && mode === "idle" && <PracticeStateManager key={kp.id} items={kindPool} />}
 
       {mode !== "idle" && current && (
         <PracticeQuestionCard

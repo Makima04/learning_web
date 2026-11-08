@@ -44,7 +44,7 @@ export interface WangdaoItem {
 
 export interface KpDrillCounts {
   total: number;
-  /** 从未标记、也不在错题集 → 当新学 */
+  /** 从未标记、也没有题目复习记录 → 当新学 */
   learn: number;
   /** 错题集里今天到期 / 逾期 */
   review: number;
@@ -154,6 +154,7 @@ export function countPoolDrill(
     (e) => e.status === "active" && e.sourceItemId && ids.has(e.sourceItemId)
   );
   const wrongIds = new Set(wrong.map((e) => e.sourceItemId));
+  const learnedIds = new Set(entries.filter((e) => e.status === "archived").map((e) => e.sourceItemId));
   const dueIds = new Set(
     wrong.filter((e) => isDueOnOrBefore(e, today)).map((e) => e.sourceItemId)
   );
@@ -163,7 +164,7 @@ export function countPoolDrill(
   for (const q of qs) {
     if (dueIds.has(q.id)) review++;
     else if (wrongIds.has(q.id)) waiting++;
-    else if (isSkip(marks.get(q.id))) learn++;
+    else if (!learnedIds.has(q.id) && isSkip(marks.get(q.id))) learn++;
   }
   return { total: qs.length, learn, review, waiting };
 }
@@ -175,12 +176,12 @@ export function learnQueueFrom(
 ): WangdaoItem[] {
   const marks = markMapOf(itemMarks);
   const ids = new Set(qs.map((q) => q.id));
-  const wrongIds = new Set(
+  const recordedIds = new Set(
     entries
-      .filter((e) => e.status === "active" && e.sourceItemId && ids.has(e.sourceItemId))
+      .filter((e) => e.sourceItemId && ids.has(e.sourceItemId))
       .map((e) => e.sourceItemId)
   );
-  return qs.filter((q) => !wrongIds.has(q.id) && isSkip(marks.get(q.id)));
+  return qs.filter((q) => !recordedIds.has(q.id) && isSkip(marks.get(q.id)));
 }
 
 export function reviewQueueFrom(

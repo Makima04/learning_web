@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { LearnReviewButtons, PracticeQuestionCard } from "@/pages/practiceQuestion";
+import { PracticeStateManager } from "@/pages/PracticeStateManager";
 
 type DrillMode = "learn" | "review";
 
@@ -209,6 +210,7 @@ export function KgBookDrillPage() {
             {counts.waiting > 0 ? ` · 间隔中 ${counts.waiting}` : ""}
           </p>
           <LearnReviewButtons learn={counts.learn} review={counts.review} onStart={start} />
+          <PracticeStateManager key={`${spec.source}-${spec.part}-${spec.section}-${facet}`} items={pool} />
         </div>
       )}
 

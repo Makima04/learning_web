@@ -7,6 +7,7 @@ import { dayKey } from "@/lib/day";
 import { isExamItemId, parseExamItemId } from "@/lib/kg/examJournal";
 import type { JournalEntry, JournalKind, ReviewResult } from "@/lib/journal";
 import type { KgChapterCard } from "@/lib/kg/journalBridge";
+import { useJournal } from "@/stores/journal";
 import { cn } from "@/lib/utils";
 
 export const KIND_LABEL: Record<JournalKind, string> = {
@@ -56,7 +57,7 @@ function EntryMeta({
         </span>
       )}
       {entry.status === "archived" ? (
-        <span className="rounded-full bg-muted px-2 py-0.5">已归档</span>
+        <span className="rounded-full bg-muted px-2 py-0.5">{entry.sourceItemId ? "永久学会" : "已归档"}</span>
       ) : (
         <>
           <span>间隔 {entry.step} 天</span>
@@ -157,6 +158,15 @@ export function EntryCard({
           {entry.lapses > 0 && <span>回退 {entry.lapses} 次</span>}
         </div>
         {showReview && onReview && <ReviewActions onReview={onReview} />}
+        {entry.sourceItemId && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => useJournal.getState().setEntryReviewStatus(entry.id, entry.status === "active" ? "archived" : "active")}
+          >
+            {entry.status === "active" ? "设为永久学会" : "加入复习计划"}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

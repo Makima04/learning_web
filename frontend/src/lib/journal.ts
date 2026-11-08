@@ -142,6 +142,7 @@ export function newEntryDefaults(
     kpId?: string;
     fromKg?: boolean;
     sourceItemId?: string;
+    status?: EntryStatus;
   }
 ): JournalEntry {
   const createdOn = partial.createdOn || dayKey();
@@ -155,7 +156,7 @@ export function newEntryDefaults(
     createdOn,
     nextReviewOn: addDays(createdOn, 1),
     step: 1,
-    status: "active",
+    status: partial.status ?? "active",
     lapses: 0,
     updatedAt: now,
   };
