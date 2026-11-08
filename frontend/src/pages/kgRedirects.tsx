@@ -31,6 +31,7 @@ export function KgLegacyKpRedirect() {
       to={kgKpPath(found.kp.id, {
         subject: found.book.subject,
         src: params.get("src"),
+        returnTo: params.get("returnTo"),
       })}
       replace
     />

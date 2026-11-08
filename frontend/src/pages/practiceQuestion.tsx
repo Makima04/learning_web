@@ -109,6 +109,7 @@ export function PracticeQuestionCard({
   onMark,
   onCollect,
   onExit,
+  size = "compact",
 }: {
   item: WangdaoItem;
   nextItem?: WangdaoItem;
@@ -119,10 +120,13 @@ export function PracticeQuestionCard({
   onMark: (m: MarkLevel) => void;
   onCollect: () => void;
   onExit: () => void;
+  /** large：大屏作答台，题面放大、留白加宽 */
+  size?: "compact" | "large";
 }) {
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const showAns = revealedId === item.id;
   const canReveal = canRevealAnswer(item);
+  const large = size === "large";
 
   useEffect(() => {
     prefetchQuestionMedia(item);
@@ -144,32 +148,35 @@ export function PracticeQuestionCard({
   const kind = practiceKindLabel(item.kind);
   return (
     <Card
-      className={cn(canReveal && !showAns && "cursor-pointer")}
+      className={cn(canReveal && !showAns && "cursor-pointer", large && "ring-1 ring-border/60")}
       onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         if (!canReveal || showAns || isInteractiveClick(e)) return;
         setRevealedId(item.id);
       }}
     >
-      <CardContent className="space-y-4 p-5">
+      <CardContent className={cn("space-y-4", large ? "p-6 md:p-7" : "p-5")}>
         <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 flex-1 text-xs text-muted-foreground">
-            {index + 1} / {total} · {practiceSourceLabel(item)}
-            {practiceBandLabel(item) ? ` · ${practiceBandLabel(item)}` : ""} · {kind} · §
-            {`${item.section} #${item.qno}`}
-            {item.pdf_page ? ` · 做题本 p.${item.pdf_page}` : ""}
-            {item.book_ans_page != null ? ` · 原书【P${item.book_ans_page}】` : ""}
-            {item.year ? ` · ${item.year}真题` : ""}
-          </p>
+          {/* 大屏作答台的表头已经显示题号与出处，这里不再重复 */}
+          {!large && (
+            <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+              {index + 1} / {total} · {practiceSourceLabel(item)}
+              {practiceBandLabel(item) ? ` · ${practiceBandLabel(item)}` : ""} · {kind} · §
+              {`${item.section} #${item.qno}`}
+              {item.pdf_page ? ` · 做题本 p.${item.pdf_page}` : ""}
+              {item.book_ans_page != null ? ` · 原书【P${item.book_ans_page}】` : ""}
+              {item.year ? ` · ${item.year}真题` : ""}
+            </p>
+          )}
           <button
             type="button"
-            className="shrink-0 text-xs text-muted-foreground hover:underline"
+            className={cn("shrink-0 text-xs text-muted-foreground hover:underline", large && "ml-auto")}
             onClick={onExit}
           >
             结束
           </button>
         </div>
         <QuestionKpLine item={item} />
-        <WangdaoStem item={item} />
+        <WangdaoStem item={item} size={size} />
         {canReveal && !showAns && (
           <p className="text-[11px] text-muted-foreground">空格或点卡片空白处显示答案</p>
         )}
@@ -181,7 +188,8 @@ export function PracticeQuestionCard({
               key={m.id}
               type="button"
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium",
+                "rounded-md font-medium",
+                large ? "px-4 py-2 text-sm" : "px-3 py-1.5 text-sm",
                 m.cls,
                 mark === m.id && "ring-2 ring-offset-2 ring-primary"
               )}
@@ -194,7 +202,8 @@ export function PracticeQuestionCard({
             type="button"
             onClick={onCollect}
             className={cn(
-              "ml-auto inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm",
+              "ml-auto inline-flex items-center gap-1 rounded-md border text-sm",
+              large ? "px-4 py-2" : "px-3 py-1.5",
               collected
                 ? "border-destructive/40 bg-destructive/10 text-ink-danger"
                 : "text-muted-foreground hover:bg-muted"

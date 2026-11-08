@@ -8,6 +8,8 @@ import {
   kgModulePath,
   kgSubjectSlug,
   parseKgSubject,
+  practiceReturnLabel,
+  practiceReturnPath,
 } from "@/lib/kg/paths";
 import {
   bookDrillGroups,
@@ -45,6 +47,7 @@ export function KgBookDrillPage() {
   const part = params.get("part");
   const section = params.get("section");
   const facet = params.get("facet");
+  const returnTo = practiceReturnPath(params.get("returnTo"));
   const book = getBook(bookId as BookId);
   const mod = getModule(bookId as BookId, moduleId);
   const groups = useMemo(() => bookDrillGroups(moduleId), [moduleId]);
@@ -122,7 +125,7 @@ export function KgBookDrillPage() {
       <div className="p-6">
         <p>模块不存在</p>
         <Button asChild variant="link">
-          <Link to={kgMapPath(book?.subject)}>返回</Link>
+          <Link to={returnTo ?? kgMapPath(book?.subject)}>{returnTo ? practiceReturnLabel(returnTo) : "返回"}</Link>
         </Button>
       </div>
     );
@@ -144,16 +147,17 @@ export function KgBookDrillPage() {
       part: spec.part,
       section: spec.section,
       facet: nextFacet,
+      returnTo,
     });
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-6">
       <div>
         <Link
-          to={kgModulePath(book.id, mod.id, book.subject)}
+          to={returnTo ?? kgModulePath(book.id, mod.id, book.subject)}
           className="text-xs text-muted-foreground hover:underline"
         >
-          ← {book.name} · {mod.name}
+          ← {returnTo ? practiceReturnLabel(returnTo) : `${book.name} · ${mod.name}`}
         </Link>
         <h1 className="mt-1 text-xl font-semibold">{spec.bookLabel}</h1>
         <p className="mt-1 text-sm text-muted-foreground">

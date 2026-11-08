@@ -12,11 +12,19 @@ type LlmPane = "answer" | "explain";
 
 const OPT_KEYS = ["A", "B", "C", "D"] as const;
 
-export function WangdaoStem({ item }: { item: WangdaoItem }) {
+export function WangdaoStem({
+  item,
+  size = "compact",
+}: {
+  item: WangdaoItem;
+  /** large：大屏作答台用，题面与选项整体放大一档 */
+  size?: "compact" | "large";
+}) {
+  const large = size === "large";
   if (item.img) {
     const src = mediaUrl(item.img)!;
     return (
-      <div className="-mx-1 overflow-hidden rounded-md bg-white sm:mx-0">
+      <div className={cn("overflow-hidden rounded-md bg-white", large ? "" : "-mx-1 sm:mx-0")}>
         <img
           src={src}
           alt={item.stem ? item.stem.slice(0, 80) : `第${item.qno}题`}
@@ -28,10 +36,12 @@ export function WangdaoStem({ item }: { item: WangdaoItem }) {
   const opts = item.options;
   const keys = OPT_KEYS.filter((k) => opts?.[k]);
   return (
-    <div className="space-y-3">
-      <p className="whitespace-pre-wrap text-base leading-relaxed">{item.stem}</p>
+    <div className={large ? "space-y-4" : "space-y-3"}>
+      <p className={cn("whitespace-pre-wrap leading-relaxed", large ? "text-[17px] leading-8" : "text-base")}>
+        {item.stem}
+      </p>
       {keys.length > 0 && (
-        <ul className="space-y-1.5 text-sm leading-relaxed">
+        <ul className={cn("leading-relaxed", large ? "space-y-2.5 text-base" : "space-y-1.5 text-sm")}>
           {keys.map((k) => (
             <li key={k} className="flex gap-2">
               <span className="w-5 shrink-0 font-medium text-muted-foreground">{k}.</span>

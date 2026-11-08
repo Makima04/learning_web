@@ -20,6 +20,7 @@ import {
   ScrollText,
   Settings,
   Sun,
+  Target,
   UserRound,
 } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from "react-router-dom";
@@ -46,6 +47,7 @@ const NAV: NavItem[] = [
   { to: "/", label: "学习概览", icon: LayoutDashboard, tile: "bg-app-teal text-white", end: true },
   { to: "/lists", label: "生熟词表", icon: Bookmark, tile: "bg-app-pink text-white" },
   { to: "/kg", label: "知识图谱", icon: Network, tile: "bg-app-purple text-white" },
+  { to: "/review-priority", label: "复习性价比", icon: Target, tile: "bg-app-orange text-white" },
   { to: "/kg/exams", label: "408 真题", icon: BookOpen, tile: "bg-primary text-primary-foreground" },
   { to: "/viz", label: "图解 408", icon: Clapperboard, tile: "bg-app-blue text-white", mobile: false },
   { to: "/journal", label: "学习日志", icon: NotebookPen, tile: "bg-app-green text-white" },
@@ -163,7 +165,7 @@ export function AppLayout() {
   // memTick：确保记忆更新后重新计算 href
   void memTick;
   const navItems = NAV.filter((item) => item.to !== "/viz" || enableCs408);
-  // 手机底栏固定 5 列 × 2 排：新增「408 真题」后，低频的「图解 408」只留在桌面侧栏
+  // 手机底栏保留两排：超过十项时改六列，不增加底栏高度或遮挡正文。
   const mobileNavItems = navItems.filter((item) => item.mobile !== false);
   const activeItem = navItems.find((item) => isNavSectionActive(item.to, location.pathname));
 
@@ -305,7 +307,7 @@ export function AppLayout() {
         >
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
-        <div className="grid grid-cols-5 px-1 pt-1.5">
+        <div className={cn("grid px-1 pt-1.5", mobileNavItems.length > 10 ? "grid-cols-6" : "grid-cols-5")}>
           {mobileNavItems.map((item) => {
             const href = navHref(item.to);
             const active = item === activeItem;

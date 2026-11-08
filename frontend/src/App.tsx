@@ -50,6 +50,15 @@ const KgBookDrillPage = lazy(() =>
 const KgPredictPage = lazy(() =>
   import("@/pages/KgPredictPage").then((m) => ({ default: m.KgPredictPage }))
 );
+const ReviewPriorityPage = lazy(() =>
+  import("@/pages/ReviewPriorityPage").then((m) => ({ default: m.ReviewPriorityPage }))
+);
+const KnowledgeReviewPage = lazy(() =>
+  import("@/pages/KnowledgeReviewPage").then((m) => ({ default: m.KnowledgeReviewPage }))
+);
+const LegacyMathReviewRedirect = lazy(() =>
+  import("@/pages/ReviewPriorityPage").then((m) => ({ default: m.LegacyMathReviewRedirect }))
+);
 const KgExamsPage = lazy(() =>
   import("@/pages/KgExamsPage").then((m) => ({ default: m.KgExamsPage }))
 );
@@ -126,6 +135,9 @@ export default function App() {
             <Route path="journal/:tab" element={<JournalPage />} />
             <Route path="kg" element={<KgIndexRedirect />} />
             <Route path="kg/predict" element={<KgPredictPage />} />
+            <Route path="review-priority" element={<ReviewPriorityPage />} />
+            <Route path="review-priority/knowledge/:kpId" element={<KnowledgeReviewPage />} />
+            <Route path="kg/math/review-priority" element={<LegacyMathReviewRedirect />} />
             <Route path="kg/exams" element={<KgExamsPage />} />
             <Route path="kg/exams/mistakes" element={<Cs408MistakesPage />} />
             <Route path="kg/exams/history" element={<Cs408HistoryPage />} />

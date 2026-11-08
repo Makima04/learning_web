@@ -1,0 +1,56 @@
+{
+  "subject": "math1",
+  "years": [
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "collected_at": "2026-11-07",
+  "edition": "community_retypeset",
+  "source_page": "https://github.com/CHNragdoll/anki-pipeline/releases/tag/math-exams",
+  "resources": [
+    {
+      "id": "questions",
+      "filename": "all-math1-questions-20261107.pdf",
+      "url": "https://github.com/CHNragdoll/anki-pipeline/releases/download/math-exams/all-math1-questions-20261107.pdf",
+      "sha256": "70e330037fce0714db02f03126b97036ca17d97c82f990412d478006630cd6de",
+      "bytes": 12193490
+    },
+    {
+      "id": "answer-details",
+      "filename": "all-math1-answer-details-20261107.pdf",
+      "url": "https://github.com/CHNragdoll/anki-pipeline/releases/download/math-exams/all-math1-answer-details-20261107.pdf",
+      "sha256": "6096817e0ee52985f41bab436f9a4e832f682584df2be332672006b0dbc63d72",
+      "bytes": 21043818
+    },
+    {
+      "id": "answers-reference",
+      "filename": "answers-reference.json",
+      "url": "https://raw.githubusercontent.com/lx-ruc/kaoyanshuxue/196dc9d2d8271978a030a3721a828c8723cd3864/kaoyan_math_images/%E6%95%B0%E5%AD%A6%E4%B8%80/answers.json",
+      "sha256": "2406063a9977a9f695d3c6f857a74a7e7931a07a5a44d0bcdf56b12777e635c0",
+      "bytes": 114205
+    },
+    {
+      "id": "2026-reference",
+      "filename": "2026-reference.pdf",
+      "url": "https://19654776.s21i.faiusr.com/61/ABUIABA9GAAgwaiiygYorNXS4Ac.pdf",
+      "sha256": "1e7bfd9144e236f6e2336031d484c96fc1fa6598329fc48142506bb352223135",
+      "bytes": 919204
+    }
+  ]
+}

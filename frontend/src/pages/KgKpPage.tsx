@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { findKp } from "@/data/kg";
-import { kgKpPath, kgMapPath, kgModulePath, kgSubjectSlug, parseKgSubject } from "@/lib/kg/paths";
+import { kgKpPath, kgMapPath, kgModulePath, kgSubjectSlug, knowledgeReviewPath, parseKgSubject, practiceReturnLabel, practiceReturnPath } from "@/lib/kg/paths";
+import { KNOWLEDGE_REVIEW_TOPICS } from "@/lib/kg/knowledgeReview";
 import { vizFor } from "@/viz/registry";
 import { wdSetPath } from "@/data/kg/wdTaxonomy";
 import {
@@ -46,6 +47,7 @@ export function KgKpPage() {
   const itemMarks = useKgProgress((s) => s.itemMarks);
   const entries = useJournal((s) => s.entries);
   const srcPref = params.get("src");
+  const returnTo = practiceReturnPath(params.get("returnTo"));
 
   useEffect(() => {
     load();
@@ -148,7 +150,7 @@ export function KgKpPage() {
       <div className="p-6">
         <p>考点不存在</p>
         <Button asChild variant="link">
-          <Link to={kgMapPath(parseKgSubject(rawSubject))}>返回</Link>
+          <Link to={returnTo ?? kgMapPath(parseKgSubject(rawSubject))}>{returnTo ? practiceReturnLabel(returnTo) : "返回"}</Link>
         </Button>
       </div>
     );
@@ -160,7 +162,7 @@ export function KgKpPage() {
   if (urlSubject && urlSubject !== kgSubjectSlug(book.subject)) {
     return (
       <Navigate
-        to={kgKpPath(kp.id, { subject: book.subject, src: srcPref })}
+        to={kgKpPath(kp.id, { subject: book.subject, src: srcPref, returnTo })}
         replace
       />
     );
@@ -168,7 +170,7 @@ export function KgKpPage() {
   if (kpId !== kp.id) {
     return (
       <Navigate
-        to={kgKpPath(kp.id, { subject: book.subject, src: srcPref })}
+        to={kgKpPath(kp.id, { subject: book.subject, src: srcPref, returnTo })}
         replace
       />
     );
@@ -178,10 +180,10 @@ export function KgKpPage() {
     <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-6">
       <div>
         <Link
-          to={kgModulePath(book.id, module.id, book.subject)}
+          to={returnTo ?? kgModulePath(book.id, module.id, book.subject)}
           className="text-xs text-muted-foreground hover:underline"
         >
-          ← {book.name} · {module.name}
+          ← {returnTo ? practiceReturnLabel(returnTo) : `${book.name} · ${module.name}`}
         </Link>
         <h1 className="mt-1 text-xl font-semibold">{kp.name}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -195,6 +197,17 @@ export function KgKpPage() {
         </p>
       </div>
 
+      {mode === "idle" && isMath && KNOWLEDGE_REVIEW_TOPICS[kp.id] && (
+        <Card>
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-sm font-bold">{KNOWLEDGE_REVIEW_TOPICS[kp.id].title} · 知识复习</h2>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">{KNOWLEDGE_REVIEW_TOPICS[kp.id].summary}</p>
+            </div>
+            <Button asChild size="sm"><Link to={returnTo?.startsWith(`/review-priority/knowledge/${encodeURIComponent(kp.id)}`) ? returnTo : knowledgeReviewPath(kp.id)}>看解题路线 →</Link></Button>
+          </CardContent>
+        </Card>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
       {!items && !error && <p className="text-sm text-muted-foreground">加载题目…</p>}
 

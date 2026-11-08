@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -20,6 +21,18 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "papers" / "cs408"
 PUBLIC = ROOT / "frontend" / "public" / "cs408"
 STATS_TS = ROOT / "frontend" / "src" / "data" / "kg" / "cs408ExamStats.ts"
+REVIEW_JSON = ROOT / "frontend/src/data/kg/cs408ReviewQuestions.json"
+
+# 复习投入的人工相对初估，未列出的考点统一为中档 2；不当作学习时长。
+REVIEW_COSTS = {
+    "ds.linear.seq": 1, "ds.sq.stack": 1, "ds.sq.queue": 1,
+    "ds.tree.bt": 1, "ds.tree.huffman": 1, "ds.search.seq-bin": 1,
+    "ds.sort.compare": 1, "co.data.int": 1, "co.intro.perf": 1,
+    "co.bus.perf": 1, "os.intro.feat": 1, "os.proc.deadlock": 1,
+    "cn.intro.layer": 1, "cn.intro.perf": 1, "cn.app.http": 1,
+    "ds.algo.design": 3, "ds.algo.dp": 3, "co.cpu.datapath": 3,
+    "co.cpu.pipeline": 3, "os.proc.classic": 3,
+}
 
 
 def to_freq(count: int, year_span: int) -> int:
@@ -160,6 +173,10 @@ def main() -> None:
     years_hit: dict[str, set[int]] = defaultdict(set)
     approx_pts: Counter[str] = Counter()
     kind_count: Counter[str] = Counter()
+    review_items: list[dict] = []
+    review_years: list[int] = []
+    review_sources: list[dict] = []
+    review_excluded: list[dict] = []
 
     PUBLIC.mkdir(parents=True, exist_ok=True)
 
@@ -199,6 +216,29 @@ def main() -> None:
             }
         )
 
+        # 性价比榜只用质量范围内的主考点，整题分值只分配一次。
+        points_valid = len(items) == 47 and sum(it["points"] or 0 for it in items) == 150
+        if meta["excluded_from_stats"] or not points_valid:
+            review_excluded.append({"year": year, "reason": "规则草稿或回忆版" if meta["excluded_from_stats"] else "来源分值合计异常，待核准"})
+        if not meta["excluded_from_stats"] and points_valid:
+            review_years.append(year)
+            review_sources.append({"year": year, "file": path.relative_to(ROOT).as_posix(),
+                                   "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+            for it in data.get("items") or []:
+                assert (it.get("kps_meta") or {}).get("method") == "llm", (year, it["n"])
+                kps = it.get("kps") or []
+                primary = next((k for k in kps if k.get("role") == "primary"), kps[0] if kps else None)
+                assert primary and primary.get("id"), (year, it["n"])
+                kid = primary["id"]
+                review_items.append({
+                    "id": f"cs408-{year}-q{it['n']}", "year": year, "n": it["n"],
+                    "kind": it["kind"], "points": it["points"], "kpId": kid, "book": it["book"],
+                    "sourceLabel": "历年真题主考点", "secondaryKpIds": [k["id"] for k in kps if k.get("id") and k["id"] != kid],
+                    "facets": [], "cost": REVIEW_COSTS.get(kid, 2),
+                    "paperPage": 0, "answerPage": 0, "classification": "llm",
+                    "note": "LLM 多标签分类；整题分值归主考点，辅助考点不重复计分。",
+                })
+
         for it in data.get("items") or []:
             kind_count[it.get("kind") or "?"] += 1
             # 考频校准只采信 2012-2025 重构卷的 LLM 多标签：
@@ -237,6 +277,15 @@ def main() -> None:
         json.dumps(index, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+
+    REVIEW_JSON.write_text(json.dumps({
+        "version": DATA_VER, "years": review_years, "availableYears": years,
+        "recentStart": max(review_years) - 4, "items": review_items,
+        "excludedYears": review_excluded,
+        "classificationNote": "统计采用 2012—2025 中分值合计正常的 LLM 多标签主考点。2009—2011 规则草稿、2026 回忆版及 2015/2021 分值合计异常卷暂不参与排行，仍可在真题入口练习。",
+        "costNote": "补齐成本为人工相对初估，未单独设定的考点按中档处理，不是实测时长或提分预测。",
+        "sources": review_sources,
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     # 考频 TS 模块
     rows: list[dict] = []

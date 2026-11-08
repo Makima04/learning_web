@@ -18,6 +18,49 @@ export function kgMapPath(subject: SubjectId | undefined | null): string {
   return `/kg/${kgSubjectSlug(subject)}`;
 }
 
+export const REVIEW_ROOT = "/review-priority";
+
+export function reviewPriorityPath(subject: SubjectId = "math"): string {
+  return `${REVIEW_ROOT}?subject=${subject}`;
+}
+
+/** 题集显式携带返回位置，刷新、切换题型后仍回入口，不依赖浏览器历史长度。 */
+export function practiceReturnPath(raw: string | null | undefined): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || /[\\\u0000-\u0020]/.test(raw)) return null;
+  const url = new URL(raw, "https://english-web.local");
+  if (url.origin !== "https://english-web.local") return null;
+  if (url.pathname !== REVIEW_ROOT && !url.pathname.startsWith(`${REVIEW_ROOT}/knowledge/`)
+    && url.pathname !== "/kg" && !/^\/kg\/(math|cs408)(\/|$)/.test(url.pathname)) return null;
+  return url.pathname + url.search + url.hash;
+}
+
+export function practiceReturnLabel(path: string): string {
+  const pathname = path.split(/[?#]/)[0];
+  if (pathname.startsWith(`${REVIEW_ROOT}/knowledge/`)) return "返回知识复习";
+  if (pathname === REVIEW_ROOT) return "返回复习性价比";
+  if (pathname.includes("/kp/") || pathname.endsWith("/book")) return "返回题集";
+  if (pathname.includes("/module/")) return "返回章节";
+  return "返回知识图谱";
+}
+
+/** 知识复习沿用题型/排序上下文，不把旧考点或其他学科的筛选带进来。 */
+export function knowledgeReviewPath(kpId: string, search = ""): string {
+  const source = new URLSearchParams(search);
+  const params = new URLSearchParams();
+  for (const key of ["kind", "order"] as const) {
+    const value = source.get(key);
+    if (value) params.set(key, value);
+  }
+  const query = params.toString();
+  return `${REVIEW_ROOT}/knowledge/${encodeURIComponent(kpId)}${query ? `?${query}` : ""}`;
+}
+
+export function legacyMathReviewPath(search: string): string {
+  const params = new URLSearchParams(search);
+  params.set("subject", "math");
+  return `${REVIEW_ROOT}?${params.toString()}`;
+}
+
 export function kgModulePath(
   bookId: string,
   moduleId: string,
@@ -28,11 +71,15 @@ export function kgModulePath(
 
 export function kgKpPath(
   kpId: string,
-  opts?: { subject?: SubjectId | null; src?: string | null }
+  opts?: { subject?: SubjectId | null; src?: string | null; returnTo?: string | null }
 ): string {
   const base = `/kg/${kgSubjectSlug(opts?.subject)}/kp/${kpId}`;
-  if (opts?.src) return `${base}?src=${encodeURIComponent(opts.src)}`;
-  return base;
+  const params = new URLSearchParams();
+  if (opts?.src) params.set("src", opts.src);
+  const returnTo = practiceReturnPath(opts?.returnTo);
+  if (returnTo) params.set("returnTo", returnTo);
+  const query = params.toString();
+  return query ? `${base}?${query}` : base;
 }
 
 export function kgBookDrillPath(
@@ -44,6 +91,7 @@ export function kgBookDrillPath(
     part: string;
     section: string;
     facet?: string | null;
+    returnTo?: string | null;
   }
 ): string {
   const q = new URLSearchParams({
@@ -52,5 +100,7 @@ export function kgBookDrillPath(
     section: opts.section,
   });
   if (opts.facet) q.set("facet", opts.facet);
+  const returnTo = practiceReturnPath(opts.returnTo);
+  if (returnTo) q.set("returnTo", returnTo);
   return `${kgModulePath(bookId, moduleId, opts.subject)}/book?${q.toString()}`;
 }

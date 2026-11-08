@@ -10,7 +10,7 @@ import { examSetPath } from "@/data/kg/examTaxonomy";
 import { wdCounts, wdSetPath } from "@/data/kg/wdTaxonomy";
 import { useWangdao408 } from "@/lib/kg/wangdao408";
 import { dueKpIds, subjectProgress } from "@/lib/kg/progress";
-import { kgKpPath, kgMapPath, kgModulePath, parseKgSubject } from "@/lib/kg/paths";
+import { kgKpPath, kgMapPath, kgModulePath, parseKgSubject, reviewPriorityPath } from "@/lib/kg/paths";
 import type { BookId, SubjectId } from "@/lib/kg/types";
 import { useKgProgress } from "@/stores/kgProgress";
 import { useSettings } from "@/stores/settings";
@@ -108,10 +108,15 @@ export function KgMapPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {subject === "cs408"
               ? "按大类（章）过图谱 · 王道选择/大题分开刷 · 点开题目出小类"
-              : "模块卡片标记进度 · 真题/预测卷回写弱项 · 遗忘曲线提醒复习"}
+              : "图谱记录薄弱项 · 真题分题型分析 · 教辅针对训练"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {(subject === "cs408" || mathTrack === "math1") && (
+            <Button asChild size="sm">
+              <Link to={reviewPriorityPath(subject)}>复习性价比</Link>
+            </Button>
+          )}
           {subject === "cs408" && (
             <Button asChild size="sm">
               <Link to="/kg/predict">408 大题预测卷</Link>
@@ -173,12 +178,12 @@ export function KgMapPage() {
             to: subject === "cs408" ? wdSetPath() : "/kg/exams",
           },
           {
-            title: "预测/诊断",
+            title: "复习性价比",
             desc:
               subject === "cs408"
-                ? "固定大题配额组卷，检测弱项"
-                : "数学预测卷后续开放",
-            to: subject === "cs408" ? "/kg/predict" : null,
+                ? "按选择 / 大题与四个分科排行，匹配真题和王道训练"
+                : mathTrack === "math1" ? "大题 / 选择 / 填空分别分析，结合薄弱项推荐 880 / 1000 训练" : "数学二分析待整理",
+            to: subject === "cs408" || mathTrack === "math1" ? reviewPriorityPath(subject) : null,
           },
           ...(settings.enableCs408
             ? [

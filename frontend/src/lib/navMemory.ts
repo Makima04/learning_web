@@ -24,7 +24,12 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "/kg",
     root: "/kg",
     // /kg/exams 已升为独立一级入口，不能再抢它的高亮与「上次路径」记忆
-    match: (p) => p === "/kg" || (p.startsWith("/kg/") && !p.startsWith("/kg/exams")),
+    match: (p) => p === "/kg" || (p.startsWith("/kg/") && !p.startsWith("/kg/exams") && p !== "/kg/math/review-priority"),
+  },
+  {
+    id: "/review-priority",
+    root: "/review-priority",
+    match: (p) => p === "/review-priority" || p.startsWith("/review-priority/") || p === "/kg/math/review-priority",
   },
   {
     id: "/kg/exams",

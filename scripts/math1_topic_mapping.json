@@ -1,0 +1,718 @@
+{
+  "version": "20261107b",
+  "mapping": {
+    "定积分的计算": {
+      "kpId": "calc.i1.tech",
+      "cost": 2,
+      "facets": []
+    },
+    "一阶非齐次线性微分方程": {
+      "kpId": "calc.ode.1st",
+      "cost": 1,
+      "facets": [
+        "lin1"
+      ]
+    },
+    "微分中值定理": {
+      "kpId": "calc.d1.mvt",
+      "cost": 3,
+      "facets": [
+        "rolle",
+        "lagrange",
+        "cauchy"
+      ]
+    },
+    "第二类曲面积分": {
+      "kpId": "calc.m.surf2",
+      "cost": 3,
+      "facets": [
+        "flux"
+      ]
+    },
+    "特征值与特征向量": {
+      "kpId": "la.eig.value",
+      "cost": 2,
+      "facets": [
+        "eigen_compute"
+      ]
+    },
+    "边缘分布和条件分布": {
+      "kpId": "prob.mv.joint",
+      "cost": 2,
+      "facets": [
+        "marginal",
+        "cond_dist"
+      ]
+    },
+    "重积分的计算": {
+      "kpId": "calc.m.dbl",
+      "cost": 2,
+      "facets": []
+    },
+    "多元函数的极值问题": {
+      "kpId": "calc.m.ext",
+      "cost": 1,
+      "facets": [
+        "ext_free",
+        "lagrange_m"
+      ]
+    },
+    "泰勒公式": {
+      "kpId": "calc.d1.lhopital",
+      "cost": 2,
+      "facets": [
+        "taylor_thm",
+        "taylor_exp"
+      ]
+    },
+    "第二类曲线积分": {
+      "kpId": "calc.m.line2",
+      "cost": 2,
+      "facets": [
+        "line_coord"
+      ]
+    },
+    "矩阵的相似与相似对角化": {
+      "kpId": "la.eig.diag",
+      "cost": 2,
+      "facets": [
+        "diagonalize"
+      ]
+    },
+    "估计量的无偏性": {
+      "kpId": "prob.stat.est",
+      "cost": 2,
+      "facets": [
+        "unbiased"
+      ]
+    },
+    "微分方程的应用": {
+      "kpId": "calc.ode.app",
+      "cost": 3,
+      "facets": []
+    },
+    "二次型": {
+      "kpId": "la.eig.quad",
+      "cost": 2,
+      "facets": []
+    },
+    "协方差与相关系数": {
+      "kpId": "prob.num.ex",
+      "cost": 2,
+      "facets": [
+        "cov",
+        "corr"
+      ]
+    },
+    "曲线的凹凸性、拐点及渐近线": {
+      "kpId": "calc.d1.sketch",
+      "cost": 2,
+      "facets": [
+        "convex",
+        "inflection",
+        "sketch"
+      ]
+    },
+    "矩估计和最大似然估计": {
+      "kpId": "prob.stat.est",
+      "cost": 2,
+      "facets": [
+        "moment_est",
+        "mle"
+      ]
+    },
+    "函数极限的计算": {
+      "kpId": "calc.limit.tech",
+      "cost": 2,
+      "facets": []
+    },
+    "幂级数的和函数及幂级数展开式": {
+      "kpId": "calc.series.power",
+      "cost": 2,
+      "facets": [
+        "sum_fn",
+        "expand"
+      ]
+    },
+    "数学期望与方差": {
+      "kpId": "prob.num.ex",
+      "cost": 2,
+      "facets": [
+        "expect",
+        "var"
+      ]
+    },
+    "二维随机变量及其分布": {
+      "kpId": "prob.mv.joint",
+      "cost": 2,
+      "facets": [
+        "joint"
+      ]
+    },
+    "方向导数和梯度": {
+      "kpId": "calc.m.dir",
+      "cost": 1,
+      "facets": [
+        "dir_grad"
+      ]
+    },
+    "定积分的应用": {
+      "kpId": "calc.i1.app",
+      "cost": 2,
+      "facets": []
+    },
+    "数列敛散性的判定": {
+      "kpId": "calc.limit.seq",
+      "cost": 3,
+      "facets": [
+        "seq_rec",
+        "seq_mono"
+      ]
+    },
+    "重积分的应用": {
+      "kpId": "calc.m.app",
+      "cost": 3,
+      "facets": []
+    },
+    "向量内积与向量正交": {
+      "kpId": "la.sp.ortho",
+      "cost": 2,
+      "facets": [
+        "inner",
+        "schmidt"
+      ]
+    },
+    "不定积分的计算": {
+      "kpId": "calc.i1.indef",
+      "cost": 2,
+      "facets": []
+    },
+    "线性方程组": {
+      "kpId": "la.eq.structure",
+      "cost": 2,
+      "facets": []
+    },
+    "偏导数的概念与计算": {
+      "kpId": "calc.m.partial",
+      "cost": 1,
+      "facets": [
+        "partial",
+        "chain_m"
+      ]
+    },
+    "定积分的概念、性质及几何意义": {
+      "kpId": "calc.i1.def",
+      "cost": 2,
+      "facets": []
+    },
+    "函数的单调性、极值与最值": {
+      "kpId": "calc.d1.sketch",
+      "cost": 2,
+      "facets": [
+        "mono",
+        "extremum"
+      ]
+    },
+    "方程根的存在性与个数": {
+      "kpId": "calc.d1.mvt",
+      "cost": 3,
+      "facets": []
+    },
+    "第一类曲面积分": {
+      "kpId": "calc.m.surf",
+      "cost": 3,
+      "facets": [
+        "surf_dS"
+      ]
+    },
+    "常系数齐次线性微分方程": {
+      "kpId": "calc.ode.2nd",
+      "cost": 2,
+      "facets": [
+        "const_coeff"
+      ]
+    },
+    "常数项级数敛散性的判定": {
+      "kpId": "calc.series.num",
+      "cost": 3,
+      "facets": []
+    },
+    "确定极限中的参数": {
+      "kpId": "calc.limit.tech",
+      "cost": 2,
+      "facets": []
+    },
+    "导数与微分的概念": {
+      "kpId": "calc.d1.def",
+      "cost": 2,
+      "facets": [
+        "der_def"
+      ]
+    },
+    "常系数非齐次线性微分方程": {
+      "kpId": "calc.ode.2nd",
+      "cost": 2,
+      "facets": [
+        "const_coeff",
+        "undetermined"
+      ]
+    },
+    "大数定律和中心极限定理": {
+      "kpId": "prob.limit.clt",
+      "cost": 2,
+      "facets": []
+    },
+    "不等式的证明": {
+      "kpId": "calc.d1.ineq",
+      "cost": 3,
+      "facets": [
+        "ineq_proof"
+      ]
+    },
+    "向量组之间的线性表示": {
+      "kpId": "la.eq.vector",
+      "cost": 2,
+      "facets": [
+        "represent"
+      ]
+    },
+    "向量组的线性相关性": {
+      "kpId": "la.eq.vector",
+      "cost": 2,
+      "facets": [
+        "dep"
+      ]
+    },
+    "交换积分次序与坐标系之间的转化": {
+      "kpId": "calc.m.dbl",
+      "cost": 2,
+      "facets": [
+        "order",
+        "dbl_polar"
+      ]
+    },
+    "矩阵的秩": {
+      "kpId": "la.mat.rank",
+      "cost": 2,
+      "facets": [
+        "rank"
+      ]
+    },
+    "随机变量及其分布": {
+      "kpId": "prob.rv.dist",
+      "cost": 2,
+      "facets": []
+    },
+    "假设检验": {
+      "kpId": "prob.stat.hyp",
+      "cost": 2,
+      "facets": [
+        "hyp_test"
+      ]
+    },
+    "傅里叶级数": {
+      "kpId": "calc.series.fourier",
+      "cost": 2,
+      "facets": [
+        "fourier_cos",
+        "fourier_sin"
+      ]
+    },
+    "随机事件和概率": {
+      "kpId": "prob.base.axioms",
+      "cost": 2,
+      "facets": []
+    },
+    "变限积分": {
+      "kpId": "calc.i1.def",
+      "cost": 2,
+      "facets": [
+        "var_limit"
+      ]
+    },
+    "其他方程": {
+      "kpId": "calc.ode.1st",
+      "cost": 2,
+      "facets": []
+    },
+    "数理统计的基本概念": {
+      "kpId": "prob.stat.sample",
+      "cost": 2,
+      "facets": [
+        "sample"
+      ]
+    },
+    "多元函数微分学的几何应用": {
+      "kpId": "calc.m.impl",
+      "cost": 2,
+      "facets": [
+        "tangent_pl"
+      ]
+    },
+    "求幂级数的收敛半径、收敛区间和收敛域": {
+      "kpId": "calc.series.power",
+      "cost": 2,
+      "facets": [
+        "radius"
+      ]
+    },
+    "矩阵的运算与变换": {
+      "kpId": "la.mat.ops",
+      "cost": 1,
+      "facets": [
+        "mat_ops",
+        "elem_trans"
+      ]
+    },
+    "全微分的概念与计算": {
+      "kpId": "calc.m.partial",
+      "cost": 1,
+      "facets": [
+        "total_diff"
+      ]
+    },
+    "反常积分的计算与敛散性": {
+      "kpId": "calc.i1.improper",
+      "cost": 2,
+      "facets": [
+        "improper_inf",
+        "improper_sing"
+      ]
+    },
+    "导数与微分的计算": {
+      "kpId": "calc.d1.rules",
+      "cost": 1,
+      "facets": []
+    },
+    "行列式": {
+      "kpId": "la.det.compute",
+      "cost": 2,
+      "facets": []
+    },
+    "无穷小量的比较": {
+      "kpId": "calc.limit.inf",
+      "cost": 1,
+      "facets": [
+        "inf_order",
+        "equiv_inf"
+      ]
+    },
+    "可分离变量的微分方程与齐次方程": {
+      "kpId": "calc.ode.1st",
+      "cost": 1,
+      "facets": [
+        "sep",
+        "homog_ode"
+      ]
+    },
+    "导数的几何意义": {
+      "kpId": "calc.d1.def",
+      "cost": 1,
+      "facets": [
+        "tangent"
+      ]
+    },
+    "旋度的定义": {
+      "kpId": "calc.m.partial",
+      "cost": 1,
+      "facets": [
+        "curl"
+      ]
+    },
+    "第一类曲线积分": {
+      "kpId": "calc.m.line",
+      "cost": 2,
+      "facets": [
+        "line_ds"
+      ]
+    },
+    "函数的连续性": {
+      "kpId": "calc.limit.cont",
+      "cost": 1,
+      "facets": [
+        "cont_on"
+      ]
+    },
+    "伴随矩阵与可逆矩阵": {
+      "kpId": "la.mat.inv",
+      "cost": 2,
+      "facets": [
+        "adjoint",
+        "inverse"
+      ]
+    },
+    "区间估计和置信区间": {
+      "kpId": "prob.stat.est",
+      "cost": 2,
+      "facets": [
+        "interval"
+      ]
+    },
+    "线性微分方程的解的结构": {
+      "kpId": "calc.ode.2nd",
+      "cost": 2,
+      "facets": [
+        "const_coeff"
+      ]
+    },
+    "重积分的概念与性质": {
+      "kpId": "calc.m.dbl",
+      "cost": 2,
+      "facets": []
+    },
+    "三重积分与坐标变换": {
+      "kpId": "calc.m.tpl",
+      "cost": 2,
+      "facets": [
+        "tpl_cyl",
+        "tpl_sph"
+      ]
+    },
+    "随机变量函数的分布": {
+      "kpId": "prob.rv.func",
+      "cost": 2,
+      "facets": [
+        "func_1d"
+      ]
+    },
+    "条件概率与常见分布": {
+      "kpId": "prob.base.cond",
+      "cost": 2,
+      "facets": [
+        "cond"
+      ]
+    },
+    "散度的定义": {
+      "kpId": "calc.m.partial",
+      "cost": 1,
+      "facets": [
+        "partial"
+      ]
+    }
+  },
+  "extra2026": [
+    {
+      "n": 1,
+      "points": 5,
+      "label": "偏导数的概念与计算",
+      "facets": [
+        "implicit_m",
+        "partial"
+      ],
+      "secondaryKpIds": [
+        "calc.m.impl"
+      ]
+    },
+    {
+      "n": 2,
+      "points": 5,
+      "label": "求幂级数的收敛半径、收敛区间和收敛域"
+    },
+    {
+      "n": 3,
+      "points": 5,
+      "label": "曲线的凹凸性、拐点及渐近线",
+      "facets": [
+        "convex",
+        "extremum"
+      ]
+    },
+    {
+      "n": 4,
+      "points": 5,
+      "label": "三重积分与坐标变换"
+    },
+    {
+      "n": 5,
+      "points": 5,
+      "label": "伴随矩阵与可逆矩阵"
+    },
+    {
+      "n": 6,
+      "points": 5,
+      "label": "向量组之间的线性表示",
+      "facets": [
+        "represent",
+        "solvability"
+      ],
+      "secondaryKpIds": [
+        "la.eq.solvability"
+      ]
+    },
+    {
+      "n": 7,
+      "points": 5,
+      "label": "二次型",
+      "facets": [
+        "ortho_trans",
+        "quadric"
+      ]
+    },
+    {
+      "n": 8,
+      "points": 5,
+      "label": "数学期望与方差",
+      "facets": [
+        "expect",
+        "var"
+      ]
+    },
+    {
+      "n": 9,
+      "points": 5,
+      "label": "随机变量函数的分布",
+      "facets": [
+        "func_1d",
+        "expect",
+        "var"
+      ],
+      "secondaryKpIds": [
+        "prob.num.ex"
+      ]
+    },
+    {
+      "n": 10,
+      "points": 5,
+      "label": "条件概率与常见分布",
+      "facets": [
+        "cond",
+        "pmf"
+      ],
+      "secondaryKpIds": [
+        "prob.rv.dist"
+      ]
+    },
+    {
+      "n": 11,
+      "points": 5,
+      "label": "散度的定义"
+    },
+    {
+      "n": 12,
+      "points": 5,
+      "label": "泰勒公式",
+      "facets": [
+        "taylor_exp"
+      ]
+    },
+    {
+      "n": 13,
+      "points": 5,
+      "label": "导数与微分的计算",
+      "facets": [
+        "param_d",
+        "higher"
+      ]
+    },
+    {
+      "n": 14,
+      "points": 5,
+      "label": "反常积分的计算与敛散性",
+      "facets": [
+        "improper_inf",
+        "parts"
+      ]
+    },
+    {
+      "n": 15,
+      "points": 5,
+      "label": "特征值与特征向量",
+      "facets": [
+        "eigen_compute"
+      ]
+    },
+    {
+      "n": 16,
+      "points": 5,
+      "label": "协方差与相关系数",
+      "facets": [
+        "cov",
+        "expect"
+      ]
+    },
+    {
+      "n": 17,
+      "points": 10,
+      "label": "多元函数的极值问题",
+      "secondaryKpIds": [
+        "calc.m.partial"
+      ],
+      "facets": [
+        "ext_free"
+      ]
+    },
+    {
+      "n": 18,
+      "points": 12,
+      "label": "常系数非齐次线性微分方程",
+      "secondaryKpIds": [
+        "calc.m.partial"
+      ],
+      "facets": [
+        "const_coeff",
+        "undetermined"
+      ],
+      "note": "由全微分相容条件推导常系数微分方程，主考点用于统计，偏导列为辅助。"
+    },
+    {
+      "n": 19,
+      "points": 12,
+      "label": "第二类曲线积分",
+      "secondaryKpIds": [
+        "calc.m.formula"
+      ],
+      "facets": [
+        "green",
+        "line_coord"
+      ]
+    },
+    {
+      "n": 20,
+      "points": 12,
+      "label": "微分中值定理",
+      "secondaryKpIds": [
+        "calc.i1.def"
+      ],
+      "facets": [
+        "rolle",
+        "var_limit"
+      ]
+    },
+    {
+      "n": 21,
+      "points": 12,
+      "label": "向量组的线性相关性",
+      "secondaryKpIds": [
+        "la.mat.ops"
+      ],
+      "facets": [
+        "max_ind",
+        "represent",
+        "recurrence"
+      ]
+    },
+    {
+      "n": 22,
+      "points": 12,
+      "label": "矩估计和最大似然估计",
+      "secondaryKpIds": [
+        "prob.rv.dist"
+      ],
+      "facets": [
+        "mle",
+        "unbiased",
+        "maxmin"
+      ],
+      "note": "指数寿命定数截尾试验，含次序统计量、无偏性与最大似然估计。"
+    }
+  ],
+  "overrides": {
+    "2021-13": {
+      "kpId": "calc.ode.euler",
+      "facets": [
+        "euler_ode"
+      ],
+      "note": "来源归为其他方程；按原题确认为欧拉方程。"
+    }
+  }
+}

@@ -78,4 +78,16 @@ describe("navMemory", () => {
     expect(isNavSectionActive("/politics", "/politics/q/2024-34")).toBe(true);
     expect(isNavSectionActive("/politics", "/politics/method")).toBe(true);
   });
+
+  it("复习性价比独立高亮和记忆，不占用知识图谱与真题入口", () => {
+    expect(sectionForPath("/review-priority")?.id).toBe("/review-priority");
+    expect(sectionForPath("/kg/math/review-priority")?.id).toBe("/review-priority");
+    expect(isNavSectionActive("/kg", "/kg/math/review-priority")).toBe(false);
+    rememberNavPath("/kg/math");
+    rememberNavPath("/kg/exams/2025");
+    rememberNavPath("/review-priority", "?subject=cs408&kind=big&book=os");
+    expect(hrefForNavRoot("/review-priority")).toBe("/review-priority?subject=cs408&kind=big&book=os");
+    expect(hrefForNavRoot("/kg")).toBe("/kg/math");
+    expect(hrefForNavRoot("/kg/exams")).toBe("/kg/exams/2025");
+  });
 });
