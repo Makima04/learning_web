@@ -4,6 +4,7 @@ import * as api from "@/lib/api";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { discardPendingKgIfNotNewer, enqueueKg } from "@/lib/syncQueue";
 import { applyItemMark, applyMarkToKp, markCovered } from "@/lib/kg/mark";
+import { nextPracticeMark } from "@/lib/kg/techniqueTraining";
 import { findKp } from "@/data/kg";
 import { journalCopyForKp } from "@/lib/kg/journalBridge";
 import { upsertItemNotes } from "@/lib/kg/itemNote";
@@ -220,7 +221,7 @@ export const useKgProgress = create<KgStore>((set, get) => ({
     );
     const itemMarks = [
       ...get().itemMarks.filter((m) => m.itemId !== itemId),
-      { itemId, mark, weakKpIds, ts: now },
+      nextPracticeMark(get().itemMarks.find((m) => m.itemId === itemId), itemId, mark, now, weakKpIds),
     ].slice(-20000);
     const doc: KgDoc = { ...get(), states, itemMarks, updatedAt: now };
     persist(doc);

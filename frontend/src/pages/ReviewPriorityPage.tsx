@@ -13,7 +13,9 @@ import {
 } from "@/lib/kg/reviewPriority";
 import { computeRoi, kindPointsPerPaper, pct, practiceMinutes, type RoiInfo } from "@/lib/kg/reviewRoi";
 import type { BookId, SubjectId } from "@/lib/kg/types";
-import { practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
+import { mathFacetName, practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
+import { buildTechniquePlan, type TechniquePlan, type TrainingReason } from "@/lib/kg/techniqueTraining";
+import type { Math1TrainingMatch } from "@/lib/kg/math1Analysis";
 import { hydratePracticeItems } from "@/lib/kg/catalogLoad";
 import { applyWangdaoPractice, isCollected, toggleWangdaoCollect } from "@/lib/kg/wangdaoPractice";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
@@ -32,6 +34,24 @@ const STATUS = {
 };
 const COST = ["", "较低", "中等", "较高"];
 const SOURCE_NAMES: Record<string, string> = { lilin880: "李林 880", zhangyu1000: "张宇 1000", wangdao: "王道 408" };
+const TECHNIQUE_STATUS = {
+  unseen: "待检验", learning: "检验中", weak: "需补练", preliminary: "初步掌握", due: "待复测", stable: "掌握较稳",
+};
+const TRAINING_REASON: Record<TrainingReason, string> = {
+  representative: "技巧代表题", supplement: "薄弱技巧补练", verify: "延迟复测",
+};
+type TrainingRow = Math1TrainingMatch & { techniqueIds?: string[]; reason?: TrainingReason };
+
+function selectTechniqueTraining(plan: TechniquePlan, fallback: Math1TrainingMatch[], dueIds: ReadonlySet<string>): TrainingRow[] {
+  if (!plan.groups.some((g) => g.total > 0)) return fallback;
+  const rows = new Map<string, TrainingRow>();
+  // 仍保留到期错题和必要的先修；首轮主队列改为每技巧两题，并跨技巧去重。
+  for (const row of fallback) if (row.review || row.match === "foundation") rows.set(row.item.id, row);
+  for (const r of plan.recommendations) rows.set(r.item.id, {
+    ...r, match: "method", review: dueIds.has(r.item.id) || r.reason === "verify",
+  });
+  return [...rows.values()];
+}
 const ORDER_LABEL: Record<AnalysisOrder, string> = {
   personal: "个人优先", frequency: "历年考频", recent: "近五年",
 };
@@ -51,7 +71,14 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
-function Status({ topic }: { topic: ReviewTopic }) {
+function Status({ topic, plan }: { topic: ReviewTopic; plan?: TechniquePlan }) {
+  if (plan?.groups.some((g) => g.total > 0)) {
+    const total = plan.groups.length;
+    const label = plan.weak ? "优先补弱" : plan.preliminary < total ? "技巧待覆盖"
+      : plan.stable === total ? "掌握较稳" : plan.groups.some((g) => g.status === "due") ? "待复测" : "首轮完成";
+    return <span className={cn("whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold",
+      plan.weak ? STATUS.weak.cls : plan.stable === total ? STATUS.stable.cls : STATUS.learning.cls)}>{label}</span>;
+  }
   const status = STATUS[topic.status];
   return <span className={cn("whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold", status.cls)}>{status.text}</span>;
 }
@@ -241,20 +268,38 @@ export function ReviewPriorityPage() {
   const wrong = entries.filter((e) => e.status === "active" && e.sourceItemId);
   const dueIds = new Set(wrong.filter((e) => isDueOnOrBefore(e)).map((e) => e.sourceItemId!));
   const waitingIds = new Set(wrong.filter((e) => !isDueOnOrBefore(e)).map((e) => e.sourceItemId!));
-  const training = selected ? matchReviewTraining(selected, items ?? [], marks, states, dueIds, waitingIds) : [];
-  const allTraining = selected ? matchReviewTraining(selected, items ?? [], marks, states, dueIds, waitingIds, true) : [];
+  const [trainingNow, setTrainingNow] = useState(() => Date.now());
+  useEffect(() => {
+    const refresh = () => setTrainingNow(Date.now());
+    // 开着页面跨过北京时间零点，或从后台回来，也能看到到期复测。
+    const timer = window.setInterval(refresh, 60_000);
+    window.addEventListener("focus", refresh);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, []);
+  const techniquePlans = useMemo(() => new Map(topics.map((t) => [t.kpId,
+    buildTechniquePlan(t, items ?? [], marks, dueIds, waitingIds, trainingNow),
+  ])), [topics, items, marks, entries, trainingNow]);
+  const techniquePlan = selected ? techniquePlans.get(selected.kpId) : undefined;
+  const hasTechniques = techniquePlan?.groups.some((g) => g.total > 0) ?? false;
+  const training: TrainingRow[] = selected && techniquePlan ? selectTechniqueTraining(techniquePlan,
+    matchReviewTraining(selected, items ?? [], marks, states, dueIds, waitingIds), dueIds) : [];
+  const trainingIds = new Set(training.map((r) => r.item.id));
+  const allTraining: TrainingRow[] = selected ? [...training,
+    ...matchReviewTraining(selected, items ?? [], marks, states, dueIds, waitingIds, true).filter((r) => !trainingIds.has(r.item.id)),
+  ] : [];
 
   // 首屏行动卡：每个考点给一道「现在就能做」的题。
   const starters = useMemo(() => {
     const map = new Map<string, WangdaoItem>();
     if (!items) return map;
     for (const t of top3) {
-      const [first] = matchReviewTraining(t, items, marks, states, dueIds, waitingIds);
+      const plan = techniquePlans.get(t.kpId)!;
+      const [first] = selectTechniqueTraining(plan, matchReviewTraining(t, items, marks, states, dueIds, waitingIds), dueIds);
       if (first) map.set(t.kpId, first.item);
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [top3, items, marks, states, dueIds, waitingIds]);
+  }, [top3, items, marks, states, dueIds, waitingIds, techniquePlans]);
 
   const unknownCount = ranked.filter((t) => t.status === "unknown").length;
   const weakCount = ranked.filter((t) => t.status === "weak").length;
@@ -359,7 +404,7 @@ export function ReviewPriorityPage() {
   }
 
   const visibleRows = expanded ? ranked : ranked.slice(0, 8);
-  const queueList = showAllTraining ? allTraining.slice(0, 40) : training;
+  const queueList = showAllTraining ? allTraining : training;
   const queueMinutes = queueList.reduce((sum, t) => sum + practiceMinutes(t.item.kind ?? kind), 0);
   const drawerRoi = selected ? roi.get(selected.kpId) : undefined;
   // 作答卡的共享属性：宽屏给左侧作答台，窄屏留在抽屉里，两处只有一份在挂载。
@@ -570,7 +615,7 @@ export function ReviewPriorityPage() {
                     <td className="py-2.5 pr-2 align-middle">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-sm font-bold">{topic.name}</span>
-                        <Status topic={topic} />
+                        <Status topic={topic} plan={techniquePlans.get(topic.kpId)} />
                         {subject === "math" && KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
                           <Link
                             to={knowledgeReviewPath(topic.kpId, params.toString())}
@@ -712,7 +757,7 @@ export function ReviewPriorityPage() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-base font-extrabold">{selected.name}</h2>
-                  <Status topic={selected} />
+                  <Status topic={selected} plan={techniquePlan} />
                 </div>
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   性价比 {drawerRoi.score ?? drawerRoi.tier} · 每年约 {drawerRoi.perPaper.toFixed(1)} 分 · 补齐约 {drawerRoi.estMinutes} 分钟
@@ -768,21 +813,57 @@ export function ReviewPriorityPage() {
                   <h3 className="flex items-center gap-1.5 text-xs font-extrabold"><BookOpen className="h-3.5 w-3.5 text-primary" />{kindLabel}训练</h3>
                   <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Timer className="h-3 w-3" />共约 {queueMinutes} 分钟</span>
                 </div>
-                <p className="mt-1 text-[11px] leading-5 text-muted-foreground">补基础 → 专项 → 真题；已会及未到期错题会避开，不会跨题型凑数。</p>
+                <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                  {hasTechniques
+                    ? "每种技巧先检验两道不同题，优先搭配基础题与不同来源或层级的对照题；不熟练时推荐补练，首轮通过后 3 天复测。每次可只练 2～3 题。"
+                    : "当前题库缺少可用的技巧细分，暂按考点推荐；不据此判定技巧已全面覆盖。已会题及未到期错题会避开。"}
+                </p>
+                {hasTechniques && techniquePlan && (
+                  <details open className="mt-3 rounded-xl border border-border/70 bg-secondary/30 p-3">
+                    <summary className="cursor-pointer text-xs font-bold">
+                      技巧覆盖 · 已检验 {techniquePlan.tested}/{techniquePlan.groups.length} · 初步掌握 {techniquePlan.preliminary}/{techniquePlan.groups.length} · 掌握较稳 {techniquePlan.stable}/{techniquePlan.groups.length}
+                    </summary>
+                    <p className="mt-2 text-[11px] leading-5 text-muted-foreground">每种技巧需两道不同题通过，且至少一道主考该技巧。当天重复点会不算延迟复测；模糊或不会后，需重新通过两道题。</p>
+                    <ul className="mt-2 max-h-72 space-y-2 overflow-y-auto">
+                      {techniquePlan.groups.map((g) => (
+                        <li key={g.id} className="rounded-lg bg-card p-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-semibold">{mathFacetName(g.id)}</span>
+                            <span className={cn("shrink-0 text-[11px] font-semibold", g.status === "weak" ? "text-ink-danger" : g.status === "stable" ? "text-ink-success" : "text-primary")}>{TECHNIQUE_STATUS[g.status]}</span>
+                          </div>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            本轮通过 {g.passed}/2 道
+                            {g.shortage ? (g.total < 2 ? " · 代表题不足两道，暂不能完成覆盖" : " · 缺少主考题，暂不能完成覆盖") : ""}
+                            {g.reviewOn && g.status !== "stable" ? ` · ${g.reviewOn} 复测` : ""}
+                            {g.status === "weak" ? " · 建议先回看讲解，再做同技巧补充题" : ""}
+                          </p>
+                          {g.recommendations.length > 0 && (
+                            <button type="button" className="mt-1.5 text-[11px] font-bold text-primary hover:underline"
+                              onClick={() => void openPractice(g.recommendations.map((r) => r.item))}>
+                              {g.status === "weak" ? "针对补练" : g.status === "due" ? "开始复测" : "检验该技巧"} · {g.recommendations.length} 题
+                            </button>
+                          )}
+                          {g.status === "weak" && !g.recommendations.length && <p className="mt-1 text-[11px] text-muted-foreground">暂没有可立即补练的题，已收录的错题到期后会重新推荐。</p>}
+                        </li>
+                      ))}
+                    </ul>
+                    {techniquePlan.untaggedCount > 0 && <p className="mt-2 text-[11px] text-muted-foreground">另有 {techniquePlan.untaggedCount} 道未细分技巧的题，可在全部可练题中补充练习，不计入技巧覆盖。</p>}
+                  </details>
+                )}
                 {items && queueList.length > 0 && (
                   <Button className="mt-2 h-9 w-full gap-1.5 text-xs" onClick={() => void openPractice(queueList.slice(0, 3).map((t) => t.item))}>
                     <Play className="h-3.5 w-3.5" />连续做 {Math.min(3, queueList.length)} 题 · 约 {queueList.slice(0, 3).reduce((s, t) => s + practiceMinutes(t.item.kind ?? kind), 0)} 分钟
                   </Button>
                 )}
                 {!items && !error && <p className="mt-2 text-xs text-muted-foreground">正在查找{subject === "math" ? "李林 880、张宇 1000" : "王道 408"}的匹配题…</p>}
-                {items && queueList.length === 0 && <p className="mt-2 text-xs text-muted-foreground">当前没有适合的新题或到期题，可直接做下方真题检验。</p>}
+                {items && queueList.length === 0 && <p className="mt-2 text-xs text-muted-foreground">{hasTechniques ? "本轮暂没有待练题，可先换一个考点；复测到期后会重新推荐。缺题技巧仍保留未完成状态。" : "当前没有适合的新题或到期题，可直接做下方真题检验。"}</p>}
                 {wide && active && (
                   <p className="mt-2 rounded-xl bg-primary/10 px-3 py-2 text-[11px] font-semibold text-primary">
                     第 {queueIndex + 1} 题正在左侧大屏作答，点下面任意一题可换题。
                   </p>
                 )}
                 <ul className="mt-2 space-y-1.5">
-                  {queueList.map(({ item, match, review }, at) => {
+                  {queueList.map(({ item, match, review, techniqueIds, reason }, at) => {
                     const current = active?.id === item.id;
                     return (
                     <li key={item.id}>
@@ -799,7 +880,7 @@ export function ReviewPriorityPage() {
                           <span className="flex flex-wrap items-center gap-1">
                             <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold">{SOURCE_NAMES[item.source || "wangdao"]}</span>
                             <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", match === "foundation" ? "bg-warning/15 text-ink-warning" : "bg-primary/10 text-primary")}>
-                              {match === "foundation" ? "补基础" : match === "method" ? "方法匹配" : "同考点"}
+                              {reason ? TRAINING_REASON[reason] : match === "foundation" ? "补基础" : match === "method" ? "方法匹配" : "同考点"}
                             </span>
                             {review && <span className="text-[10px] font-semibold text-ink-danger">到期重练</span>}
                             {current && <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">作答中</span>}
@@ -807,6 +888,7 @@ export function ReviewPriorityPage() {
                           <span className="mt-1 block truncate text-xs">
                             {practiceSourceLabel(item)} · {item.section_name || `章节 ${item.section}`} · 第 {item.qno} 题
                           </span>
+                          {techniqueIds?.length ? <span className="mt-1 block text-[10px] text-muted-foreground">{techniqueIds.map(mathFacetName).join(" · ")}</span> : null}
                         </span>
                         <span className="shrink-0 text-[10px] text-muted-foreground">约 {practiceMinutes(item.kind ?? kind)} 分钟</span>
                         <Play className="h-3.5 w-3.5 shrink-0 text-primary" />

@@ -36,6 +36,8 @@ export interface WangdaoItem {
   answer?: string;
   /** 题型细类（解析分类，不是图谱考点） */
   facets?: string[];
+  /** 经核对的主技巧；未标注的多技巧题不推断主次。 */
+  primaryFacet?: string;
   /** 原书顺序（李林880 由抽取脚本写入；有它就不靠 page/qno 猜顺序） */
   ord?: number;
 }

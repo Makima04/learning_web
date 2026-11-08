@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const apiMocks = vi.hoisted(() => ({
   isLoggedIn: vi.fn(() => false),
@@ -11,6 +11,7 @@ import { flushPending, getSyncStatus } from "@/lib/syncQueue";
 import { useKgProgress } from "@/stores/kgProgress";
 
 describe("kgProgress itemNotes", () => {
+  afterEach(() => vi.restoreAllMocks());
   beforeEach(() => {
     const storage = new Map<string, string>();
     vi.stubGlobal("localStorage", {
@@ -60,5 +61,31 @@ describe("kgProgress itemNotes", () => {
       })
     );
     expect(getSyncStatus().pending).toBe(false);
+  });
+
+  it("技巧复测证据随学习记录入队，并能在另一设备从服务端恢复", async () => {
+    const clock = vi.spyOn(Date, "now").mockReturnValue(1794096000000);
+    apiMocks.isLoggedIn.mockReturnValue(true);
+    const input = { itemId: "q-technique", primaryKpId: "calc.m.ext", mark: "pass" as const };
+    useKgProgress.getState().markItem(input);
+    const first = useKgProgress.getState().itemMarks[0];
+    clock.mockReturnValue(1794355200000);
+    useKgProgress.getState().markItem(input);
+    const latest = useKgProgress.getState().itemMarks[0];
+    expect(latest.passStartedAt).toBe(first.ts);
+    expect(latest.passTimes).toEqual([first.ts, latest.ts]);
+    await flushPending();
+    const remote = apiMocks.putKg.mock.calls.at(-1)![0];
+    expect(remote.itemMarks).toEqual([latest]);
+
+    // 模拟第二台设备没有本地学习缓存，采用服务端权威快照。
+    localStorage.clear();
+    useKgProgress.setState({ itemMarks: [], states: {}, updatedAt: 0 });
+    apiMocks.getKg.mockResolvedValue({ kg: remote, updated_at: remote.updatedAt });
+    await useKgProgress.getState().syncFromServer();
+    expect(useKgProgress.getState().itemMarks).toEqual([latest]);
+    useKgProgress.setState({ itemMarks: [] });
+    useKgProgress.getState().load();
+    expect(useKgProgress.getState().itemMarks).toEqual([latest]);
   });
 });

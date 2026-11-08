@@ -75,6 +75,12 @@ export interface UserItemMark {
   /** 用户细标的弱考点（综合题） */
   weakKpIds?: string[];
   ts: number;
+  /** 本轮首次答会时间；重复点会不顺延，用于技巧的延迟复测。随 /api/kg 同步。 */
+  passStartedAt?: number;
+  /** 最近模糊/不会时间；补练必须提供此后两道不同题的通过证据。 */
+  lastWeakAt?: number;
+  /** 按北京时间每天保留最近一次通过，供同技巧其他题暴露薄弱后的重新检验使用。 */
+  passTimes?: number[];
 }
 
 /** 预测/练习卷中的一题槽位（算法填结构，LLM/题库填内容） */
