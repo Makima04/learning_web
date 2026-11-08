@@ -136,6 +136,7 @@ export default function App() {
             <Route path="kg" element={<KgIndexRedirect />} />
             <Route path="kg/predict" element={<KgPredictPage />} />
             <Route path="review-priority" element={<ReviewPriorityPage />} />
+            <Route path="review-priority/knowledge" element={<KnowledgeReviewPage />} />
             <Route path="review-priority/knowledge/:kpId" element={<KnowledgeReviewPage />} />
             <Route path="kg/math/review-priority" element={<LegacyMathReviewRedirect />} />
             <Route path="kg/exams" element={<KgExamsPage />} />

@@ -1,3 +1,5 @@
+import { MATH_BOOKS } from "@/data/kg/math";
+
 // 知识模板只保存教学内容与原题引用；作答记录仍复用图谱/错题集的账号同步。
 export type ReviewBlock =
   | { type: "text"; text: string }
@@ -26,7 +28,7 @@ export type ReviewReference = {
 export interface ReviewLesson {
   id: string;
   label: string;
-  examId: string;
+  examId?: string;
   prompt: ReviewBlock[];
   signals: string[];
   recognition: string;
@@ -54,6 +56,7 @@ export interface KnowledgeReview {
   title: string;
   description: string;
   opening: string;
+  knowledge?: ReviewBlock[];
   scope: string;
   defaultRouteId: string;
   routes: ReviewRoute[];
@@ -61,6 +64,9 @@ export interface KnowledgeReview {
 
 /** 入口元数据与正文分离，排行页不提前加载公式引擎和整份教案。 */
 export const KNOWLEDGE_REVIEW_TOPICS: Readonly<Record<string, { title: string; summary: string }>> = {
+  ...Object.fromEntries(MATH_BOOKS.flatMap((book) => book.modules.flatMap((module) => module.kps.map((kp) => [kp.id, {
+    title: kp.name, summary: `${module.name} · 概念公式、方法例题与解题步骤。`,
+  }])))),
   "calc.m.ext": {
     title: "求极值与最值",
     summary: "识别有无约束，分清区域内部与边界，再用真题恢复解题路线。",
@@ -69,8 +75,8 @@ export const KNOWLEDGE_REVIEW_TOPICS: Readonly<Record<string, { title: string; s
 
 export const REVIEW_SOURCE_LABELS = {
   exam: "真题",
-  lilin880: "李林 880 · 综合大题",
-  zhangyu1000: "张宇 1000 · 强化题",
+  lilin880: "李林 880",
+  zhangyu1000: "张宇 1000",
 } as const;
 
 /** URL 只选择现有路线/例题；无效深链回到模板默认路线。 */

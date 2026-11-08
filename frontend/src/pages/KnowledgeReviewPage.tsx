@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, ExternalLink, Eye, EyeOff, Lightbulb, Play, Route, ScanLine } from "lucide-react";
 import { findKp } from "@/data/kg";
-import { MATH_EXTREMA_REVIEW } from "@/data/kg/mathExtremaReview";
+import { MATH_KNOWLEDGE_REVIEWS } from "@/data/kg/mathKnowledgeReviews";
 import { MathFormula } from "@/components/MathFormula";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { syncAccountData } from "@/lib/accountSync";
 import { hydratePracticeItems } from "@/lib/kg/catalogLoad";
 import { REVIEW_SOURCE_LABELS, resolveReviewLesson, type KnowledgeReview, type ReviewBlock, type ReviewLesson, type ReviewReference } from "@/lib/kg/knowledgeReview";
 import { MATH1_ITEMS, parseMath1Kind } from "@/lib/kg/math1Analysis";
+import { mathKnowledgeReferences } from "@/lib/kg/mathKnowledgeReferences";
 import { useDrillCatalog } from "@/lib/kg/mathPractice";
 import { kgKpPath, reviewPriorityPath } from "@/lib/kg/paths";
 import { reviewQuestionHref } from "@/lib/kg/reviewPriority";
@@ -17,6 +18,7 @@ import { applyWangdaoPractice, toggleWangdaoCollect } from "@/lib/kg/wangdaoPrac
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
 import { cn } from "@/lib/utils";
 import { PracticeQuestionCard } from "@/pages/practiceQuestion";
+import { MathKnowledgeIndex } from "@/pages/MathKnowledgeIndex";
 import { useAuth } from "@/stores/auth";
 import { useJournal } from "@/stores/journal";
 import { useKgProgress } from "@/stores/kgProgress";
@@ -64,15 +66,16 @@ function ReferenceList({ references, onPractice, busyId, catalogReady, catalogEr
 }) {
   return (
     <section aria-labelledby="review-references-title">
-      <h2 id="review-references-title" className="text-sm font-extrabold">配套题：各补一处变化</h2>
-      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">真题 → 李林综合大题 → 张宇强化题</p>
+      <h2 id="review-references-title" className="text-sm font-extrabold">配套练习</h2>
+      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">真题 → 李林 880 → 张宇 1000</p>
+      {references.length === 0 && <p className="mt-3 text-xs leading-6 text-muted-foreground">{catalogReady ? "该考点在当前题型下暂无匹配原题，可先完成上方方法例题，或进入考点题集选择其他题型。" : "正在查找配套题，知识内容可以先阅读。"}</p>}
       <div className="mt-1 divide-y divide-border/60">
         {references.map((ref, index) => {
           const exam = ref.source === "exam" ? MATH1_ITEMS.find((q) => q.id === ref.questionId) : undefined;
           const label = ref.source === "exam" ? (exam ? `${exam.year} 年 · 第 ${exam.n} 题` : ref.questionId) : ref.label;
           return (
             <div key={ref.questionId} className="space-y-2 py-4">
-              <p className="text-[11px] font-bold text-primary">{index === 0 ? "主例" : "补变化"} · {REVIEW_SOURCE_LABELS[ref.source]}</p>
+              <p className="text-[11px] font-bold text-primary">{index + 1} · {REVIEW_SOURCE_LABELS[ref.source]}</p>
               <h3 className="text-xs font-bold leading-6">{label}</h3>
               <p className="text-xs leading-6 text-muted-foreground">{ref.purpose}</p>
               {ref.source === "exam" ? <ExamLinks questionId={ref.questionId} /> : (
@@ -148,7 +151,7 @@ function LessonContent({ lesson, items, catalogError }: { lesson: ReviewLesson; 
                 <span className="text-xs text-muted-foreground">{question ? `${question.year} 年 · 第 ${question.n} 题` : lesson.label}</span>
               </div>
               <div className="mt-3 rounded-xl bg-secondary/45 p-4"><ReviewBlocks blocks={lesson.prompt} /></div>
-              <div className="mt-3"><ExamLinks questionId={lesson.examId} /></div>
+              {lesson.examId && <div className="mt-3"><ExamLinks questionId={lesson.examId} /></div>}
               <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:gap-4">
                 <h3 className="shrink-0 text-xs font-bold leading-7 text-primary">识别信号</h3>
                 <div className="min-w-0">
@@ -248,6 +251,10 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
   const [params, setParams] = useSearchParams();
   const { route, lesson } = resolveReviewLesson(template, params.get("route"), params.get("example"));
   const { items, error } = useDrillCatalog("math");
+  const kind = parseMath1Kind(params.get("kind"));
+  const currentLesson = lesson.examId ? lesson : {
+    ...lesson, references: mathKnowledgeReferences(template.kpId, kind, items ?? []),
+  };
   const loggedIn = useAuth((s) => s.loggedIn);
   const userId = useAuth((s) => s.user?.id);
   const load = useKgProgress((s) => s.load);
@@ -280,13 +287,21 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
         <Link to={`/review-priority?${returnParams}`} className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary"><ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />返回复习性价比</Link>
         <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold text-primary">知识复习 · 高等数学 · 多元函数</p>
+            <p className="text-[11px] font-bold text-primary">知识复习 · {found?.book.name} · {found?.module.name}</p>
             <h1 className="mt-1 text-2xl font-extrabold tracking-tight">{template.title}</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{template.description}</p>
           </div>
-          <Button asChild variant="outline" size="sm" className="gap-1 text-xs"><Link to={kgKpPath(template.kpId, { subject: "math", returnTo: location.pathname + location.search + location.hash })}>考点与全部练习<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link></Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm" className="text-xs"><Link to={`/review-priority/knowledge${location.search}`}>全部数学模板</Link></Button>
+            <Button asChild variant="outline" size="sm" className="gap-1 text-xs"><Link to={kgKpPath(template.kpId, { subject: "math", returnTo: location.pathname + location.search + location.hash })}>考点与全部练习<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link></Button>
+          </div>
         </div>
       </header>
+
+      {template.knowledge && <Card><CardContent className="space-y-3 p-5 md:p-6">
+        <h2 className="flex items-center gap-2 text-sm font-extrabold"><BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />先补概念与公式</h2>
+        <ReviewBlocks blocks={template.knowledge} />
+      </CardContent></Card>}
 
       <Card>
         <CardContent className="space-y-4 p-5 md:p-6">
@@ -309,18 +324,20 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
       </Card>
 
       {syncError && <p role="status" className="text-xs text-ink-warning">{syncError}</p>}
-      <LessonContent key={lesson.id} lesson={lesson} items={items} catalogError={error} />
+      <LessonContent key={`${template.kpId}:${lesson.id}`} lesson={currentLesson} items={items} catalogError={error} />
     </div>
   );
 }
 
 export function KnowledgeReviewPage() {
   const { kpId = "" } = useParams();
-  if (kpId === MATH_EXTREMA_REVIEW.kpId) return <KnowledgeReviewContent template={MATH_EXTREMA_REVIEW} />;
+  if (!kpId) return <MathKnowledgeIndex />;
+  const template = MATH_KNOWLEDGE_REVIEWS[kpId];
+  if (template) return <KnowledgeReviewContent key={kpId} template={template} />;
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
-      <h1 className="text-xl font-extrabold">这个考点的知识模板还在整理中</h1>
-      <p className="text-sm text-muted-foreground">先从已整理的“求极值与最值”复习，或返回考点选择练习。</p>
+      <h1 className="text-xl font-extrabold">未找到这个数学考点</h1>
+      <p className="text-sm text-muted-foreground">请从数学知识图谱或复习性价比页面选择考点。</p>
       <Button asChild variant="outline"><Link to={reviewPriorityPath("math")}>返回复习性价比</Link></Button>
     </div>
   );
