@@ -217,6 +217,50 @@ pub async fn chat_completion(
     Ok(out)
 }
 
+/// 数学解析支持同一配置模型的题图输入；错误仅返回状态码，避免把网关响应或密钥传到客户端。
+pub async fn chat_reply(
+    http: &Client,
+    conf: &Config,
+    model: &str,
+    system: &str,
+    user: Value,
+) -> Result<(String, String), anyhow::Error> {
+    ensure_configured(conf)?;
+    if model.is_empty() {
+        return Err(anyhow::anyhow!("model not configured"));
+    }
+    let mut response = http
+        .post(join_url(&conf.llm_url, "/chat/completions"))
+        .bearer_auth(&conf.llm_key)
+        .header("User-Agent", "english-web/math-explanations")
+        .json(&json!({"model":model,"temperature":0,"messages":[
+            {"role":"system","content":system},{"role":"user","content":user}
+        ]}))
+        .send()
+        .await
+        .map_err(|_| anyhow::anyhow!("model network error"))?;
+    if !response.status().is_success() {
+        return Err(anyhow::anyhow!("model HTTP {}", response.status().as_u16()));
+    }
+    let mut bytes = Vec::new();
+    while let Some(chunk) = response.chunk().await? {
+        if bytes.len() + chunk.len() > 2_000_000 {
+            return Err(anyhow::anyhow!("model response too large"));
+        }
+        bytes.extend_from_slice(&chunk);
+    }
+    let value: Value = serde_json::from_slice(&bytes)?;
+    let content = value
+        .pointer("/choices/0/message/content")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    if content.trim().is_empty() || content.len() > 128_000 {
+        return Err(anyhow::anyhow!("invalid model content"));
+    }
+    let returned = value.get("model").and_then(Value::as_str).unwrap_or(model);
+    Ok((content.to_string(), returned.chars().take(200).collect()))
+}
+
 /// 译文必须含足够汉字。部分中转网关会丢掉 system 消息，模型便把原句当成
 /// 「用户贴了一段引文」来自由发挥，返回英文分析/反问；这类结果绝不能 status=ok
 /// 落库（ok 译文永不重翻）。

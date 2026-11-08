@@ -1,0 +1,286 @@
+{
+  "item_id": "ll-hard-9-big-1",
+  "image_hashes": [
+    "23941e612f83a36596cdd8321f3dc1f48d536ecf1ceff8a7262e491b3451527c",
+    "3c7d3245a102ef222fc3eb80e8d98e553468c16501bc2d4df99015592682939d"
+  ],
+  "model": "deepseek-flash",
+  "returned_models": [
+    "deepseek-v4.1-flash-1017",
+    "deepseek-v4.1-flash"
+  ],
+  "explanation": {
+    "schema_version": "math_explanation.v1",
+    "status": "draft",
+    "problem_readback": [
+      {
+        "type": "text",
+        "text": "设 f(x) 有二阶连续导数，且满足初始条件："
+      },
+      {
+        "type": "math",
+        "tex": "f(0)=0,\\qquad f'(0)=1."
+      },
+      {
+        "type": "text",
+        "text": "曲线积分"
+      },
+      {
+        "type": "math",
+        "tex": "I=\\int_L \\bigl[x e^{2x}-6f(x)\\bigr]\\sin y\\,dx-\\bigl[5f(x)-f'(x)\\bigr]\\cos y\\,dy"
+      },
+      {
+        "type": "text",
+        "text": "与路径无关，求 f(x) 的表达式。"
+      }
+    ],
+    "missing_information": [],
+    "review_notes": [],
+    "breakthroughs": [
+      {
+        "id": "b1",
+        "clue": "积分与路径无关，且 P、Q 在全平面有连续偏导",
+        "move": "取 Pᵧ=Qₓ，并在 y=0 代入，得到关于 f 的二阶线性微分方程。",
+        "why": "全平面单连通，P、Q 的偏导连续，路径无关等价于 Pᵧ=Qₓ。等式对所有 y 成立，取 y=0 即可消去三角函数因子。",
+        "step_ids": [
+          "s1",
+          "s2"
+        ]
+      },
+      {
+        "id": "b2",
+        "clue": "非齐次项为 xe²ˣ，而 2 是特征方程的单根",
+        "move": "先求齐次通解，再按“多项式乘指数且指数为特征单根”设特解 (ax²+bx)e²ˣ",
+        "why": "指数 2 与特征根重合会产生共振，若仍设 (a x+b)e²ˣ 代入后无法匹配 xe²ˣ，必须提高一次多项式次数",
+        "step_ids": [
+          "s3",
+          "s4"
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "s1",
+        "title": "设出 P、Q 并写出路径无关条件",
+        "brief": "记 P、Q，利用全平面单连通与偏导连续，把路径无关转化为 Pᵧ=Qₓ。",
+        "details": [
+          {
+            "type": "text",
+            "text": "令"
+          },
+          {
+            "type": "math",
+            "tex": "P(x,y)=\\bigl[x e^{2x}-6f(x)\\bigr]\\sin y,\\qquad Q(x,y)=-\\bigl[5f(x)-f'(x)\\bigr]\\cos y."
+          },
+          {
+            "type": "text",
+            "text": "因为 f 有二阶连续导数，P、Q 在全平面有连续偏导数，且全平面单连通，所以曲线积分与路径无关等价于"
+          },
+          {
+            "type": "math",
+            "tex": "P_y=Q_x."
+          }
+        ],
+        "pitfalls": [
+          "不能只由“被积表达式含 sin y、cos y”就断言路径无关，必须先核实 P、Q 的偏导连续与区域单连通。"
+        ]
+      },
+      {
+        "id": "s2",
+        "title": "计算偏导并化为微分方程",
+        "brief": "分别对 y、x 求偏导，比较系数得到非齐次二阶方程 f″−5f′+6f=x e²ˣ。",
+        "details": [
+          {
+            "type": "math",
+            "tex": "P_y=\\bigl[x e^{2x}-6f(x)\\bigr]\\cos y,"
+          },
+          {
+            "type": "math",
+            "tex": "Q_x=-\\bigl[5f'(x)-f''(x)\\bigr]\\cos y=\\bigl[f''(x)-5f'(x)\\bigr]\\cos y."
+          },
+          {
+            "type": "text",
+            "text": "由 P_y=Q_x 对所有使该式有意义的 y 成立，特别取 y=0 得"
+          },
+          {
+            "type": "math",
+            "tex": "x e^{2x}-6f(x)=f''(x)-5f'(x),"
+          },
+          {
+            "type": "text",
+            "text": "整理为"
+          },
+          {
+            "type": "math",
+            "tex": "f''-5f'+6f=x e^{2x}."
+          }
+        ],
+        "pitfalls": [
+          "对 Q 求 x 偏导时容易漏掉前面的负号，注意 Q_x=(f''−5f')cos y，而不是 (5f'−f'')cos y。",
+          "不要写“两边除以 cos y”；应说明 cos y 在 y=0 附近非零，或直接由恒等式比较。"
+        ]
+      },
+      {
+        "id": "s3",
+        "title": "求齐次方程通解",
+        "brief": "写出特征方程 r²−5r+6=0，得齐次通解 C₁e²ˣ+C₂e³ˣ。",
+        "details": [
+          {
+            "type": "math",
+            "tex": "r^2-5r+6=(r-2)(r-3)=0,"
+          },
+          {
+            "type": "math",
+            "tex": "f_h=C_1e^{2x}+C_2e^{3x}."
+          }
+        ],
+        "pitfalls": [
+          "特征根要写成 2 与 3；若写成别的根，后续共振判断和特解形式都会错。"
+        ]
+      },
+      {
+        "id": "s4",
+        "title": "按共振情形设特解并比较系数",
+        "brief": "因 2 是特征单根，设 fₚ=(a x²+b x)e²ˣ，代入得 a=−1/2，b=−1。",
+        "details": [
+          {
+            "type": "text",
+            "text": "非齐次项为 x e^{2x}，指数 2 是特征单根，故设"
+          },
+          {
+            "type": "math",
+            "tex": "f_p=(a x^2+b x)e^{2x}."
+          },
+          {
+            "type": "text",
+            "text": "代入方程左边可得"
+          },
+          {
+            "type": "math",
+            "tex": "f_p''-5f_p'+6f_p=e^{2x}\\bigl[-2a x+2a-b\\bigr]."
+          },
+          {
+            "type": "text",
+            "text": "它与 x e^{2x} 比较系数："
+          },
+          {
+            "type": "math",
+            "tex": "-2a=1,\\qquad 2a-b=0,"
+          },
+          {
+            "type": "text",
+            "text": "解得"
+          },
+          {
+            "type": "math",
+            "tex": "a=-\\frac12,\\qquad b=-1,\\qquad f_p=\\left(-\\frac12x^2-x\\right)e^{2x}."
+          }
+        ],
+        "pitfalls": [
+          "若设 f_p=(a x+b)e^{2x}，代入后 x e^{2x} 项会被消掉，无法匹配；这是共振时常见错误。",
+          "求导时要保留乘积法则产生的低次项，漏项会导致 2a−b 的常数关系算错。"
+        ]
+      },
+      {
+        "id": "s5",
+        "title": "由初值确定常数",
+        "brief": "写出通解并用 f(0)=0、f′(0)=1 联立，解得 C₁=−2，C₂=2。",
+        "details": [
+          {
+            "type": "math",
+            "tex": "f(x)=C_1e^{2x}+C_2e^{3x}+\\left(-\\frac12x^2-x\\right)e^{2x}."
+          },
+          {
+            "type": "text",
+            "text": "由 f(0)=0 得"
+          },
+          {
+            "type": "math",
+            "tex": "C_1+C_2=0\\quad\\Rightarrow\\quad C_2=-C_1."
+          },
+          {
+            "type": "text",
+            "text": "求导："
+          },
+          {
+            "type": "math",
+            "tex": "f'(x)=2C_1e^{2x}+3C_2e^{3x}+e^{2x}\\left(-x^2-3x-1\\right),"
+          },
+          {
+            "type": "math",
+            "tex": "f'(0)=2C_1+3C_2-1=1\\quad\\Rightarrow\\quad 2C_1+3C_2=2."
+          },
+          {
+            "type": "text",
+            "text": "代入 C₂=−C₁ 得 C₁=−2，C₂=2。于是"
+          },
+          {
+            "type": "math",
+            "tex": "f(x)=-2e^{2x}+2e^{3x}+\\left(-\\frac12x^2-x\\right)e^{2x}=2e^{3x}-\\left(2+x+\\frac12x^2\\right)e^{2x}."
+          }
+        ],
+        "pitfalls": [
+          "对特解求导得 fₚ′(0)=−1，因此初值等式应写成 2C₁+3C₂−1=1，移项后为 2C₁+3C₂=2；不要漏掉这一项或移错符号。",
+          "把 C₂=−C₁ 代入 f'(0)=1 时，注意是 2C₁+3C₂−1=1，即 2C₁+3C₂=2。"
+        ]
+      }
+    ],
+    "final_answer": [
+      {
+        "type": "math",
+        "tex": "f(x)=2e^{3x}-\\left(2+x+\\frac{1}{2}x^2\\right)e^{2x}."
+      }
+    ],
+    "checks": [
+      {
+        "target": "初值 f(0)=0",
+        "evidence": [
+          {
+            "type": "math",
+            "tex": "f(0)=2-\\left(2+0+0\\right)=0."
+          }
+        ]
+      },
+      {
+        "target": "初值 f'(0)=1",
+        "evidence": [
+          {
+            "type": "text",
+            "text": "由最终表达式求导得"
+          },
+          {
+            "type": "math",
+            "tex": "f'(x)=6e^{3x}-e^{2x}\\left(x^2+3x+5\\right),"
+          },
+          {
+            "type": "math",
+            "tex": "f'(0)=6-5=1."
+          }
+        ]
+      },
+      {
+        "target": "路径无关条件 P_y=Q_x",
+        "evidence": [
+          {
+            "type": "text",
+            "text": "由最终 f 整理得 f''−5f'+6f=x e^{2x}，即 f''−5f'=x e^{2x}−6f，于是"
+          },
+          {
+            "type": "math",
+            "tex": "Q_x=\\left(f''-5f'\\right)\\cos y=\\left(x e^{2x}-6f\\right)\\cos y=P_y,"
+          },
+          {
+            "type": "text",
+            "text": "与原题 P_y=Q_x 相符。"
+          }
+        ]
+      }
+    ],
+    "transfer": {
+      "signal": "曲线积分与路径无关，且被积表达式含同一函数 f(x) 及其导数",
+      "move": "令 P、Q，使用 Pᵧ=Qₓ 消去公共因子，得到关于 f 的微分方程，再按特征根判断是否共振设特解",
+      "conditions": "区域单连通且 P、Q 偏导连续；消去公共因子时要说明该因子非零或改用恒等比较。"
+    }
+  },
+  "review_note": "原方程与初值经独立符号计算核对，教学说明经过校对。"
+}

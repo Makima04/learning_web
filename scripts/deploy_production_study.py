@@ -194,7 +194,7 @@ def deploy(args):
                             'exec pg_restore -U "$POSTGRES_USER" --dbname="$1" --exit-on-error --no-owner --no-privileges', "sh", test_db], stdin=dump, check=True)
         before = fingerprint(test_db)
         env.update(EW_DATABASE_URL=urllib.parse.urlunsplit(uri._replace(path="/"+test_db)),
-                   EW_PORT="8000", EW_HOST="0.0.0.0", EW_ALLOW_FIRST_ADMIN="0", EW_MAIL_DEV="0")
+                   EW_PORT="8000", EW_HOST="0.0.0.0", EW_ALLOW_FIRST_ADMIN="0", EW_MAIL_DEV="0", EW_BACKGROUND_TASKS="0")
         if any("\n" in value for value in env.values()):
             raise RuntimeError("运行环境含有多行变量，需要人工核对")
         test_env.write_text("".join(key+"="+value+"\n" for key,value in env.items()))

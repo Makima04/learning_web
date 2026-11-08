@@ -1,6 +1,7 @@
 // api.ts — backend client，镜像 web/api.js + 新增 study-events/stats 端点。
 // 同源 /api，无 CORS；自动带 Bearer token；JSON in/out；错误抛 Error(status,data)。
 import type { JournalCategory, JournalEntry, ReviewLog } from "@/lib/journal";
+import type { MathExplanationResponse } from "@/lib/kg/mathExplanation";
 import { submitImport, type ImportData } from "@/features/study/infrastructure/importSnapshot";
 import {
   AUTH_EXPIRED_MESSAGE,
@@ -24,6 +25,13 @@ const KEY_USER = "ew.user.v1";
 const DEFAULT_TIMEOUT_MS = 12_000;
 const LONG_TIMEOUT_MS = 60_000;
 const AUTH_TIMEOUT_MS = 30_000;
+
+export function getMathExplanation(itemId: string) {
+  return request<MathExplanationResponse>(`/api/math/explanations?item_id=${encodeURIComponent(itemId)}`);
+}
+export function startMathExplanation(itemId: string, regenerate = false) {
+  return request<MathExplanationResponse>("/api/math/explanations", { method: "POST", body: JSON.stringify({ item_id: itemId, regenerate }) });
+}
 
 type ReqOpts = RequestInit & { timeoutMs?: number };
 
@@ -222,7 +230,8 @@ export function isAdmin(): boolean {
 export async function request<T>(path: string, opts: ReqOpts = {}): Promise<T> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, signal, headers: optHeaders, ...rest } = opts;
   // 会话已失效：除登录相关 / 公开端点外一律短路，别拿旧 token 反复刷 401
-  if (isAuthExpired() && !isAuthBypassPath(path)) {
+  const publicMathRead = path.split("?")[0] === "/api/math/explanations" && (!rest.method || rest.method === "GET");
+  if (isAuthExpired() && !isAuthBypassPath(path) && !publicMathRead) {
     throw new ApiError(AUTH_EXPIRED_MESSAGE, 401, null);
   }
   const headers: Record<string, string> = { ...((optHeaders as Record<string, string>) || {}) };

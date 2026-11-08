@@ -11,10 +11,11 @@ export function canExplain(item: Pick<WangdaoItem, "kind" | "stem">): boolean {
 }
 
 export function canRevealAnswer(
-  item: Pick<WangdaoItem, "kind" | "stem" | "answer" | "ans_img" | "facets">
+  item: Pick<WangdaoItem, "kind" | "stem" | "answer" | "ans_img" | "facets" | "source" | "img">
 ): boolean {
   return Boolean(
-    item.answer || item.ans_img || (item.facets && item.facets.length) || canExplain(item)
+    ((item.source === "lilin880" || item.source === "zhangyu1000") && item.img)
+    || item.answer || item.ans_img || (item.facets && item.facets.length) || canExplain(item)
   );
 }
 

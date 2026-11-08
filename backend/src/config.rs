@@ -14,6 +14,8 @@ pub struct Config {
     pub host: String,
     pub port: u16,
     pub static_dir: PathBuf,
+    /// 更新预检恢复的是生产副本，禁止在其中重复执行付费后台任务。
+    pub background_tasks: bool,
     /// 仅连接本机更新服务，不给 Web 容器 Docker 权限。
     pub update_socket: Option<PathBuf>,
     pub update_maintenance_file: Option<PathBuf>,
@@ -106,6 +108,9 @@ impl Config {
             host,
             port,
             static_dir,
+            background_tasks: std::env::var("EW_BACKGROUND_TASKS")
+                .map(|v| v != "0" && v != "false")
+                .unwrap_or(true),
             update_socket: env_nonempty("EW_UPDATE_SOCKET").map(PathBuf::from),
             update_maintenance_file: env_nonempty("EW_UPDATE_MAINTENANCE_FILE").map(PathBuf::from),
             resend_api_key,

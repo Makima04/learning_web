@@ -8,6 +8,8 @@ import stat
 import tempfile
 import types
 import unittest
+import urllib.error
+import urllib.parse
 from unittest.mock import Mock, patch
 
 import agent
@@ -89,6 +91,24 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(self.events, ["backup"])
         self.assertFalse(self.updater.flag.exists())
         self.assertFalse(self.updater.journal.exists())
+
+    def test_preflight_disables_paid_background_jobs_in_restored_database(self):
+        work = self.root / "background-check"
+        work.mkdir()
+        captured = {}
+        def run(args, **_kwargs):
+            if args[:2] == ["docker", "run"]:
+                captured.update(line.split("=", 1) for line in (work / "test.env").read_text().splitlines())
+            return "container"
+        self.helper.inspect.return_value = {"NetworkSettings": {"Networks": {"net": {"IPAddress": "127.0.0.1"}}}}
+        self.helper.probe = Mock()
+        self.helper.request = Mock(side_effect=urllib.error.HTTPError("http://test", 503, "maintenance", None, None))
+        self.updater.cleanup_preflight = Mock()
+        ctx = dict(env={"EW_BACKGROUND_TASKS": "1"}, uri=urllib.parse.urlsplit("postgres://test@db/english_web"), network="net")
+        with patch.object(agent, "run", side_effect=run):
+            agent.Updater.preflight(self.updater, ctx, self.candidate, self.backups[0], work)
+        self.assertEqual(captured["EW_BACKGROUND_TASKS"], "0")
+        self.assertFalse((work / "test.env").exists())
 
     def test_start_failure_restores_fresh_data_before_old_image(self):
         def ready(_base, version):

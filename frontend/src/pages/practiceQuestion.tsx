@@ -14,13 +14,13 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLInputElement ||
     target instanceof HTMLTextAreaElement ||
-    (target instanceof HTMLElement && target.isContentEditable)
+    (target instanceof HTMLElement && (target.isContentEditable || Boolean(target.closest("button, a, summary, select, [role='button'], [role='tab']"))))
   );
 }
 
 function isInteractiveClick(e: React.MouseEvent): boolean {
   const el = e.target;
-  return el instanceof Element && Boolean(el.closest("button, a, input, textarea, select, label"));
+  return el instanceof Element && Boolean(el.closest("button, a, input, textarea, select, label, summary"));
 }
 
 export const PRACTICE_MARKS: { id: MarkLevel; label: string; cls: string }[] = [

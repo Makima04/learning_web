@@ -1,0 +1,19 @@
+{
+  "task": "请按给定 schema 生成数学逐题分层解析。突破点与路线供默认显示，演算细节与最终答案供按需展开。只返回 JSON。",
+  "problem": {
+    "item_id": "pilot-path-independent-ode",
+    "subject": "math1",
+    "kind": "big",
+    "stem_text": "设 f(x) 有二阶连续导数，f(0)=0，f'(0)=1。曲线积分 I=∫_L [x e^{2x}-6 f(x)] sin(y) dx - [5 f(x)-f'(x)] cos(y) dy 与路径无关，求 f(x) 的表达式。",
+    "image_readback": null,
+    "kp_labels": [
+      "第二类曲线积分",
+      "二阶常系数线性微分方程"
+    ]
+  },
+  "reference_solution": null,
+  "presentation": {
+    "max_breakthroughs": 2,
+    "max_brief_chars": 80
+  }
+}

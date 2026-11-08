@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { findKp } from "@/data/kg";
 import { ApiError } from "@/lib/api";
 import type { KgExplainResult } from "@/lib/api";
@@ -9,6 +9,7 @@ import { mathFacetLabels } from "@/lib/kg/mathPractice";
 import { cn } from "@/lib/utils";
 
 type LlmPane = "answer" | "explain";
+const MathExplanationPanel = lazy(() => import("./MathExplanationPanel").then((m) => ({ default: m.MathExplanationPanel })));
 
 const OPT_KEYS = ["A", "B", "C", "D"] as const;
 
@@ -80,6 +81,16 @@ export function QuestionFacetChips({ item }: { item: WangdaoItem }) {
 }
 
 export function WangdaoAnalysis({
+  item,
+  revealAnswer = false,
+}: { item: WangdaoItem; revealAnswer?: boolean }) {
+  if (item.source === "lilin880" || item.source === "zhangyu1000") {
+    return <Suspense fallback={<p className="text-xs text-muted-foreground">正在加载解析入口…</p>}><MathExplanationPanel key={item.id} itemId={item.id} revealAnswer={revealAnswer} /></Suspense>;
+  }
+  return <LegacyWangdaoAnalysis item={item} revealAnswer={revealAnswer} />;
+}
+
+function LegacyWangdaoAnalysis({
   item,
   revealAnswer = false,
 }: {

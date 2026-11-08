@@ -57,6 +57,9 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let state = AppState::new(pool, config.clone(), llm_rt);
+    if config.background_tasks {
+        services::math_explanations::start_worker(state.clone());
+    }
 
     let app = Router::new()
         .merge(routes::api_router())

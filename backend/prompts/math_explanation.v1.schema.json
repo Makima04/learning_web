@@ -1,0 +1,392 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Math explanation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "math_explanation.v1"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "needs_input",
+        "needs_review"
+      ]
+    },
+    "problem_readback": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/block"
+      },
+      "minItems": 1,
+      "maxItems": 32
+    },
+    "missing_information": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 800
+      },
+      "minItems": 0,
+      "maxItems": 8
+    },
+    "review_notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 800
+      },
+      "minItems": 0,
+      "maxItems": 8
+    },
+    "breakthroughs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^b[1-3]$"
+          },
+          "clue": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "move": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "why": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          },
+          "step_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^s([1-9]|1[0-6])$"
+            },
+            "minItems": 1,
+            "maxItems": 16
+          }
+        },
+        "required": [
+          "id",
+          "clue",
+          "move",
+          "why",
+          "step_ids"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 3
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^s([1-9]|1[0-6])$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "brief": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/block"
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "pitfalls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "minItems": 0,
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "brief",
+          "details",
+          "pitfalls"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 16
+    },
+    "final_answer": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/block"
+      },
+      "minItems": 0,
+      "maxItems": 32
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "target": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/block"
+            },
+            "minItems": 1,
+            "maxItems": 32
+          }
+        },
+        "required": [
+          "target",
+          "evidence"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 3
+    },
+    "transfer": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "signal": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "move": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "conditions": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          },
+          "required": [
+            "signal",
+            "move",
+            "conditions"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "problem_readback",
+    "missing_information",
+    "review_notes",
+    "breakthroughs",
+    "steps",
+    "final_answer",
+    "checks",
+    "transfer"
+  ],
+  "$defs": {
+    "block": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            }
+          },
+          "required": [
+            "type",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "math"
+            },
+            "tex": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            }
+          },
+          "required": [
+            "type",
+            "tex"
+          ]
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "draft"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "missing_information": {
+            "maxItems": 0
+          },
+          "review_notes": {
+            "maxItems": 0
+          },
+          "breakthroughs": {
+            "minItems": 1
+          },
+          "steps": {
+            "minItems": 1
+          },
+          "final_answer": {
+            "minItems": 1
+          },
+          "checks": {
+            "minItems": 1
+          },
+          "transfer": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "signal": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "move": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "conditions": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "signal",
+              "move",
+              "conditions"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "needs_input"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "breakthroughs": {
+            "maxItems": 0
+          },
+          "steps": {
+            "maxItems": 0
+          },
+          "final_answer": {
+            "maxItems": 0
+          },
+          "checks": {
+            "maxItems": 0
+          },
+          "missing_information": {
+            "minItems": 1
+          },
+          "review_notes": {
+            "maxItems": 0
+          },
+          "transfer": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "needs_review"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "breakthroughs": {
+            "maxItems": 0
+          },
+          "steps": {
+            "maxItems": 0
+          },
+          "final_answer": {
+            "maxItems": 0
+          },
+          "checks": {
+            "maxItems": 0
+          },
+          "review_notes": {
+            "minItems": 1
+          },
+          "missing_information": {
+            "maxItems": 0
+          },
+          "transfer": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@ mod journal;
 mod kg;
 pub mod llm_cfg;
 mod lookup;
+mod math_explanations;
 mod meta;
 mod paper;
 mod parse;
@@ -31,6 +32,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(settings::router())
         .merge(journal::router())
         .merge(kg::router())
+        .merge(math_explanations::router())
         .merge(sentences::router())
         .merge(translate::router())
         .merge(lookup::router())

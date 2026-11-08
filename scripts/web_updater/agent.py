@@ -294,7 +294,7 @@ class Updater:
             self.restore(backup, database)
             before = self.fingerprint(database)
             env = dict(ctx["env"], EW_DATABASE_URL=urllib.parse.urlunsplit(ctx["uri"]._replace(path="/"+database)),
-                       EW_HOST="0.0.0.0", EW_PORT="8000", EW_ALLOW_FIRST_ADMIN="0", EW_MAIL_DEV="0",
+                       EW_HOST="0.0.0.0", EW_PORT="8000", EW_ALLOW_FIRST_ADMIN="0", EW_MAIL_DEV="0", EW_BACKGROUND_TASKS="0",
                        EW_UPDATE_SOCKET="", EW_UPDATE_MAINTENANCE_FILE="/run/ew-update-probe/maintenance.json")
             if any("\n" in v or "\r" in v for v in env.values()):
                 raise RuntimeError("不支持多行运行变量")
