@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { kgBookDrillPath, kgKpPath } from "./kg/paths";
 import {
   hrefForNavRoot,
   isNavSectionActive,
@@ -89,5 +90,55 @@ describe("navMemory", () => {
     expect(hrefForNavRoot("/review-priority")).toBe("/review-priority?subject=cs408&kind=big&book=os");
     expect(hrefForNavRoot("/kg")).toBe("/kg/math");
     expect(hrefForNavRoot("/kg/exams")).toBe("/kg/exams/2025");
+  });
+
+  it.each([
+    kgKpPath("calc.m.ext", { subject: "math", returnTo: "/review-priority?subject=math&kind=big&kp=calc.m.ext" }),
+    kgKpPath("ds.sort.insert", { subject: "cs408", returnTo: "/review-priority?subject=cs408&kind=choice" }),
+    kgKpPath("calc.m.ext", { subject: "math", returnTo: "/review-priority/knowledge/calc.m.ext?route=free&example=degenerate#example" }),
+    kgBookDrillPath("calc", "calc-multi", {
+      subject: "math", src: "lilin880", part: "hard", section: "5", facet: "ext_free",
+      returnTo: "/review-priority?subject=math&kind=big",
+    }),
+  ])("从复习入口打开题集不覆盖图谱记忆：%s", (href) => {
+    const entry = "/review-priority?subject=math&kind=big";
+    rememberNavPath("/kg/math/module/calc/calc-multi");
+    rememberNavPath("/review-priority", entry.slice(entry.indexOf("?")));
+    const practice = new URL(href, "http://localhost");
+    rememberNavPath(practice.pathname, practice.search);
+
+    expect(hrefForNavRoot("/kg")).toBe("/kg/math/module/calc/calc-multi");
+    expect(hrefForNavRoot("/review-priority")).toBe(entry);
+
+    // 刷新或切换题型再次记录，也不能覆盖图谱记忆。
+    practice.searchParams.set("kind", "big");
+    rememberNavPath(practice.pathname, practice.search);
+    expect(hrefForNavRoot("/kg")).toBe("/kg/math/module/calc/calc-multi");
+  });
+
+  it("没有图谱记忆时，复习题集不会成为图谱导航的默认落点", () => {
+    const search = new URLSearchParams({ returnTo: "/review-priority?subject=math" });
+    rememberNavPath("/kg/math/kp/calc.m.ext", `?${search}`);
+    expect(hrefForNavRoot("/kg")).toBe("/kg");
+  });
+
+  it("忽略修复前已保存的跨分区题集记忆", () => {
+    const href = kgKpPath("calc.m.ext", { subject: "math", returnTo: "/review-priority?subject=math" });
+    sessionStorage.setItem("ew.nav.memory.v1", JSON.stringify({
+      "/kg": href,
+      "/review-priority": "/review-priority?subject=math",
+    }));
+    expect(hrefForNavRoot("/kg")).toBe("/kg");
+    expect(hrefForNavRoot("/review-priority")).toBe("/review-priority?subject=math");
+  });
+
+  it("图谱内部进入题集仍记住题集和章节返回位置", () => {
+    const href = kgKpPath("calc.m.ext", {
+      subject: "math", src: "lilin880", returnTo: "/kg/math/module/calc/calc-multi",
+    });
+    const practice = new URL(href, "http://localhost");
+    rememberNavPath(practice.pathname, practice.search);
+    rememberNavPath("/settings");
+    expect(hrefForNavRoot("/kg")).toBe(href);
   });
 });

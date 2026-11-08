@@ -1,4 +1,5 @@
 // 主导航「分区上次路径」：离开子页再点回该导航时，回到上次浏览处而非一级首页。
+import { practiceReturnPath } from "@/lib/kg/paths";
 
 export interface NavSection {
   /** 与 NAV 项 to 对齐的主键 */
@@ -110,10 +111,17 @@ export function sectionForPath(pathname: string): NavSection | undefined {
   return ranked.find((s) => s.match(pathname));
 }
 
+/** 从其他分区临时进入的题集保留返回入口，但不覆盖本分区的导航记忆。 */
+function isCrossSectionPractice(section: NavSection, search: string): boolean {
+  const returnTo = practiceReturnPath(new URLSearchParams(search).get("returnTo"));
+  const origin = returnTo ? sectionForPath(returnTo.split(/[?#]/)[0]) : undefined;
+  return !!origin && origin.id !== section.id;
+}
+
 /** 记录当前 URL 到所属分区（pathname + search） */
 export function rememberNavPath(pathname: string, search = "") {
   const section = sectionForPath(pathname);
-  if (!section) return;
+  if (!section || isCrossSectionPractice(section, search)) return;
   const full = pathname + (search || "");
   const map = load();
   if (map[section.id] === full) return;
@@ -132,6 +140,9 @@ export function hrefForNavRoot(root: string): string {
   if (!mem) return section.root;
   const pathOnly = mem.split("?")[0] || "";
   if (!section.match(pathOnly)) return section.root;
+  // 兼容修复前已写入 sessionStorage 的跨分区题集地址。
+  const queryStart = mem.indexOf("?");
+  if (isCrossSectionPractice(section, queryStart < 0 ? "" : mem.slice(queryStart))) return section.root;
   return mem;
 }
 
