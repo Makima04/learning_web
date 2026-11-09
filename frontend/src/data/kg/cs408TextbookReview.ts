@@ -3,6 +3,7 @@ import { reviewTextbook } from "./reviewTextbooks";
 import { CS408_BOOKS } from "./cs408";
 import { math as m, text as t, step as s } from "./mathReviewBuilder";
 import type { KnowledgeReview, ReviewBlock } from "@/lib/kg/knowledgeReview";
+import { withCs408QuestionReview } from "@/lib/kg/cs408QuestionReview";
 const names = new Map(CS408_BOOKS.flatMap(b => b.modules.flatMap(g => g.kps.map(k => [k.id,k.name] as const))));
 const tb = (headers: string[], rows: string[][]): ReviewBlock => ({type:"table",headers,rows});
 const code = (value: string): ReviewBlock => ({type:"code",code:value});
@@ -106,4 +107,4 @@ export const CS408_TEXTBOOK_REVIEWS: KnowledgeReview[] = [
  c("cn.app.http","HTTP 是应用层协议，HTTPS 通过 TLS 提供安全通道；经典 HTTP/1.x、HTTP/2 常基于 TCP，HTTP/3 基于 QUIC。",[tb(["协议","用途"],[["HTTP／HTTPS","Web资源请求"],["SMTP","邮件发送／中继"],["POP3／IMAP","邮件访问"]]),t("非持久 HTTP 每个对象单独连接；持久连接可复用，流水线与多路复用还须区分版本。")],"忽略 DNS、发送时间与 TLS，非持久 HTTP 获取一个小对象需多少 RTT？",[[t("假设 TCP 三次握手占 1 RTT，连接建立后才发 HTTP 请求。")],[t("请求到首个响应再占 1 RTT。")],[m`T\approx2RTT`]], ["HTTPS 就是与 HTTP 毫无关系的新应用语义吗？","不是，主要增加安全传输保护","是","时延模型必须注明协议版本、连接复用和 TLS 假设；不能把经典 HTTP/1.x 结论无条件用于所有版本。"]),
  c("cn.app.other","FTP 控制连接与数据连接分离；DHCP 完成地址等配置，DISCOVER、OFFER、REQUEST、ACK 为典型初始流程。",[tb(["服务","常见端口／关系"],[["FTP控制","TCP 21"],["FTP数据","主动／被动模式不同"],["DHCP","服务器UDP 67、客户端UDP 68"]]),code("DHCP: Discover -> Offer -> Request -> ACK")],"无地址主机通过 DHCP 获得网络配置，列出主要交互。",[[t("客户端广播 Discover，服务器回复 Offer。")],[t("客户端发送 Request 表示选择，服务器确认 ACK。")],[t("获得租约、地址及相关配置；续租流程不必重复完整四步。")]], ["FTP 数据连接永远固定使用服务器 TCP 20 吗？","不是，被动模式不同","是","控制连接与数据连接分开，主动／被动模式影响连接发起者和数据端口，需按题设判断。"]),
 ];
-export const CS408_KNOWLEDGE_REVIEWS: Readonly<Record<string, KnowledgeReview>> = Object.fromEntries(CS408_TEXTBOOK_REVIEWS.map(r=>[r.kpId,r]));
+export const CS408_KNOWLEDGE_REVIEWS: Readonly<Record<string, KnowledgeReview>> = Object.fromEntries(CS408_TEXTBOOK_REVIEWS.map(r=>[r.kpId,withCs408QuestionReview(r)]));

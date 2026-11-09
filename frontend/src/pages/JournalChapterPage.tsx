@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { categoryMap, EntryCard } from "@/pages/journalCards";
 import { ItemNoteField } from "@/pages/itemNoteField";
 import { QuestionKpLine, WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
+import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "pass", label: "会", cls: "bg-success text-success-foreground" },
@@ -105,7 +106,9 @@ export function JournalChapterPage() {
                 <Card key={entry.id}>
                   <CardContent className="space-y-3 p-5">
                     <p className="text-xs text-muted-foreground">
-                      {practiceSourceLabel(q)} · {practiceKindLabel(q.kind)} · §{q.section} #{q.qno}
+                      {q.source === "lilin880" || q.source === "zhangyu1000"
+                        ? `${practiceSourceLabel(q)} · ${practiceKindLabel(q.kind)} · §${q.section} #${q.qno}`
+                        : practiceQuestionLocation(q)}
                       {q.pdf_page ? ` · 做题本 p.${q.pdf_page}` : ""}
                       {q.book_ans_page != null ? ` · 原书【P${q.book_ans_page}】` : ""}
                       {entry.nextReviewOn < today ? " · 逾期" : ""}

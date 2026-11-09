@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ItemNoteField } from "@/pages/itemNoteField";
 import { QuestionKpLine, WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
+import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
 function isTypingTarget(target: EventTarget | null): boolean {
   return (
@@ -169,12 +170,13 @@ export function PracticeQuestionCard({
                 item.part === "hard" ? "bg-warning/15 text-ink-warning" : "bg-primary/10 text-primary"
               )}>{part}</span>}
             </div>
-            {/* 大屏作答台表头已显示题号，卡片内只保留醒目的来源与阶段。 */}
-            {!large && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                {index + 1} / {total}
-                {practiceBandLabel(item) ? ` · ${practiceBandLabel(item)}` : ""} · {kind} · §
-                {`${item.section} #${item.qno}`}
+            {/* 王道出处在大屏与窄屏均完整展示，原书题号与队列序号分开。 */}
+            {(!large || source === "王道") && (
+              <p className="mt-2 break-words text-xs leading-5 text-muted-foreground" aria-label="题目原书位置">
+                {!large && `${index + 1} / ${total} · `}
+                {source === "王道" ? practiceQuestionLocation(item) : <>
+                  {practiceBandLabel(item) ? `${practiceBandLabel(item)} · ` : ""}{kind} · §{item.section} #{item.qno}
+                </>}
                 {item.pdf_page ? ` · 做题本 p.${item.pdf_page}` : ""}
                 {item.book_ans_page != null ? ` · 原书【P${item.book_ans_page}】` : ""}
                 {item.year ? ` · ${item.year}真题` : ""}

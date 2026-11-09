@@ -25,6 +25,7 @@ import { useJournal } from "@/stores/journal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PracticeQuestionCard } from "@/pages/practiceQuestion";
+import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
 const STATUS = {
   unknown: { text: "待诊断", cls: "bg-muted text-muted-foreground" },
@@ -726,8 +727,8 @@ export function ReviewPriorityPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-bold">{selected.name}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {practiceSourceLabel(active)} · §{active.section} #{active.qno}
+                  <p className="break-words text-[11px] leading-5 text-muted-foreground">
+                    {practiceQuestionLocation(active)}
                     {active.year ? ` · ${active.year} 真题` : ""}
                     {active.pdf_page ? ` · 做题本 p.${active.pdf_page}` : ""}
                   </p>
@@ -910,8 +911,10 @@ export function ReviewPriorityPage() {
                             {review && <span className="text-[10px] font-semibold text-ink-danger">到期重练</span>}
                             {current && <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">作答中</span>}
                           </span>
-                          <span className="mt-1 block truncate text-xs">
-                            {practiceSourceLabel(item)} · {item.section_name || `章节 ${item.section}`} · 第 {item.qno} 题
+                          <span className="mt-1 block break-words text-xs leading-5">
+                            {item.source === "lilin880" || item.source === "zhangyu1000"
+                              ? `${practiceSourceLabel(item)} · ${item.section_name || `章节 ${item.section}`} · 第 ${item.qno} 题`
+                              : practiceQuestionLocation(item)}
                           </span>
                           {techniqueIds?.length ? <span className="mt-1 block text-[10px] text-muted-foreground">{techniqueIds.map(mathFacetName).join(" · ")}</span> : null}
                         </span>

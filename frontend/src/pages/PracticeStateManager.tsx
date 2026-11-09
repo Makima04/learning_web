@@ -6,6 +6,7 @@ import { markMapOf, type WangdaoItem } from "@/lib/kg/wangdao408";
 import { setWangdaoReviewStatus } from "@/lib/kg/wangdaoPractice";
 import { useJournal } from "@/stores/journal";
 import { useKgProgress } from "@/stores/kgProgress";
+import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
 /** 包括已退出队列的题，避免永久学会后找不到重新加入复习的入口。 */
 export function PracticeStateManager({ items }: { items: WangdaoItem[] }) {
@@ -42,7 +43,9 @@ export function PracticeStateManager({ items }: { items: WangdaoItem[] }) {
                 <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3">
                   <div className="min-w-0 flex-1 text-xs">
                     <p className="font-semibold">
-                      {practiceSourceLabel(item)} · {practiceBandLabel(item)} · {practiceKindLabel(item.kind)} · §{item.section} #{item.qno}
+                      {item.source === "lilin880" || item.source === "zhangyu1000"
+                        ? `${practiceSourceLabel(item)} · ${practiceBandLabel(item)} · ${practiceKindLabel(item.kind)} · §${item.section} #${item.qno}`
+                        : practiceQuestionLocation(item)}
                     </p>
                     {item.stem && <p className="mt-1 line-clamp-2 text-muted-foreground">{item.stem}</p>}
                     <p className="mt-1 text-muted-foreground">

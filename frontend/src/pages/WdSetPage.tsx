@@ -33,6 +33,7 @@ import { ItemNoteField } from "@/pages/itemNoteField";
 import { WdTags } from "@/pages/wdTags";
 import { WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
 import { vizFor } from "@/viz/registry";
+import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "pass", label: "对", cls: "bg-success text-success-foreground" },
@@ -430,8 +431,8 @@ function QRow({
     <Card id={`q-${item.id}`} className={cn(open && "ring-1 ring-primary/40")}>
       <button type="button" className="w-full px-4 py-3 text-left" onClick={onToggle}>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-sm font-medium">
-            {item.book.toUpperCase()} §{item.section} #{item.qno}
+          <span className="break-words text-sm font-medium">
+            {practiceQuestionLocation(item)}
           </span>
           <WdTags item={item} showMinor={open} compact link={false} />
           {mark && (

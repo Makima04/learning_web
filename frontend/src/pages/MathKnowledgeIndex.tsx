@@ -6,6 +6,7 @@ import { MATH_BOOKS } from "@/data/kg/math";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { knowledgeReviewPath } from "@/lib/kg/paths";
+import { CS408_QUESTION_CASES, CS408_QUESTION_GAPS } from "@/lib/kg/cs408QuestionReview";
 
 export function MathKnowledgeIndex() {
   const [params] = useSearchParams();
@@ -25,7 +26,9 @@ export function MathKnowledgeIndex() {
     <header>
       <Link to={`/review-priority?subject=${subject}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"><ArrowLeft className="h-3.5 w-3.5" />返回复习性价比</Link>
       <h1 className="mt-4 text-2xl font-extrabold">{subject === "math" ? "数学" : "408"}知识复习</h1>
-      <p className="mt-2 text-sm leading-7 text-muted-foreground">{count} 个考点 · 教材体系 · 概念公式、过程推演与易错检查。</p>
+      <p className="mt-2 text-sm leading-7 text-muted-foreground">{subject === "cs408"
+        ? `${count} 个考点 · ${Object.keys(CS408_QUESTION_CASES).length} 个结合真题或王道逐题讲解 · ${Object.keys(CS408_QUESTION_GAPS).length} 个待补原题。`
+        : `${count} 个考点 · 教材体系 · 概念公式、过程推演与易错检查。`}</p>
     </header>
     <div role="group" aria-label="选择学科" className="flex gap-2">{(["math", "cs408"] as const).map(value => <Button key={value} asChild size="sm" variant={subject === value ? "default" : "outline"}><Link onClick={() => { setBookId("all"); setQuery(""); }} to={`?${new URLSearchParams({ subject: value, kind: value === "cs408" && params.get("kind") === "fill" ? "big" : params.get("kind") ?? "big", order: params.get("order") ?? "personal" })}`}>{value === "math" ? "数学" : "408"}</Link></Button>)}</div>
     <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
@@ -42,7 +45,7 @@ export function MathKnowledgeIndex() {
         {book.modules.map((module) => <section key={module.id} className="min-w-0 rounded-2xl border border-border bg-card p-4">
           <h3 className="text-sm font-bold">{module.name}</h3>
           <ul className="mt-3 divide-y divide-border/60">{module.kps.map((kp) => <li key={kp.id}>
-            <Link to={knowledgeReviewPath(kp.id, params.toString())} className="flex items-center gap-2 py-3 text-sm leading-6 text-primary hover:underline"><span className="min-w-0 flex-1">{kp.name}</span><ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /></Link>
+            <Link to={knowledgeReviewPath(kp.id, params.toString())} className="flex items-center gap-2 py-3 text-sm leading-6 text-primary hover:underline"><span className="min-w-0 flex-1">{kp.name}{subject === "cs408" && <span className="block text-[11px] leading-5 text-muted-foreground">{CS408_QUESTION_CASES[kp.id]?.label ?? "基础讲解 · 原题待补"}</span>}</span><ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /></Link>
           </li>)}</ul>
         </section>)}
       </div>

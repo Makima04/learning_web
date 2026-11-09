@@ -31,6 +31,14 @@ export interface ReviewLesson {
   id: string;
   label: string;
   examId?: string;
+  /** 经逐题编写的讲解来源，区别于末尾自动匹配的同考点练习。 */
+  sourceQuestion?: {
+    source: "exam" | "wangdao";
+    questionId: string;
+    label: string;
+    kind: "big" | "mcq";
+    excerpt: boolean;
+  };
   prompt: ReviewBlock[];
   signals: string[];
   recognition: string;
@@ -64,6 +72,7 @@ export interface KnowledgeReview {
   textbook?: { title: string; url: string; note?: string };
   scope: string;
   defaultRouteId: string;
+  sourceGap?: string;
   routes: ReviewRoute[];
 }
 

@@ -81,6 +81,9 @@ jobs:
         working-directory: frontend
         run: npm test
 
+      - name: 408 原题教案与正文算法校验
+        run: python3 -m unittest discover -s scripts -p 'test_cs408_knowledge_lessons.py'
+
       - name: 更新服务故障恢复测试
         run: python3 -m unittest discover -s scripts/web_updater -p 'test_*.py'
 

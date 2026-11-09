@@ -40,7 +40,7 @@ function ReviewBlocks({ blocks }: { blocks: ReviewBlock[] }) {
             </table>
           </div>
         );
-        return <p key={index}>{block.text}</p>;
+        return <p key={index} className="whitespace-pre-wrap">{block.text}</p>;
       })}
     </div>
   );
@@ -52,14 +52,18 @@ function reviewExam(questionId: string) {
 
 function ExamLinks({ questionId }: { questionId: string }) {
   const question = reviewExam(questionId);
+  // 知识教案允许引用统计集之外的真实题目；是否计入考频与能否学习原题是两个口径。
+  const csId = /^cs408-(\d{4})-q(\d+)$/.exec(questionId);
   const subject = question ? findKp(question.kpId)?.book.subject ?? "math" : "math";
-  if (!question) return <span className="text-xs text-muted-foreground">原题暂不可用</span>;
+  if (!question && !csId) return <span className="text-xs text-muted-foreground">原题暂不可用</span>;
+  const href = question ? reviewQuestionHref(subject, question) : `/kg/exams/practice/${csId![1]}?q=${csId![2]}`;
+  const answerHref = question ? reviewQuestionHref(subject, question, true) : `/kg/exams/${csId![1]}#q${csId![2]}`;
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-primary">
-      <a className="inline-flex items-center gap-1 hover:underline" href={reviewQuestionHref(subject, question)} target="_blank" rel="noreferrer">
+      <a className="inline-flex items-center gap-1 hover:underline" href={href} target="_blank" rel="noreferrer">
         打开原题<ExternalLink className="h-3 w-3" aria-hidden="true" />
       </a>
-      <a className="inline-flex items-center gap-1 hover:underline" href={reviewQuestionHref(subject, question, true)} target="_blank" rel="noreferrer">
+      <a className="inline-flex items-center gap-1 hover:underline" href={answerHref} target="_blank" rel="noreferrer">
         参考解析<ExternalLink className="h-3 w-3" aria-hidden="true" />
       </a>
     </div>
@@ -103,7 +107,7 @@ function ReferenceList({ subject, references, onPractice, busyId, catalogReady, 
 }
 
 /** 遮挡、展开及口头自测只控制当前阅读；真正的练习评分复用已有账号写路径。 */
-function LessonContent({ subject, lesson, items, catalogError }: { subject: SubjectId; lesson: ReviewLesson; items: WangdaoItem[] | null; catalogError: string }) {
+function LessonContent({ subject, lesson, items, catalogError, template }: { subject: SubjectId; lesson: ReviewLesson; items: WangdaoItem[] | null; catalogError: string; template: KnowledgeReview }) {
   const [recall, setRecall] = useState(false);
   const [working, setWorking] = useState(lesson.showWorkingByDefault ?? false);
   const [answer, setAnswer] = useState<number | null>(null);
@@ -142,7 +146,9 @@ function LessonContent({ subject, lesson, items, catalogError }: { subject: Subj
     try {
       const [full] = await hydratePracticeItems([item]);
       if (request !== requestId.current) return;
-      setPractice(full);
+      // 本节主例题经过逐题核对，不能再沿用旧目录中的错误标签记录学习进度。
+      setPractice(lesson.sourceQuestion?.questionId === id && subject === "cs408"
+        ? { ...full, kp_ids: [template.kpId] } : full);
     } catch (error: unknown) {
       if (request === requestId.current) setPracticeError(error instanceof Error ? error.message : "题目加载失败，请重试。");
     } finally {
@@ -158,10 +164,12 @@ function LessonContent({ subject, lesson, items, catalogError }: { subject: Subj
             <section aria-labelledby="review-recognition-title">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 id="review-recognition-title" className="flex items-center gap-2 text-sm font-extrabold"><ScanLine className="h-4 w-4 text-primary" aria-hidden="true" />从题目识别</h2>
-                <span className="text-xs text-muted-foreground">{question ? `${question.year} 年 · 第 ${question.n} 题` : lesson.label}</span>
+                <span className="text-xs leading-6 text-muted-foreground">{lesson.sourceQuestion?.label ?? (question ? `${question.year} 年 · 第 ${question.n} 题` : lesson.label)}</span>
               </div>
               <div className="mt-3 rounded-xl bg-secondary/45 p-4"><ReviewBlocks blocks={lesson.prompt} /></div>
+              {lesson.sourceQuestion && <p className="mt-2 text-xs leading-6 text-muted-foreground">{lesson.sourceQuestion.excerpt ? "以上为题意摘录，完整条件与版面见原题。" : "题干与选项来自注明的原题，排版已整理。"}下方推演针对本题重新编写。</p>}
               {lesson.examId && <div className="mt-3"><ExamLinks questionId={lesson.examId} /></div>}
+              {lesson.sourceQuestion?.source === "wangdao" && <Button variant="outline" size="sm" className="mt-3 text-xs" disabled={busyId !== null || !items} onClick={() => void openPractice(lesson.sourceQuestion!.questionId)}>独立重做这道王道题</Button>}
               <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:gap-4">
                 <h3 className="shrink-0 text-xs font-bold leading-7 text-primary">识别信号</h3>
                 <div className="min-w-0">
@@ -170,6 +178,12 @@ function LessonContent({ subject, lesson, items, catalogError }: { subject: Subj
                 </div>
               </div>
             </section>
+
+            {subject === "cs408" && template.knowledge && <section className="space-y-3 border-t border-border/60 pt-5" aria-label="本题用到的知识与公式">
+              <h2 className="flex items-center gap-2 text-sm font-extrabold"><BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />本题用到的知识与公式</h2>
+              {template.textbook?.note && <p className="text-xs leading-6 text-muted-foreground">{template.textbook.note}</p>}
+              <ReviewBlocks blocks={template.knowledge} />
+            </section>}
 
             <section aria-labelledby="review-route-title">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -265,7 +279,11 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
   const { items, error } = useDrillCatalog(subject === "math" ? "math" : "wangdao");
   const rawKind = parseMath1Kind(params.get("kind"));
   const kind = subject === "cs408" && rawKind === "fill" ? "big" : rawKind;
-  const currentLesson = lesson.examId ? lesson : {
+  const currentLesson = lesson.sourceQuestion ? {
+    ...lesson,
+    references: [...lesson.references, ...cs408KnowledgeReferences(template.kpId, lesson.sourceQuestion.kind, items ?? [])
+      .filter(ref => ref.questionId !== lesson.sourceQuestion!.questionId)],
+  } : lesson.examId ? lesson : {
     ...lesson, references: (subject === "math" ? mathKnowledgeReferences : cs408KnowledgeReferences)(template.kpId, kind, items ?? []),
   };
   const loggedIn = useAuth((s) => s.loggedIn);
@@ -314,7 +332,9 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
 
       {template.textbook && <p className="text-xs leading-6 text-muted-foreground">教材体系参考：<a href={template.textbook.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">{template.textbook.title}</a> · 自编学习提要</p>}
 
-      {template.knowledge && <Card><CardContent className="space-y-3 p-5 md:p-6">
+      {template.sourceGap && <p role="status" className="rounded-xl bg-warning/10 p-4 text-sm leading-7 text-ink-warning">{template.sourceGap}</p>}
+
+      {subject === "math" && template.knowledge && <Card><CardContent className="space-y-3 p-5 md:p-6">
         <h2 className="flex items-center gap-2 text-sm font-extrabold"><BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />先补概念与公式</h2>
         {template.textbook?.note && <p className="text-xs leading-6 text-muted-foreground">{template.textbook.note}</p>}
         <ReviewBlocks blocks={template.knowledge} />
@@ -341,7 +361,7 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
       </Card> : <p className="text-xs leading-6 text-muted-foreground">{template.scope}</p>}
 
       {syncError && <p role="status" className="text-xs text-ink-warning">{syncError}</p>}
-      <LessonContent key={`${template.kpId}:${lesson.id}`} subject={subject} lesson={currentLesson} items={items} catalogError={error} />
+      <LessonContent key={`${template.kpId}:${lesson.id}`} subject={subject} lesson={currentLesson} items={items} catalogError={error} template={template} />
     </div>
   );
 }
