@@ -198,7 +198,7 @@ export function KgKpPage() {
         </p>
       </div>
 
-      {mode === "idle" && isMath && KNOWLEDGE_REVIEW_TOPICS[kp.id] && (
+      {mode === "idle" && KNOWLEDGE_REVIEW_TOPICS[kp.id] && (
         <Card>
           <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
             <div className="min-w-0 flex-1">

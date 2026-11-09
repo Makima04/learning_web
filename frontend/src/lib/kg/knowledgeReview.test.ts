@@ -19,7 +19,7 @@ const catalogs = ["lilin880", "zhangyu1000"].flatMap((source) => {
 describe("知识复习的原题依据", () => {
   it("每个例题都对应已有极值真题，按真题、李林综合大题、张宇强化题排序", () => {
     expect(findKp(template.kpId)?.book.subject).toBe("math");
-    const priority = { exam: 0, lilin880: 1, zhangyu1000: 2 };
+    const priority = { exam: 0, lilin880: 1, zhangyu1000: 2, wangdao: 3 };
     for (const route of template.routes) {
       for (const lesson of route.lessons) {
         const lead = MATH1_ITEMS.find((q) => q.id === lesson.examId);

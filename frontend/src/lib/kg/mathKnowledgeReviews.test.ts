@@ -14,10 +14,10 @@ const catalog = ["lilin880", "zhangyu1000"].flatMap((source) => JSON.parse(
 ).items as WangdaoItem[]);
 
 describe("数学知识模板全量覆盖与教学内容", () => {
-  it("三个分科的 75 个考点均有入口和真实模板，408 不进入这次扩展", () => {
+  it("三个分科的 75 个考点均有入口和真实模板，数学入口独立于408覆盖统计", () => {
     expect(points).toHaveLength(75);
     expect(Object.keys(MATH_KNOWLEDGE_REVIEWS).sort()).toEqual(points.map((kp) => kp.id).sort());
-    expect(Object.keys(KNOWLEDGE_REVIEW_TOPICS).sort()).toEqual(Object.keys(MATH_KNOWLEDGE_REVIEWS).sort());
+    expect(Object.keys(KNOWLEDGE_REVIEW_TOPICS).filter(id => points.some(kp => kp.id === id)).sort()).toEqual(Object.keys(MATH_KNOWLEDGE_REVIEWS).sort());
   });
 
   it.each(points.map((kp) => [kp.id, kp.name]))("%s 的概念、演算、自测与公式可读", (id) => {
@@ -52,7 +52,7 @@ describe("配套题引用与题型隔离", () => {
     for (const kp of points) {
       const references = mathKnowledgeReferences(kp.id, kind, catalog);
       expect(new Set(references.map((ref) => ref.questionId)).size).toBe(references.length);
-      const ranks = references.map((ref) => ({ exam: 0, lilin880: 1, zhangyu1000: 2 })[ref.source]);
+      const ranks = references.map((ref) => ({ exam: 0, lilin880: 1, zhangyu1000: 2, wangdao: 3 })[ref.source]);
       expect(ranks).toEqual([...ranks].sort());
       for (const reference of references) {
         if (reference.source === "exam") {

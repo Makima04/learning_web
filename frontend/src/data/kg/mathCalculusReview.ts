@@ -1,5 +1,6 @@
 // 高数方法例题为自编；每条分别给出适用条件、演算与易错检查。
 import { topic, text as t, math as m, step as s } from "./mathReviewBuilder";
+import { MATH_SURFACE_FLUX_REVIEW } from "./mathSurfaceFluxReview";
 
 export const MATH_CALCULUS_REVIEWS = [
   topic("calc.limit.fn", "先检查定义域，再判断奇偶、周期、单调和有界；复合函数逐层分析。",
@@ -242,12 +243,7 @@ export const MATH_CALCULUS_REVIEWS = [
     [s("写投影区域", "投影为单位正方形。", m`D=[0,1]\times[0,1]`), s("计算面积因子", "gₓ=gᵧ=1。", m`dS=\sqrt3\,dx\,dy`), s("积分", "面积因子为常数。", m`S=\iint_D\sqrt3\,dx\,dy=\sqrt3`)],
     "曲面面积不是投影面积；一般需要乘 √(1+gₓ²+gᵧ²)。",
     ["第一类曲面积分与选上侧、下侧有关吗？", "无关", "有关，会变号", "dS 是无向面积元，改变法向不改变曲面面积。"]),
-  topic("calc.m.surf2", "第二类曲面积分先定法向方向；闭面优先考虑高斯，开面比较直接投影和补面。",
-    [m`\iint_\Sigma P\,dy\,dz+Q\,dz\,dx+R\,dx\,dy=\iint_\Sigma F\cdot n\,dS`, t("图形 z=g(x,y) 的上侧有向面积元为 (−gₓ,−gᵧ,1)dxdy，下侧取负。")],
-    [m`\Sigma:x^2+y^2+z^2=1\text{外侧},\quad F=(x,y,z),\quad\text{求通量}`],
-    [s("检查闭面与正则性", "单位球面闭合，向量场处处光滑，方向向外。", m`\nabla\cdot F=3`), s("使用高斯公式", "转为球体内的散度积分。", m`\iint_\Sigma F\cdot n\,dS=\iiint_V3\,dV`), s("代体积", "单位球体积 4π/3。", m`\text{通量}=4\pi`)],
-    "高斯公式默认闭曲面外侧；补面后要按照统一的外法向减去该面的贡献。",
-    ["闭曲面改成内侧，通量会怎样？", "变号", "不变", "第二类曲面积分依赖法向定向。"]),
+  MATH_SURFACE_FLUX_REVIEW,
   topic("calc.m.formula", "格林把平面闭曲线变面积分，高斯把闭曲面变体积分，斯托克斯把空间闭曲线变旋度通量。",
     [m`\iint_{\partial V}F\cdot n\,dS=\iiint_V\nabla\cdot F\,dV`, m`\oint_{\partial S}F\cdot dr=\iint_S(\nabla\times F)\cdot n\,dS`, t("使用前检查场在所需邻域光滑、有无奇点，以及边界方向与法向是否一致。")],
     [m`F=(-y/2,x/2,0),\quad L:x^2+y^2=1,\ z=0\text{，从上看逆时针}`],

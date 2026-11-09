@@ -490,11 +490,11 @@ export function ReviewPriorityPage() {
       </div>
 
       <div className="mx-auto max-w-6xl space-y-5 p-4 pb-16 md:p-6">
-        {subject === "math" && <Link to={`/review-priority/knowledge?${new URLSearchParams({ kind, order })}`} className="flex items-center gap-3 rounded-xl border border-primary/30 bg-accent/40 px-4 py-3 text-primary hover:bg-accent/70">
+        <Link to={`/review-priority/knowledge?${new URLSearchParams({ subject, kind, order })}`} className="flex items-center gap-3 rounded-xl border border-primary/30 bg-accent/40 px-4 py-3 text-primary hover:bg-accent/70">
           <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
-          <span className="min-w-0 flex-1"><span className="block text-sm font-bold">数学知识模板 · 75 个考点</span><span className="mt-1 block text-xs text-muted-foreground">高数、线代、概率统计 · 先学知识与解题路线，再直接练题</span></span>
+          <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{subject === "math" ? "数学知识复习 · 75 个考点" : "408知识复习 · 92 个考点"}</span><span className="mt-1 block text-xs text-muted-foreground">{subject === "math" ? "高数、线代、概率统计 · 公式与完整演算" : "数据结构、计组、操作系统、计网 · 原理与过程推演"}</span></span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-        </Link>}
+        </Link>
         {/* ---------- 结论层：一句话 + Top3 行动卡 ---------- */}
         <section aria-label="本周推荐" className="rounded-2xl bg-card p-5 shadow-edge md:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -558,7 +558,7 @@ export function ReviewPriorityPage() {
                       <Play className="h-3 w-3" />{starter ? (subject === "math" ? "直接练题" : "开始练") : "暂无题"}
                     </Button>
                   </div>
-                  {subject === "math" && KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
+                  {KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
                     <Link to={knowledgeReviewPath(topic.kpId, params.toString())} className="mt-3 inline-flex items-center gap-1.5 border-t border-border/60 pt-2.5 text-xs font-bold text-primary hover:underline">
                       <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />知识模板 · 先学知识与解题路线<ArrowRight className="ml-auto h-3 w-3" aria-hidden="true" />
                     </Link>
@@ -616,7 +616,7 @@ export function ReviewPriorityPage() {
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-sm font-bold">{topic.name}</span>
                         <Status topic={topic} plan={techniquePlans.get(topic.kpId)} />
-                        {subject === "math" && KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
+                        {KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
                           <Link
                             to={knowledgeReviewPath(topic.kpId, params.toString())}
                             onClick={(event) => event.stopPropagation()}
@@ -769,7 +769,7 @@ export function ReviewPriorityPage() {
             </div>
 
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-              {subject === "math" && KNOWLEDGE_REVIEW_TOPICS[selected.kpId] && (
+              {KNOWLEDGE_REVIEW_TOPICS[selected.kpId] && (
                 <Link to={knowledgeReviewPath(selected.kpId, params.toString())} className="flex items-start gap-3 rounded-xl border-2 border-primary/30 bg-accent/50 p-3 transition-colors hover:border-primary/60">
                   <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   <span className="min-w-0 flex-1"><span className="block text-sm font-bold">先复习知识与解题路线</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{KNOWLEDGE_REVIEW_TOPICS[selected.kpId].summary}</span></span>

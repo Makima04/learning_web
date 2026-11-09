@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, ExternalLink, Eye, EyeOff, Lightbulb, Play, Route, ScanLine } from "lucide-react";
 import { findKp } from "@/data/kg";
+import { CS408_KNOWLEDGE_REVIEWS } from "@/data/kg/cs408TextbookReview";
+import { cs408KnowledgeReferences } from "@/lib/kg/cs408KnowledgeReferences";
+import type { SubjectId } from "@/lib/kg/types";
 import { MATH_KNOWLEDGE_REVIEWS } from "@/data/kg/mathKnowledgeReviews";
 import { MathFormula } from "@/components/MathFormula";
 import { Button } from "@/components/ui/button";
@@ -13,7 +16,7 @@ import { MATH1_ITEMS, parseMath1Kind } from "@/lib/kg/math1Analysis";
 import { mathKnowledgeReferences } from "@/lib/kg/mathKnowledgeReferences";
 import { useDrillCatalog } from "@/lib/kg/mathPractice";
 import { kgKpPath, reviewPriorityPath } from "@/lib/kg/paths";
-import { reviewQuestionHref } from "@/lib/kg/reviewPriority";
+import { REVIEW_DATASETS, reviewQuestionHref } from "@/lib/kg/reviewPriority";
 import { applyWangdaoPractice, toggleWangdaoCollect } from "@/lib/kg/wangdaoPractice";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
 import { cn } from "@/lib/utils";
@@ -28,6 +31,7 @@ function ReviewBlocks({ blocks }: { blocks: ReviewBlock[] }) {
     <div className="min-w-0 space-y-2 text-sm leading-7">
       {blocks.map((block, index) => {
         if (block.type === "math") return <MathFormula key={index} tex={block.tex} />;
+        if (block.type === "code") return <pre key={index} className="max-w-full overflow-x-auto rounded-lg bg-secondary/50 p-3 text-xs leading-6"><code>{block.code}</code></pre>;
         if (block.type === "table") return (
           <div key={index} className="max-w-full overflow-x-auto">
             <table className="w-full text-left text-xs leading-6">
@@ -42,22 +46,28 @@ function ReviewBlocks({ blocks }: { blocks: ReviewBlock[] }) {
   );
 }
 
+function reviewExam(questionId: string) {
+  return MATH1_ITEMS.find(q => q.id === questionId) ?? REVIEW_DATASETS.cs408.items.find(q => q.id === questionId);
+}
+
 function ExamLinks({ questionId }: { questionId: string }) {
-  const question = MATH1_ITEMS.find((q) => q.id === questionId);
+  const question = reviewExam(questionId);
+  const subject = question ? findKp(question.kpId)?.book.subject ?? "math" : "math";
   if (!question) return <span className="text-xs text-muted-foreground">原题暂不可用</span>;
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-primary">
-      <a className="inline-flex items-center gap-1 hover:underline" href={reviewQuestionHref("math", question)} target="_blank" rel="noreferrer">
+      <a className="inline-flex items-center gap-1 hover:underline" href={reviewQuestionHref(subject, question)} target="_blank" rel="noreferrer">
         打开原题<ExternalLink className="h-3 w-3" aria-hidden="true" />
       </a>
-      <a className="inline-flex items-center gap-1 hover:underline" href={reviewQuestionHref("math", question, true)} target="_blank" rel="noreferrer">
+      <a className="inline-flex items-center gap-1 hover:underline" href={reviewQuestionHref(subject, question, true)} target="_blank" rel="noreferrer">
         参考解析<ExternalLink className="h-3 w-3" aria-hidden="true" />
       </a>
     </div>
   );
 }
 
-function ReferenceList({ references, onPractice, busyId, catalogReady, catalogError }: {
+function ReferenceList({ subject, references, onPractice, busyId, catalogReady, catalogError }: {
+  subject: SubjectId;
   references: ReviewReference[];
   onPractice: (id: string) => void;
   busyId: string | null;
@@ -67,11 +77,11 @@ function ReferenceList({ references, onPractice, busyId, catalogReady, catalogEr
   return (
     <section aria-labelledby="review-references-title">
       <h2 id="review-references-title" className="text-sm font-extrabold">配套练习</h2>
-      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">真题 → 李林 880 → 张宇 1000</p>
+      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{subject === "math" ? "真题 → 李林 880 → 张宇 1000" : "真题 → 王道"}</p>
       {references.length === 0 && <p className="mt-3 text-xs leading-6 text-muted-foreground">{catalogReady ? "该考点在当前题型下暂无匹配原题，可先完成上方方法例题，或进入考点题集选择其他题型。" : "正在查找配套题，知识内容可以先阅读。"}</p>}
       <div className="mt-1 divide-y divide-border/60">
         {references.map((ref, index) => {
-          const exam = ref.source === "exam" ? MATH1_ITEMS.find((q) => q.id === ref.questionId) : undefined;
+          const exam = ref.source === "exam" ? reviewExam(ref.questionId) : undefined;
           const label = ref.source === "exam" ? (exam ? `${exam.year} 年 · 第 ${exam.n} 题` : ref.questionId) : ref.label;
           return (
             <div key={ref.questionId} className="space-y-2 py-4">
@@ -93,9 +103,9 @@ function ReferenceList({ references, onPractice, busyId, catalogReady, catalogEr
 }
 
 /** 遮挡、展开及口头自测只控制当前阅读；真正的练习评分复用已有账号写路径。 */
-function LessonContent({ lesson, items, catalogError }: { lesson: ReviewLesson; items: WangdaoItem[] | null; catalogError: string }) {
+function LessonContent({ subject, lesson, items, catalogError }: { subject: SubjectId; lesson: ReviewLesson; items: WangdaoItem[] | null; catalogError: string }) {
   const [recall, setRecall] = useState(false);
-  const [working, setWorking] = useState(false);
+  const [working, setWorking] = useState(lesson.showWorkingByDefault ?? false);
   const [answer, setAnswer] = useState<number | null>(null);
   const [practice, setPractice] = useState<WangdaoItem | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -107,7 +117,7 @@ function LessonContent({ lesson, items, catalogError }: { lesson: ReviewLesson; 
   const entries = useJournal((s) => s.entries);
   const userId = useAuth((s) => s.user?.id);
   const loggedIn = useAuth((s) => s.loggedIn);
-  const question = MATH1_ITEMS.find((q) => q.id === lesson.examId);
+  const question = lesson.examId ? reviewExam(lesson.examId) : undefined;
 
   useEffect(() => {
     requestId.current++;
@@ -215,7 +225,7 @@ function LessonContent({ lesson, items, catalogError }: { lesson: ReviewLesson; 
                 ))}
               </div>
             </section>
-            <ReferenceList references={lesson.references} onPractice={(id) => void openPractice(id)} busyId={busyId} catalogReady={items !== null} catalogError={catalogError} />
+            <ReferenceList subject={subject} references={lesson.references} onPractice={(id) => void openPractice(id)} busyId={busyId} catalogReady={items !== null} catalogError={catalogError} />
           </CardContent>
         </Card>
       </div>
@@ -250,17 +260,21 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
   const location = useLocation();
   const [params, setParams] = useSearchParams();
   const { route, lesson } = resolveReviewLesson(template, params.get("route"), params.get("example"));
-  const { items, error } = useDrillCatalog("math");
-  const kind = parseMath1Kind(params.get("kind"));
+  const found = findKp(template.kpId);
+  const subject = found?.book.subject ?? "math";
+  const { items, error } = useDrillCatalog(subject === "math" ? "math" : "wangdao");
+  const rawKind = parseMath1Kind(params.get("kind"));
+  const kind = subject === "cs408" && rawKind === "fill" ? "big" : rawKind;
   const currentLesson = lesson.examId ? lesson : {
-    ...lesson, references: mathKnowledgeReferences(template.kpId, kind, items ?? []),
+    ...lesson, references: (subject === "math" ? mathKnowledgeReferences : cs408KnowledgeReferences)(template.kpId, kind, items ?? []),
   };
   const loggedIn = useAuth((s) => s.loggedIn);
   const userId = useAuth((s) => s.user?.id);
   const load = useKgProgress((s) => s.load);
   const [syncError, setSyncError] = useState("");
-  const found = findKp(template.kpId);
-  const returnParams = new URLSearchParams({ subject: "math", book: found?.book.id ?? "calc", kind: parseMath1Kind(params.get("kind")), kp: template.kpId });
+  const returnParams = new URLSearchParams({ subject, book: found?.book.id ?? "calc", kind, kp: template.kpId });
+  const indexParams = new URLSearchParams({ subject, kind });
+  if (params.get("order")) indexParams.set("order", params.get("order")!);
   const order = params.get("order");
   if (order === "personal" || order === "recent" || order === "frequency") returnParams.set("order", order);
 
@@ -292,18 +306,21 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{template.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" size="sm" className="text-xs"><Link to={`/review-priority/knowledge${location.search}`}>全部数学模板</Link></Button>
-            <Button asChild variant="outline" size="sm" className="gap-1 text-xs"><Link to={kgKpPath(template.kpId, { subject: "math", returnTo: location.pathname + location.search + location.hash })}>考点与全部练习<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link></Button>
+            <Button asChild variant="outline" size="sm" className="text-xs"><Link to={`/review-priority/knowledge?${indexParams}`}>全部知识点</Link></Button>
+            <Button asChild variant="outline" size="sm" className="gap-1 text-xs"><Link to={kgKpPath(template.kpId, { subject, returnTo: location.pathname + location.search + location.hash })}>考点与全部练习<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link></Button>
           </div>
         </div>
       </header>
 
+      {template.textbook && <p className="text-xs leading-6 text-muted-foreground">教材体系参考：<a href={template.textbook.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">{template.textbook.title}</a> · 自编学习提要</p>}
+
       {template.knowledge && <Card><CardContent className="space-y-3 p-5 md:p-6">
         <h2 className="flex items-center gap-2 text-sm font-extrabold"><BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />先补概念与公式</h2>
+        {template.textbook?.note && <p className="text-xs leading-6 text-muted-foreground">{template.textbook.note}</p>}
         <ReviewBlocks blocks={template.knowledge} />
       </CardContent></Card>}
 
-      <Card>
+      {template.routes.length > 1 || route.lessons.length > 1 ? <Card>
         <CardContent className="space-y-4 p-5 md:p-6">
           <div className="rounded-xl bg-secondary/50 p-4 text-sm leading-7"><span className="mr-3 font-bold">读题先问两句</span>{template.opening}</div>
           <div role="group" aria-label="选择解题路线" className="grid gap-2 sm:grid-cols-3">
@@ -316,15 +333,15 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
           </div>
           <p className="text-xs leading-6 text-muted-foreground">{template.scope}</p>
           {route.lessons.length > 1 && (
-            <div role="group" aria-label="选择真题例子" className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
+            <div role="group" aria-label="选择例题" className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
               {route.lessons.map((item) => <Button key={item.id} variant={item.id === lesson.id ? "default" : "outline"} size="sm" className="text-xs" aria-pressed={item.id === lesson.id} onClick={() => choose(route.id, item.id)}>{item.label}</Button>)}
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card> : <p className="text-xs leading-6 text-muted-foreground">{template.scope}</p>}
 
       {syncError && <p role="status" className="text-xs text-ink-warning">{syncError}</p>}
-      <LessonContent key={`${template.kpId}:${lesson.id}`} lesson={currentLesson} items={items} catalogError={error} />
+      <LessonContent key={`${template.kpId}:${lesson.id}`} subject={subject} lesson={currentLesson} items={items} catalogError={error} />
     </div>
   );
 }
@@ -332,12 +349,12 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
 export function KnowledgeReviewPage() {
   const { kpId = "" } = useParams();
   if (!kpId) return <MathKnowledgeIndex />;
-  const template = MATH_KNOWLEDGE_REVIEWS[kpId];
+  const template = MATH_KNOWLEDGE_REVIEWS[kpId] ?? CS408_KNOWLEDGE_REVIEWS[kpId];
   if (template) return <KnowledgeReviewContent key={kpId} template={template} />;
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
-      <h1 className="text-xl font-extrabold">未找到这个数学考点</h1>
-      <p className="text-sm text-muted-foreground">请从数学知识图谱或复习性价比页面选择考点。</p>
+      <h1 className="text-xl font-extrabold">未找到这个考点</h1>
+      <p className="text-sm text-muted-foreground">请从知识图谱或复习性价比页面选择考点。</p>
       <Button asChild variant="outline"><Link to={reviewPriorityPath("math")}>返回复习性价比</Link></Button>
     </div>
   );

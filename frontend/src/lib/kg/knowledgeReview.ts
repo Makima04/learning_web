@@ -1,9 +1,11 @@
+import { CS408_BOOKS } from "@/data/kg/cs408";
 import { MATH_BOOKS } from "@/data/kg/math";
 
 // 知识模板只保存教学内容与原题引用；作答记录仍复用图谱/错题集的账号同步。
 export type ReviewBlock =
   | { type: "text"; text: string }
   | { type: "math"; tex: string }
+  | { type: "code"; code: string }
   | { type: "table"; headers: string[]; rows: string[][] };
 
 export interface ReviewStep {
@@ -22,7 +24,7 @@ export type ReviewReference = {
   purpose: string;
 } & (
   | { source: "exam" }
-  | { source: "lilin880" | "zhangyu1000"; label: string }
+  | { source: "lilin880" | "zhangyu1000" | "wangdao"; label: string }
 );
 
 export interface ReviewLesson {
@@ -33,6 +35,8 @@ export interface ReviewLesson {
   signals: string[];
   recognition: string;
   steps: ReviewStep[];
+  /** 以推导为主的教案进入时直接展示演算，仍允许手动收起。 */
+  showWorkingByDefault?: boolean;
   checkpoint: string;
   techniques: ReviewTechnique[];
   references: ReviewReference[];
@@ -57,6 +61,7 @@ export interface KnowledgeReview {
   description: string;
   opening: string;
   knowledge?: ReviewBlock[];
+  textbook?: { title: string; url: string; note?: string };
   scope: string;
   defaultRouteId: string;
   routes: ReviewRoute[];
@@ -64,7 +69,7 @@ export interface KnowledgeReview {
 
 /** 入口元数据与正文分离，排行页不提前加载公式引擎和整份教案。 */
 export const KNOWLEDGE_REVIEW_TOPICS: Readonly<Record<string, { title: string; summary: string }>> = {
-  ...Object.fromEntries(MATH_BOOKS.flatMap((book) => book.modules.flatMap((module) => module.kps.map((kp) => [kp.id, {
+  ...Object.fromEntries([...MATH_BOOKS, ...CS408_BOOKS].flatMap((book) => book.modules.flatMap((module) => module.kps.map((kp) => [kp.id, {
     title: kp.name, summary: `${module.name} · 概念公式、方法例题与解题步骤。`,
   }])))),
   "calc.m.ext": {
@@ -75,6 +80,7 @@ export const KNOWLEDGE_REVIEW_TOPICS: Readonly<Record<string, { title: string; s
 
 export const REVIEW_SOURCE_LABELS = {
   exam: "真题",
+  wangdao: "王道",
   lilin880: "李林 880",
   zhangyu1000: "张宇 1000",
 } as const;
