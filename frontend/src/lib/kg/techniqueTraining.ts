@@ -52,14 +52,16 @@ export function nextPracticeMark(
   };
 }
 
-function sourceAllowed(topic: ReviewTopic, q: WangdaoItem): boolean {
+type TechniqueTopic = Pick<ReviewTopic, "kpId" | "kind" | "subject" | "facets">;
+
+function sourceAllowed(topic: TechniqueTopic, q: WangdaoItem): boolean {
   return q.kind === topic.kind && q.kp_ids.includes(topic.kpId)
     && (topic.subject === "math" ? q.source === "lilin880" || q.source === "zhangyu1000"
       : !q.source || q.source === "wangdao");
 }
 
 /** 单技巧题或明确主技巧标注才作主考证据；多标签的顺序不代表主次。 */
-function primary(q: WangdaoItem, topic: ReviewTopic, id: string): boolean {
+function primary(q: WangdaoItem, topic: TechniqueTopic, id: string): boolean {
   return q.kp_ids[0] === topic.kpId
     && (q.primaryFacet === id || (q.facets?.length === 1 && q.facets[0] === id));
 }
@@ -69,7 +71,7 @@ function order(a: WangdaoItem, b: WangdaoItem): number {
 }
 
 export function buildTechniquePlan(
-  topic: ReviewTopic, catalog: WangdaoItem[], marks: UserItemMark[],
+  topic: TechniqueTopic, catalog: WangdaoItem[], marks: UserItemMark[],
   dueIds: ReadonlySet<string> = new Set(), waitingIds: ReadonlySet<string> = new Set(),
   now = Date.now(),
 ): TechniquePlan {

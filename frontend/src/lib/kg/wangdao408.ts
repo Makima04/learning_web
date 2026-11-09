@@ -38,6 +38,9 @@ export interface WangdaoItem {
   facets?: string[];
   /** 经核对的主技巧；未标注的多技巧题不推断主次。 */
   primaryFacet?: string;
+  /** OCR 串题/截断待核对时，保留原题入口但不用于自动诊断。 */
+  diagnostic_eligible?: boolean;
+  classificationNote?: string;
   /** 原书顺序（李林880 由抽取脚本写入；有它就不靠 page/qno 猜顺序） */
   ord?: number;
 }

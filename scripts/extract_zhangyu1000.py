@@ -374,6 +374,10 @@ def write_images(doc: fitz.Document, questions: list[dict]) -> None:
         ok = render_clips(doc, pdf_clips, dest)
         if ok:
             q["img"] = f"/math/img/zy/{q['id']}.jpg"
+    # 已人工核对的题图边界，重建时也要保留，避免题号行切断高公式。
+    from repair_zhangyu_surface_images import repair_images
+
+    repair_images(IMG_DIR)
 
 
 def slim_row(q: dict) -> dict:

@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, ExternalLink, Info, Ma
 import { findKp } from "@/data/kg";
 import { syncAccountData } from "@/lib/accountSync";
 import { isDueOnOrBefore } from "@/lib/journal";
-import { kgKpPath, kgMapPath, knowledgeReviewPath, legacyMathReviewPath } from "@/lib/kg/paths";
+import { kgKpPath, kgMapPath, knowledgeReviewPath, knowledgeCheckPath, legacyMathReviewPath } from "@/lib/kg/paths";
 import { KNOWLEDGE_REVIEW_TOPICS } from "@/lib/kg/knowledgeReview";
 import { MATH1_KINDS, MATH1_KIND_NAMES, parseMath1Kind, type AnalysisOrder } from "@/lib/kg/math1Analysis";
 import {
@@ -24,6 +24,8 @@ import { useKgProgress } from "@/stores/kgProgress";
 import { useJournal } from "@/stores/journal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Cs408DiagnosticSummary } from "@/components/Cs408DiagnosticSummary";
+import { buildCs408Diagnostic } from "@/lib/kg/cs408Diagnostic";
 import { PracticeQuestionCard } from "@/pages/practiceQuestion";
 import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
@@ -73,6 +75,11 @@ function useMediaQuery(query: string) {
 }
 
 function Status({ topic, plan }: { topic: ReviewTopic; plan?: TechniquePlan }) {
+  if (topic.diagnostic) {
+    const diagnostic = topic.diagnostic;
+    return <span className={cn("whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold",
+      diagnostic.status === "weak" ? STATUS.weak.cls : diagnostic.status === "stable" ? STATUS.stable.cls : STATUS.learning.cls)}>{diagnostic.label}</span>;
+  }
   if (plan?.groups.some((g) => g.total > 0)) {
     const total = plan.groups.length;
     const label = plan.weak ? "优先补弱" : plan.preliminary < total ? "技巧待覆盖"
@@ -266,9 +273,10 @@ export function ReviewPriorityPage() {
     narrowCardRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [activeId, wide]);
 
+  const [trainingNow, setTrainingNow] = useState(() => Date.now());
   const topics = useMemo(
-    () => buildReviewTopics(dataset, states, marks, items ?? [], Date.now(), kind, attempts),
-    [dataset, states, marks, items, kind, attempts]
+    () => buildReviewTopics(dataset, states, marks, items ?? [], trainingNow, kind, attempts),
+    [dataset, states, marks, items, kind, attempts, trainingNow]
   );
   const pointsPerPaper = useMemo(() => kindPointsPerPaper(dataset.items, kind), [dataset, kind]);
   const roi = useMemo(() => computeRoi(topics, pointsPerPaper), [topics, pointsPerPaper]);
@@ -279,7 +287,6 @@ export function ReviewPriorityPage() {
   const wrong = entries.filter((e) => e.status === "active" && e.sourceItemId);
   const dueIds = new Set(wrong.filter((e) => isDueOnOrBefore(e)).map((e) => e.sourceItemId!));
   const waitingIds = new Set(wrong.filter((e) => !isDueOnOrBefore(e)).map((e) => e.sourceItemId!));
-  const [trainingNow, setTrainingNow] = useState(() => Date.now());
   useEffect(() => {
     const refresh = () => setTrainingNow(Date.now());
     // 开着页面跨过北京时间零点，或从后台回来，也能看到到期复测。
@@ -292,6 +299,11 @@ export function ReviewPriorityPage() {
   ])), [topics, trainingItems, marks, entries, trainingNow]);
   const techniquePlan = selected ? techniquePlans.get(selected.kpId) : undefined;
   const hasTechniques = techniquePlan?.groups.some((g) => g.total > 0) ?? false;
+  const diagnostic = selected && subject === "cs408" ? buildCs408Diagnostic(selected, trainingItems ?? [], marks, attempts, trainingNow, dueIds, waitingIds) : undefined;
+  const alternateKind = kind === "big" ? "mcq" : "big";
+  const alternateCount = selected && subject === "cs408" ? (items ?? []).filter((q) => q.kind === alternateKind && q.kp_ids.includes(selected.kpId)).length : 0;
+  const alternateParams = new URLSearchParams(params);
+  alternateParams.set("kind", alternateKind);
   const training: TrainingRow[] = selected && techniquePlan ? selectTechniqueTraining(techniquePlan,
     matchReviewTraining(selected, trainingItems ?? [], marks, states, dueIds, waitingIds), dueIds) : [];
   const trainingIds = new Set(training.map((r) => r.item.id));
@@ -577,10 +589,10 @@ export function ReviewPriorityPage() {
                     <Button
                       size="sm"
                       className="h-8 gap-1 px-3 text-[11px]"
-                      disabled={!starter}
-                      onClick={() => starter && startTopic(topic.kpId, [starter])}
+                      disabled={subject === "math" && !starter}
+                      onClick={() => subject === "cs408" ? openTopic(topic.kpId) : starter && startTopic(topic.kpId, [starter])}
                     >
-                      <Play className="h-3 w-3" />{starter ? (subject === "math" ? "直接练题" : "开始练") : "暂无题"}
+                      <Play className="h-3 w-3" />{subject === "cs408" ? "开始检验" : starter ? "直接练题" : "暂无题"}
                     </Button>
                   </div>
                   {KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
@@ -663,16 +675,16 @@ export function ReviewPriorityPage() {
                       <span className="block text-[10px] text-muted-foreground">{topic.recentYears.length}/{recentSamples} 年</span>
                     </td>
                     <td className="hidden py-2.5 pr-2 align-middle sm:table-cell">
-                      <span className="text-xs font-semibold tabular-nums">{topic.confidence === null ? "—" : pct(topic.confidence, 0)}</span>
-                      <span className="block text-[10px] text-muted-foreground">{topic.sampleCount ? `${topic.sampleCount} 道` : "无记录"}</span>
+                      <span className="text-xs font-semibold tabular-nums">{topic.diagnostic ? topic.diagnostic.label : topic.confidence === null ? "—" : pct(topic.confidence, 0)}</span>
+                      <span className="block text-[10px] text-muted-foreground">{topic.diagnostic ? `抽检 ${topic.diagnostic.sampleCount} 题 · 基础 ${topic.diagnostic.checksPassed}/3` : topic.sampleCount ? `${topic.sampleCount} 道` : "无记录"}</span>
                     </td>
                     <td className="hidden py-2.5 pr-2 align-middle text-xs text-muted-foreground lg:table-cell">{COST[topic.cost]}</td>
                     <td className="py-2.5 pr-4 align-middle text-right">
                       <button
                         type="button"
-                        disabled={!starter}
-                        aria-label={`开始练 ${topic.name}`}
-                        onClick={(e) => { e.stopPropagation(); if (starter) startTopic(topic.kpId, [starter]); }}
+                        disabled={subject === "math" && !starter}
+                        aria-label={`${subject === "cs408" ? "开始检验" : "开始练"} ${topic.name}`}
+                        onClick={(e) => { e.stopPropagation(); if (subject === "cs408") openTopic(topic.kpId); else if (starter) startTopic(topic.kpId, [starter]); }}
                         className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-30"
                       >
                         <Play className="h-3.5 w-3.5" />
@@ -803,7 +815,9 @@ export function ReviewPriorityPage() {
               )}
               <p className="rounded-xl bg-accent/40 p-3 text-[13px] leading-6">
                 近五年考了 <strong>{selected.recentYears.length}/{recentSamples}</strong> 次，平均每年约 <strong>{drawerRoi.perPaper.toFixed(1)} 分</strong>。
-                {selected.confidence === null
+                {selected.diagnostic
+                  ? `已检验 ${selected.diagnostic.sampleCount} 道主考题；${selected.diagnostic.label}。掌握缺口仅作排序估计，完整考法覆盖仍需核对。`
+                  : selected.confidence === null
                   ? "还没有同题型记录，建议先做一道代表题判断起点。"
                   : `最近 ${selected.sampleCount} 道同题型记录显示掌握度约 ${pct(selected.confidence, 0)}${selected.confidenceSource === "graph" ? "（暂用共享图谱参考）" : ""}。`}
                 补齐预计 <strong>{drawerRoi.estMinutes} 分钟</strong>，按当前缺口估算可拿回 <strong>{drawerRoi.estGain} 分</strong>。
@@ -833,6 +847,12 @@ export function ReviewPriorityPage() {
                 </div>
               )}
 
+              {diagnostic ? <Cs408DiagnosticSummary plan={diagnostic}
+                checkHref={knowledgeCheckPath(selected.kpId, params.toString())}
+                returnTo={location.pathname + location.search} catalogReady={items !== null} catalogError={error}
+                alternateHref={alternateCount ? `${location.pathname}?${alternateParams}` : undefined}
+                alternateLabel={`当前暂无${kindLabel}关联，另有 ${alternateCount} 道${MATH1_KIND_NAMES[alternateKind]}`}
+                onPractice={(list) => void openPractice(list)} /> : (
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="flex items-center gap-1.5 text-xs font-extrabold"><BookOpen className="h-3.5 w-3.5 text-primary" />{kindLabel}训练</h3>
@@ -931,6 +951,8 @@ export function ReviewPriorityPage() {
                   </button>
                 )}
               </div>
+
+              )}
 
               {/* 窄屏：作答卡就放在抽屉里，且排在看训练队列之前；宽屏已移到左侧大屏，两处只挂一份 */}
               {wide && active && (

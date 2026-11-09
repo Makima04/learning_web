@@ -6,12 +6,13 @@ import { CS408_KNOWLEDGE_REVIEWS } from "@/data/kg/cs408TextbookReview";
 import { cs408KnowledgeReferences } from "@/lib/kg/cs408KnowledgeReferences";
 import type { SubjectId } from "@/lib/kg/types";
 import { MATH_KNOWLEDGE_REVIEWS } from "@/data/kg/mathKnowledgeReviews";
-import { MathFormula } from "@/components/MathFormula";
+import { ReviewBlocks } from "@/components/ReviewBlocks";
+import { Cs408KnowledgeCheck } from "@/components/Cs408KnowledgeCheck";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { syncAccountData } from "@/lib/accountSync";
 import { hydratePracticeItems } from "@/lib/kg/catalogLoad";
-import { REVIEW_SOURCE_LABELS, resolveReviewLesson, type KnowledgeReview, type ReviewBlock, type ReviewLesson, type ReviewReference } from "@/lib/kg/knowledgeReview";
+import { REVIEW_SOURCE_LABELS, resolveReviewLesson, type KnowledgeReview, type ReviewLesson, type ReviewReference } from "@/lib/kg/knowledgeReview";
 import { MATH1_ITEMS, parseMath1Kind } from "@/lib/kg/math1Analysis";
 import { mathKnowledgeReferences } from "@/lib/kg/mathKnowledgeReferences";
 import { useDrillCatalog } from "@/lib/kg/mathPractice";
@@ -26,25 +27,6 @@ import { useAuth } from "@/stores/auth";
 import { useJournal } from "@/stores/journal";
 import { useKgProgress } from "@/stores/kgProgress";
 
-function ReviewBlocks({ blocks }: { blocks: ReviewBlock[] }) {
-  return (
-    <div className="min-w-0 space-y-2 text-sm leading-7">
-      {blocks.map((block, index) => {
-        if (block.type === "math") return <MathFormula key={index} tex={block.tex} />;
-        if (block.type === "code") return <pre key={index} className="max-w-full overflow-x-auto rounded-lg bg-secondary/50 p-3 text-xs leading-6"><code>{block.code}</code></pre>;
-        if (block.type === "table") return (
-          <div key={index} className="max-w-full overflow-x-auto">
-            <table className="w-full text-left text-xs leading-6">
-              <thead><tr>{block.headers.map((header, at) => <th key={at} scope="col" className="border-b border-border px-2 py-2 font-semibold text-muted-foreground">{header}</th>)}</tr></thead>
-              <tbody>{block.rows.map((row, at) => <tr key={at}>{row.map((cell, col) => <td key={col} className="border-b border-border/50 px-2 py-2 last:tabular-nums">{cell}</td>)}</tr>)}</tbody>
-            </table>
-          </div>
-        );
-        return <p key={index} className="whitespace-pre-wrap">{block.text}</p>;
-      })}
-    </div>
-  );
-}
 
 function reviewExam(questionId: string) {
   return MATH1_ITEMS.find(q => q.id === questionId) ?? REVIEW_DATASETS.cs408.items.find(q => q.id === questionId);
@@ -281,7 +263,7 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
   const kind = subject === "cs408" && rawKind === "fill" ? "big" : rawKind;
   const currentLesson = lesson.sourceQuestion ? {
     ...lesson,
-    references: [...lesson.references, ...cs408KnowledgeReferences(template.kpId, lesson.sourceQuestion.kind, items ?? [])
+    references: [...lesson.references, ...cs408KnowledgeReferences(template.kpId, kind, items ?? [])
       .filter(ref => ref.questionId !== lesson.sourceQuestion!.questionId)],
   } : lesson.examId ? lesson : {
     ...lesson, references: (subject === "math" ? mathKnowledgeReferences : cs408KnowledgeReferences)(template.kpId, kind, items ?? []),
@@ -329,6 +311,8 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
           </div>
         </div>
       </header>
+
+      {subject === "cs408" && <Cs408KnowledgeCheck key={`${template.kpId}:${userId ?? "guest"}`} template={template} focus={params.get("check") === "1"} />}
 
       {template.textbook && <p className="text-xs leading-6 text-muted-foreground">教材体系参考：<a href={template.textbook.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">{template.textbook.title}</a> · 自编学习提要</p>}
 

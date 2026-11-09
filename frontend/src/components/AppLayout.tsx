@@ -144,7 +144,8 @@ export function AppLayout() {
   useEffect(() => {
     const hash = location.hash.replace(/^#/, "");
     if (!hash) {
-      if (navigationType !== "POP") window.scrollTo(0, 0);
+      // 题集切题只更新 q，由页面定位，保留页面滚动。
+      if (navigationType !== "POP" && !location.state?.preserveScroll) window.scrollTo(0, 0);
       return;
     }
     const id = decodeURIComponent(hash);
@@ -160,7 +161,7 @@ export function AppLayout() {
     };
     timer = window.setTimeout(locate, 0);
     return () => window.clearTimeout(timer);
-  }, [location.pathname, location.search, location.hash, navigationType]);
+  }, [location.pathname, location.search, location.hash, location.state, navigationType]);
 
   // memTick：确保记忆更新后重新计算 href
   void memTick;
@@ -170,7 +171,7 @@ export function AppLayout() {
   const activeItem = navItems.find((item) => isNavSectionActive(item.to, location.pathname));
 
   return (
-    <div className="min-h-screen text-foreground md:flex">
+    <div className="min-h-screen text-foreground md:flex" style={{ "--sidebar-width": navCollapsed ? "76px" : "250px" } as CSSProperties}>
       <aside
         className={cn(
           "hidden md:sticky md:top-0 md:flex h-dvh max-h-dvh shrink-0 flex-col overflow-hidden border-r-2 border-border/70 transition-[width] duration-200",

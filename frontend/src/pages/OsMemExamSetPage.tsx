@@ -225,7 +225,7 @@ function SetView({ group }: { group: GroupParam }) {
       const next = new URLSearchParams(params);
       if (key) next.set("q", key);
       else next.delete("q");
-      setParams(next, { replace: true });
+      setParams(next, { replace: true, state: { preserveScroll: true } });
     },
     [params, setParams]
   );

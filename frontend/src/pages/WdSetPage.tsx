@@ -228,7 +228,7 @@ function SetView({ group }: { group: string }) {
 
   useEffect(() => {
     if (!openKey || !items) return;
-    document.getElementById(`q-${openKey}`)?.scrollIntoView({ block: "nearest" });
+    document.getElementById(`q-${openKey}`)?.scrollIntoView({ block: "start" });
   }, [openKey, items]);
 
   const setOpen = useCallback(
@@ -236,7 +236,7 @@ function SetView({ group }: { group: string }) {
       const next = new URLSearchParams(params);
       if (key) next.set("q", key);
       else next.delete("q");
-      setParams(next, { replace: true });
+      setParams(next, { replace: true, state: { preserveScroll: true } });
     },
     [params, setParams]
   );
@@ -259,11 +259,41 @@ function SetView({ group }: { group: string }) {
       );
       if (!proof) return;
       const idx = visible.findIndex((r) => r.id === item.id);
-      const after = visible.slice(idx + 1).find((r) => !markMap.has(r.id));
+      // 完整列表按书本顺序前进，已标过的题也可以再次校对。
+      const after = visible[idx + 1] ?? (onlyUnmarked ? visible.find((r) => r.id !== item.id) : undefined);
       if (after) setOpen(after.id);
+      else if (onlyUnmarked) setOpen(null);
     },
-    [proof, visible, markMap, setOpen]
+    [proof, visible, onlyUnmarked, setOpen]
   );
+
+  const activeIndex = visible.findIndex((item) => item.id === openKey);
+  const activeItem = visible[activeIndex];
+  const previous = visible[activeIndex - 1];
+  const nextItem = activeIndex >= 0 ? visible[activeIndex + 1] : undefined;
+
+  useEffect(() => {
+    if (!proof || !activeItem) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (event.defaultPrevented || event.repeat || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+      // 备注输入和弹层中的按键不参与校对。
+      if (target instanceof HTMLElement && (target.isContentEditable || target.closest("input, textarea, select, [role='dialog'], [role='menu']"))) return;
+      const mark = MARKS[Number(event.key) - 1];
+      if (mark && ["1", "2", "3"].includes(event.key)) {
+        event.preventDefault();
+        onMark(activeItem, mark.id);
+      } else if (event.key === "ArrowLeft" && previous) {
+        event.preventDefault();
+        setOpen(previous.id);
+      } else if (event.key === "ArrowRight" && nextItem) {
+        event.preventDefault();
+        setOpen(nextItem.id);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [proof, activeItem, previous, nextItem, onMark, setOpen]);
 
   const title =
     group === "all"
@@ -271,7 +301,7 @@ function SetView({ group }: { group: string }) {
       : `${g?.name ?? group} · ${wdKindLabel(kind)}`;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-6">
+    <div className={cn("mx-auto max-w-3xl space-y-4 p-4 md:p-6", proof && "pb-36 md:pb-36")}>
       <div>
         <button
           type="button"
@@ -282,7 +312,7 @@ function SetView({ group }: { group: string }) {
         </button>
         <h1 className="mt-1 text-xl font-semibold">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {proof ? "快速校对：点开出小类，勾对/错回写图谱与错题集。" : "点开题目看小类标签与题干。"}
+          {proof ? "快速校对：1 对 / 2 模糊 / 3 错，标记后自动下一题；← → 切题。" : "点开题目看小类标签与题干。"}
           {" · "}
           {visible.length}/{refs.length} 题
         </p>
@@ -385,6 +415,29 @@ function SetView({ group }: { group: string }) {
       {error && <p className="text-sm text-destructive">{error}</p>}
       {!items && !error && <p className="text-sm text-muted-foreground">加载王道目录…</p>}
 
+      {proof && activeItem && (
+        <div role="region" aria-label="连续校对" className="fixed inset-x-0 bottom-[var(--nav-reserve)] z-20 px-3 pb-2 md:bottom-2 md:left-[var(--sidebar-width)]">
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2 rounded-2xl border bg-card p-3 shadow-lg">
+            <div className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">第 {activeIndex + 1} / {visible.length} 题</span>
+              <span className="ml-2">已标 {refs.filter((item) => markMap.has(item.id)).length}/{refs.length}</span>
+              {!nextItem && <span className="ml-2">最后一题</span>}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="outline" aria-label="← 上一题" disabled={!previous} onClick={() => previous && setOpen(previous.id)}>←<span className="hidden sm:inline"> 上一题</span></Button>
+              {MARKS.map((m, index) => (
+                <button key={m.id} type="button" onClick={() => onMark(activeItem, m.id)}
+                  className={cn("rounded-md px-3 py-2 text-sm font-medium", m.cls, markMap.get(activeItem.id) === m.id && "ring-2 ring-primary ring-offset-2")}
+                  title={`${index + 1}：${m.label}，并进入下一题`}>
+                  {index + 1} {m.label}
+                </button>
+              ))}
+              <Button size="sm" variant="outline" aria-label="下一题 →" disabled={!nextItem} onClick={() => nextItem && setOpen(nextItem.id)}><span className="hidden sm:inline">下一题 </span>→</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-2">
         {visible.map((item) => (
           <QRow
@@ -428,7 +481,7 @@ function QRow({
   const viz = pk && vizFor(pk);
 
   return (
-    <Card id={`q-${item.id}`} className={cn(open && "ring-1 ring-primary/40")}>
+    <Card id={`q-${item.id}`} className={cn("scroll-mt-20", open && "ring-1 ring-primary/40")}>
       <button type="button" className="w-full px-4 py-3 text-left" onClick={onToggle}>
         <div className="flex flex-wrap items-center gap-2">
           <span className="break-words text-sm font-medium">
@@ -466,7 +519,7 @@ function QRow({
             ) : null}
           </p>
           <WangdaoStem item={item} />
-          <WangdaoAnalysis item={item} />
+          <WangdaoAnalysis item={item} revealAnswer={proof && item.kind === "mcq"} />
           <ItemNoteField itemId={item.id} />
           <div className="flex flex-wrap gap-2">
             {MARKS.map((m) => (

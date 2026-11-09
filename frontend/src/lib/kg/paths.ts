@@ -55,6 +55,19 @@ export function knowledgeReviewPath(kpId: string, search = ""): string {
   return `${REVIEW_ROOT}/knowledge/${encodeURIComponent(kpId)}${query ? `?${query}` : ""}`;
 }
 
+export function knowledgeCheckPath(kpId: string, search = ""): string {
+  const path = knowledgeReviewPath(kpId, search);
+  return `${path}${path.includes("?") ? "&" : "?"}check=1#knowledge-check`;
+}
+
+/** 从抽检进入单道真题，做完能回到原考点，避免无意进入整卷练习。 */
+export function cs408SingleQuestionPath(year: number, n: number, returnTo: string): string {
+  const params = new URLSearchParams({ q: String(n), single: "1" });
+  const safe = practiceReturnPath(returnTo);
+  if (safe) params.set("returnTo", safe);
+  return `/kg/exams/practice/${year}?${params}`;
+}
+
 export function legacyMathReviewPath(search: string): string {
   const params = new URLSearchParams(search);
   params.set("subject", "math");

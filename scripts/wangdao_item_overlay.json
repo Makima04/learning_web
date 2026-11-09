@@ -1,0 +1,6156 @@
+{
+  "version": "20261109",
+  "scope": "王道408大题逐章题干复核；主考点在前，辅助考点不冒充主考证据。",
+  "items": {
+    "os-big-1.2-1": {
+      "kp_ids": [
+        "os.intro.feat"
+      ],
+      "facets": [
+        "os.intro.feat::多道程序与资源利用率"
+      ],
+      "primaryFacet": "os.intro.feat::多道程序与资源利用率",
+      "review_note": "多道程序与资源利用率",
+      "stem_sha256": "fe4cdb27a1616932e9b4441eaad6149266868e775d4e1ccd9223d08416ff203a",
+      "previous_kp_ids": [
+        "os.intro.feat"
+      ]
+    },
+    "os-big-1.2-2": {
+      "kp_ids": [
+        "os.intro.feat"
+      ],
+      "facets": [
+        "os.intro.feat::多道程序与资源利用率"
+      ],
+      "primaryFacet": "os.intro.feat::多道程序与资源利用率",
+      "review_note": "多道程序与资源利用率",
+      "stem_sha256": "dc2a2553906bb4b4e9667ec09611a56f7b4b84c8796d9b2a861d4af5517410fa",
+      "previous_kp_ids": [
+        "os.intro.feat"
+      ]
+    },
+    "os-big-2.1-1": {
+      "kp_ids": [
+        "os.proc.pcb",
+        "os.io.hw"
+      ],
+      "facets": [
+        "os.proc.pcb::进程状态与地址空间"
+      ],
+      "primaryFacet": "os.proc.pcb::进程状态与地址空间",
+      "review_note": "进程状态与地址空间",
+      "stem_sha256": "98188502d3b8a632c7068304dfc5f2940fd29503309c0f7cefc99e8aa3622d91",
+      "previous_kp_ids": [
+        "os.proc.pcb"
+      ]
+    },
+    "os-big-2.2-1": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::调度时序与资源利用率"
+      ],
+      "primaryFacet": "os.proc.sched::调度时序与资源利用率",
+      "review_note": "调度时序与资源利用率",
+      "stem_sha256": "5297ce7d837994d5196c6439a179006cda67f2fca4ff22f5ad3d7f7ef4387a49",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-2": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::调度时序与资源利用率"
+      ],
+      "primaryFacet": "os.proc.sched::调度时序与资源利用率",
+      "review_note": "调度时序与资源利用率",
+      "stem_sha256": "7ccb4474be376ac7e695e2f499cc43616312e033dada04fbb0c81daaed86aabb",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-7": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::调度时序与资源利用率"
+      ],
+      "primaryFacet": "os.proc.sched::调度时序与资源利用率",
+      "review_note": "调度时序与资源利用率",
+      "stem_sha256": "dd1f6b63bc635ef95c226753bd1258231d3d0ce2e8b52e149865cf418ced9d66",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-3": {
+      "kp_ids": [
+        "os.proc.pcb",
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.pcb::进程状态转换"
+      ],
+      "primaryFacet": "os.proc.pcb::进程状态转换",
+      "review_note": "进程状态转换",
+      "stem_sha256": "46170e47843bb3cb2a40ba55f468c31d7401431b33c61e3c4ec4d0af7d9f794f",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-4": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::调度顺序与周转时间"
+      ],
+      "primaryFacet": "os.proc.sched::调度顺序与周转时间",
+      "review_note": "调度顺序与周转时间",
+      "stem_sha256": "fc87d49d992970016916f29aa313518b20ddd60ac8e9aee9f3477fbf777755f7",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-5": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::调度顺序与周转时间"
+      ],
+      "primaryFacet": "os.proc.sched::调度顺序与周转时间",
+      "review_note": "调度顺序与周转时间",
+      "stem_sha256": "a9bbcb3d2cce849dacf4d414b6e952b73cefbfbc0b844df24b42370e253c102d",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-6": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::调度顺序与周转时间"
+      ],
+      "primaryFacet": "os.proc.sched::调度顺序与周转时间",
+      "review_note": "调度顺序与周转时间",
+      "stem_sha256": "e4c008a257fa0d88a8b79e5354cf7c70e03daab1e8a9c83d229d3a43c594ea66",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-8": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::调度顺序与周转时间"
+      ],
+      "primaryFacet": "os.proc.sched::调度顺序与周转时间",
+      "review_note": "调度顺序与周转时间",
+      "stem_sha256": "61b9313de21a1f54a2b6168eb857425df0d850fb5f636941e4aafddb87832a08",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-9": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::调度顺序与周转时间"
+      ],
+      "primaryFacet": "os.proc.sched::调度顺序与周转时间",
+      "review_note": "调度顺序与周转时间",
+      "stem_sha256": "82968ac99383f6c06b3795e8445d200d1db2311de1a58f3c8745f6ed050da4bc",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.2-10": {
+      "kp_ids": [
+        "os.proc.sched"
+      ],
+      "facets": [
+        "os.proc.sched::动态优先级与饥饿"
+      ],
+      "primaryFacet": "os.proc.sched::动态优先级与饥饿",
+      "review_note": "动态优先级与饥饿",
+      "stem_sha256": "d19f0336966bd2ebfeef23be3887ed400a42423966f4a268d42ecd979cd90578",
+      "previous_kp_ids": [
+        "os.proc.sched"
+      ]
+    },
+    "os-big-2.3-1": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::临界区与互斥正确性"
+      ],
+      "primaryFacet": "os.proc.sync::临界区与互斥正确性",
+      "review_note": "临界区与互斥正确性",
+      "stem_sha256": "96f5ade1767e9cea5a566e13e281973a77eae7fea4f7b94b7cf9a694a853a1df",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-8": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::临界区与互斥正确性"
+      ],
+      "primaryFacet": "os.proc.sync::临界区与互斥正确性",
+      "review_note": "临界区与互斥正确性",
+      "stem_sha256": "c61969d85a9d93a4a0c26a29d0fa8d692e0c56ad0379aa2a1f09ad516c34e645",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-22": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::临界区与互斥正确性"
+      ],
+      "primaryFacet": "os.proc.sync::临界区与互斥正确性",
+      "review_note": "临界区与互斥正确性",
+      "stem_sha256": "f4b7f6d5051edf807d38588d1355741f17cd9c1ae0a5630479386c81cbc418d8",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-25": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::临界区与互斥正确性"
+      ],
+      "primaryFacet": "os.proc.sync::临界区与互斥正确性",
+      "review_note": "临界区与互斥正确性",
+      "stem_sha256": "1c9429878479dcf06c8eaf27db56769cfdf4a950816a806a1f814e1c056d4780",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-27": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::临界区与互斥正确性"
+      ],
+      "primaryFacet": "os.proc.sync::临界区与互斥正确性",
+      "review_note": "临界区与互斥正确性",
+      "stem_sha256": "888c63db9b705a61399b7987cfb3e544af2246006d55843f347aa66ef717391f",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-28": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::临界区与互斥正确性"
+      ],
+      "primaryFacet": "os.proc.sync::临界区与互斥正确性",
+      "review_note": "临界区与互斥正确性",
+      "stem_sha256": "3a8ece2662e5722f252ce8e118a79c98044915dd3e3000b36f5c622c3c9de225",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-2": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "70394c1fe4657234552f7232d146248ee17bd88c16be2fb55060f031e43a8123",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-3": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "3ca76a3c06a96054acb97517c942909921a4e261ef0f34ee16523140c3cd497a",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-6": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "ad09626b24f478e028a46917734c77da5792dcce553ba74f8556c0710888f5b5",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-13": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "681bc6f666713bdfa54cb5b11065fb4ef2ee1abf349273e2ccbbd1692920669d",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-14": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "61204b8d61b4d9487168277969e329825c575921d8bbcd388da9189ab12b35b6",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-18": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "0832f1a11d071d4aa1f45ff26b4bfecb9c74d948067a270c304a2c245e111545",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-19": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "771377889fd8bcb84d79b4465afe0c0a0274569e3b8f6f5251b4161d7698d77d",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-24": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "78b8a3a972e3efa33c7c7df12567cbe99266c113d59b1177646f26c2044c0c34",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-26": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "252f40740d53b87df68c23f7eb15133030361d44f6a308f3133376da2802e91d",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-29": {
+      "kp_ids": [
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.sync::信号量同步关系与资源约束"
+      ],
+      "primaryFacet": "os.proc.sync::信号量同步关系与资源约束",
+      "review_note": "信号量同步关系与资源约束",
+      "stem_sha256": "0989e9b4b1b992615eb056fb21208abfdaec27c0fd7a06b2547cd98b7268a707",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-4": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "15adc16b9fa5e6f50e2ea70a03a6d89aa28e7b31cf75e91f43db240cf68d2d79",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-5": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "d8c2e27c95457bb526c59fd910cc2a2c62287a2a5433c84c8ba2c23fb2a84202",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-9": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "6cc15ec4974e7c9869b9f88ff698150c4e9a30c2bd9de41519d35263a7789ea4",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-10": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "89ae064983d1f473e7b8c7449218ad867952e9f688d5432d82692ff6ce8290e6",
+      "previous_kp_ids": [
+        "os.proc.classic"
+      ]
+    },
+    "os-big-2.3-15": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "23bcec87413e0136f1dd1dd7b01c9d58272d44f44beda4b12929f8e3620ae024",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-16": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "0f9a033369caa1710e2f72b511179b36a0ad454692f7c5327ebc7a56d3b9e793",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-17": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "903b47578c5bf9bc5e8d4d0651baabfdf747b5567d11620904ba8f0ffdcb90c3",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-20": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "9aea5cbac48cf911bcfcf0eaa2152e56ac3d3db417e1ac3f445b27d1c8025773",
+      "previous_kp_ids": [
+        "os.proc.classic"
+      ]
+    },
+    "os-big-2.3-21": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::生产消费与多资源协作"
+      ],
+      "primaryFacet": "os.proc.classic::生产消费与多资源协作",
+      "review_note": "生产消费与多资源协作",
+      "stem_sha256": "5237dcc9b12e5f1f54d73329f664d18603938ce3f195d4bab19af34a841a6dd1",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-7": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::同类并发与异类互斥"
+      ],
+      "primaryFacet": "os.proc.classic::同类并发与异类互斥",
+      "review_note": "同类并发与异类互斥",
+      "stem_sha256": "1b901841a23361eed7fdc37692723206412126ca70a570b367cf6a2a8e07f566",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-12": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::同类并发与异类互斥"
+      ],
+      "primaryFacet": "os.proc.classic::同类并发与异类互斥",
+      "review_note": "同类并发与异类互斥",
+      "stem_sha256": "efe07affdcb6081bdbbd2f29be17bed358d4aa076af3d12636fb83d24d137696",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-11": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.sync"
+      ],
+      "facets": [
+        "os.proc.classic::理发师与服务队列"
+      ],
+      "primaryFacet": "os.proc.classic::理发师与服务队列",
+      "review_note": "理发师与服务队列",
+      "stem_sha256": "9db59ce2967a320af99ce669610db1db3b4be7e597ea963797cf9b146f39325f",
+      "previous_kp_ids": [
+        "os.proc.sync"
+      ]
+    },
+    "os-big-2.3-23": {
+      "kp_ids": [
+        "os.proc.classic",
+        "os.proc.deadlock"
+      ],
+      "facets": [
+        "os.proc.classic::哲学家与死锁预防"
+      ],
+      "primaryFacet": "os.proc.classic::哲学家与死锁预防",
+      "review_note": "哲学家与死锁预防",
+      "stem_sha256": "d7e2ac9e42bf8dcdbd6b429fe1f23e2e2675547f35eaa9f06c87d11b9b5781ba",
+      "previous_kp_ids": [
+        "os.proc.classic"
+      ]
+    },
+    "os-big-2.4-1": {
+      "kp_ids": [
+        "os.proc.deadlock"
+      ],
+      "facets": [
+        "os.proc.deadlock::死锁条件与资源分配约束"
+      ],
+      "primaryFacet": "os.proc.deadlock::死锁条件与资源分配约束",
+      "review_note": "死锁条件与资源分配约束",
+      "stem_sha256": "1f9dd7495efc6c62fa3ecf0014847dca378487a7d1ee9861b4e0325bba612593",
+      "previous_kp_ids": [
+        "os.proc.deadlock"
+      ]
+    },
+    "os-big-2.4-2": {
+      "kp_ids": [
+        "os.proc.deadlock"
+      ],
+      "facets": [
+        "os.proc.deadlock::死锁条件与资源分配约束"
+      ],
+      "primaryFacet": "os.proc.deadlock::死锁条件与资源分配约束",
+      "review_note": "死锁条件与资源分配约束",
+      "stem_sha256": "857bb14e4ab60b6c23c044b9f9c4baeeee59896b7b14d5ded27a98b670579c04",
+      "previous_kp_ids": [
+        "os.proc.deadlock"
+      ]
+    },
+    "os-big-2.4-3": {
+      "kp_ids": [
+        "os.proc.deadlock"
+      ],
+      "facets": [
+        "os.proc.deadlock::银行家算法与安全序列"
+      ],
+      "primaryFacet": "os.proc.deadlock::银行家算法与安全序列",
+      "review_note": "银行家算法与安全序列",
+      "stem_sha256": "1f4a413a9845edb2a108886308d324b167e7189c65aa196d09eb9df4ddfdb5d2",
+      "previous_kp_ids": [
+        "os.proc.deadlock"
+      ]
+    },
+    "os-big-2.4-4": {
+      "kp_ids": [
+        "os.proc.deadlock"
+      ],
+      "facets": [
+        "os.proc.deadlock::银行家算法与安全序列"
+      ],
+      "primaryFacet": "os.proc.deadlock::银行家算法与安全序列",
+      "review_note": "银行家算法与安全序列",
+      "stem_sha256": "5903175871dfaa84228300a20aba68cba00257ab1689fd536868e39938276509",
+      "previous_kp_ids": [
+        "os.proc.deadlock"
+      ]
+    },
+    "os-big-2.4-5": {
+      "kp_ids": [
+        "os.proc.deadlock"
+      ],
+      "facets": [
+        "os.proc.deadlock::银行家算法与安全序列"
+      ],
+      "primaryFacet": "os.proc.deadlock::银行家算法与安全序列",
+      "review_note": "银行家算法与安全序列",
+      "stem_sha256": "1a8a4c8980a8330b53b43a64d20836f738fcba44005e2ee12bfa576ede3cbcd8",
+      "previous_kp_ids": [
+        "os.proc.deadlock"
+      ]
+    },
+    "os-big-3.1-1": {
+      "kp_ids": [
+        "os.mem.alloc"
+      ],
+      "facets": [
+        "os.mem.alloc::动态分区分配与回收"
+      ],
+      "primaryFacet": "os.mem.alloc::动态分区分配与回收",
+      "review_note": "动态分区分配与回收",
+      "stem_sha256": "279a45e6260090d2cd1bfc34fd45f3ebbbb2bbaaf59fca3800409446081f17e4",
+      "previous_kp_ids": [
+        "os.mem.alloc"
+      ]
+    },
+    "os-big-3.1-2": {
+      "kp_ids": [
+        "os.mem.alloc"
+      ],
+      "facets": [
+        "os.mem.alloc::动态分区分配与回收"
+      ],
+      "primaryFacet": "os.mem.alloc::动态分区分配与回收",
+      "review_note": "动态分区分配与回收",
+      "stem_sha256": "9eaf44a97cde4d7a0fb6639554a2353c48de8d9443f54b770931e67bfc29fbd0",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-3": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::地址变换与越界检查"
+      ],
+      "primaryFacet": "os.mem.page::地址变换与越界检查",
+      "review_note": "地址变换与越界检查",
+      "stem_sha256": "5f8469fd26733112054fddb24f679b92c682a6304244af0b1f85ecaebd58c0fd",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-4": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::地址变换与越界检查"
+      ],
+      "primaryFacet": "os.mem.page::地址变换与越界检查",
+      "review_note": "地址变换与越界检查",
+      "stem_sha256": "74fec949256d4a5ba577439b3edc52a794db08ee7712248b6d74598a08232b4b",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-5": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::地址变换与越界检查"
+      ],
+      "primaryFacet": "os.mem.page::地址变换与越界检查",
+      "review_note": "地址变换与越界检查",
+      "stem_sha256": "812d2831cb27d5d9e17e770ab5e76286fdd32801ef49e5b8da60051a814ce2b4",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-6": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::地址变换与越界检查"
+      ],
+      "primaryFacet": "os.mem.page::地址变换与越界检查",
+      "review_note": "地址变换与越界检查",
+      "stem_sha256": "9381a963c299a9ccc984bde9b48d8a07be922e64f9f99186214cd1d57c77d5a1",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-7": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::地址变换与越界检查"
+      ],
+      "primaryFacet": "os.mem.page::地址变换与越界检查",
+      "review_note": "地址变换与越界检查",
+      "stem_sha256": "05f0633e607492749d07159fbee178e54ff18cfe618d17d7157aa947ac04342f",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-8": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::快表与有效访问时间"
+      ],
+      "primaryFacet": "os.mem.page::快表与有效访问时间",
+      "review_note": "快表与有效访问时间",
+      "stem_sha256": "1a10aa88be7a5a344e0bf214b612c435362426467adffddbe40089f8e41236d1",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-9": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::快表与有效访问时间"
+      ],
+      "primaryFacet": "os.mem.page::快表与有效访问时间",
+      "review_note": "快表与有效访问时间",
+      "stem_sha256": "483e212bfc728d25ad91339a0a2e6add46dabe68403f068e58205064e4e2b820",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-10": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::页框分配与位图"
+      ],
+      "primaryFacet": "os.mem.page::页框分配与位图",
+      "review_note": "页框分配与位图",
+      "stem_sha256": "aa83d578bed924308c9fc108ae78abc1e1ff0ece6f7b8e011d6e3d5480e0541a",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.1-11": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::多级页表与地址划分"
+      ],
+      "primaryFacet": "os.mem.page::多级页表与地址划分",
+      "review_note": "多级页表与地址划分",
+      "stem_sha256": "951885fbecd1be80c4538efa66c650243dae1efb2b94526665f736ed08c100d7",
+      "previous_kp_ids": [
+        "os.mem.page"
+      ]
+    },
+    "os-big-3.2-1": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::地址变换与越界检查"
+      ],
+      "primaryFacet": "os.mem.page::地址变换与越界检查",
+      "review_note": "地址变换与越界检查",
+      "stem_sha256": "b50ba9c14a8872cba0d8003751964d6c8e92399dd89a2caddce331a1a76e42ab",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-2": {
+      "kp_ids": [
+        "os.mem.virt",
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.virt::缺页与有效访问时间"
+      ],
+      "primaryFacet": "os.mem.virt::缺页与有效访问时间",
+      "review_note": "缺页与有效访问时间",
+      "stem_sha256": "c6af5a118bee754ff6850ed0939a509a3e7a6dff903fd13c9bada77ea44cd1af",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-6": {
+      "kp_ids": [
+        "os.mem.virt",
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.virt::缺页与有效访问时间"
+      ],
+      "primaryFacet": "os.mem.virt::缺页与有效访问时间",
+      "review_note": "缺页与有效访问时间",
+      "stem_sha256": "1fbb5196618db676c5394b8e67344969b433705e4c914f3c5fb25359d2aef541",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-14": {
+      "kp_ids": [
+        "os.mem.virt",
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.virt::缺页与有效访问时间"
+      ],
+      "primaryFacet": "os.mem.virt::缺页与有效访问时间",
+      "review_note": "缺页与有效访问时间",
+      "stem_sha256": "a9a6dc75d8556db6814475285f8b1859296f30c8a686e1c17ebc46204ac09816",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-3": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::页面置换与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::页面置换与缺页次数",
+      "review_note": "页面置换与缺页次数",
+      "stem_sha256": "7f9dae218f17478345a1c2c75bf1094e38658fc2939731e86c8c8e7b75bfdf40",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-4": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::页面置换与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::页面置换与缺页次数",
+      "review_note": "页面置换与缺页次数",
+      "stem_sha256": "f8bec6d854ad47dc7f67f10ce0717adea620360486760bf176014415142d6127",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-8": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::页面置换与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::页面置换与缺页次数",
+      "review_note": "页面置换与缺页次数",
+      "stem_sha256": "1eb9ae5599fa4c42aeaf4a321ba8d17cdf51b4c595de32ba9fc6aa6791e1ab1d",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-9": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::页面置换与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::页面置换与缺页次数",
+      "review_note": "页面置换与缺页次数",
+      "stem_sha256": "d441d126a548cf117f1a766cd1d4da6a67237cd1868078f5e0bde773d0bed202",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-10": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::页面置换与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::页面置换与缺页次数",
+      "review_note": "页面置换与缺页次数",
+      "stem_sha256": "cf8a98b79b1a2a0138deb43d7c35c099f4d94a171a30ef5eea73e94022e0b2fd",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-11": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::页面置换与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::页面置换与缺页次数",
+      "review_note": "页面置换与缺页次数",
+      "stem_sha256": "fc2e7320c6d3dcd00effcd1af64b760e9d844b1cfffb951a052510991d094213",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-16": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::页面置换与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::页面置换与缺页次数",
+      "review_note": "页面置换与缺页次数",
+      "stem_sha256": "419f307c0edbb87b336fa0812cb73b6da3badb7ac2d39263a6f0cab66e1b3afe",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-17": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::页面置换与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::页面置换与缺页次数",
+      "review_note": "页面置换与缺页次数",
+      "stem_sha256": "c0f374e2b30c6f8c0bc81a67fd0b7321d06ed53c9c1b794295deb7e259823e7a",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-5": {
+      "kp_ids": [
+        "os.mem.thrash",
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.thrash::抖动诊断与并发度"
+      ],
+      "primaryFacet": "os.mem.thrash::抖动诊断与并发度",
+      "review_note": "抖动诊断与并发度",
+      "stem_sha256": "628d19be63a329883d6c224441bf22ca1e50383fe9ddd5edeb2b0b0b106f2be4",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-7": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::多级页表与地址划分"
+      ],
+      "primaryFacet": "os.mem.page::多级页表与地址划分",
+      "review_note": "多级页表与地址划分",
+      "stem_sha256": "2da9e42a0eb40bc2f729a12149f6d4e161aa178a6785b7c094ef48d7876255b1",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-13": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::多级页表与地址划分"
+      ],
+      "primaryFacet": "os.mem.page::多级页表与地址划分",
+      "review_note": "多级页表与地址划分",
+      "stem_sha256": "8a16f64839938788a60066ee2fe15bbdbcb79832b32b029e0bd2a704ec1113c7",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-18": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::多级页表与地址划分"
+      ],
+      "primaryFacet": "os.mem.page::多级页表与地址划分",
+      "review_note": "多级页表与地址划分",
+      "stem_sha256": "85d9cb993afe9967dacb3d9d5c06f4e6d66a7e64e40e46543e22a7527fe45aec",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-19": {
+      "kp_ids": [
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.page::多级页表与地址划分"
+      ],
+      "primaryFacet": "os.mem.page::多级页表与地址划分",
+      "review_note": "多级页表与地址划分",
+      "stem_sha256": "371d493ea9c2cdca9109a1319a45fdf2f0ef245e5ecab46cdc281ad01d8ddf88",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-12": {
+      "kp_ids": [
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.virt::程序局部性与缺页次数"
+      ],
+      "primaryFacet": "os.mem.virt::程序局部性与缺页次数",
+      "review_note": "程序局部性与缺页次数",
+      "stem_sha256": "9f53d01c6c6a01f9a9c94577c66624b84dc39c13e7255b58d4e9c550c15dd56c",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-15": {
+      "kp_ids": [
+        "os.mem.virt",
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.virt::缺页处理与地址重建"
+      ],
+      "primaryFacet": "os.mem.virt::缺页处理与地址重建",
+      "review_note": "缺页处理与地址重建",
+      "stem_sha256": "33817816fae5ce3182fd73282770e1521d89ac9eacebecf9535354fe4fbefd7d",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-22": {
+      "kp_ids": [
+        "os.mem.virt",
+        "os.mem.page"
+      ],
+      "facets": [
+        "os.mem.virt::缺页处理与地址重建"
+      ],
+      "primaryFacet": "os.mem.virt::缺页处理与地址重建",
+      "review_note": "缺页处理与地址重建",
+      "stem_sha256": "5d15feefd7bbb578b4a98fd97a3b1fcecab28280bdac9f1e1970b63613020452",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-20": {
+      "kp_ids": [
+        "os.mem.page",
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.page::多级页表与地址划分"
+      ],
+      "primaryFacet": "os.mem.page::多级页表与地址划分",
+      "review_note": "多级页表与地址划分",
+      "stem_sha256": "d53045c4f606a2baab6e662899955df0eccaee2dbc35f49aaaf3b3739e686eba",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-3.2-21": {
+      "kp_ids": [
+        "os.mem.page",
+        "os.mem.virt"
+      ],
+      "facets": [
+        "os.mem.page::多级页表与地址划分"
+      ],
+      "primaryFacet": "os.mem.page::多级页表与地址划分",
+      "review_note": "多级页表与地址划分",
+      "stem_sha256": "7507ad3a041a7958425fc8227fc4d9475a7396953b848d665537fc83c6ef10fb",
+      "previous_kp_ids": [
+        "os.mem.virt"
+      ]
+    },
+    "os-big-4.2-1": {
+      "kp_ids": [
+        "os.file.alloc",
+        "os.file.struct"
+      ],
+      "facets": [
+        "os.file.alloc::分配方式与访问代价"
+      ],
+      "primaryFacet": "os.file.alloc::分配方式与访问代价",
+      "review_note": "分配方式与访问代价",
+      "stem_sha256": "016a2a876973ce292ae6baab11e5cdaf24fca4a9db39941ad0c8cca9d4e52e28",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-6": {
+      "kp_ids": [
+        "os.file.alloc",
+        "os.file.struct"
+      ],
+      "facets": [
+        "os.file.alloc::分配方式与访问代价"
+      ],
+      "primaryFacet": "os.file.alloc::分配方式与访问代价",
+      "review_note": "分配方式与访问代价",
+      "stem_sha256": "6f6a7c02cdcb33b9d2301f3bd3e58665b00a3cee7c5c00f0de483ee67baec22f",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-10": {
+      "kp_ids": [
+        "os.file.alloc",
+        "os.file.struct"
+      ],
+      "facets": [
+        "os.file.alloc::分配方式与访问代价"
+      ],
+      "primaryFacet": "os.file.alloc::分配方式与访问代价",
+      "review_note": "分配方式与访问代价",
+      "stem_sha256": "414b53c731882bfec1256ad5cd5db5804043294fc9d854925747206a6a86b0d2",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-12": {
+      "kp_ids": [
+        "os.file.alloc",
+        "os.file.struct"
+      ],
+      "facets": [
+        "os.file.alloc::分配方式与访问代价"
+      ],
+      "primaryFacet": "os.file.alloc::分配方式与访问代价",
+      "review_note": "分配方式与访问代价",
+      "stem_sha256": "4ac42890760fb71052a6b568d8c81f16e8cb51dc410414596d63118d761e6949",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-2": {
+      "kp_ids": [
+        "os.file.dir"
+      ],
+      "facets": [
+        "os.file.dir::目录检索与FCB分解"
+      ],
+      "primaryFacet": "os.file.dir::目录检索与FCB分解",
+      "review_note": "目录检索与FCB分解",
+      "stem_sha256": "977564a0f44d631ba769bf7cc7f51d8d6d5baf345b3d075e4f7442a78a57db01",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-3": {
+      "kp_ids": [
+        "os.file.dir"
+      ],
+      "facets": [
+        "os.file.dir::目录操作与文件共享"
+      ],
+      "primaryFacet": "os.file.dir::目录操作与文件共享",
+      "review_note": "目录操作与文件共享",
+      "stem_sha256": "e9d8f5992dbd189cb433b59a0af2728bf6c02c0e33100479c749c336f3ac47d2",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-4": {
+      "kp_ids": [
+        "os.file.dir"
+      ],
+      "facets": [
+        "os.file.dir::目录操作与文件共享"
+      ],
+      "primaryFacet": "os.file.dir::目录操作与文件共享",
+      "review_note": "目录操作与文件共享",
+      "stem_sha256": "8c7a3822525a488494ec3dbaea1febc8b61d035e36feec277d33e1064cfdb1f5",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-5": {
+      "kp_ids": [
+        "os.file.alloc",
+        "os.file.dir"
+      ],
+      "facets": [
+        "os.file.alloc::索引容量与空间开销"
+      ],
+      "primaryFacet": "os.file.alloc::索引容量与空间开销",
+      "review_note": "索引容量与空间开销",
+      "stem_sha256": "c7653a6bcfced0c1e43fbc92d4a84a5e8b1d38a3ea290cff2cf36da09faee9c2",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-7": {
+      "kp_ids": [
+        "os.file.alloc",
+        "os.file.dir"
+      ],
+      "facets": [
+        "os.file.alloc::FAT与链式分配"
+      ],
+      "primaryFacet": "os.file.alloc::FAT与链式分配",
+      "review_note": "FAT与链式分配",
+      "stem_sha256": "024911e3d4f86da7dc05f4a1bbe55002ec13fe3e6d7ff0fd3a41fe5caf28c16c",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-11": {
+      "kp_ids": [
+        "os.file.alloc",
+        "os.file.dir"
+      ],
+      "facets": [
+        "os.file.alloc::FAT与链式分配"
+      ],
+      "primaryFacet": "os.file.alloc::FAT与链式分配",
+      "review_note": "FAT与链式分配",
+      "stem_sha256": "a85dba069755600c75bf001d6e2d495795e02c6b9937be78769118c0a2bf5135",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-8": {
+      "kp_ids": [
+        "os.file.alloc"
+      ],
+      "facets": [
+        "os.file.alloc::索引容量与空间开销"
+      ],
+      "primaryFacet": "os.file.alloc::索引容量与空间开销",
+      "review_note": "索引容量与空间开销",
+      "stem_sha256": "ca9497e0c8869101e762e6183cbe6bee0b2acf8e1f6549f8e1c294cfe0b097c3",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-9": {
+      "kp_ids": [
+        "os.file.alloc"
+      ],
+      "facets": [
+        "os.file.alloc::索引容量与空间开销"
+      ],
+      "primaryFacet": "os.file.alloc::索引容量与空间开销",
+      "review_note": "索引容量与空间开销",
+      "stem_sha256": "79e3f78a9aef1bacdce16c52b89d0561f1710b8beda39ae76016afb0ed0098a3",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-13": {
+      "kp_ids": [
+        "os.file.alloc"
+      ],
+      "facets": [
+        "os.file.alloc::索引容量与空间开销"
+      ],
+      "primaryFacet": "os.file.alloc::索引容量与空间开销",
+      "review_note": "索引容量与空间开销",
+      "stem_sha256": "0978caa9f26d38a3b454ae445db0fe340e92d3118a994f3b47c6afb49cecf935",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-14": {
+      "kp_ids": [
+        "os.file.alloc"
+      ],
+      "facets": [
+        "os.file.alloc::索引容量与空间开销"
+      ],
+      "primaryFacet": "os.file.alloc::索引容量与空间开销",
+      "review_note": "索引容量与空间开销",
+      "stem_sha256": "33b617393075f664de67af9d5bd3417fe15a17d99b648fde0af97391693d3f1e",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.2-15": {
+      "kp_ids": [
+        "os.file.dir",
+        "os.file.alloc"
+      ],
+      "facets": [
+        "os.file.dir::路径访问与索引结点"
+      ],
+      "primaryFacet": "os.file.dir::路径访问与索引结点",
+      "review_note": "路径访问与索引结点",
+      "stem_sha256": "3025de57cc6b571089999caaf5ab1e29244d2fec857dbccd5f01aeb1c0526ef0",
+      "previous_kp_ids": [
+        "os.file.dir"
+      ]
+    },
+    "os-big-4.3-1": {
+      "kp_ids": [
+        "os.file.fs"
+      ],
+      "facets": [
+        "os.file.fs::空闲位图与盘块编号"
+      ],
+      "primaryFacet": "os.file.fs::空闲位图与盘块编号",
+      "review_note": "空闲位图与盘块编号",
+      "stem_sha256": "3451de249eb42b4d2b9431a3c4d230e4c56b7a905a3898552cae01f36af21358",
+      "previous_kp_ids": [
+        "os.file.fs"
+      ]
+    },
+    "os-big-4.3-2": {
+      "kp_ids": [
+        "os.file.fs"
+      ],
+      "facets": [
+        "os.file.fs::空闲位图与盘块编号"
+      ],
+      "primaryFacet": "os.file.fs::空闲位图与盘块编号",
+      "review_note": "空闲位图与盘块编号",
+      "stem_sha256": "3224d67bfcaf0f7a29c0e3c82baacfb7c25230a5250d35179da41da6ac42290a",
+      "previous_kp_ids": [
+        "os.file.fs"
+      ]
+    },
+    "os-big-5.1-1": {
+      "kp_ids": [
+        "os.io.hw",
+        "os.intro.int"
+      ],
+      "facets": [
+        "os.io.hw::中断开销与CPU利用率"
+      ],
+      "primaryFacet": "os.io.hw::中断开销与CPU利用率",
+      "review_note": "中断开销与CPU利用率",
+      "stem_sha256": "e0e29b5965c7f5128333ce737468d88c48df97858257eca3c6403bedbbf8f158",
+      "previous_kp_ids": [
+        "os.io.hw"
+      ]
+    },
+    "os-big-5.1-2": {
+      "kp_ids": [
+        "os.io.hw",
+        "os.intro.int"
+      ],
+      "facets": [
+        "os.io.hw::中断开销与CPU利用率"
+      ],
+      "primaryFacet": "os.io.hw::中断开销与CPU利用率",
+      "review_note": "中断开销与CPU利用率",
+      "stem_sha256": "18b20354bdcad9b730227412b5aa03efa79423c4db9cd2984d8d73025b68089b",
+      "previous_kp_ids": [
+        "os.io.hw"
+      ]
+    },
+    "os-big-5.2-1": {
+      "kp_ids": [
+        "os.io.hw"
+      ],
+      "facets": [
+        "os.io.hw::I/O软件分层"
+      ],
+      "primaryFacet": "os.io.hw::I/O软件分层",
+      "review_note": "I/O软件分层",
+      "stem_sha256": "8f8144bd5b5fd4a93258b955dfe3624d8f28ca0772a39344ec03a60b6a25ed2f",
+      "previous_kp_ids": [
+        "os.io.spool"
+      ]
+    },
+    "os-big-5.2-2": {
+      "kp_ids": [
+        "os.io.spool"
+      ],
+      "facets": [
+        "os.io.spool::缓冲流水与处理时间"
+      ],
+      "primaryFacet": "os.io.spool::缓冲流水与处理时间",
+      "review_note": "缓冲流水与处理时间",
+      "stem_sha256": "79c2adea7050d8b26c736e12fc0fec26aa04ec929cf13f116adb5524e5d9e4f2",
+      "previous_kp_ids": [
+        "os.io.spool"
+      ]
+    },
+    "os-big-5.2-3": {
+      "kp_ids": [
+        "os.io.hw",
+        "os.proc.pcb",
+        "os.intro.int"
+      ],
+      "facets": [
+        "os.io.hw::中断驱动I/O与进程状态"
+      ],
+      "primaryFacet": "os.io.hw::中断驱动I/O与进程状态",
+      "review_note": "中断驱动I/O与进程状态",
+      "stem_sha256": "c9f405072b09fad4f601e76f85bc52e590a54bc7b2150c02aefb93907c2f07cd",
+      "previous_kp_ids": [
+        "os.io.spool"
+      ]
+    },
+    "os-big-5.3-1": {
+      "kp_ids": [
+        "os.io.disk"
+      ],
+      "facets": [
+        "os.io.disk::磁盘地址与容量"
+      ],
+      "primaryFacet": "os.io.disk::磁盘地址与容量",
+      "review_note": "磁盘地址与容量",
+      "stem_sha256": "e5bbd206ccb1e7ec63ab09cfdcce887344f06b785fee7cddbadbb498035f853f",
+      "previous_kp_ids": [
+        "os.io.disk"
+      ]
+    },
+    "os-big-5.3-2": {
+      "kp_ids": [
+        "os.io.disk"
+      ],
+      "facets": [
+        "os.io.disk::访问时间与扇区交错"
+      ],
+      "primaryFacet": "os.io.disk::访问时间与扇区交错",
+      "review_note": "访问时间与扇区交错",
+      "stem_sha256": "0277ac044c292a09ed56ca60f82ad52bc78d7bcfd43615eba715d68e7fd44741",
+      "previous_kp_ids": [
+        "os.io.disk"
+      ]
+    },
+    "os-big-5.3-4": {
+      "kp_ids": [
+        "os.io.disk"
+      ],
+      "facets": [
+        "os.io.disk::访问时间与扇区交错"
+      ],
+      "primaryFacet": "os.io.disk::访问时间与扇区交错",
+      "review_note": "访问时间与扇区交错",
+      "stem_sha256": "a24c694310a8ae13cf20e238774d49fc11088d2e54d2987cdbf97d8df9edfa7a",
+      "previous_kp_ids": [
+        "os.io.disk"
+      ]
+    },
+    "os-big-5.3-5": {
+      "kp_ids": [
+        "os.io.disk"
+      ],
+      "facets": [
+        "os.io.disk::访问时间与扇区交错"
+      ],
+      "primaryFacet": "os.io.disk::访问时间与扇区交错",
+      "review_note": "访问时间与扇区交错",
+      "stem_sha256": "ef9dbc8b30fe4ca8d4aa41d50945af08dacf31e3ed9f4320ad139ee808e2c8b8",
+      "previous_kp_ids": [
+        "os.io.disk"
+      ]
+    },
+    "os-big-5.3-3": {
+      "kp_ids": [
+        "os.io.disk"
+      ],
+      "facets": [
+        "os.io.disk::调度序列与寻道距离"
+      ],
+      "primaryFacet": "os.io.disk::调度序列与寻道距离",
+      "review_note": "调度序列与寻道距离",
+      "stem_sha256": "6153ef360867d9adeb85df726defe73e1e1c4c4e3abc73a7e5e73e832ad45c2e",
+      "previous_kp_ids": [
+        "os.io.disk"
+      ]
+    },
+    "os-big-5.3-6": {
+      "kp_ids": [
+        "os.io.disk",
+        "os.file.fs"
+      ],
+      "facets": [
+        "os.io.disk::调度序列与寻道距离"
+      ],
+      "primaryFacet": "os.io.disk::调度序列与寻道距离",
+      "review_note": "调度序列与寻道距离",
+      "stem_sha256": "260d088ddae399c5e15bed62f9c6256b939e957c123092c4c1c70579d60224e4",
+      "previous_kp_ids": [
+        "os.io.disk"
+      ]
+    },
+    "os-big-5.3-7": {
+      "kp_ids": [
+        "os.io.disk",
+        "os.io.hw"
+      ],
+      "facets": [
+        "os.io.disk::调度序列与寻道距离"
+      ],
+      "primaryFacet": "os.io.disk::调度序列与寻道距离",
+      "review_note": "调度序列与寻道距离",
+      "stem_sha256": "dd950d36f2b279a776bdd08cf2306d8024819a0053bc998c6b165a090b1abeff",
+      "previous_kp_ids": [
+        "os.io.disk"
+      ]
+    },
+    "os-big-5.3-8": {
+      "kp_ids": [
+        "os.file.fs",
+        "os.intro.feat"
+      ],
+      "facets": [
+        "os.file.fs::启动流程与磁盘格式化"
+      ],
+      "primaryFacet": "os.file.fs::启动流程与磁盘格式化",
+      "review_note": "启动流程与磁盘格式化",
+      "stem_sha256": "bfd3b0d0046559d63652e60317162bc88572f18e21480b9c22775f6eb233a053",
+      "previous_kp_ids": [
+        "os.io.disk"
+      ]
+    },
+    "ds-big-1.1-1": {
+      "kp_ids": [],
+      "facets": [],
+      "primaryFacet": null,
+      "review_note": "逻辑结构与存储结构（图谱未设独立考点）",
+      "stem_sha256": "5bd4b5235083ae122161a569c8fe233d5f21ae12760cdaff47266f3c64d4718f",
+      "previous_kp_ids": []
+    },
+    "ds-big-1.1-2": {
+      "kp_ids": [],
+      "facets": [],
+      "primaryFacet": null,
+      "review_note": "逻辑结构与存储结构（图谱未设独立考点）",
+      "stem_sha256": "75bacc6616204f8fe73238a52f9a758780b9b0cbdb4a58aac3ab20861bff8c8d",
+      "previous_kp_ids": []
+    },
+    "ds-big-1.2-1": {
+      "kp_ids": [
+        "ds.algo.design"
+      ],
+      "facets": [
+        "ds.algo.design::循环程序复杂度分析"
+      ],
+      "primaryFacet": "ds.algo.design::循环程序复杂度分析",
+      "review_note": "循环程序复杂度分析",
+      "stem_sha256": "6c9e186c1d83c815b8cdf67eaeeeb92df950e0e63a4894ad2f39694d5dde6a85",
+      "previous_kp_ids": [
+        "ds.algo.design"
+      ]
+    },
+    "ds-big-2.2-1": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::顺序扫描与元素筛选"
+      ],
+      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
+      "review_note": "顺序扫描与元素筛选",
+      "stem_sha256": "25cd1f7c1aafcb51753698a055df500f954134bf46df4cc40cc2d20974c06c7e",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-3": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::顺序扫描与元素筛选"
+      ],
+      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
+      "review_note": "顺序扫描与元素筛选",
+      "stem_sha256": "bdce957140ff629aa3500c552d50fe24b2b76c757e318ea7c7aae522f59fd06a",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-4": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::顺序扫描与元素筛选"
+      ],
+      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
+      "review_note": "顺序扫描与元素筛选",
+      "stem_sha256": "5f54e17eb1bb3cfa902a712b3cca35b5cf51a18332377882e490da115ceb9176",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-5": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::顺序扫描与元素筛选"
+      ],
+      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
+      "review_note": "顺序扫描与元素筛选",
+      "stem_sha256": "9c02d7fe250befc769baa415fd6eb0e3278521f36f9503e595a082355e31b7cf",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-12": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::顺序扫描与元素筛选"
+      ],
+      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
+      "review_note": "顺序扫描与元素筛选",
+      "stem_sha256": "1e22f6579b7b72bffcc08a2209b3dcffc4caf20e302cee050a26de5921cc03f1",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-13": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::顺序扫描与元素筛选"
+      ],
+      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
+      "review_note": "顺序扫描与元素筛选",
+      "stem_sha256": "abdd148fa812d1e2bae5268e27b2d598e5f8acea66624207479cabf54a60a3ed",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-2": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::原地逆置与循环移动"
+      ],
+      "primaryFacet": "ds.linear.seq::原地逆置与循环移动",
+      "review_note": "原地逆置与循环移动",
+      "stem_sha256": "44cca4952c880c554738ac7511038645dd3b9319254bf0880d479e8b1194e6c1",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-7": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::原地逆置与循环移动"
+      ],
+      "primaryFacet": "ds.linear.seq::原地逆置与循环移动",
+      "review_note": "原地逆置与循环移动",
+      "stem_sha256": "7f6305ed97e639b156b951656ac7f9017c4687695f5b61c99f78454d9771dbad",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-10": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::原地逆置与循环移动"
+      ],
+      "primaryFacet": "ds.linear.seq::原地逆置与循环移动",
+      "review_note": "原地逆置与循环移动",
+      "stem_sha256": "084f448d0c3f4e7f725ecee0eebc32f496374185b3c2cd6c9d31cc33074bfa78",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-6": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::有序序列与多指针"
+      ],
+      "primaryFacet": "ds.linear.seq::有序序列与多指针",
+      "review_note": "有序序列与多指针",
+      "stem_sha256": "d7a8b80c85a2da9eb67993e4addd5d4c63f26b86b18ff06c32278c960e3608b4",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-9": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::有序序列与多指针"
+      ],
+      "primaryFacet": "ds.linear.seq::有序序列与多指针",
+      "review_note": "有序序列与多指针",
+      "stem_sha256": "8f09f4035b1a4e618412516b91510f97dc85f828bd02361d0107aef788638fb0",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-14": {
+      "kp_ids": [
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.linear.seq::有序序列与多指针"
+      ],
+      "primaryFacet": "ds.linear.seq::有序序列与多指针",
+      "review_note": "有序序列与多指针",
+      "stem_sha256": "40308a9e36e9a640c07af2a8aaf23667b4d9714333e46bf65e56f222f795480e",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-8": {
+      "kp_ids": [
+        "ds.search.seq-bin",
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.search.seq-bin::折半查找与边界处理"
+      ],
+      "primaryFacet": "ds.search.seq-bin::折半查找与边界处理",
+      "review_note": "折半查找与边界处理",
+      "stem_sha256": "64975ac2bae5ed27d3880438b71d64803c0aeda69a187a7a1b338c27177cb101",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-11": {
+      "kp_ids": [
+        "ds.algo.recur",
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.algo.recur::有序序列的分治选择"
+      ],
+      "primaryFacet": "ds.algo.recur::有序序列的分治选择",
+      "review_note": "有序序列的分治选择",
+      "stem_sha256": "b2a240a46c7b2434c575f8f7a33708c3836ecfa2fcbd4b4bf8d748cd63586083",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.2-15": {
+      "kp_ids": [
+        "ds.algo.dp",
+        "ds.linear.seq"
+      ],
+      "facets": [
+        "ds.algo.dp::后缀状态与线性递推"
+      ],
+      "primaryFacet": "ds.algo.dp::后缀状态与线性递推",
+      "review_note": "后缀状态与线性递推",
+      "stem_sha256": "48a7886dde6cdd4f74e9239918a25fef9773018b8bc12e5a3c990eff2b542b05",
+      "previous_kp_ids": [
+        "ds.linear.seq"
+      ]
+    },
+    "ds-big-2.3-1": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::链表删除与结点释放"
+      ],
+      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
+      "review_note": "链表删除与结点释放",
+      "stem_sha256": "3904c8b028373d32b9327a8278fc211151aa0648fe3acf6bde4137c7d62ff833",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-2": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::链表删除与结点释放"
+      ],
+      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
+      "review_note": "链表删除与结点释放",
+      "stem_sha256": "60bb8309c4f5628a6aaf35f77a640e62e4d735076180aafbf812c8c6d75778c4",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-4": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::链表删除与结点释放"
+      ],
+      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
+      "review_note": "链表删除与结点释放",
+      "stem_sha256": "37e8475dccadfddf1d503b2a93309a05343440f0f87e23c90905326c192b0366",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-7": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::链表删除与结点释放"
+      ],
+      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
+      "review_note": "链表删除与结点释放",
+      "stem_sha256": "7f4f8796214cef2519df8607285a250377592c9843340463ffa2e27c8beff364",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-19": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::链表删除与结点释放"
+      ],
+      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
+      "review_note": "链表删除与结点释放",
+      "stem_sha256": "a9b72878259c1c4f30016ffcef1ed3ba8ea13d1c27db5fc71e326020e8c776f0",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-3": {
+      "kp_ids": [
+        "ds.linear.poly",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.poly::链表逆置分拆与合并"
+      ],
+      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
+      "review_note": "链表逆置分拆与合并",
+      "stem_sha256": "223d1ae4de215140e238d968f68c04ae6862b67f97ea693e926b95c1b3d3d3a6",
+      "previous_kp_ids": [
+        "ds.linear.poly"
+      ]
+    },
+    "ds-big-2.3-6": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [],
+      "primaryFacet": null,
+      "review_note": "题干在“将其”处截断，暂保留原顺序分类；待原页核对，不作代表题。",
+      "stem_sha256": "91e2b3d6e0a07f5de3c7dd6a3d9ce6fff80e8a3bac42c7ada817dcd94f0bbc10",
+      "diagnostic_eligible": false,
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-8": {
+      "kp_ids": [
+        "ds.linear.poly",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.poly::链表逆置分拆与合并"
+      ],
+      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
+      "review_note": "链表逆置分拆与合并",
+      "stem_sha256": "5b9f23c9dce2e1b8a1804ff2e9f3d9b2104a60648ffd91301613f1dabd89ea1e",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-9": {
+      "kp_ids": [
+        "ds.linear.poly",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.poly::链表逆置分拆与合并"
+      ],
+      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
+      "review_note": "链表逆置分拆与合并",
+      "stem_sha256": "6689b21472563c196abec3bd6e794b1e857d19ee1743eb693582f66f9b88b32e",
+      "previous_kp_ids": [
+        "ds.linear.poly"
+      ]
+    },
+    "ds-big-2.3-14": {
+      "kp_ids": [
+        "ds.linear.poly",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.poly::链表逆置分拆与合并"
+      ],
+      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
+      "review_note": "链表逆置分拆与合并",
+      "stem_sha256": "42a47f8357fbd849e49723473bf4d1e6d3554ea4ec48b6392dbf2a862186e6f9",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-16": {
+      "kp_ids": [
+        "ds.linear.poly",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.poly::链表逆置分拆与合并"
+      ],
+      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
+      "review_note": "链表逆置分拆与合并",
+      "stem_sha256": "bcc87a50b61db34cb3a68086693f36514d6331783891b8852ef1c30d3066b48a",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-20": {
+      "kp_ids": [
+        "ds.linear.poly",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.poly::链表逆置分拆与合并"
+      ],
+      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
+      "review_note": "链表逆置分拆与合并",
+      "stem_sha256": "c1f2736a02e19879c7f872e9a5209848dfa25150e83b45516c80e59638fdbc9d",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-5": {
+      "kp_ids": [
+        "ds.linear.poly",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.poly::公共结点与共享后缀"
+      ],
+      "primaryFacet": "ds.linear.poly::公共结点与共享后缀",
+      "review_note": "公共结点与共享后缀",
+      "stem_sha256": "862de867e770b1b0922e50210e88c42398968cd2305c4a33f0d9d44b497a8550",
+      "previous_kp_ids": [
+        "ds.linear.poly"
+      ]
+    },
+    "ds-big-2.3-18": {
+      "kp_ids": [
+        "ds.linear.poly",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.poly::公共结点与共享后缀"
+      ],
+      "primaryFacet": "ds.linear.poly::公共结点与共享后缀",
+      "review_note": "公共结点与共享后缀",
+      "stem_sha256": "3bd64985c6264168225371ab28edf154448fab8f02075d39bf4abf8aa30a119c",
+      "previous_kp_ids": [
+        "ds.linear.poly"
+      ]
+    },
+    "ds-big-2.3-10": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::链表定位与双指针"
+      ],
+      "primaryFacet": "ds.linear.linked::链表定位与双指针",
+      "review_note": "链表定位与双指针",
+      "stem_sha256": "39d34d1be3a8a6a20a1a7d477b933fd81e7d625cb1d9bcfc5fba9219fd6472f7",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-15": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::链表定位与双指针"
+      ],
+      "primaryFacet": "ds.linear.linked::链表定位与双指针",
+      "review_note": "链表定位与双指针",
+      "stem_sha256": "86388d62fbdb5270e73ac2562c702b58f9afe53f6820f2e2443a45ffc25ecf48",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-17": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::链表定位与双指针"
+      ],
+      "primaryFacet": "ds.linear.linked::链表定位与双指针",
+      "review_note": "链表定位与双指针",
+      "stem_sha256": "58c1220f38b195f4a4d2a25a40dfd8f33fc88e41da9617f3564dc341ab5106b1",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-11": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::循环双链表与指针维护"
+      ],
+      "primaryFacet": "ds.linear.linked::循环双链表与指针维护",
+      "review_note": "循环双链表与指针维护",
+      "stem_sha256": "d0413a66b591c02842367c402c1c7875503c155c1de1998f9defcf45c2d6a78b",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-12": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::循环双链表与指针维护"
+      ],
+      "primaryFacet": "ds.linear.linked::循环双链表与指针维护",
+      "review_note": "循环双链表与指针维护",
+      "stem_sha256": "248e3ee0fc9226cf5b069130609827c6e3a85c620b7e95c518b2f0fce01798ee",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-2.3-13": {
+      "kp_ids": [
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.linear.linked::循环双链表与指针维护"
+      ],
+      "primaryFacet": "ds.linear.linked::循环双链表与指针维护",
+      "review_note": "循环双链表与指针维护",
+      "stem_sha256": "96ee87e99ddf157b0fba967ca055d45e0d903f9503da1c166451420c7c891d97",
+      "previous_kp_ids": [
+        "ds.linear.linked"
+      ]
+    },
+    "ds-big-3.1-1": {
+      "kp_ids": [
+        "ds.sq.stack"
+      ],
+      "facets": [
+        "ds.sq.stack::栈序列合法性"
+      ],
+      "primaryFacet": "ds.sq.stack::栈序列合法性",
+      "review_note": "栈序列合法性",
+      "stem_sha256": "8a1ab126344016fb0c7d5ef938c58588d237a3cdfa3ade24332a871cd4339283",
+      "previous_kp_ids": [
+        "ds.sq.stack"
+      ]
+    },
+    "ds-big-3.1-2": {
+      "kp_ids": [
+        "ds.sq.stack"
+      ],
+      "facets": [
+        "ds.sq.stack::栈序列合法性"
+      ],
+      "primaryFacet": "ds.sq.stack::栈序列合法性",
+      "review_note": "栈序列合法性",
+      "stem_sha256": "0fbe7da17a2fb9c69111fd7e3d7a08daebf0bb3a8175005b506ec7d46c9c217b",
+      "previous_kp_ids": [
+        "ds.sq.stack"
+      ]
+    },
+    "ds-big-3.1-3": {
+      "kp_ids": [
+        "ds.sq.stack"
+      ],
+      "facets": [
+        "ds.sq.stack::栈序列合法性"
+      ],
+      "primaryFacet": "ds.sq.stack::栈序列合法性",
+      "review_note": "栈序列合法性",
+      "stem_sha256": "d41ac9b016937e6b14d11ce983f71f96114dedf5b0de70f4eb71d43fe0f19873",
+      "previous_kp_ids": [
+        "ds.sq.stack"
+      ]
+    },
+    "ds-big-3.1-4": {
+      "kp_ids": [
+        "ds.sq.apply",
+        "ds.sq.stack",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.sq.apply::栈辅助序列判定"
+      ],
+      "primaryFacet": "ds.sq.apply::栈辅助序列判定",
+      "review_note": "栈辅助序列判定",
+      "stem_sha256": "053e4eaf4fb68bfafda8884536842bf14755ab955fcb83b687ae952fe5797c3c",
+      "previous_kp_ids": [
+        "ds.sq.stack"
+      ]
+    },
+    "ds-big-3.1-5": {
+      "kp_ids": [
+        "ds.sq.stack"
+      ],
+      "facets": [
+        "ds.sq.stack::共享栈的入栈出栈"
+      ],
+      "primaryFacet": "ds.sq.stack::共享栈的入栈出栈",
+      "review_note": "共享栈的入栈出栈",
+      "stem_sha256": "b08ae1ef49015a27d7e35500bbd39a6942702041cba6be85e9b977675ddb014d",
+      "previous_kp_ids": [
+        "ds.sq.stack"
+      ]
+    },
+    "ds-big-3.2-1": {
+      "kp_ids": [
+        "ds.sq.queue"
+      ],
+      "facets": [
+        "ds.sq.queue::队列结构与空满判定"
+      ],
+      "primaryFacet": "ds.sq.queue::队列结构与空满判定",
+      "review_note": "队列结构与空满判定",
+      "stem_sha256": "861c817d7f06118256e4123a6a35116f8cd2da1c04c642fd619c9fa0b492b344",
+      "previous_kp_ids": [
+        "ds.sq.queue"
+      ]
+    },
+    "ds-big-3.2-4": {
+      "kp_ids": [
+        "ds.sq.queue"
+      ],
+      "facets": [
+        "ds.sq.queue::队列结构与空满判定"
+      ],
+      "primaryFacet": "ds.sq.queue::队列结构与空满判定",
+      "review_note": "队列结构与空满判定",
+      "stem_sha256": "352d3da75dc818e4d77fc5ce3a22ca95ff9ee749590676a3a86de71d584bbbd6",
+      "previous_kp_ids": [
+        "ds.sq.queue"
+      ]
+    },
+    "ds-big-3.2-2": {
+      "kp_ids": [
+        "ds.sq.apply",
+        "ds.sq.stack",
+        "ds.sq.queue"
+      ],
+      "facets": [
+        "ds.sq.apply::栈与队列相互模拟"
+      ],
+      "primaryFacet": "ds.sq.apply::栈与队列相互模拟",
+      "review_note": "栈与队列相互模拟",
+      "stem_sha256": "77cf738d2454cc28ab9c18c28a33db02844e55488c5c05a40f14a41c7cbf0e28",
+      "previous_kp_ids": [
+        "ds.sq.queue"
+      ]
+    },
+    "ds-big-3.2-3": {
+      "kp_ids": [
+        "ds.sq.apply",
+        "ds.sq.stack",
+        "ds.sq.queue"
+      ],
+      "facets": [
+        "ds.sq.apply::栈与队列相互模拟"
+      ],
+      "primaryFacet": "ds.sq.apply::栈与队列相互模拟",
+      "review_note": "栈与队列相互模拟",
+      "stem_sha256": "fbd21d1a2c9d00457246e89cc4792701aa4e588a780a52414a3ede34c97af742",
+      "previous_kp_ids": [
+        "ds.sq.queue"
+      ]
+    },
+    "ds-big-3.3-1": {
+      "kp_ids": [
+        "ds.sq.stack"
+      ],
+      "facets": [
+        "ds.sq.stack::括号匹配"
+      ],
+      "primaryFacet": "ds.sq.stack::括号匹配",
+      "review_note": "括号匹配",
+      "stem_sha256": "74e831fd900dad2afae5c916e49ea94ff0903abe76372e1aa40806e61c61c615",
+      "previous_kp_ids": [
+        "ds.sq.apply"
+      ]
+    },
+    "ds-big-4.2-1": {
+      "kp_ids": [
+        "ds.str.kmp"
+      ],
+      "facets": [
+        "ds.str.kmp::next数组与匹配回退"
+      ],
+      "primaryFacet": "ds.str.kmp::next数组与匹配回退",
+      "review_note": "next数组与匹配回退",
+      "stem_sha256": "3a00eea01cb968476d2e0669887d811a496dbb91553d7bf8e070484785e044d1",
+      "previous_kp_ids": [
+        "ds.str.kmp"
+      ]
+    },
+    "ds-big-4.2-2": {
+      "kp_ids": [
+        "ds.str.kmp"
+      ],
+      "facets": [
+        "ds.str.kmp::next数组与匹配回退"
+      ],
+      "primaryFacet": "ds.str.kmp::next数组与匹配回退",
+      "review_note": "next数组与匹配回退",
+      "stem_sha256": "17dd10c7a4d6f8344aaef8ba09d6c0df638f9b85a9e152ae72659b887e58fd71",
+      "previous_kp_ids": [
+        "ds.str.kmp"
+      ]
+    },
+    "ds-big-5.1-1": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::结点度数与高度关系"
+      ],
+      "primaryFacet": "ds.tree.bt::结点度数与高度关系",
+      "review_note": "结点度数与高度关系",
+      "stem_sha256": "570a307be527de08711da510c97ecdf4e7be0aa336cec6017ab3470bf65949c1",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.1-2": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::结点度数与高度关系"
+      ],
+      "primaryFacet": "ds.tree.bt::结点度数与高度关系",
+      "review_note": "结点度数与高度关系",
+      "stem_sha256": "7a3602b4502b620f3fbad597404267612f24c708b0ab752a6b34479b74bdb62d",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.1-3": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::结点度数与高度关系"
+      ],
+      "primaryFacet": "ds.tree.bt::结点度数与高度关系",
+      "review_note": "结点度数与高度关系",
+      "stem_sha256": "298eb79fcbcadc56b0c3020d9369430ee0b4a085882399ca499f45b22fd2816b",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.2-1": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::结点度数与高度关系"
+      ],
+      "primaryFacet": "ds.tree.bt::结点度数与高度关系",
+      "review_note": "结点度数与高度关系",
+      "stem_sha256": "5633986e856b7ad55732afd3ae556c5cd686d17b2f4e11565e7be84fe254edd2",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.2-2": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::结点度数与高度关系"
+      ],
+      "primaryFacet": "ds.tree.bt::结点度数与高度关系",
+      "review_note": "结点度数与高度关系",
+      "stem_sha256": "3300d4b64d5ecca9961b7c9e9ec5c720882438c5bec270a664b7143cf161c8e0",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.2-3": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::结点度数与高度关系"
+      ],
+      "primaryFacet": "ds.tree.bt::结点度数与高度关系",
+      "review_note": "结点度数与高度关系",
+      "stem_sha256": "53d097c9a3178d96ca05d5d1f350841fe9d507f479e57e6cb9ef754b7ac093df",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.2-4": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::结点度数与高度关系"
+      ],
+      "primaryFacet": "ds.tree.bt::结点度数与高度关系",
+      "review_note": "结点度数与高度关系",
+      "stem_sha256": "97aa1364ab48d1577c6406b34b5350c0376c9bb69ad28467ffa35b3591c01f15",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.2-6": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::结点度数与高度关系"
+      ],
+      "primaryFacet": "ds.tree.bt::结点度数与高度关系",
+      "review_note": "结点度数与高度关系",
+      "stem_sha256": "474061e411b24ccf7bfa7f1b81ba97c2739150e9c14df77142d8a9366b2973b3",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.2-5": {
+      "kp_ids": [
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.tree.bt::顺序存储与祖先定位"
+      ],
+      "primaryFacet": "ds.tree.bt::顺序存储与祖先定位",
+      "review_note": "顺序存储与祖先定位",
+      "stem_sha256": "4d92e038bbec00f2239cac6ac485a8e1aaad7e487e1c20ef04c3df3279a8df95",
+      "previous_kp_ids": [
+        "ds.tree.bt"
+      ]
+    },
+    "ds-big-5.3-1": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历序列与树形恢复"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历序列与树形恢复",
+      "review_note": "遍历序列与树形恢复",
+      "stem_sha256": "77a012a95a6db3b80f54c26cae771929fae324cdaf0b0ade713c7716ca8b1651",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-2": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历序列与树形恢复"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历序列与树形恢复",
+      "review_note": "遍历序列与树形恢复",
+      "stem_sha256": "6232e8c305a26ba866257b82b647895e27f2e6068d8c006d3d19928a2456c90f",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-12": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历序列与树形恢复"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历序列与树形恢复",
+      "review_note": "遍历序列与树形恢复",
+      "stem_sha256": "65a4202d1d2e4cda30887432508010b6c29876d419bc792e23b2dcfc82944659",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-3": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "c2d24e1462978a17e75748ba79355abdadd66e0e6f8a1127e5e60c7f9b92e12a",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-4": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "233857cf556999cb41dbef3b735a23e195c040a0aee79e847615d77e60e12d83",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-5": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "fe437d482b66cc9917879fda3acacafd9265bd5da6d90e67fb626eb7deb6bf12",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-6": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "32cf0085ec50ad6beef14dbfffbe16c92a5aff77aa68fb2455d2becbc6e35d67",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-7": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "14cabc9b7f04939c5ec2981570bd6450794214e5fd19b7db27234d2b7c13c7aa",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-8": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "8561b5ebab970f7e03c5cf9df78a4b95b35a60486b56de6bde0eb77489cd3ec0",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-9": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "9aa968fcc8608c7c069b7e2e600f648c7aa2ac5ea950240404f6be38f5545126",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-10": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "93b83a79c1e1baa4d8890c13d0d65c26de34c6fa4c90aaf252f348fa349abcf5",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-11": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "48c3abf2700c3dfcbb378b31712fe79e99e2e613d2ba9b8b9792e9eff4675330",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-13": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "905814a92860a8b45c5e250f335a7776014979e40aec9eb3cd735e353642acf8",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-14": {
+      "kp_ids": [
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "85238c2202565be19caa15016b8bea08bb32e9eaacc3b84c1873848c786a0360",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-15": {
+      "kp_ids": [
+        "ds.tree.trav",
+        "ds.tree.huffman"
+      ],
+      "facets": [
+        "ds.tree.trav::遍历框架与结点处理"
+      ],
+      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
+      "review_note": "遍历框架与结点处理",
+      "stem_sha256": "3bf080dee47fc12a468089167110ce61820b7c023518875c54bdc23bf0b1c4bf",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-16": {
+      "kp_ids": [
+        "ds.tree.trav",
+        "ds.sq.stack"
+      ],
+      "facets": [
+        "ds.tree.trav::表达式树与遍历输出"
+      ],
+      "primaryFacet": "ds.tree.trav::表达式树与遍历输出",
+      "review_note": "表达式树与遍历输出",
+      "stem_sha256": "0329d04fd7c96852e98939a0602011506c983b9b0ae868bf29d802202cdb9dce",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.3-17": {
+      "kp_ids": [
+        "ds.search.bst",
+        "ds.tree.bt"
+      ],
+      "facets": [
+        "ds.search.bst::二叉排序树性质判定"
+      ],
+      "primaryFacet": "ds.search.bst::二叉排序树性质判定",
+      "review_note": "二叉排序树性质判定",
+      "stem_sha256": "be479096a81a0dc6c6be2510be5acddd8ed45a0337490f2fd076af56dc1565cc",
+      "previous_kp_ids": [
+        "ds.tree.thread"
+      ]
+    },
+    "ds-big-5.4-1": {
+      "kp_ids": [
+        "ds.tree.forest",
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.forest::树森林与二叉树转换"
+      ],
+      "primaryFacet": "ds.tree.forest::树森林与二叉树转换",
+      "review_note": "树森林与二叉树转换",
+      "stem_sha256": "e5bf6f2e874a4995fa97fc50c69833944312110ed6b431f7ecf69cdc194ae8f8",
+      "previous_kp_ids": [
+        "ds.tree.forest"
+      ]
+    },
+    "ds-big-5.4-2": {
+      "kp_ids": [
+        "ds.tree.forest",
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.forest::树森林与二叉树转换"
+      ],
+      "primaryFacet": "ds.tree.forest::树森林与二叉树转换",
+      "review_note": "树森林与二叉树转换",
+      "stem_sha256": "772ba519de674f9a4a10c25b9be23391eb39109e587b584843fa07b4c6976dcb",
+      "previous_kp_ids": [
+        "ds.tree.forest"
+      ]
+    },
+    "ds-big-5.4-3": {
+      "kp_ids": [
+        "ds.tree.forest",
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.forest::树森林与二叉树转换"
+      ],
+      "primaryFacet": "ds.tree.forest::树森林与二叉树转换",
+      "review_note": "树森林与二叉树转换",
+      "stem_sha256": "a7da8ee95e2b4915920522e4ad8834fa01bf2988371a1e6e8608f56d7a56b316",
+      "previous_kp_ids": [
+        "ds.tree.forest"
+      ]
+    },
+    "ds-big-5.4-4": {
+      "kp_ids": [
+        "ds.tree.forest",
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.forest::孩子兄弟表示与递归统计"
+      ],
+      "primaryFacet": "ds.tree.forest::孩子兄弟表示与递归统计",
+      "review_note": "孩子兄弟表示与递归统计",
+      "stem_sha256": "45a2098254e65daf40f287b2f9c64f7b06a5541f1d988660f91e7136bfaff33c",
+      "previous_kp_ids": [
+        "ds.tree.forest"
+      ]
+    },
+    "ds-big-5.4-5": {
+      "kp_ids": [
+        "ds.tree.forest",
+        "ds.tree.trav"
+      ],
+      "facets": [
+        "ds.tree.forest::孩子兄弟表示与递归统计"
+      ],
+      "primaryFacet": "ds.tree.forest::孩子兄弟表示与递归统计",
+      "review_note": "孩子兄弟表示与递归统计",
+      "stem_sha256": "29e9773cab3e4701073451b2cf35e87b3b49618f437999688709538fbc3d7c7e",
+      "previous_kp_ids": [
+        "ds.tree.forest"
+      ]
+    },
+    "ds-big-5.5-1": {
+      "kp_ids": [
+        "ds.tree.huffman"
+      ],
+      "facets": [
+        "ds.tree.huffman::哈夫曼构造与带权路径"
+      ],
+      "primaryFacet": "ds.tree.huffman::哈夫曼构造与带权路径",
+      "review_note": "哈夫曼构造与带权路径",
+      "stem_sha256": "a17bf4e464fdbc556092826b10c1cb7485bd7d32f29f68c66ef5180cd31be874",
+      "previous_kp_ids": [
+        "ds.tree.huffman"
+      ]
+    },
+    "ds-big-5.5-2": {
+      "kp_ids": [
+        "ds.tree.huffman",
+        "ds.algo.greedy",
+        "ds.sort.merge"
+      ],
+      "facets": [
+        "ds.tree.huffman::哈夫曼构造与最优合并"
+      ],
+      "primaryFacet": "ds.tree.huffman::哈夫曼构造与最优合并",
+      "review_note": "哈夫曼构造与最优合并",
+      "stem_sha256": "993e98d792ce082f3a5cd627267123b50234dcd5b28510696d19f506bfd32754",
+      "previous_kp_ids": [
+        "ds.tree.huffman"
+      ]
+    },
+    "ds-big-5.5-3": {
+      "kp_ids": [
+        "ds.tree.huffman"
+      ],
+      "facets": [
+        "ds.tree.huffman::前缀编码与译码"
+      ],
+      "primaryFacet": "ds.tree.huffman::前缀编码与译码",
+      "review_note": "前缀编码与译码",
+      "stem_sha256": "3c71776ff3f441d7c55538fabdbef8dacbf43551c841ae7b676727ae6fcff90b",
+      "previous_kp_ids": [
+        "ds.tree.huffman"
+      ]
+    },
+    "ds-big-6.1-1": {
+      "kp_ids": [
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.store::图的边数与度数关系"
+      ],
+      "primaryFacet": "ds.graph.store::图的边数与度数关系",
+      "review_note": "图的边数与度数关系",
+      "stem_sha256": "e9d45cab4146f4089b72fdf66a22b2412c74a38bebe504b07f05f211ee68603f",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.2-1": {
+      "kp_ids": [
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.store::图的存储转换与度数计算"
+      ],
+      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
+      "review_note": "图的存储转换与度数计算",
+      "stem_sha256": "4d44bf7f2921b2f3d6e4428fbdb4db5cc7ba1f4bea14dc56cbc2ef4ec69855d0",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.2-2": {
+      "kp_ids": [
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.store::图的存储转换与度数计算"
+      ],
+      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
+      "review_note": "图的存储转换与度数计算",
+      "stem_sha256": "5d15482ee241883c94b38f2d042bff28c0c12fa362b998a74c4f81486f75cf25",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.2-3": {
+      "kp_ids": [
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.store::图的存储转换与度数计算"
+      ],
+      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
+      "review_note": "图的存储转换与度数计算",
+      "stem_sha256": "4a52a80cc0cce15df169e20dbf792954fad2907822df19362c0f0b81d5a7f5ff",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.2-5": {
+      "kp_ids": [
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.store::图的存储转换与度数计算"
+      ],
+      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
+      "review_note": "图的存储转换与度数计算",
+      "stem_sha256": "16037f4f2a9b192476bbb6606e172b60b3dc487d78f0ffde3a3c9036f16589cd",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.2-6": {
+      "kp_ids": [
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.store::图的存储转换与度数计算"
+      ],
+      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
+      "review_note": "图的存储转换与度数计算",
+      "stem_sha256": "ea3557237f2199d490da8ef2af78dce6c1ac03eec5798b2f2f126e74b00112e3",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.2-7": {
+      "kp_ids": [
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.store::图的存储转换与度数计算"
+      ],
+      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
+      "review_note": "图的存储转换与度数计算",
+      "stem_sha256": "ad843e4e168798b7de71a3d9700364c4b5550f1e76bab6a53cc570c74aef66dd",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.2-8": {
+      "kp_ids": [
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.store::图的存储转换与度数计算"
+      ],
+      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
+      "review_note": "图的存储转换与度数计算",
+      "stem_sha256": "fcb48af9d4d0ada1bb60bd5b30f5e867f7cae0b861a6628a381b38c703c4a40f",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.2-4": {
+      "kp_ids": [
+        "ds.graph.topo",
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.topo::拓扑序与有向无环图"
+      ],
+      "primaryFacet": "ds.graph.topo::拓扑序与有向无环图",
+      "review_note": "拓扑序与有向无环图",
+      "stem_sha256": "d7d1cd5792807c694579c73f7ee8b2c9e2fcae66b1f34ad9fd22f102b9ad2197",
+      "previous_kp_ids": [
+        "ds.graph.store"
+      ]
+    },
+    "ds-big-6.3-1": {
+      "kp_ids": [
+        "ds.graph.dfs-bfs"
+      ],
+      "facets": [
+        "ds.graph.dfs-bfs::DFS与BFS遍历过程"
+      ],
+      "primaryFacet": "ds.graph.dfs-bfs::DFS与BFS遍历过程",
+      "review_note": "DFS与BFS遍历过程",
+      "stem_sha256": "5cba1530b1e881e6c22685bc06fa209c8df90402223c561d0db70e71f085adf1",
+      "previous_kp_ids": [
+        "ds.graph.dfs-bfs"
+      ]
+    },
+    "ds-big-6.3-2": {
+      "kp_ids": [
+        "ds.graph.dfs-bfs"
+      ],
+      "facets": [
+        "ds.graph.dfs-bfs::遍历判定与路径搜索"
+      ],
+      "primaryFacet": "ds.graph.dfs-bfs::遍历判定与路径搜索",
+      "review_note": "遍历判定与路径搜索",
+      "stem_sha256": "f7ebe498f5eff6cc82a51b394779c41cfa7fa90e69cf25333a1558163b964648",
+      "previous_kp_ids": [
+        "ds.graph.dfs-bfs"
+      ]
+    },
+    "ds-big-6.3-3": {
+      "kp_ids": [
+        "ds.graph.dfs-bfs"
+      ],
+      "facets": [
+        "ds.graph.dfs-bfs::遍历判定与路径搜索"
+      ],
+      "primaryFacet": "ds.graph.dfs-bfs::遍历判定与路径搜索",
+      "review_note": "遍历判定与路径搜索",
+      "stem_sha256": "6125638ffcb847c827c95daa609be7a719c17d1bbf617a6710b4a3613cbfcc36",
+      "previous_kp_ids": [
+        "ds.graph.dfs-bfs"
+      ]
+    },
+    "ds-big-6.3-4": {
+      "kp_ids": [
+        "ds.graph.dfs-bfs"
+      ],
+      "facets": [
+        "ds.graph.dfs-bfs::遍历判定与路径搜索"
+      ],
+      "primaryFacet": "ds.graph.dfs-bfs::遍历判定与路径搜索",
+      "review_note": "遍历判定与路径搜索",
+      "stem_sha256": "de9102079ca3776b131bce065f470513fe762a28a1c825e93db4c05d8248a687",
+      "previous_kp_ids": [
+        "ds.graph.dfs-bfs"
+      ]
+    },
+    "ds-big-6.3-5": {
+      "kp_ids": [
+        "ds.graph.dfs-bfs"
+      ],
+      "facets": [
+        "ds.graph.dfs-bfs::遍历判定与路径搜索"
+      ],
+      "primaryFacet": "ds.graph.dfs-bfs::遍历判定与路径搜索",
+      "review_note": "遍历判定与路径搜索",
+      "stem_sha256": "6863bae673bf8db9e8057ce580e444ab7207f58d09d152c67e9d6f8f8cce30a4",
+      "previous_kp_ids": [
+        "ds.graph.dfs-bfs"
+      ]
+    },
+    "ds-big-6.4-1": {
+      "kp_ids": [
+        "ds.graph.mst"
+      ],
+      "facets": [
+        "ds.graph.mst::最小生成树构造与性质"
+      ],
+      "primaryFacet": "ds.graph.mst::最小生成树构造与性质",
+      "review_note": "最小生成树构造与性质",
+      "stem_sha256": "d9c38f2b5ccddf4f61f4c5dba570c67fb09268356ee9fedb7767f3ec905fa185",
+      "previous_kp_ids": [
+        "ds.graph.mst"
+      ]
+    },
+    "ds-big-6.4-11": {
+      "kp_ids": [
+        "ds.graph.mst"
+      ],
+      "facets": [
+        "ds.graph.mst::最小生成树构造与性质"
+      ],
+      "primaryFacet": "ds.graph.mst::最小生成树构造与性质",
+      "review_note": "最小生成树构造与性质",
+      "stem_sha256": "e87cdf601e52a37a57586410b43a4c1ba2a19b6a71fee2d978048e8aafd03ca6",
+      "previous_kp_ids": [
+        "ds.graph.mst"
+      ]
+    },
+    "ds-big-6.4-12": {
+      "kp_ids": [
+        "ds.graph.mst"
+      ],
+      "facets": [
+        "ds.graph.mst::最小生成树构造与性质"
+      ],
+      "primaryFacet": "ds.graph.mst::最小生成树构造与性质",
+      "review_note": "最小生成树构造与性质",
+      "stem_sha256": "95ad0c482c979cca658f23003d729a019223d6993e3cb309395f06e214f1e345",
+      "previous_kp_ids": [
+        "ds.graph.mst"
+      ]
+    },
+    "ds-big-6.4-2": {
+      "kp_ids": [
+        "ds.graph.mst",
+        "ds.graph.dfs-bfs",
+        "ds.graph.topo",
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.mst::图的综合分析"
+      ],
+      "primaryFacet": "ds.graph.mst::图的综合分析",
+      "review_note": "图的综合分析",
+      "stem_sha256": "70771284a340275f809ddb1c970ac3fb59fa21661abd074f0c3fa17d0e8e991c",
+      "previous_kp_ids": [
+        "ds.graph.mst"
+      ]
+    },
+    "ds-big-6.4-3": {
+      "kp_ids": [
+        "ds.graph.sp"
+      ],
+      "facets": [
+        "ds.graph.sp::最短路径过程与正确性"
+      ],
+      "primaryFacet": "ds.graph.sp::最短路径过程与正确性",
+      "review_note": "最短路径过程与正确性",
+      "stem_sha256": "ab4e5540d2e8463bcdca58305b5c934c44108e3a87151551c4bfebd485a1a2e7",
+      "previous_kp_ids": [
+        "ds.graph.sp"
+      ]
+    },
+    "ds-big-6.4-8": {
+      "kp_ids": [
+        "ds.graph.sp"
+      ],
+      "facets": [
+        "ds.graph.sp::最短路径过程与正确性"
+      ],
+      "primaryFacet": "ds.graph.sp::最短路径过程与正确性",
+      "review_note": "最短路径过程与正确性",
+      "stem_sha256": "920c647109395901539ee5ddf29bb1b4b4686e4fda6682dcd8ebe91b536b3afc",
+      "previous_kp_ids": [
+        "ds.graph.sp"
+      ]
+    },
+    "ds-big-6.4-4": {
+      "kp_ids": [
+        "ds.graph.topo"
+      ],
+      "facets": [
+        "ds.graph.topo::AOE网与关键路径"
+      ],
+      "primaryFacet": "ds.graph.topo::AOE网与关键路径",
+      "review_note": "AOE网与关键路径",
+      "stem_sha256": "35e38e21bd02f5147be27ebcd2cafdf1034cb378eeae7d658e67175306cbf5bf",
+      "previous_kp_ids": [
+        "ds.graph.topo"
+      ]
+    },
+    "ds-big-6.4-5": {
+      "kp_ids": [
+        "ds.graph.topo"
+      ],
+      "facets": [
+        "ds.graph.topo::AOE网与关键路径"
+      ],
+      "primaryFacet": "ds.graph.topo::AOE网与关键路径",
+      "review_note": "AOE网与关键路径",
+      "stem_sha256": "371c2ad2f5688d70ac997213015f85c97dc5a5e5d3b0c27f8524e1e2704d98c7",
+      "previous_kp_ids": [
+        "ds.graph.topo"
+      ]
+    },
+    "ds-big-6.4-9": {
+      "kp_ids": [
+        "ds.graph.topo"
+      ],
+      "facets": [
+        "ds.graph.topo::AOE网与关键路径"
+      ],
+      "primaryFacet": "ds.graph.topo::AOE网与关键路径",
+      "review_note": "AOE网与关键路径",
+      "stem_sha256": "857945d8562a507b1f8e9d7c34c85e1997736d38043c08b65cb51f2fa2816219",
+      "previous_kp_ids": [
+        "ds.graph.topo"
+      ]
+    },
+    "ds-big-6.4-14": {
+      "kp_ids": [
+        "ds.graph.topo"
+      ],
+      "facets": [
+        "ds.graph.topo::AOE网与关键路径"
+      ],
+      "primaryFacet": "ds.graph.topo::AOE网与关键路径",
+      "review_note": "AOE网与关键路径",
+      "stem_sha256": "1f95c030dd254f43ebd5a0451711e333abea454c15a6500c5821cf92ce6a6e1a",
+      "previous_kp_ids": [
+        "ds.graph.topo"
+      ]
+    },
+    "ds-big-6.4-6": {
+      "kp_ids": [
+        "ds.graph.sp",
+        "ds.graph.mst"
+      ],
+      "facets": [
+        "ds.graph.sp::最短路径与生成树的区别"
+      ],
+      "primaryFacet": "ds.graph.sp::最短路径与生成树的区别",
+      "review_note": "最短路径与生成树的区别",
+      "stem_sha256": "c8c344e9d607488d31fab5f0b275f5a8fa60baef7db6287be1beb2956fedaa42",
+      "previous_kp_ids": [
+        "ds.graph.mst"
+      ]
+    },
+    "ds-big-6.4-7": {
+      "kp_ids": [
+        "ds.graph.topo"
+      ],
+      "facets": [
+        "ds.graph.topo::拓扑序与有向无环图"
+      ],
+      "primaryFacet": "ds.graph.topo::拓扑序与有向无环图",
+      "review_note": "拓扑序与有向无环图",
+      "stem_sha256": "c0e1d95d19ce03dda88384a9c64a336f9f9d2590b765f53f3a64b3bc0f982c50",
+      "previous_kp_ids": [
+        "ds.graph.topo"
+      ]
+    },
+    "ds-big-6.4-13": {
+      "kp_ids": [
+        "ds.graph.topo"
+      ],
+      "facets": [
+        "ds.graph.topo::拓扑序与有向无环图"
+      ],
+      "primaryFacet": "ds.graph.topo::拓扑序与有向无环图",
+      "review_note": "拓扑序与有向无环图",
+      "stem_sha256": "fad856251d2d82fac95cd5638940a85ad7cabbb289a8c3da543bec9649e9a6bc",
+      "previous_kp_ids": [
+        "ds.graph.topo"
+      ]
+    },
+    "ds-big-6.4-10": {
+      "kp_ids": [
+        "ds.graph.sp",
+        "ds.graph.store"
+      ],
+      "facets": [
+        "ds.graph.sp::最短路径过程与正确性"
+      ],
+      "primaryFacet": "ds.graph.sp::最短路径过程与正确性",
+      "review_note": "最短路径过程与正确性",
+      "stem_sha256": "1904b11f1fed49b44b57e3de0d52c75b832a1a0c0c4b22d7725d67786893b78f",
+      "previous_kp_ids": [
+        "ds.graph.topo"
+      ]
+    },
+    "ds-big-7.2-1": {
+      "kp_ids": [
+        "ds.search.seq-bin"
+      ],
+      "facets": [
+        "ds.search.seq-bin::查找判定树与平均长度"
+      ],
+      "primaryFacet": "ds.search.seq-bin::查找判定树与平均长度",
+      "review_note": "查找判定树与平均长度",
+      "stem_sha256": "e0f3c2c13d5bb019f5065d275aea19217acedfbd9dc538aae3f5e5d69a841e07",
+      "previous_kp_ids": [
+        "ds.search.seq-bin"
+      ]
+    },
+    "ds-big-7.2-2": {
+      "kp_ids": [
+        "ds.search.seq-bin"
+      ],
+      "facets": [
+        "ds.search.seq-bin::查找判定树与平均长度"
+      ],
+      "primaryFacet": "ds.search.seq-bin::查找判定树与平均长度",
+      "review_note": "查找判定树与平均长度",
+      "stem_sha256": "b3d71a517d4cec454ed56b32e2dbebca44ec8f8352bb62e4d813955d0a2e6765",
+      "previous_kp_ids": [
+        "ds.search.seq-bin"
+      ]
+    },
+    "ds-big-7.2-3": {
+      "kp_ids": [
+        "ds.search.seq-bin"
+      ],
+      "facets": [
+        "ds.search.seq-bin::查找判定树与平均长度"
+      ],
+      "primaryFacet": "ds.search.seq-bin::查找判定树与平均长度",
+      "review_note": "查找判定树与平均长度",
+      "stem_sha256": "4540ab1a5ba39d23bc202fbccb7d3947c74bddb38f936513dbee933b54a00df7",
+      "previous_kp_ids": [
+        "ds.search.seq-bin"
+      ]
+    },
+    "ds-big-7.2-7": {
+      "kp_ids": [
+        "ds.search.seq-bin"
+      ],
+      "facets": [
+        "ds.search.seq-bin::查找判定树与平均长度"
+      ],
+      "primaryFacet": "ds.search.seq-bin::查找判定树与平均长度",
+      "review_note": "查找判定树与平均长度",
+      "stem_sha256": "47fa26eb0a8acd1ee37d021517ccbd25a311fa82a85531e2e79a726b862d13e6",
+      "previous_kp_ids": [
+        "ds.search.seq-bin"
+      ]
+    },
+    "ds-big-7.2-4": {
+      "kp_ids": [
+        "ds.search.seq-bin"
+      ],
+      "facets": [
+        "ds.search.seq-bin::有序查找与搜索空间缩减"
+      ],
+      "primaryFacet": "ds.search.seq-bin::有序查找与搜索空间缩减",
+      "review_note": "有序查找与搜索空间缩减",
+      "stem_sha256": "e31f95c9d2c016c1a0eaab26ce7c13c4be1e1c48655b67133f9a5ad5c6701f81",
+      "previous_kp_ids": [
+        "ds.search.seq-bin"
+      ]
+    },
+    "ds-big-7.2-6": {
+      "kp_ids": [
+        "ds.search.seq-bin"
+      ],
+      "facets": [
+        "ds.search.seq-bin::有序查找与搜索空间缩减"
+      ],
+      "primaryFacet": "ds.search.seq-bin::有序查找与搜索空间缩减",
+      "review_note": "有序查找与搜索空间缩减",
+      "stem_sha256": "5db3210d3bcc9768c93e839a66b5d84afecda02f9684b318b4c926f053753c1e",
+      "previous_kp_ids": [
+        "ds.search.seq-bin"
+      ]
+    },
+    "ds-big-7.2-5": {
+      "kp_ids": [
+        "ds.search.seq-bin",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.search.seq-bin::查找概率与自调整"
+      ],
+      "primaryFacet": "ds.search.seq-bin::查找概率与自调整",
+      "review_note": "查找概率与自调整",
+      "stem_sha256": "91bd41d0bddb22dd2e2ddedb9586fc0960294e0c94d9bb9e0dab0c00b4a6be6b",
+      "previous_kp_ids": [
+        "ds.search.seq-bin"
+      ]
+    },
+    "ds-big-7.3-1": {
+      "kp_ids": [
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.bst::排序树构造与查找长度"
+      ],
+      "primaryFacet": "ds.search.bst::排序树构造与查找长度",
+      "review_note": "排序树构造与查找长度",
+      "stem_sha256": "f4ff660569dd04746773aedd8fbf406f17ac2c7c5795b40f44da9a286ecdcb8c",
+      "previous_kp_ids": [
+        "ds.search.bst"
+      ]
+    },
+    "ds-big-7.3-2": {
+      "kp_ids": [
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.bst::排序树构造与查找长度"
+      ],
+      "primaryFacet": "ds.search.bst::排序树构造与查找长度",
+      "review_note": "排序树构造与查找长度",
+      "stem_sha256": "360021cf4c47f3ca10732fc3fc451ca2130e3a64196fabddd12cf02e43a853a6",
+      "previous_kp_ids": [
+        "ds.search.bst"
+      ]
+    },
+    "ds-big-7.3-4": {
+      "kp_ids": [
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.bst::排序树构造与查找长度"
+      ],
+      "primaryFacet": "ds.search.bst::排序树构造与查找长度",
+      "review_note": "排序树构造与查找长度",
+      "stem_sha256": "c3f127241bb1a365ef8ba0eba444a7769d860badcd88521ef1fbcde3aff39539",
+      "previous_kp_ids": [
+        "ds.search.bst"
+      ]
+    },
+    "ds-big-7.3-3": {
+      "kp_ids": [
+        "ds.search.avl",
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.avl::平衡树构造与判定"
+      ],
+      "primaryFacet": "ds.search.avl::平衡树构造与判定",
+      "review_note": "平衡树构造与判定",
+      "stem_sha256": "d23b9d56c370551659bcf94628eb5d6bd1588868027e9404457fb8ed60332095",
+      "previous_kp_ids": [
+        "ds.search.avl"
+      ]
+    },
+    "ds-big-7.3-7": {
+      "kp_ids": [
+        "ds.search.avl",
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.avl::平衡树构造与判定"
+      ],
+      "primaryFacet": "ds.search.avl::平衡树构造与判定",
+      "review_note": "平衡树构造与判定",
+      "stem_sha256": "f9a6569a586753a4560132e0d604e51b7ff5142a087a0a0b8e2f413f0b6cd2a1",
+      "previous_kp_ids": [
+        "ds.search.avl"
+      ]
+    },
+    "ds-big-7.3-5": {
+      "kp_ids": [
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.bst::排序树性质与查找算法"
+      ],
+      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
+      "review_note": "排序树性质与查找算法",
+      "stem_sha256": "75553412a3be733d7a4bf0c18aeb0addb5b9d7f86807460e873715f68a1c0e95",
+      "previous_kp_ids": [
+        "ds.search.bst"
+      ]
+    },
+    "ds-big-7.3-6": {
+      "kp_ids": [
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.bst::排序树性质与查找算法"
+      ],
+      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
+      "review_note": "排序树性质与查找算法",
+      "stem_sha256": "02e17e58d1299b0c9b2186098b8cdac9585c115eb7cd562c0a63a49ff4b20611",
+      "previous_kp_ids": [
+        "ds.search.bst"
+      ]
+    },
+    "ds-big-7.3-8": {
+      "kp_ids": [
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.bst::排序树性质与查找算法"
+      ],
+      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
+      "review_note": "排序树性质与查找算法",
+      "stem_sha256": "2be78e1ad81c67c240d1eaf91706f596f730bf773dd89bf61027ef39d8274b0d",
+      "previous_kp_ids": [
+        "ds.search.bst"
+      ]
+    },
+    "ds-big-7.3-9": {
+      "kp_ids": [
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.bst::排序树性质与查找算法"
+      ],
+      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
+      "review_note": "排序树性质与查找算法",
+      "stem_sha256": "c58940c0cbd849239076ba04eba3b4abde784651234e46938a8b1c7616e18cb5",
+      "previous_kp_ids": [
+        "ds.search.bst"
+      ]
+    },
+    "ds-big-7.3-10": {
+      "kp_ids": [
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.search.bst::排序树性质与查找算法"
+      ],
+      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
+      "review_note": "排序树性质与查找算法",
+      "stem_sha256": "c57483c024556334809ed4303cee3616ee172b0d0e93abfc4eb444ec9ccf63b4",
+      "previous_kp_ids": [
+        "ds.search.bst"
+      ]
+    },
+    "ds-big-7.4-1": {
+      "kp_ids": [
+        "ds.search.b"
+      ],
+      "facets": [
+        "ds.search.b::B树插入删除与分裂"
+      ],
+      "primaryFacet": "ds.search.b::B树插入删除与分裂",
+      "review_note": "B树插入删除与分裂",
+      "stem_sha256": "de12e57cf58054f9f5023630b1068c04a438d6a172fa0edf46e5a564deb7364d",
+      "previous_kp_ids": [
+        "ds.search.b"
+      ]
+    },
+    "ds-big-7.4-2": {
+      "kp_ids": [
+        "ds.search.b"
+      ],
+      "facets": [
+        "ds.search.b::B树插入删除与分裂"
+      ],
+      "primaryFacet": "ds.search.b::B树插入删除与分裂",
+      "review_note": "B树插入删除与分裂",
+      "stem_sha256": "8a4f45c08548930353276a2fec61a7dfd63d15bd4e4e918ae7b76d61cf392438",
+      "previous_kp_ids": [
+        "ds.search.b"
+      ]
+    },
+    "ds-big-7.4-3": {
+      "kp_ids": [
+        "ds.search.b"
+      ],
+      "facets": [
+        "ds.search.b::B树阶数与外存索引"
+      ],
+      "primaryFacet": "ds.search.b::B树阶数与外存索引",
+      "review_note": "B树阶数与外存索引",
+      "stem_sha256": "ce28a1bb532535d0e40f7140460a203dbacd732fe34f0501eb6facf0f0b6b0df",
+      "previous_kp_ids": [
+        "ds.search.b"
+      ]
+    },
+    "ds-big-7.5-1": {
+      "kp_ids": [
+        "ds.search.hash"
+      ],
+      "facets": [
+        "ds.search.hash::散列函数与删除规则"
+      ],
+      "primaryFacet": "ds.search.hash::散列函数与删除规则",
+      "review_note": "散列函数与删除规则",
+      "stem_sha256": "59edb3e84f776a80a8b226ddbfb0981aa28dec7e47885e1a27c54059f907fcba",
+      "previous_kp_ids": [
+        "ds.search.hash"
+      ]
+    },
+    "ds-big-7.5-2": {
+      "kp_ids": [
+        "ds.search.hash"
+      ],
+      "facets": [
+        "ds.search.hash::散列函数与删除规则"
+      ],
+      "primaryFacet": "ds.search.hash::散列函数与删除规则",
+      "review_note": "散列函数与删除规则",
+      "stem_sha256": "98202e9965e2ef742ca0cd0a41b48525fa3a793de7a03acca48ad7b7357738cc",
+      "previous_kp_ids": [
+        "ds.search.hash"
+      ]
+    },
+    "ds-big-7.5-3": {
+      "kp_ids": [
+        "ds.search.hash"
+      ],
+      "facets": [
+        "ds.search.hash::冲突处理与平均查找长度"
+      ],
+      "primaryFacet": "ds.search.hash::冲突处理与平均查找长度",
+      "review_note": "冲突处理与平均查找长度",
+      "stem_sha256": "369b4e088c42a83ad776236800e79dc1e608d8300978fdcbd372bf660b418e9b",
+      "previous_kp_ids": [
+        "ds.search.hash"
+      ]
+    },
+    "ds-big-7.5-4": {
+      "kp_ids": [
+        "ds.search.hash"
+      ],
+      "facets": [
+        "ds.search.hash::冲突处理与平均查找长度"
+      ],
+      "primaryFacet": "ds.search.hash::冲突处理与平均查找长度",
+      "review_note": "冲突处理与平均查找长度",
+      "stem_sha256": "5725efb404893e9d600b1c39ebe2352e24592beb2055bacd12d764451cd48914",
+      "previous_kp_ids": [
+        "ds.search.hash"
+      ]
+    },
+    "ds-big-7.5-5": {
+      "kp_ids": [
+        "ds.search.hash"
+      ],
+      "facets": [
+        "ds.search.hash::冲突处理与平均查找长度"
+      ],
+      "primaryFacet": "ds.search.hash::冲突处理与平均查找长度",
+      "review_note": "冲突处理与平均查找长度",
+      "stem_sha256": "b1de53054971c16803d1c2a05fbb0ef15e404a52c34691e66a3a5bbf935091e7",
+      "previous_kp_ids": [
+        "ds.search.hash"
+      ]
+    },
+    "ds-big-7.5-6": {
+      "kp_ids": [
+        "ds.search.hash"
+      ],
+      "facets": [
+        "ds.search.hash::冲突处理与平均查找长度"
+      ],
+      "primaryFacet": "ds.search.hash::冲突处理与平均查找长度",
+      "review_note": "冲突处理与平均查找长度",
+      "stem_sha256": "10995002c8e4128af4d81e1f32cbe66d493518763389ed15082bf2166a00e340",
+      "previous_kp_ids": [
+        "ds.search.hash"
+      ]
+    },
+    "ds-big-7.5-7": {
+      "kp_ids": [
+        "ds.search.hash"
+      ],
+      "facets": [
+        "ds.search.hash::冲突处理与平均查找长度"
+      ],
+      "primaryFacet": "ds.search.hash::冲突处理与平均查找长度",
+      "review_note": "冲突处理与平均查找长度",
+      "stem_sha256": "0d197093caaa4453d228d491ae3e064bcb120db54ec590032ecda0e4d41705c3",
+      "previous_kp_ids": [
+        "ds.search.hash"
+      ]
+    },
+    "ds-big-8.2-1": {
+      "kp_ids": [
+        "ds.sort.insert"
+      ],
+      "facets": [
+        "ds.sort.insert::插入排序与希尔排序过程"
+      ],
+      "primaryFacet": "ds.sort.insert::插入排序与希尔排序过程",
+      "review_note": "插入排序与希尔排序过程",
+      "stem_sha256": "c58f6f43121d2ec892363a895d4136fdc470520f380318b0cd4e6c738bb20765",
+      "previous_kp_ids": [
+        "ds.sort.insert"
+      ]
+    },
+    "ds-big-8.2-2": {
+      "kp_ids": [
+        "ds.sort.insert"
+      ],
+      "facets": [
+        "ds.sort.insert::插入排序与希尔排序过程"
+      ],
+      "primaryFacet": "ds.sort.insert::插入排序与希尔排序过程",
+      "review_note": "插入排序与希尔排序过程",
+      "stem_sha256": "ea7510583185f3c99ce84de0387ff910a576373c60592939ef3a65f28b4d147b",
+      "previous_kp_ids": [
+        "ds.sort.insert"
+      ]
+    },
+    "ds-big-8.3-1": {
+      "kp_ids": [
+        "ds.sort.swap"
+      ],
+      "facets": [
+        "ds.sort.swap::划分操作与选择算法"
+      ],
+      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
+      "review_note": "划分操作与选择算法",
+      "stem_sha256": "ec530e35a9cd3dc1faa4d1c15710863f076d779a8786edcdfefac9a8101c4bfd",
+      "previous_kp_ids": [
+        "ds.sort.swap"
+      ]
+    },
+    "ds-big-8.3-2": {
+      "kp_ids": [
+        "ds.sort.swap"
+      ],
+      "facets": [
+        "ds.sort.swap::划分操作与选择算法"
+      ],
+      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
+      "review_note": "划分操作与选择算法",
+      "stem_sha256": "87438dda65c82a6191de8d2c1068c4353953bcab8e0e2072d1eadf1e34282671",
+      "previous_kp_ids": [
+        "ds.sort.swap"
+      ]
+    },
+    "ds-big-8.3-3": {
+      "kp_ids": [
+        "ds.sort.swap"
+      ],
+      "facets": [
+        "ds.sort.swap::划分操作与选择算法"
+      ],
+      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
+      "review_note": "划分操作与选择算法",
+      "stem_sha256": "219f9db0ca7c3cceeca4becb73068d50360a1830d042f8fe915e1259bac8f174",
+      "previous_kp_ids": [
+        "ds.sort.swap"
+      ]
+    },
+    "ds-big-8.3-4": {
+      "kp_ids": [
+        "ds.sort.swap"
+      ],
+      "facets": [
+        "ds.sort.swap::划分操作与选择算法"
+      ],
+      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
+      "review_note": "划分操作与选择算法",
+      "stem_sha256": "f5e9786e4472eaf02f8576582fca9a5ff2017ac2843a321e2590d3dc3e94ba04",
+      "previous_kp_ids": [
+        "ds.sort.swap"
+      ]
+    },
+    "ds-big-8.4-1": {
+      "kp_ids": [
+        "ds.sort.select",
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.sort.select::堆与排序树性质辨析"
+      ],
+      "primaryFacet": "ds.sort.select::堆与排序树性质辨析",
+      "review_note": "堆与排序树性质辨析",
+      "stem_sha256": "8c3ee29b62181df6c0a2be71a7df2ac974743023c94049435d303d0c5128f0ca",
+      "previous_kp_ids": [
+        "ds.sort.select"
+      ]
+    },
+    "ds-big-8.4-2": {
+      "kp_ids": [
+        "ds.sort.select",
+        "ds.search.bst"
+      ],
+      "facets": [
+        "ds.sort.select::堆与排序树性质辨析"
+      ],
+      "primaryFacet": "ds.sort.select::堆与排序树性质辨析",
+      "review_note": "堆与排序树性质辨析",
+      "stem_sha256": "d76b0f975b5822d83bcd663345b364106367388afe816e57d4361926a31104fe",
+      "previous_kp_ids": [
+        "ds.sort.select"
+      ]
+    },
+    "ds-big-8.4-3": {
+      "kp_ids": [
+        "ds.sort.select"
+      ],
+      "facets": [
+        "ds.sort.select::堆与部分排序"
+      ],
+      "primaryFacet": "ds.sort.select::堆与部分排序",
+      "review_note": "堆与部分排序",
+      "stem_sha256": "90d571e337fc997e72f308ea91236ac86c0001adddaf466b1365149dfb826511",
+      "previous_kp_ids": [
+        "ds.sort.select"
+      ]
+    },
+    "ds-big-8.4-8": {
+      "kp_ids": [
+        "ds.sort.select"
+      ],
+      "facets": [
+        "ds.sort.select::堆与部分排序"
+      ],
+      "primaryFacet": "ds.sort.select::堆与部分排序",
+      "review_note": "堆与部分排序",
+      "stem_sha256": "a428ba8d5e5d7903c6aa297621d2333b0aa7aba93bf2eb0f6b44246b83e0fcf9",
+      "previous_kp_ids": [
+        "ds.sort.select"
+      ]
+    },
+    "ds-big-8.4-4": {
+      "kp_ids": [
+        "ds.sort.select"
+      ],
+      "facets": [
+        "ds.sort.select::堆结构与调整操作"
+      ],
+      "primaryFacet": "ds.sort.select::堆结构与调整操作",
+      "review_note": "堆结构与调整操作",
+      "stem_sha256": "e740b9b878519869db1b684cfc5efd9bcb0c3b8f84500dd55f12ee51d88061e3",
+      "previous_kp_ids": [
+        "ds.sort.select"
+      ]
+    },
+    "ds-big-8.4-6": {
+      "kp_ids": [
+        "ds.sort.select"
+      ],
+      "facets": [
+        "ds.sort.select::堆结构与调整操作"
+      ],
+      "primaryFacet": "ds.sort.select::堆结构与调整操作",
+      "review_note": "堆结构与调整操作",
+      "stem_sha256": "dee1f1674714ee2ebf8fc1ed0fc255b777d5102c6bd6b2e638abf8bd71c85cdf",
+      "previous_kp_ids": [
+        "ds.sort.select"
+      ]
+    },
+    "ds-big-8.4-7": {
+      "kp_ids": [
+        "ds.sort.select"
+      ],
+      "facets": [
+        "ds.sort.select::堆结构与调整操作"
+      ],
+      "primaryFacet": "ds.sort.select::堆结构与调整操作",
+      "review_note": "堆结构与调整操作",
+      "stem_sha256": "f4773cb91de02d698a26b40dcdb6beae10b880ae6277390335dee05490c1baf3",
+      "previous_kp_ids": [
+        "ds.sort.select"
+      ]
+    },
+    "ds-big-8.4-5": {
+      "kp_ids": [
+        "ds.sort.select",
+        "ds.linear.linked"
+      ],
+      "facets": [
+        "ds.sort.select::简单选择排序"
+      ],
+      "primaryFacet": "ds.sort.select::简单选择排序",
+      "review_note": "简单选择排序",
+      "stem_sha256": "6801021577ec0c87da521029f96b474dd6f830b4598fef8ccb697e5c42b3543d",
+      "previous_kp_ids": [
+        "ds.sort.select"
+      ]
+    },
+    "ds-big-8.5-1": {
+      "kp_ids": [
+        "ds.sort.merge"
+      ],
+      "facets": [
+        "ds.sort.merge::归并过程与有序段合并"
+      ],
+      "primaryFacet": "ds.sort.merge::归并过程与有序段合并",
+      "review_note": "归并过程与有序段合并",
+      "stem_sha256": "da18aebed2557ea0eb1d81bbf6516087e979eea6ff7ff2b8895b19b6083f7a24",
+      "previous_kp_ids": [
+        "ds.sort.radix"
+      ]
+    },
+    "ds-big-8.5-2": {
+      "kp_ids": [
+        "ds.sort.radix"
+      ],
+      "facets": [
+        "ds.sort.radix::基数排序过程"
+      ],
+      "primaryFacet": "ds.sort.radix::基数排序过程",
+      "review_note": "基数排序过程",
+      "stem_sha256": "572eab86ae6260f3a74c5bc93fd0e20bd058c3f62f4233cd23edd055d1c48ff7",
+      "previous_kp_ids": [
+        "ds.sort.radix"
+      ]
+    },
+    "ds-big-8.5-3": {
+      "kp_ids": [
+        "ds.sort.compare"
+      ],
+      "facets": [
+        "ds.sort.compare::比较次数与排序稳定性"
+      ],
+      "primaryFacet": "ds.sort.compare::比较次数与排序稳定性",
+      "review_note": "比较次数与排序稳定性",
+      "stem_sha256": "df5d929b8976e39fa91f298a81455b90171ec92dca8330b55f1c98caaad2a0d9",
+      "previous_kp_ids": [
+        "ds.sort.radix"
+      ]
+    },
+    "ds-big-8.6-1": {
+      "kp_ids": [
+        "ds.sort.compare"
+      ],
+      "facets": [
+        "ds.sort.compare::排序交换次数分析"
+      ],
+      "primaryFacet": "ds.sort.compare::排序交换次数分析",
+      "review_note": "排序交换次数分析",
+      "stem_sha256": "75d242b43b7aa81fee40476830d7e6273c150d813e9d6f82c74f0d6699f51fc5",
+      "previous_kp_ids": [
+        "ds.sort.compare"
+      ]
+    },
+    "ds-big-8.6-2": {
+      "kp_ids": [
+        "ds.sort.merge"
+      ],
+      "facets": [
+        "ds.sort.merge::归并过程与有序段合并"
+      ],
+      "primaryFacet": "ds.sort.merge::归并过程与有序段合并",
+      "review_note": "归并过程与有序段合并",
+      "stem_sha256": "11956d4063e77726842ec94fb7016c414d6535b82bfc15ed812057212b39f59e",
+      "previous_kp_ids": [
+        "ds.sort.compare"
+      ]
+    },
+    "ds-big-8.6-3": {
+      "kp_ids": [
+        "ds.sort.swap"
+      ],
+      "facets": [
+        "ds.sort.swap::划分操作与选择算法"
+      ],
+      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
+      "review_note": "划分操作与选择算法",
+      "stem_sha256": "96dd365ad7660f366bd44381e809825c6fc5a245e715c75aca88ca8a35fe0fe1",
+      "previous_kp_ids": [
+        "ds.sort.compare"
+      ]
+    },
+    "ds-big-8.7-1": {
+      "kp_ids": [
+        "ds.sort.external"
+      ],
+      "facets": [
+        "ds.sort.external::归并趟数与磁盘读写"
+      ],
+      "primaryFacet": "ds.sort.external::归并趟数与磁盘读写",
+      "review_note": "归并趟数与磁盘读写",
+      "stem_sha256": "ce5e8f361cb20b2911a3f3a80938479c13116ad5380d085906665bb13c34e3c5",
+      "previous_kp_ids": [
+        "ds.sort.external"
+      ]
+    },
+    "ds-big-8.7-2": {
+      "kp_ids": [
+        "ds.sort.external"
+      ],
+      "facets": [
+        "ds.sort.external::归并趟数与磁盘读写"
+      ],
+      "primaryFacet": "ds.sort.external::归并趟数与磁盘读写",
+      "review_note": "归并趟数与磁盘读写",
+      "stem_sha256": "48822cfe426fc138899798d4227d88a6bb1698bbf16e24a2642b9ddcfda07b75",
+      "previous_kp_ids": [
+        "ds.sort.external"
+      ]
+    },
+    "ds-big-8.7-3": {
+      "kp_ids": [
+        "ds.sort.external"
+      ],
+      "facets": [
+        "ds.sort.external::败者树与多路归并"
+      ],
+      "primaryFacet": "ds.sort.external::败者树与多路归并",
+      "review_note": "败者树与多路归并",
+      "stem_sha256": "ec79cab9c69b1ea20e781f124e0651c72584355c3d326e4d33d1686f284ddd33",
+      "previous_kp_ids": [
+        "ds.sort.external"
+      ]
+    },
+    "ds-big-8.7-4": {
+      "kp_ids": [
+        "ds.sort.external",
+        "ds.tree.huffman"
+      ],
+      "facets": [
+        "ds.sort.external::最佳归并树"
+      ],
+      "primaryFacet": "ds.sort.external::最佳归并树",
+      "review_note": "最佳归并树",
+      "stem_sha256": "dca6448724542dd3a727c94f59d3f401db21b9dee8c8395e05da29f03ba65acb",
+      "previous_kp_ids": [
+        "ds.sort.external"
+      ]
+    },
+    "ds-big-8.7-5": {
+      "kp_ids": [
+        "ds.sort.external"
+      ],
+      "facets": [
+        "ds.sort.external::置换选择与初始归并段"
+      ],
+      "primaryFacet": "ds.sort.external::置换选择与初始归并段",
+      "review_note": "置换选择与初始归并段",
+      "stem_sha256": "8f06458079635425c7083e785e41cd941eaf77f79e62b297780a1ee81548c9da",
+      "previous_kp_ids": [
+        "ds.sort.external"
+      ]
+    },
+    "co-big-1.3-1": {
+      "kp_ids": [
+        "co.intro.perf"
+      ],
+      "facets": [
+        "co.intro.perf::主频CPI与执行时间"
+      ],
+      "primaryFacet": "co.intro.perf::主频CPI与执行时间",
+      "review_note": "主频CPI与执行时间",
+      "stem_sha256": "749a2618d04a7c549513345c31b4dd415b2d60ca192b08cd62ca54bbf98b415d",
+      "previous_kp_ids": [
+        "co.intro.perf"
+      ]
+    },
+    "co-big-1.3-2": {
+      "kp_ids": [
+        "co.intro.perf"
+      ],
+      "facets": [
+        "co.intro.perf::主频CPI与执行时间"
+      ],
+      "primaryFacet": "co.intro.perf::主频CPI与执行时间",
+      "review_note": "主频CPI与执行时间",
+      "stem_sha256": "646f8c2186955b2b3477ec6647a6cba058cf16a4ba2e3d00a47bf5bbc9f34807",
+      "previous_kp_ids": [
+        "co.intro.perf"
+      ]
+    },
+    "co-big-2.2-1": {
+      "kp_ids": [
+        "co.data.int",
+        "co.data.alu"
+      ],
+      "facets": [
+        "co.data.int::定点表示与移位"
+      ],
+      "primaryFacet": "co.data.int::定点表示与移位",
+      "review_note": "定点表示与移位",
+      "stem_sha256": "b2fe6629107201052873ff55d1c0433eeaf42c8c938210af1ca25683d10854ae",
+      "previous_kp_ids": [
+        "co.data.alu"
+      ]
+    },
+    "co-big-2.2-2": {
+      "kp_ids": [
+        "co.data.alu",
+        "co.data.int"
+      ],
+      "facets": [
+        "co.data.alu::补码加减与溢出标志"
+      ],
+      "primaryFacet": "co.data.alu::补码加减与溢出标志",
+      "review_note": "补码加减与溢出标志",
+      "stem_sha256": "1a7c19358f9c9f79efb75bff2d2b04a83e6e938af1a94bca81a35e2bf4992b70",
+      "previous_kp_ids": [
+        "co.data.alu"
+      ]
+    },
+    "co-big-2.2-3": {
+      "kp_ids": [
+        "co.data.alu",
+        "co.data.int"
+      ],
+      "facets": [
+        "co.data.alu::补码加减与溢出标志"
+      ],
+      "primaryFacet": "co.data.alu::补码加减与溢出标志",
+      "review_note": "补码加减与溢出标志",
+      "stem_sha256": "f4f445ce1ea359713168cb37205271051bb40c5cc4c4fd16d8868edbba220f05",
+      "previous_kp_ids": [
+        "co.data.alu"
+      ]
+    },
+    "co-big-2.2-4": {
+      "kp_ids": [
+        "co.data.alu",
+        "co.data.int"
+      ],
+      "facets": [
+        "co.data.alu::乘法实现与溢出判断"
+      ],
+      "primaryFacet": "co.data.alu::乘法实现与溢出判断",
+      "review_note": "乘法实现与溢出判断",
+      "stem_sha256": "4751a3980d0073540b8c6f0fab2d224496ecaa87a11d7eefcf940d833994ca30",
+      "previous_kp_ids": [
+        "co.data.alu"
+      ]
+    },
+    "co-big-2.3-1": {
+      "kp_ids": [
+        "co.data.float",
+        "co.data.int"
+      ],
+      "facets": [
+        "co.data.float::IEEE754编码与特殊值"
+      ],
+      "primaryFacet": "co.data.float::IEEE754编码与特殊值",
+      "review_note": "IEEE754编码与特殊值",
+      "stem_sha256": "9172ac1e71343fa0b6d11437638b57462468330c7de9b1c1d4772956305f5535",
+      "previous_kp_ids": [
+        "co.data.float"
+      ]
+    },
+    "co-big-2.3-2": {
+      "kp_ids": [
+        "co.data.float"
+      ],
+      "facets": [
+        "co.data.float::类型转换与表示精度"
+      ],
+      "primaryFacet": "co.data.float::类型转换与表示精度",
+      "review_note": "类型转换与表示精度",
+      "stem_sha256": "c06abec44ea9c2511090742914c0407fb02669bf6e170ce92ef9ecc8b1841e46",
+      "previous_kp_ids": [
+        "co.data.float"
+      ]
+    },
+    "co-big-2.3-3": {
+      "kp_ids": [
+        "co.data.float"
+      ],
+      "facets": [
+        "co.data.float::浮点加减与编码"
+      ],
+      "primaryFacet": "co.data.float::浮点加减与编码",
+      "review_note": "浮点加减与编码",
+      "stem_sha256": "24d93a40b207ec3fce880addb7c993f186b8c117adb5407b99940758c39bd44d",
+      "previous_kp_ids": [
+        "co.data.float"
+      ]
+    },
+    "co-big-2.3-4": {
+      "kp_ids": [
+        "co.data.float",
+        "co.data.int"
+      ],
+      "facets": [
+        "co.data.float::IEEE754编码与特殊值"
+      ],
+      "primaryFacet": "co.data.float::IEEE754编码与特殊值",
+      "review_note": "OCR将IEEE754判断与后续程序题连在一起，需拆题核对，不作代表题。",
+      "stem_sha256": "a7aabc37ba90377cc5a4fe1a185d48e17d4351273e60d4f4f50fb474d0556e5f",
+      "diagnostic_eligible": false,
+      "previous_kp_ids": [
+        "co.data.float"
+      ]
+    },
+    "co-big-3.2-1": {
+      "kp_ids": [
+        "co.mem.sram-dram"
+      ],
+      "facets": [
+        "co.mem.sram-dram::并行存储与访存带宽"
+      ],
+      "primaryFacet": "co.mem.sram-dram::并行存储与访存带宽",
+      "review_note": "并行存储与访存带宽",
+      "stem_sha256": "35834ff9155c16a5f10b17bff31a20a9a37ea90f6a6e5e5c20ebe78bec5a0b53",
+      "previous_kp_ids": [
+        "co.mem.sram-dram"
+      ]
+    },
+    "co-big-3.2-2": {
+      "kp_ids": [
+        "co.mem.sram-dram"
+      ],
+      "facets": [
+        "co.mem.sram-dram::并行存储与访存带宽"
+      ],
+      "primaryFacet": "co.mem.sram-dram::并行存储与访存带宽",
+      "review_note": "并行存储与访存带宽",
+      "stem_sha256": "f5ff31241a3ea911ea2d9b61edc1f553bd5c17783f9223676481b0e933b4afcb",
+      "previous_kp_ids": [
+        "co.mem.sram-dram"
+      ]
+    },
+    "co-big-3.2-3": {
+      "kp_ids": [
+        "co.mem.sram-dram"
+      ],
+      "facets": [
+        "co.mem.sram-dram::并行存储与访存带宽"
+      ],
+      "primaryFacet": "co.mem.sram-dram::并行存储与访存带宽",
+      "review_note": "并行存储与访存带宽",
+      "stem_sha256": "f47ff724b042703d8bb5cc90c11c17ce57f063419757191a3cc57d856f8b6784",
+      "previous_kp_ids": [
+        "co.mem.sram-dram"
+      ]
+    },
+    "co-big-3.2-4": {
+      "kp_ids": [
+        "co.mem.sram-dram"
+      ],
+      "facets": [
+        "co.mem.sram-dram::并行存储与访存带宽"
+      ],
+      "primaryFacet": "co.mem.sram-dram::并行存储与访存带宽",
+      "review_note": "并行存储与访存带宽",
+      "stem_sha256": "af4572d057f1322c816ce77066d605c7766beb8ae8185fef596485c6765b38b7",
+      "previous_kp_ids": [
+        "co.mem.sram-dram"
+      ]
+    },
+    "co-big-3.2-5": {
+      "kp_ids": [
+        "co.mem.sram-dram"
+      ],
+      "facets": [
+        "co.mem.sram-dram::并行存储与访存带宽"
+      ],
+      "primaryFacet": "co.mem.sram-dram::并行存储与访存带宽",
+      "review_note": "并行存储与访存带宽",
+      "stem_sha256": "993f31cc7fd9922d28ee007bfa58fe2f97b454880ebf37f24837894210a3be68",
+      "previous_kp_ids": [
+        "co.mem.sram-dram"
+      ]
+    },
+    "co-big-3.3-1": {
+      "kp_ids": [
+        "co.mem.sram-dram"
+      ],
+      "facets": [
+        "co.mem.sram-dram::芯片字位扩展与地址线"
+      ],
+      "primaryFacet": "co.mem.sram-dram::芯片字位扩展与地址线",
+      "review_note": "芯片字位扩展与地址线",
+      "stem_sha256": "fb22b9f8cc8161095adbee2350295921771e221e834653475b00559b19a1b5d9",
+      "previous_kp_ids": [
+        "co.mem.sram-dram"
+      ]
+    },
+    "co-big-3.4-1": {
+      "kp_ids": [
+        "co.mem.hier",
+        "os.io.disk"
+      ],
+      "facets": [
+        "co.mem.hier::磁盘容量与访问时间"
+      ],
+      "primaryFacet": "co.mem.hier::磁盘容量与访问时间",
+      "review_note": "磁盘容量与访问时间",
+      "stem_sha256": "1cafa0e256ca05602f7c3b64eb2b81a40e51bca34e0932fcdeee492eedc7421b",
+      "previous_kp_ids": [
+        "co.mem.hier"
+      ]
+    },
+    "co-big-3.5-1": {
+      "kp_ids": [
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.cache::地址划分与总容量"
+      ],
+      "primaryFacet": "co.mem.cache::地址划分与总容量",
+      "review_note": "地址划分与总容量",
+      "stem_sha256": "35f07b3e7890132b56ed776517ecec85bd2346a7776c2ce406f8182c3d5bb7ab",
+      "previous_kp_ids": [
+        "co.mem.cache"
+      ]
+    },
+    "co-big-3.5-2": {
+      "kp_ids": [
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.cache::地址划分与总容量"
+      ],
+      "primaryFacet": "co.mem.cache::地址划分与总容量",
+      "review_note": "地址划分与总容量",
+      "stem_sha256": "28739778efe48ca176aef9fa4fdba568e80f610804d508450e228caf85149718",
+      "previous_kp_ids": [
+        "co.mem.cache"
+      ]
+    },
+    "co-big-3.5-3": {
+      "kp_ids": [
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.cache::访问序列与命中率"
+      ],
+      "primaryFacet": "co.mem.cache::访问序列与命中率",
+      "review_note": "访问序列与命中率",
+      "stem_sha256": "ac385c837616e537c7ea595de8bf404b0566e5fa2ef37a7fc399eda13173ce71",
+      "previous_kp_ids": [
+        "co.mem.cache"
+      ]
+    },
+    "co-big-3.5-4": {
+      "kp_ids": [
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.cache::访问序列与命中率"
+      ],
+      "primaryFacet": "co.mem.cache::访问序列与命中率",
+      "review_note": "访问序列与命中率",
+      "stem_sha256": "f052eb9829898c05ff4e8671ff92a83973c981d1ffbdf5dba6441becc798a1d6",
+      "previous_kp_ids": [
+        "co.mem.cache"
+      ]
+    },
+    "co-big-3.5-5": {
+      "kp_ids": [
+        "co.mem.cache",
+        "co.bus.perf",
+        "co.intro.perf"
+      ],
+      "facets": [
+        "co.mem.cache::缺失代价与执行时间"
+      ],
+      "primaryFacet": "co.mem.cache::缺失代价与执行时间",
+      "review_note": "缺失代价与执行时间",
+      "stem_sha256": "e535952f419fc811f1540f789c2076d3f5142dcf81872753e1ad166945aeca5c",
+      "previous_kp_ids": [
+        "co.mem.cache"
+      ]
+    },
+    "co-big-3.5-6": {
+      "kp_ids": [
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.cache::地址划分与访问序列"
+      ],
+      "primaryFacet": "co.mem.cache::地址划分与访问序列",
+      "review_note": "地址划分与访问序列",
+      "stem_sha256": "2505f09443584e0649cf63d54dd3dbde074d807a5bf79517dc2fedd25419f559",
+      "previous_kp_ids": [
+        "co.mem.cache"
+      ]
+    },
+    "co-big-3.6-1": {
+      "kp_ids": [
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.mem.virt::页表TLB与地址转换"
+      ],
+      "primaryFacet": "co.mem.virt::页表TLB与地址转换",
+      "review_note": "页表TLB与地址转换",
+      "stem_sha256": "1158afc8c0c630e0b091d250b88d56cb8bb3a82554aa041db79c821597253cb0",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-3.6-2": {
+      "kp_ids": [
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.mem.virt::页表TLB与地址转换"
+      ],
+      "primaryFacet": "co.mem.virt::页表TLB与地址转换",
+      "review_note": "页表TLB与地址转换",
+      "stem_sha256": "0e7dedaadcb77df2c1d7b1267f0400b724fc6b3d1f7ff560f66aca5ef72b3f05",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-3.6-7": {
+      "kp_ids": [
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.mem.virt::页表TLB与地址转换"
+      ],
+      "primaryFacet": "co.mem.virt::页表TLB与地址转换",
+      "review_note": "页表TLB与地址转换",
+      "stem_sha256": "a70ac201e333c9079cce3582346e041015010519d55e121b9e5dc1efcacb4060",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-3.6-3": {
+      "kp_ids": [
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.mem.virt::页面置换与命中率"
+      ],
+      "primaryFacet": "co.mem.virt::页面置换与命中率",
+      "review_note": "页面置换与命中率",
+      "stem_sha256": "abdf2cc80aadfb03c7cf131fdea0f7cf01bc4635930e7463b2cb2a1832cf6f9b",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-3.6-4": {
+      "kp_ids": [
+        "co.mem.virt",
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.virt::TLB页表Cache综合访问"
+      ],
+      "primaryFacet": "co.mem.virt::TLB页表Cache综合访问",
+      "review_note": "TLB页表Cache综合访问",
+      "stem_sha256": "698bc45f9e36d8a6f1116e11430be9438247a8f1f76dbc37b6420921dc83f0db",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-3.6-5": {
+      "kp_ids": [
+        "co.mem.virt",
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.virt::TLB页表Cache综合访问"
+      ],
+      "primaryFacet": "co.mem.virt::TLB页表Cache综合访问",
+      "review_note": "TLB页表Cache综合访问",
+      "stem_sha256": "d984e99849076092c2e18a373e8bd65bc9ace18eb42f84634710d0f3160958d3",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-3.6-6": {
+      "kp_ids": [
+        "co.mem.virt",
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.virt::TLB页表Cache综合访问"
+      ],
+      "primaryFacet": "co.mem.virt::TLB页表Cache综合访问",
+      "review_note": "TLB页表Cache综合访问",
+      "stem_sha256": "589fc8d8200d67163af367efabbddaa8547b25f87c8e7da4a7b80cf0821eb467",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-3.6-8": {
+      "kp_ids": [
+        "co.mem.virt",
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.virt::局部性缺页与Cache访问"
+      ],
+      "primaryFacet": "co.mem.virt::局部性缺页与Cache访问",
+      "review_note": "局部性缺页与Cache访问",
+      "stem_sha256": "57cb12ae3b1bd56a59827b445d62b982f24ba81623f0e025a081b616d17b3d95",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-3.6-9": {
+      "kp_ids": [
+        "co.mem.virt",
+        "co.mem.cache"
+      ],
+      "facets": [
+        "co.mem.virt::局部性缺页与Cache访问"
+      ],
+      "primaryFacet": "co.mem.virt::局部性缺页与Cache访问",
+      "review_note": "局部性缺页与Cache访问",
+      "stem_sha256": "66e5563dcd79e23ca6bff5eb18026f89c465c5d445b9172f2f6ab5aa5dda45fb",
+      "previous_kp_ids": [
+        "co.mem.virt"
+      ]
+    },
+    "co-big-4.1-1": {
+      "kp_ids": [
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.isa.format::指令编码与扩展操作码"
+      ],
+      "primaryFacet": "co.isa.format::指令编码与扩展操作码",
+      "review_note": "指令编码与扩展操作码",
+      "stem_sha256": "b82ae3e1e1a144e700f6dd16cb82ea87a6203cae7bdf35fc670aa424a69f6651",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.1-2": {
+      "kp_ids": [
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.isa.format::指令编码与扩展操作码"
+      ],
+      "primaryFacet": "co.isa.format::指令编码与扩展操作码",
+      "review_note": "指令编码与扩展操作码",
+      "stem_sha256": "23540de16f4164ca68f740eb14a68af0ea2215c147076c95914d931b83049d29",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.1-3": {
+      "kp_ids": [
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.isa.format::指令编码与扩展操作码"
+      ],
+      "primaryFacet": "co.isa.format::指令编码与扩展操作码",
+      "review_note": "指令编码与扩展操作码",
+      "stem_sha256": "706bf276095e3451a5033feca020f1316c44dcd3e0133c170f473a83596675c1",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.2-1": {
+      "kp_ids": [
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.isa.format::寻址与分支目标计算"
+      ],
+      "primaryFacet": "co.isa.format::寻址与分支目标计算",
+      "review_note": "寻址与分支目标计算",
+      "stem_sha256": "a81dc119ebc7b99cd4a3809d4232fd3170a2b522ecf131e862236abdbdca2639",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.2-2": {
+      "kp_ids": [
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.isa.format::寻址与分支目标计算"
+      ],
+      "primaryFacet": "co.isa.format::寻址与分支目标计算",
+      "review_note": "寻址与分支目标计算",
+      "stem_sha256": "b33c450d42c09a6e9a7a322782e42b4de830ed9455eba837d202f7fc528fd9a1",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.2-3": {
+      "kp_ids": [
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.isa.format::寻址与分支目标计算"
+      ],
+      "primaryFacet": "co.isa.format::寻址与分支目标计算",
+      "review_note": "寻址与分支目标计算",
+      "stem_sha256": "6828f55eb88aa2eacd87e37579d6e0fe8139a3f2911769ddaf5a33a109553629",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.2-4": {
+      "kp_ids": [
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.isa.format::寻址与分支目标计算"
+      ],
+      "primaryFacet": "co.isa.format::寻址与分支目标计算",
+      "review_note": "寻址与分支目标计算",
+      "stem_sha256": "7cbc65944bf0aaacef919e3fd4e0c65c01d0ca99041a78c8006de606f5e18f75",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.2-5": {
+      "kp_ids": [
+        "co.isa.format",
+        "co.data.alu"
+      ],
+      "facets": [
+        "co.isa.format::指令译码与执行结果"
+      ],
+      "primaryFacet": "co.isa.format::指令译码与执行结果",
+      "review_note": "指令译码与执行结果",
+      "stem_sha256": "b546e4e463f8d3532ff699919447557ffb9b1143a618fb73bf14ec339acfe7e6",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.3-1": {
+      "kp_ids": [
+        "co.isa.format",
+        "co.isa.ciscrisc",
+        "co.data.alu"
+      ],
+      "facets": [
+        "co.isa.format::机器代码与程序执行"
+      ],
+      "primaryFacet": "co.isa.format::机器代码与程序执行",
+      "review_note": "OCR将两道机器代码题串在一起且缺第2题独立条目，待原页核对，不作代表题。",
+      "stem_sha256": "986580031ae494e30e56d4315677b7cb915f4ca15e2f186e04a130e8cac827d6",
+      "diagnostic_eligible": false,
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.3-3": {
+      "kp_ids": [
+        "co.mem.cache",
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.mem.cache::地址划分与总容量"
+      ],
+      "primaryFacet": "co.mem.cache::地址划分与总容量",
+      "review_note": "地址划分与总容量",
+      "stem_sha256": "7de1b5e040c8964b7471f30eed7395bb6e55ce338b9ec816d312f4f7a5cae810",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.3-4": {
+      "kp_ids": [
+        "co.isa.format",
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.isa.format::机器代码与程序执行"
+      ],
+      "primaryFacet": "co.isa.format::机器代码与程序执行",
+      "review_note": "机器代码与程序执行",
+      "stem_sha256": "89732bf6e3ddf212b30d5c0792563a7ff193ce253439cdd1b09fd576a044415d",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.3-5": {
+      "kp_ids": [
+        "co.cpu.datapath",
+        "co.isa.format",
+        "co.data.alu"
+      ],
+      "facets": [
+        "co.cpu.datapath::数据通路与控制信号"
+      ],
+      "primaryFacet": "co.cpu.datapath::数据通路与控制信号",
+      "review_note": "数据通路与控制信号",
+      "stem_sha256": "4842306d6619ea7f1b1fd9af49f9503453ed3f22b13fedf78aa2eb718a016639",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.3-6": {
+      "kp_ids": [
+        "co.isa.format",
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.isa.format::机器代码与程序执行"
+      ],
+      "primaryFacet": "co.isa.format::机器代码与程序执行",
+      "review_note": "机器代码与程序执行",
+      "stem_sha256": "e58af4497b8deec9cd57664a1fde2c0aadf34ba8ef53fb83d273e51dee80dbeb",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-4.3-7": {
+      "kp_ids": [
+        "co.data.alu",
+        "co.io.query"
+      ],
+      "facets": [
+        "co.data.alu::除法实现与异常"
+      ],
+      "primaryFacet": "co.data.alu::除法实现与异常",
+      "review_note": "除法实现与异常",
+      "stem_sha256": "9cf115d20f7541ec8aaaa367ad11e737308ea061993e98f6d41881056696dd33",
+      "previous_kp_ids": [
+        "co.isa.format"
+      ]
+    },
+    "co-big-5.3-1": {
+      "kp_ids": [
+        "co.cpu.datapath"
+      ],
+      "facets": [
+        "co.cpu.datapath::微操作序列与节拍"
+      ],
+      "primaryFacet": "co.cpu.datapath::微操作序列与节拍",
+      "review_note": "微操作序列与节拍",
+      "stem_sha256": "0723e74232a3cad0cedb534351c720c030da0e110a435756e9e5ecb73fda6ce6",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-2": {
+      "kp_ids": [
+        "co.cpu.datapath"
+      ],
+      "facets": [
+        "co.cpu.datapath::微操作序列与节拍"
+      ],
+      "primaryFacet": "co.cpu.datapath::微操作序列与节拍",
+      "review_note": "微操作序列与节拍",
+      "stem_sha256": "774275c88666d11d975a3a61b1baf8f48362f8236134c541849d398658e157e6",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-3": {
+      "kp_ids": [
+        "co.cpu.datapath"
+      ],
+      "facets": [
+        "co.cpu.datapath::微操作序列与节拍"
+      ],
+      "primaryFacet": "co.cpu.datapath::微操作序列与节拍",
+      "review_note": "微操作序列与节拍",
+      "stem_sha256": "591718e303b12ee779dfc79536ea1fda08ae23c8c1affabbd5129f46e51e5556",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-4": {
+      "kp_ids": [
+        "co.cpu.datapath"
+      ],
+      "facets": [
+        "co.cpu.datapath::微操作序列与节拍"
+      ],
+      "primaryFacet": "co.cpu.datapath::微操作序列与节拍",
+      "review_note": "微操作序列与节拍",
+      "stem_sha256": "cdc9ce8238cae53f85cbf0f8b4ef1c000916629381d01953655c4579b34ee3ba",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-5": {
+      "kp_ids": [
+        "co.cpu.datapath"
+      ],
+      "facets": [
+        "co.cpu.datapath::微操作序列与节拍"
+      ],
+      "primaryFacet": "co.cpu.datapath::微操作序列与节拍",
+      "review_note": "微操作序列与节拍",
+      "stem_sha256": "78166939fc698c5e546a29c687581d3ea9acd0fb645acd617ed0e833c1348541",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-6": {
+      "kp_ids": [
+        "co.cpu.datapath"
+      ],
+      "facets": [
+        "co.cpu.datapath::微操作序列与节拍"
+      ],
+      "primaryFacet": "co.cpu.datapath::微操作序列与节拍",
+      "review_note": "微操作序列与节拍",
+      "stem_sha256": "2db5e9e72a06f9c01c707e5b0f1f876674120f9482886b31c6fe3a88c815482e",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-7": {
+      "kp_ids": [
+        "co.cpu.datapath"
+      ],
+      "facets": [
+        "co.cpu.datapath::微操作序列与节拍"
+      ],
+      "primaryFacet": "co.cpu.datapath::微操作序列与节拍",
+      "review_note": "微操作序列与节拍",
+      "stem_sha256": "f43572e44730a42f9b4d0c5bef92031cb0cb3c1a3d5b70df9c5959b9455d1f70",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-8": {
+      "kp_ids": [
+        "co.cpu.datapath",
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.cpu.datapath::数据通路与控制信号"
+      ],
+      "primaryFacet": "co.cpu.datapath::数据通路与控制信号",
+      "review_note": "数据通路与控制信号",
+      "stem_sha256": "b26c92fc4eda3f8692c9ab34e8bf5e63d178491de2b0f038e0c152f048d82ed6",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-9": {
+      "kp_ids": [
+        "co.cpu.datapath",
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.cpu.datapath::数据通路与控制信号"
+      ],
+      "primaryFacet": "co.cpu.datapath::数据通路与控制信号",
+      "review_note": "数据通路与控制信号",
+      "stem_sha256": "6e534d7ee86d75f8c46115c7120eb8e098120ee8b5296bfece054ff896f1761a",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.3-10": {
+      "kp_ids": [
+        "co.cpu.datapath",
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.cpu.datapath::数据通路与控制信号"
+      ],
+      "primaryFacet": "co.cpu.datapath::数据通路与控制信号",
+      "review_note": "数据通路与控制信号",
+      "stem_sha256": "9a54b09e539dcda91e121e29bfc217e0121a547c9d5374e01808f87b4f8fe9f0",
+      "previous_kp_ids": [
+        "co.cpu.datapath"
+      ]
+    },
+    "co-big-5.4-1": {
+      "kp_ids": [
+        "co.intro.perf"
+      ],
+      "facets": [
+        "co.intro.perf::主频CPI与执行时间"
+      ],
+      "primaryFacet": "co.intro.perf::主频CPI与执行时间",
+      "review_note": "主频CPI与执行时间",
+      "stem_sha256": "8f3895e70d4a9c3c4f9eabb0affbfb907abe73a309e648dc3256f3eb42f157ff",
+      "previous_kp_ids": [
+        "co.cpu.hardsoft"
+      ]
+    },
+    "co-big-5.4-2": {
+      "kp_ids": [
+        "co.cpu.hardsoft"
+      ],
+      "facets": [
+        "co.cpu.hardsoft::微指令格式与控存容量"
+      ],
+      "primaryFacet": "co.cpu.hardsoft::微指令格式与控存容量",
+      "review_note": "微指令格式与控存容量",
+      "stem_sha256": "48452d26380ef31f8a4046f22cb98d6e4e5ce08ebc9ae0f8a44cc9f3f61b997a",
+      "previous_kp_ids": [
+        "co.cpu.hardsoft"
+      ]
+    },
+    "co-big-5.4-3": {
+      "kp_ids": [
+        "co.cpu.hardsoft"
+      ],
+      "facets": [
+        "co.cpu.hardsoft::微指令格式与控存容量"
+      ],
+      "primaryFacet": "co.cpu.hardsoft::微指令格式与控存容量",
+      "review_note": "微指令格式与控存容量",
+      "stem_sha256": "5593c0ade0be1b1b44d355578063c6948e536578194086459ed41ada34d38ff1",
+      "previous_kp_ids": [
+        "co.cpu.hardsoft"
+      ]
+    },
+    "co-big-5.4-4": {
+      "kp_ids": [
+        "co.cpu.hardsoft"
+      ],
+      "facets": [
+        "co.cpu.hardsoft::微指令格式与控存容量"
+      ],
+      "primaryFacet": "co.cpu.hardsoft::微指令格式与控存容量",
+      "review_note": "微指令格式与控存容量",
+      "stem_sha256": "2d0a0112789b13a18bbc981b2a7b3be86df3cfbd1ef8347debab9ea0eb8dda0c",
+      "previous_kp_ids": [
+        "co.cpu.hardsoft"
+      ]
+    },
+    "co-big-5.4-5": {
+      "kp_ids": [
+        "co.cpu.datapath"
+      ],
+      "facets": [
+        "co.cpu.datapath::微操作序列与节拍"
+      ],
+      "primaryFacet": "co.cpu.datapath::微操作序列与节拍",
+      "review_note": "微操作序列与节拍",
+      "stem_sha256": "4c656d30fa10d147e3cb6e13bb6c0991474e6be3be925196829917736111583e",
+      "previous_kp_ids": [
+        "co.cpu.hardsoft"
+      ]
+    },
+    "co-big-5.6-1": {
+      "kp_ids": [
+        "co.cpu.pipeline",
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.cpu.pipeline::流水线时序与冒险"
+      ],
+      "primaryFacet": "co.cpu.pipeline::流水线时序与冒险",
+      "review_note": "流水线时序与冒险",
+      "stem_sha256": "6218b5e4fa0dfba5aa2fd078e7013bd6977b7ea8e8b4994b82c55c68a05def1c",
+      "previous_kp_ids": [
+        "co.cpu.pipeline"
+      ]
+    },
+    "co-big-5.6-2": {
+      "kp_ids": [
+        "co.cpu.pipeline",
+        "co.isa.format"
+      ],
+      "facets": [
+        "co.cpu.pipeline::流水线时序与冒险"
+      ],
+      "primaryFacet": "co.cpu.pipeline::流水线时序与冒险",
+      "review_note": "流水线时序与冒险",
+      "stem_sha256": "b9ebab14eda9d52687998682c01dec12856619eb3d738ef448496a59614603fc",
+      "previous_kp_ids": [
+        "co.cpu.pipeline"
+      ]
+    },
+    "co-big-5.6-3": {
+      "kp_ids": [
+        "co.mem.cache",
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.mem.cache::访问序列与命中率"
+      ],
+      "primaryFacet": "co.mem.cache::访问序列与命中率",
+      "review_note": "访问序列与命中率",
+      "stem_sha256": "8be78e1b31a41476f52e0b0ce8a1276d1c475ef4e2e0939435356573d92deeab",
+      "previous_kp_ids": [
+        "co.cpu.pipeline"
+      ]
+    },
+    "co-big-6.1-1": {
+      "kp_ids": [
+        "co.bus.perf"
+      ],
+      "facets": [
+        "co.bus.perf::总线传输速率与带宽"
+      ],
+      "primaryFacet": "co.bus.perf::总线传输速率与带宽",
+      "review_note": "总线传输速率与带宽",
+      "stem_sha256": "c278400911c11b95d288e900a25ee5590aaff837bdd8c5d95f913c460aa9ae72",
+      "previous_kp_ids": [
+        "co.bus.arb"
+      ]
+    },
+    "co-big-6.1-2": {
+      "kp_ids": [
+        "co.bus.perf"
+      ],
+      "facets": [
+        "co.bus.perf::总线传输速率与带宽"
+      ],
+      "primaryFacet": "co.bus.perf::总线传输速率与带宽",
+      "review_note": "总线传输速率与带宽",
+      "stem_sha256": "76012f075f6e5e10bf26d698b7d038e197a114f3cfeb5d442b13d3c085f1a67d",
+      "previous_kp_ids": [
+        "co.bus.arb"
+      ]
+    },
+    "co-big-7.3-1": {
+      "kp_ids": [
+        "co.io.dma"
+      ],
+      "facets": [
+        "co.io.dma::DMA通路与总线使用"
+      ],
+      "primaryFacet": "co.io.dma::DMA通路与总线使用",
+      "review_note": "DMA通路与总线使用",
+      "stem_sha256": "cae7df67184bdc63cd690805a23b32e4725713d7dceaff27cdb7f20394b0d3fa",
+      "previous_kp_ids": [
+        "co.io.dma"
+      ]
+    },
+    "co-big-7.3-2": {
+      "kp_ids": [
+        "co.io.query"
+      ],
+      "facets": [
+        "co.io.query::查询中断开销与可行性"
+      ],
+      "primaryFacet": "co.io.query::查询中断开销与可行性",
+      "review_note": "查询中断开销与可行性",
+      "stem_sha256": "277888fcbdbf2ad9755bb7628c331dfc3dab147a1b09fe0181d44502ca115210",
+      "previous_kp_ids": [
+        "co.io.query"
+      ]
+    },
+    "co-big-7.3-3": {
+      "kp_ids": [
+        "co.io.query"
+      ],
+      "facets": [
+        "co.io.query::查询中断开销与可行性"
+      ],
+      "primaryFacet": "co.io.query::查询中断开销与可行性",
+      "review_note": "查询中断开销与可行性",
+      "stem_sha256": "cc0d93a0a845889dd5fd3224567365b4003aa9236f55212f606169d54bbdb2f6",
+      "previous_kp_ids": [
+        "co.io.query"
+      ]
+    },
+    "co-big-7.3-9": {
+      "kp_ids": [
+        "co.io.query"
+      ],
+      "facets": [
+        "co.io.query::查询中断开销与可行性"
+      ],
+      "primaryFacet": "co.io.query::查询中断开销与可行性",
+      "review_note": "查询中断开销与可行性",
+      "stem_sha256": "926c3039c6fe847bc6136c7427384195e9bb99d0007d3ea97f0eaab0161ac15d",
+      "previous_kp_ids": [
+        "co.io.query"
+      ]
+    },
+    "co-big-7.3-4": {
+      "kp_ids": [
+        "co.io.query"
+      ],
+      "facets": [
+        "co.io.query::中断屏蔽与嵌套次序"
+      ],
+      "primaryFacet": "co.io.query::中断屏蔽与嵌套次序",
+      "review_note": "中断屏蔽与嵌套次序",
+      "stem_sha256": "583d27ea38a6fe3565d30db97fd51e32241ae0d36bd783f9ba4b59d1530043f3",
+      "previous_kp_ids": [
+        "co.io.query"
+      ]
+    },
+    "co-big-7.3-5": {
+      "kp_ids": [
+        "co.io.dma",
+        "co.io.query"
+      ],
+      "facets": [
+        "co.io.dma::DMA与查询中断开销对比"
+      ],
+      "primaryFacet": "co.io.dma::DMA与查询中断开销对比",
+      "review_note": "DMA与查询中断开销对比",
+      "stem_sha256": "6c83dc5c51d973d13b0e327d329e77f01e947a3c5fa87a078214ba9931312ed6",
+      "previous_kp_ids": [
+        "co.io.dma"
+      ]
+    },
+    "co-big-7.3-6": {
+      "kp_ids": [
+        "co.io.dma",
+        "co.io.query"
+      ],
+      "facets": [
+        "co.io.dma::DMA与查询中断开销对比"
+      ],
+      "primaryFacet": "co.io.dma::DMA与查询中断开销对比",
+      "review_note": "DMA与查询中断开销对比",
+      "stem_sha256": "2750f0c3e37bb41c0c8ef4e724094c579d09e485edb6839e61bb6257cdd65e08",
+      "previous_kp_ids": [
+        "co.io.dma"
+      ]
+    },
+    "co-big-7.3-7": {
+      "kp_ids": [
+        "co.io.dma",
+        "co.io.query"
+      ],
+      "facets": [
+        "co.io.dma::DMA与查询中断开销对比"
+      ],
+      "primaryFacet": "co.io.dma::DMA与查询中断开销对比",
+      "review_note": "DMA与查询中断开销对比",
+      "stem_sha256": "a8638b428136325f21fefc4f05ff583036744c5d906ee3a1bd4c11ec4379af73",
+      "previous_kp_ids": [
+        "co.io.dma"
+      ]
+    },
+    "co-big-7.3-10": {
+      "kp_ids": [
+        "co.io.dma",
+        "co.io.query"
+      ],
+      "facets": [
+        "co.io.dma::DMA与查询中断开销对比"
+      ],
+      "primaryFacet": "co.io.dma::DMA与查询中断开销对比",
+      "review_note": "DMA与查询中断开销对比",
+      "stem_sha256": "847da1c51dd6b8bda1cc206c880096a602010eeb0db09341e765957cfb969fe1",
+      "previous_kp_ids": [
+        "co.io.dma"
+      ]
+    },
+    "co-big-7.3-8": {
+      "kp_ids": [
+        "co.io.dma",
+        "co.mem.cache",
+        "co.mem.virt"
+      ],
+      "facets": [
+        "co.io.dma::DMA带宽与总线请求"
+      ],
+      "primaryFacet": "co.io.dma::DMA带宽与总线请求",
+      "review_note": "DMA带宽与总线请求",
+      "stem_sha256": "8a783ec3ac958c7510c86bba6f583b82f5234ac835b9cd76c9243b34cf73302b",
+      "previous_kp_ids": [
+        "co.io.dma"
+      ]
+    },
+    "co-big-7.3-11": {
+      "kp_ids": [
+        "co.io.dma",
+        "os.io.disk"
+      ],
+      "facets": [
+        "co.io.dma::DMA带宽与总线请求"
+      ],
+      "primaryFacet": "co.io.dma::DMA带宽与总线请求",
+      "review_note": "DMA带宽与总线请求",
+      "stem_sha256": "a0a2ffbc66cfe920dcf9c03695b1e2d0daa0bd2dd0abf8237f84ea315e7dec21",
+      "previous_kp_ids": [
+        "co.io.dma"
+      ]
+    },
+    "cn-big-1.1-1": {
+      "kp_ids": [
+        "cn.intro.perf"
+      ],
+      "facets": [
+        "cn.intro.perf::分组开销与最优长度"
+      ],
+      "primaryFacet": "cn.intro.perf::分组开销与最优长度",
+      "review_note": "分组开销与最优长度",
+      "stem_sha256": "aeb30ea49106d270fee3578f54a0262e40d88112d037a833393e2fa8efdf259c",
+      "previous_kp_ids": [
+        "cn.intro.perf"
+      ]
+    },
+    "cn-big-1.1-2": {
+      "kp_ids": [
+        "cn.intro.perf"
+      ],
+      "facets": [
+        "cn.intro.perf::发送时延与传播时延"
+      ],
+      "primaryFacet": "cn.intro.perf::发送时延与传播时延",
+      "review_note": "发送时延与传播时延",
+      "stem_sha256": "01c6b4259add2fd8ba1e71ec4c70e90e40767ddfb53f73aebb4a72baf1f374b6",
+      "previous_kp_ids": [
+        "cn.intro.perf"
+      ]
+    },
+    "cn-big-1.1-3": {
+      "kp_ids": [
+        "cn.intro.perf"
+      ],
+      "facets": [
+        "cn.intro.perf::分组交换与确认粒度"
+      ],
+      "primaryFacet": "cn.intro.perf::分组交换与确认粒度",
+      "review_note": "分组交换与确认粒度",
+      "stem_sha256": "91537bedd0f2971e159cbe15398177c44d4744bca42f61cc9007efc32e3fac74",
+      "previous_kp_ids": [
+        "cn.intro.perf"
+      ]
+    },
+    "cn-big-2.1-1": {
+      "kp_ids": [
+        "cn.intro.perf"
+      ],
+      "facets": [
+        "cn.intro.perf::存储转发与分组流水时延"
+      ],
+      "primaryFacet": "cn.intro.perf::存储转发与分组流水时延",
+      "review_note": "存储转发与分组流水时延",
+      "stem_sha256": "b1801d9f51714ae72558810605e39c3ae69a28f606b1c4fd0ccbbd3f98661b2d",
+      "previous_kp_ids": [
+        "cn.phy.coding"
+      ]
+    },
+    "cn-big-2.1-2": {
+      "kp_ids": [
+        "cn.intro.perf"
+      ],
+      "facets": [
+        "cn.intro.perf::存储转发与分组流水时延"
+      ],
+      "primaryFacet": "cn.intro.perf::存储转发与分组流水时延",
+      "review_note": "存储转发与分组流水时延",
+      "stem_sha256": "20a2d13208907b84c7be296c804bb786fb8b099e78fa881068b34f99e8fad866",
+      "previous_kp_ids": [
+        "cn.phy.coding"
+      ]
+    },
+    "cn-big-3.2-1": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::帧定界与透明传输"
+      ],
+      "primaryFacet": "cn.dll.framing::帧定界与透明传输",
+      "review_note": "帧定界与透明传输",
+      "stem_sha256": "95f55084c2468f309c9634560a4ebbca6a74abd4067295027fb5d983e4c6392c",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.3-1": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::CRC计算与差错检测"
+      ],
+      "primaryFacet": "cn.dll.framing::CRC计算与差错检测",
+      "review_note": "CRC计算与差错检测",
+      "stem_sha256": "fe4c49e0b9a88cee0a6464c817543229d296a5e15af20faea2eea306c68e7d9f",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.4-1": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::滑动窗口与序号约束"
+      ],
+      "primaryFacet": "cn.dll.framing::滑动窗口与序号约束",
+      "review_note": "滑动窗口与序号约束",
+      "stem_sha256": "eb386412651a4ff5a94aa284557faa0ffe382ff018bb6f03e09250df817c3a84",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.4-2": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::窗口协议与信道利用率"
+      ],
+      "primaryFacet": "cn.dll.framing::窗口协议与信道利用率",
+      "review_note": "窗口协议与信道利用率",
+      "stem_sha256": "393137fde3bdff6306d79f90607f0a2edee8702c258e150ee7b51b91a96970c2",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.4-3": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::窗口协议与信道利用率"
+      ],
+      "primaryFacet": "cn.dll.framing::窗口协议与信道利用率",
+      "review_note": "窗口协议与信道利用率",
+      "stem_sha256": "9fba06337494f483d600774292a2dc0d2fa00ce718b60ece1428e3ccc37c56a8",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.4-4": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::窗口协议与信道利用率"
+      ],
+      "primaryFacet": "cn.dll.framing::窗口协议与信道利用率",
+      "review_note": "窗口协议与信道利用率",
+      "stem_sha256": "e888821706a0c0519e3edb96a9ed490251d56da21d702e32f325828c815fde78",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.4-5": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::窗口协议与信道利用率"
+      ],
+      "primaryFacet": "cn.dll.framing::窗口协议与信道利用率",
+      "review_note": "窗口协议与信道利用率",
+      "stem_sha256": "96b9973621780e1d25824c4f5b0bd71a4eeb099c64ba11d21215f61cfd1d96c8",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.4-6": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::窗口协议与信道利用率"
+      ],
+      "primaryFacet": "cn.dll.framing::窗口协议与信道利用率",
+      "review_note": "窗口协议与信道利用率",
+      "stem_sha256": "2979f6fdc145d3774ce1031dd4554bffb36aad591e46390369581d1ba5a4da8f",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.4-7": {
+      "kp_ids": [
+        "cn.dll.framing"
+      ],
+      "facets": [
+        "cn.dll.framing::GBN确认与重传过程"
+      ],
+      "primaryFacet": "cn.dll.framing::GBN确认与重传过程",
+      "review_note": "GBN确认与重传过程",
+      "stem_sha256": "67fba69bcf1a24472aed9bc39586dc381c989b13d04e3af50a5813f83734f435",
+      "previous_kp_ids": [
+        "cn.dll.framing"
+      ]
+    },
+    "cn-big-3.6-1": {
+      "kp_ids": [
+        "cn.dll.mac"
+      ],
+      "facets": [
+        "cn.dll.mac::竞争接入与静态分配"
+      ],
+      "primaryFacet": "cn.dll.mac::竞争接入与静态分配",
+      "review_note": "竞争接入与静态分配",
+      "stem_sha256": "d80a9b3aa4cf17fec9344b1634078efaa07ca9035681f7a3dbd05749a775f7d5",
+      "previous_kp_ids": [
+        "cn.dll.mac"
+      ]
+    },
+    "cn-big-3.6-2": {
+      "kp_ids": [
+        "cn.dll.mac"
+      ],
+      "facets": [
+        "cn.dll.mac::争用期与最小帧长"
+      ],
+      "primaryFacet": "cn.dll.mac::争用期与最小帧长",
+      "review_note": "争用期与最小帧长",
+      "stem_sha256": "15ab65b4f94c3ca48809e2412d0d3902183dc312714f27fad0995c19fcc33e45",
+      "previous_kp_ids": [
+        "cn.dll.mac"
+      ]
+    },
+    "cn-big-3.6-3": {
+      "kp_ids": [
+        "cn.dll.mac"
+      ],
+      "facets": [
+        "cn.dll.mac::争用期与最小帧长"
+      ],
+      "primaryFacet": "cn.dll.mac::争用期与最小帧长",
+      "review_note": "争用期与最小帧长",
+      "stem_sha256": "0f3e0a2949ecbf0e2ffc991cc33bd6a386ff8c29df7d0a54fd291f56b7ab1ef9",
+      "previous_kp_ids": [
+        "cn.dll.mac"
+      ]
+    },
+    "cn-big-3.6-4": {
+      "kp_ids": [
+        "cn.dll.mac"
+      ],
+      "facets": [
+        "cn.dll.mac::争用期与最小帧长"
+      ],
+      "primaryFacet": "cn.dll.mac::争用期与最小帧长",
+      "review_note": "争用期与最小帧长",
+      "stem_sha256": "d2870c3957e0c338062b6ae3640e6d0a72ebba55181303908ad67bb8f14b4653",
+      "previous_kp_ids": [
+        "cn.dll.mac"
+      ]
+    },
+    "cn-big-3.6-5": {
+      "kp_ids": [
+        "cn.dll.mac",
+        "cn.intro.perf"
+      ],
+      "facets": [
+        "cn.dll.mac::碰撞检测与有效传输速率"
+      ],
+      "primaryFacet": "cn.dll.mac::碰撞检测与有效传输速率",
+      "review_note": "碰撞检测与有效传输速率",
+      "stem_sha256": "a2a7149d9096dceeda93bd1f0fcab13b4dba64ef0e5fc0f513f4adfd9b66a3d4",
+      "previous_kp_ids": [
+        "cn.dll.mac"
+      ]
+    },
+    "cn-big-4.2-1": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::IPv4首部与分片"
+      ],
+      "primaryFacet": "cn.net.ip::IPv4首部与分片",
+      "review_note": "IPv4首部与分片",
+      "stem_sha256": "0a94c4b4d3c8e7c0fec5c6120069a87ad777c2ae3ddfd5800c11378d749efd3f",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-2": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::IPv4首部与分片"
+      ],
+      "primaryFacet": "cn.net.ip::IPv4首部与分片",
+      "review_note": "IPv4首部与分片",
+      "stem_sha256": "7761c94c813558293aec2f92de9a5d2a3f4c5997261369ae5833ce630760b2b8",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-3": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::IPv4首部与分片"
+      ],
+      "primaryFacet": "cn.net.ip::IPv4首部与分片",
+      "review_note": "IPv4首部与分片",
+      "stem_sha256": "5af1edc797dd6e6f0fa901dc0c7ac824406a058c2ef7a016ec6d81f82a042804",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-10": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::IPv4首部与分片"
+      ],
+      "primaryFacet": "cn.net.ip::IPv4首部与分片",
+      "review_note": "IPv4首部与分片",
+      "stem_sha256": "8a7fa7ae23d4bceb02e8e558abc24f9b07f2330ec5efa4d2a341e61807dcf397",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-11": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::IPv4首部与分片"
+      ],
+      "primaryFacet": "cn.net.ip::IPv4首部与分片",
+      "review_note": "IPv4首部与分片",
+      "stem_sha256": "bb43bc1fef45c7d46dc84128bd75847a3b9946b36ba00a80d152e0d9eb55e8d2",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-15": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::IPv4首部与分片"
+      ],
+      "primaryFacet": "cn.net.ip::IPv4首部与分片",
+      "review_note": "IPv4首部与分片",
+      "stem_sha256": "20fd07a5b6a0e40f72ac3073bf9a452d7b7e393d32302b26dde874ba73356e85",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-4": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::子网划分与地址聚合"
+      ],
+      "primaryFacet": "cn.net.ip::子网划分与地址聚合",
+      "review_note": "子网划分与地址聚合",
+      "stem_sha256": "c0847e5cbe14546c1350e9cbe39a208fa7e1ffe98b9a13e2a7cd548d37845f5e",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-5": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::子网划分与地址聚合"
+      ],
+      "primaryFacet": "cn.net.ip::子网划分与地址聚合",
+      "review_note": "子网划分与地址聚合",
+      "stem_sha256": "eca3f7b3df98b15cf10abf51ab8fa688286e4bcfd733b47d420603e6a5474599",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-8": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::子网划分与地址聚合"
+      ],
+      "primaryFacet": "cn.net.ip::子网划分与地址聚合",
+      "review_note": "子网划分与地址聚合",
+      "stem_sha256": "ae840271535aaae800b81431d5f91638726a82ca51640de9957aeaf733bf08b6",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-9": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::子网划分与地址聚合"
+      ],
+      "primaryFacet": "cn.net.ip::子网划分与地址聚合",
+      "review_note": "子网划分与地址聚合",
+      "stem_sha256": "cc74307d91cdef1d29db6b46e6ea4fd0dd17cf0388bd78d4bd041431398343e4",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-13": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::子网划分与地址聚合"
+      ],
+      "primaryFacet": "cn.net.ip::子网划分与地址聚合",
+      "review_note": "子网划分与地址聚合",
+      "stem_sha256": "45e57b909b763a775b9ac0fd30e7143d5ec323c708d4103633be1c2d7f427a49",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-6": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::最长前缀匹配与转发"
+      ],
+      "primaryFacet": "cn.net.ip::最长前缀匹配与转发",
+      "review_note": "最长前缀匹配与转发",
+      "stem_sha256": "7ecdf9c8f0eb698d8c1e3f6caf882770b70c8a954312c44b084414a99b4b1862",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-7": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::最长前缀匹配与转发"
+      ],
+      "primaryFacet": "cn.net.ip::最长前缀匹配与转发",
+      "review_note": "最长前缀匹配与转发",
+      "stem_sha256": "b50b1fb7be2b6b19a422685f54a7c84a88f581eb0540b38d3a2f18cbd007771a",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-12": {
+      "kp_ids": [
+        "cn.net.ip",
+        "cn.net.icmp",
+        "cn.dll.eth"
+      ],
+      "facets": [
+        "cn.net.ip::NAT与跨网转发"
+      ],
+      "primaryFacet": "cn.net.ip::NAT与跨网转发",
+      "review_note": "NAT与跨网转发",
+      "stem_sha256": "ff3436e7ab6002a49fb13724ad4551b528ade260f591e203ea5b4afba33e6e92",
+      "previous_kp_ids": [
+        "cn.net.icmp"
+      ]
+    },
+    "cn-big-4.2-14": {
+      "kp_ids": [
+        "cn.app.other",
+        "cn.net.icmp",
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.app.other::DHCP与主机网络配置"
+      ],
+      "primaryFacet": "cn.app.other::DHCP与主机网络配置",
+      "review_note": "DHCP与主机网络配置",
+      "stem_sha256": "1b03171fb4eed494137a31eb7fde97aec64b64198d3f67b43262121fedb6ac60",
+      "previous_kp_ids": [
+        "cn.net.icmp"
+      ]
+    },
+    "cn-big-4.2-16": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::NAT与跨网转发"
+      ],
+      "primaryFacet": "cn.net.ip::NAT与跨网转发",
+      "review_note": "NAT与跨网转发",
+      "stem_sha256": "75d196f3b8fd788d247ddc5e82d0a10a548bfc79569cf202212177d917799d4c",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-17": {
+      "kp_ids": [
+        "cn.dll.eth",
+        "cn.dll.mac",
+        "cn.app.other"
+      ],
+      "facets": [
+        "cn.dll.eth::广播域冲突域与链路封装"
+      ],
+      "primaryFacet": "cn.dll.eth::广播域冲突域与链路封装",
+      "review_note": "广播域冲突域与链路封装",
+      "stem_sha256": "4c96cdd1176fcf36b885240126d136aabd30e53d874aa50fa20ec40cd2611783",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.2-18": {
+      "kp_ids": [
+        "cn.net.ip",
+        "cn.dll.framing",
+        "cn.intro.perf"
+      ],
+      "facets": [
+        "cn.net.ip::子网划分与地址聚合"
+      ],
+      "primaryFacet": "cn.net.ip::子网划分与地址聚合",
+      "review_note": "子网划分与地址聚合",
+      "stem_sha256": "acc49cff486e1a39777b0536ffba6b02102649db3b6d3fb2fd826f33acfa121c",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.4-1": {
+      "kp_ids": [
+        "cn.net.route"
+      ],
+      "facets": [
+        "cn.net.route::路由协议机制与选择"
+      ],
+      "primaryFacet": "cn.net.route::路由协议机制与选择",
+      "review_note": "路由协议机制与选择",
+      "stem_sha256": "15834a5447f2054acb7eba5a32d7376d100f8e429bc5cf18880575f1461e64d9",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-4.4-6": {
+      "kp_ids": [
+        "cn.net.route"
+      ],
+      "facets": [
+        "cn.net.route::路由协议机制与选择"
+      ],
+      "primaryFacet": "cn.net.route::路由协议机制与选择",
+      "review_note": "路由协议机制与选择",
+      "stem_sha256": "3e659049eb4c095f33911c47a816aba568c3511a241138fb690e67cb9a809c77",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-4.4-2": {
+      "kp_ids": [
+        "cn.net.route"
+      ],
+      "facets": [
+        "cn.net.route::RIP距离向量更新"
+      ],
+      "primaryFacet": "cn.net.route::RIP距离向量更新",
+      "review_note": "RIP距离向量更新",
+      "stem_sha256": "8dd4b7ced938508e9c625292cf59fc9a3d9b0c6a05f554a512d3e27ef732b9b1",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-4.4-3": {
+      "kp_ids": [
+        "cn.net.route"
+      ],
+      "facets": [
+        "cn.net.route::OSPF链路状态与路由计算"
+      ],
+      "primaryFacet": "cn.net.route::OSPF链路状态与路由计算",
+      "review_note": "OSPF链路状态与路由计算",
+      "stem_sha256": "39c5071e4505058682315f37c3d138cb9579a7d8ea2f70cc11bb03cbccb3d81f",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-4.4-5": {
+      "kp_ids": [
+        "cn.net.route"
+      ],
+      "facets": [
+        "cn.net.route::OSPF链路状态与路由计算"
+      ],
+      "primaryFacet": "cn.net.route::OSPF链路状态与路由计算",
+      "review_note": "OSPF链路状态与路由计算",
+      "stem_sha256": "2d478d7fecf4a25297c0aef223fc4e6989e294455313bce0fb2faa65d8dc4fdf",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-4.4-4": {
+      "kp_ids": [
+        "cn.net.route",
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.route::自治系统路由与聚合"
+      ],
+      "primaryFacet": "cn.net.route::自治系统路由与聚合",
+      "review_note": "自治系统路由与聚合",
+      "stem_sha256": "662b9be57cfd4d0eddebc181f30438cecaae1a21f5da612a195adfe2ef1f4346",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-4.5-1": {
+      "kp_ids": [
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.ip::IP多播与转发"
+      ],
+      "primaryFacet": "cn.net.ip::IP多播与转发",
+      "review_note": "IP多播与转发",
+      "stem_sha256": "34facfda1d5c69d7f2837406ac91682b7df2b437eff5f8820395fc60b4cc123d",
+      "previous_kp_ids": [
+        "cn.net.ip"
+      ]
+    },
+    "cn-big-4.7-1": {
+      "kp_ids": [
+        "cn.net.route",
+        "cn.net.icmp",
+        "cn.net.ip"
+      ],
+      "facets": [
+        "cn.net.route::路由表与分组转发"
+      ],
+      "primaryFacet": "cn.net.route::路由表与分组转发",
+      "review_note": "路由表与分组转发",
+      "stem_sha256": "75751a83a78508691cf6b2ba178c84c68d199357a6dd95b7d2fd9e2bbf9973cc",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-4.7-2": {
+      "kp_ids": [
+        "cn.net.route"
+      ],
+      "facets": [
+        "cn.net.route::路由与转发的区别"
+      ],
+      "primaryFacet": "cn.net.route::路由与转发的区别",
+      "review_note": "路由与转发的区别",
+      "stem_sha256": "6d1bfc068077b065fc62f20b4dcc688a17ac8ca174df869cfba8b1d81e4db3a1",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-4.7-3": {
+      "kp_ids": [
+        "cn.net.ip",
+        "cn.dll.eth"
+      ],
+      "facets": [
+        "cn.net.ip::子网互连与NAT配置"
+      ],
+      "primaryFacet": "cn.net.ip::子网互连与NAT配置",
+      "review_note": "子网互连与NAT配置",
+      "stem_sha256": "42e91b611eecc81471c8f90ee3aad549a8f685ca89c96cedfca668e4975d9519",
+      "previous_kp_ids": [
+        "cn.net.route"
+      ]
+    },
+    "cn-big-5.2-1": {
+      "kp_ids": [
+        "cn.trans.udp",
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.udp::UDP服务与协议选择"
+      ],
+      "primaryFacet": "cn.trans.udp::UDP服务与协议选择",
+      "review_note": "UDP服务与协议选择",
+      "stem_sha256": "e904f4d458ac82f28869c0da4caacc3fb1598c731ab0d1256be6d60f5b9fe068",
+      "previous_kp_ids": [
+        "cn.trans.udp"
+      ]
+    },
+    "cn-big-5.2-2": {
+      "kp_ids": [
+        "cn.trans.udp",
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.udp::UDP服务与协议选择"
+      ],
+      "primaryFacet": "cn.trans.udp::UDP服务与协议选择",
+      "review_note": "UDP服务与协议选择",
+      "stem_sha256": "2f41c49df4d0d43ed86a2349f0cb84f22e64336d07dae09baf879602b9b5dba6",
+      "previous_kp_ids": [
+        "cn.trans.udp"
+      ]
+    },
+    "cn-big-5.2-3": {
+      "kp_ids": [
+        "cn.net.ip",
+        "cn.trans.udp"
+      ],
+      "facets": [
+        "cn.net.ip::IPv4首部与分片"
+      ],
+      "primaryFacet": "cn.net.ip::IPv4首部与分片",
+      "review_note": "IPv4首部与分片",
+      "stem_sha256": "906a1d3474cb33a14b9c36f04e67964ed40bfd079503ec6084f7bb60cb1505cf",
+      "previous_kp_ids": [
+        "cn.trans.udp"
+      ]
+    },
+    "cn-big-5.2-5": {
+      "kp_ids": [
+        "cn.net.ip",
+        "cn.trans.udp"
+      ],
+      "facets": [
+        "cn.net.ip::IPv4首部与分片"
+      ],
+      "primaryFacet": "cn.net.ip::IPv4首部与分片",
+      "review_note": "IPv4首部与分片",
+      "stem_sha256": "015023ac7bd43028d6a22efe2f23ee50f1eeb7970205127e98c2e73d50dc3bde",
+      "previous_kp_ids": [
+        "cn.trans.udp"
+      ]
+    },
+    "cn-big-5.2-4": {
+      "kp_ids": [
+        "cn.trans.udp"
+      ],
+      "facets": [
+        "cn.trans.udp::UDP首部与端口"
+      ],
+      "primaryFacet": "cn.trans.udp::UDP首部与端口",
+      "review_note": "UDP首部与端口",
+      "stem_sha256": "08fa5e4f57f8b2f94a304bf92e897bc76fae1d64b40e324c230c52056664b842",
+      "previous_kp_ids": [
+        "cn.trans.udp"
+      ]
+    },
+    "cn-big-5.3-1": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::序号确认与可靠传输"
+      ],
+      "primaryFacet": "cn.trans.tcp::序号确认与可靠传输",
+      "review_note": "序号确认与可靠传输",
+      "stem_sha256": "570cfb36d395db27edd1574abe99181896a723914ccfef7cecea7e80890b3fa4",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-2": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::序号确认与可靠传输"
+      ],
+      "primaryFacet": "cn.trans.tcp::序号确认与可靠传输",
+      "review_note": "序号确认与可靠传输",
+      "stem_sha256": "2098d01ab4f80d2956589707cc1d9dd7a7b27ccecda06e5f2727b63a54e29f7e",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-3": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::序号确认与可靠传输"
+      ],
+      "primaryFacet": "cn.trans.tcp::序号确认与可靠传输",
+      "review_note": "序号确认与可靠传输",
+      "stem_sha256": "1c1aae1ea90e099ba07c9df4a2219c93e5bc5a36ea7e878fba620de01b473729",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-6": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::序号确认与可靠传输"
+      ],
+      "primaryFacet": "cn.trans.tcp::序号确认与可靠传输",
+      "review_note": "序号确认与可靠传输",
+      "stem_sha256": "71a1d113fa5dbad61343bc98851ffb27a004e3f424d64eda94ed9efcbf570678",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-9": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::序号确认与可靠传输"
+      ],
+      "primaryFacet": "cn.trans.tcp::序号确认与可靠传输",
+      "review_note": "序号确认与可靠传输",
+      "stem_sha256": "9f223d201d9d1648e4cf6d4824e1f2bb0e8a0910f4f490010562aed9e7170b8c",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-4": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::窗口限制与吞吐量"
+      ],
+      "primaryFacet": "cn.trans.tcp::窗口限制与吞吐量",
+      "review_note": "窗口限制与吞吐量",
+      "stem_sha256": "559b28637f157a9ef2746e76e4db756e681e2c0bc02ac51048e1ff4b6babb1ca",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-5": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::窗口限制与吞吐量"
+      ],
+      "primaryFacet": "cn.trans.tcp::窗口限制与吞吐量",
+      "review_note": "窗口限制与吞吐量",
+      "stem_sha256": "d5602b77ffc13f6895d9e8de57bbf65e4fc634020d587d6e8a54255b587c8f65",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-10": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::窗口限制与吞吐量"
+      ],
+      "primaryFacet": "cn.trans.tcp::窗口限制与吞吐量",
+      "review_note": "窗口限制与吞吐量",
+      "stem_sha256": "b77785504d447c3d8126920592675a758912bede88ffbdfbaa9b190717545414",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-7": {
+      "kp_ids": [
+        "cn.trans.cong"
+      ],
+      "facets": [
+        "cn.trans.cong::拥塞窗口与慢开始"
+      ],
+      "primaryFacet": "cn.trans.cong::拥塞窗口与慢开始",
+      "review_note": "拥塞窗口与慢开始",
+      "stem_sha256": "fcbce302446c968197533d4ca40dff16c0f479aa4f575bcede25d828c4312bc3",
+      "previous_kp_ids": [
+        "cn.trans.cong"
+      ]
+    },
+    "cn-big-5.3-8": {
+      "kp_ids": [
+        "cn.trans.cong"
+      ],
+      "facets": [
+        "cn.trans.cong::拥塞窗口与慢开始"
+      ],
+      "primaryFacet": "cn.trans.cong::拥塞窗口与慢开始",
+      "review_note": "拥塞窗口与慢开始",
+      "stem_sha256": "98cba54a7f0ef318681c4daf516f2df991e1f7694767d7a36ee930504797e452",
+      "previous_kp_ids": [
+        "cn.trans.cong"
+      ]
+    },
+    "cn-big-5.3-11": {
+      "kp_ids": [
+        "cn.trans.cong"
+      ],
+      "facets": [
+        "cn.trans.cong::拥塞窗口与慢开始"
+      ],
+      "primaryFacet": "cn.trans.cong::拥塞窗口与慢开始",
+      "review_note": "拥塞窗口与慢开始",
+      "stem_sha256": "7b03a9d52b55b962e02c023c1f886830eaee77d765326c77659addf74bdd4897",
+      "previous_kp_ids": [
+        "cn.trans.cong"
+      ]
+    },
+    "cn-big-5.3-12": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::TCP首部与连接管理"
+      ],
+      "primaryFacet": "cn.trans.tcp::TCP首部与连接管理",
+      "review_note": "TCP首部与连接管理",
+      "stem_sha256": "cf167348e1ceccd9ffa3ca81a77f787541a85342e2ca3ac0a376d1cdba2ce401",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-13": {
+      "kp_ids": [
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.tcp::TCP首部与连接管理"
+      ],
+      "primaryFacet": "cn.trans.tcp::TCP首部与连接管理",
+      "review_note": "TCP首部与连接管理",
+      "stem_sha256": "a28b38890a23b52bb2bf4e415f22f63e0965fb29443e2998c75287d53ff93685",
+      "previous_kp_ids": [
+        "cn.trans.tcp"
+      ]
+    },
+    "cn-big-5.3-14": {
+      "kp_ids": [
+        "cn.trans.cong",
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.trans.cong::拥塞窗口与接收窗口约束"
+      ],
+      "primaryFacet": "cn.trans.cong::拥塞窗口与接收窗口约束",
+      "review_note": "拥塞窗口与接收窗口约束",
+      "stem_sha256": "0bca8f1738d1879b8cb759b011ea8ee94e505af3800b459406f1ed0f7e4cda07",
+      "previous_kp_ids": [
+        "cn.trans.cong"
+      ]
+    },
+    "cn-big-6.2-1": {
+      "kp_ids": [
+        "cn.app.dns"
+      ],
+      "facets": [
+        "cn.app.dns::域名解析缓存与传输"
+      ],
+      "primaryFacet": "cn.app.dns::域名解析缓存与传输",
+      "review_note": "域名解析缓存与传输",
+      "stem_sha256": "77af609a842ccd047782f029661669f136f609b8e068980062e4a8b845403537",
+      "previous_kp_ids": [
+        "cn.app.dns"
+      ]
+    },
+    "cn-big-6.2-2": {
+      "kp_ids": [
+        "cn.app.dns"
+      ],
+      "facets": [
+        "cn.app.dns::域名解析缓存与传输"
+      ],
+      "primaryFacet": "cn.app.dns::域名解析缓存与传输",
+      "review_note": "域名解析缓存与传输",
+      "stem_sha256": "6442cdf9a2986b6a3d7c67a100078fe39c9980d5fc05bc4b2ac369015505ae3d",
+      "previous_kp_ids": [
+        "cn.app.dns"
+      ]
+    },
+    "cn-big-6.3-1": {
+      "kp_ids": [
+        "cn.app.other"
+      ],
+      "facets": [
+        "cn.app.other::FTP控制连接与数据连接"
+      ],
+      "primaryFacet": "cn.app.other::FTP控制连接与数据连接",
+      "review_note": "FTP控制连接与数据连接",
+      "stem_sha256": "0c0c6eaacc797135ce3bbfa966f8f405b3aa510c5189168c595a138a688fd3c1",
+      "previous_kp_ids": [
+        "cn.app.other"
+      ]
+    },
+    "cn-big-6.3-2": {
+      "kp_ids": [
+        "cn.app.other"
+      ],
+      "facets": [
+        "cn.app.other::FTP控制连接与数据连接"
+      ],
+      "primaryFacet": "cn.app.other::FTP控制连接与数据连接",
+      "review_note": "FTP控制连接与数据连接",
+      "stem_sha256": "eb6536b75817bc3e228ff61cf7f42da65238ac06557cf2d6101a8cc6719fdc56",
+      "previous_kp_ids": [
+        "cn.app.other"
+      ]
+    },
+    "cn-big-6.3-3": {
+      "kp_ids": [
+        "cn.app.other"
+      ],
+      "facets": [
+        "cn.app.other::FTP控制连接与数据连接"
+      ],
+      "primaryFacet": "cn.app.other::FTP控制连接与数据连接",
+      "review_note": "FTP控制连接与数据连接",
+      "stem_sha256": "afe40255855f7e65309474dfd2e01abb28f8f671a75e8b86e86964d3b9b18af9",
+      "previous_kp_ids": [
+        "cn.app.other"
+      ]
+    },
+    "cn-big-6.3-4": {
+      "kp_ids": [
+        "cn.app.other",
+        "cn.trans.cong",
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.app.other::FTP与TCP传输过程"
+      ],
+      "primaryFacet": "cn.app.other::FTP与TCP传输过程",
+      "review_note": "FTP与TCP传输过程",
+      "stem_sha256": "1f69d767d33c10c2c8c842fb07e783bece1b18f39ddad71246b3d679d2a13a97",
+      "previous_kp_ids": [
+        "cn.app.other"
+      ]
+    },
+    "cn-big-6.4-1": {
+      "kp_ids": [
+        "cn.app.http"
+      ],
+      "facets": [
+        "cn.app.http::邮件协议与应用语义"
+      ],
+      "primaryFacet": "cn.app.http::邮件协议与应用语义",
+      "review_note": "邮件协议与应用语义",
+      "stem_sha256": "de43e75e5a03da6c348bc5ad0a21f5f453f2d0d5be4807e3282fa3ed068285b4",
+      "previous_kp_ids": [
+        "cn.app.http"
+      ]
+    },
+    "cn-big-6.4-2": {
+      "kp_ids": [
+        "cn.app.http"
+      ],
+      "facets": [
+        "cn.app.http::邮件协议与应用语义"
+      ],
+      "primaryFacet": "cn.app.http::邮件协议与应用语义",
+      "review_note": "邮件协议与应用语义",
+      "stem_sha256": "a1ff9b2365f7cd798ca42c25099fd3c1e3f9964a67ec4112506094586511cc54",
+      "previous_kp_ids": [
+        "cn.app.http"
+      ]
+    },
+    "cn-big-6.4-3": {
+      "kp_ids": [
+        "cn.app.http"
+      ],
+      "facets": [
+        "cn.app.http::邮件协议与应用语义"
+      ],
+      "primaryFacet": "cn.app.http::邮件协议与应用语义",
+      "review_note": "邮件协议与应用语义",
+      "stem_sha256": "374bfb8572550f3b07b53b1e903e0789be19c6df7687ec8dcc049ba78503af7f",
+      "previous_kp_ids": [
+        "cn.app.http"
+      ]
+    },
+    "cn-big-6.5-1": {
+      "kp_ids": [
+        "cn.app.http",
+        "cn.app.dns",
+        "cn.net.icmp"
+      ],
+      "facets": [
+        "cn.app.http::Web访问与跨层封装"
+      ],
+      "primaryFacet": "cn.app.http::Web访问与跨层封装",
+      "review_note": "Web访问与跨层封装",
+      "stem_sha256": "567cd8ac5d00e346c47aa0905f45ef09bd9ba518b2755d8dd376360a3739525f",
+      "previous_kp_ids": [
+        "cn.app.http"
+      ]
+    },
+    "cn-big-6.5-3": {
+      "kp_ids": [
+        "cn.app.http",
+        "cn.app.dns",
+        "cn.net.icmp"
+      ],
+      "facets": [
+        "cn.app.http::Web访问与跨层封装"
+      ],
+      "primaryFacet": "cn.app.http::Web访问与跨层封装",
+      "review_note": "Web访问与跨层封装",
+      "stem_sha256": "a0aa2f9998ee989482ef8074428e895d104bbe90102212690c12ff3a8f3dde70",
+      "previous_kp_ids": [
+        "cn.app.http"
+      ]
+    },
+    "cn-big-6.5-4": {
+      "kp_ids": [
+        "cn.app.http",
+        "cn.app.dns",
+        "cn.net.icmp"
+      ],
+      "facets": [
+        "cn.app.http::Web访问与跨层封装"
+      ],
+      "primaryFacet": "cn.app.http::Web访问与跨层封装",
+      "review_note": "Web访问与跨层封装",
+      "stem_sha256": "e82bac79359c053a6eab971908a50e0eda1a452db30797153284d84cfa4393ee",
+      "previous_kp_ids": [
+        "cn.app.http"
+      ]
+    },
+    "cn-big-6.5-2": {
+      "kp_ids": [
+        "cn.app.http",
+        "cn.trans.tcp"
+      ],
+      "facets": [
+        "cn.app.http::HTTP连接复用与时延"
+      ],
+      "primaryFacet": "cn.app.http::HTTP连接复用与时延",
+      "review_note": "HTTP连接复用与时延",
+      "stem_sha256": "5c65f45c0063d688aa91bc08b5ea65b5d140aad64ab5bb9ec92caeeea5c695d4",
+      "previous_kp_ids": [
+        "cn.app.http"
+      ]
+    }
+  }
+}

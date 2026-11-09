@@ -1,7 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { kgBookDrillPath, kgKpPath, kgMapPath, kgModulePath, parseKgSubject, kgSubjectSlug, practiceReturnLabel, practiceReturnPath } from "./paths";
+import { cs408SingleQuestionPath, knowledgeCheckPath } from "./paths";
 
 describe("kg paths", () => {
+  it("单题抽检携带安全返回地址，基础自检入口保留题型与排序", () => {
+    const path = "/review-priority?subject=cs408&kind=big&book=os&kp=os.file.alloc";
+    const url = new URL(cs408SingleQuestionPath(2020, 45, path), "https://example.com");
+    expect(url.searchParams.get("single")).toBe("1");
+    expect(url.searchParams.get("q")).toBe("45");
+    expect(url.searchParams.get("returnTo")).toBe(path);
+    expect(cs408SingleQuestionPath(2020, 45, "https://evil.example")).not.toContain("returnTo");
+    const check = new URL(knowledgeCheckPath("co.io.channel", "kind=big&order=recent&kp=os.io.disk"), "https://example.com");
+    expect(check.searchParams.get("kind")).toBe("big");
+    expect(check.searchParams.get("check")).toBe("1");
+    expect(check.hash).toBe("#knowledge-check");
+    expect(check.searchParams.has("kp")).toBe(false);
+  });
   it("splits 408 and math map URLs", () => {
     expect(kgMapPath("cs408")).toBe("/kg/cs408");
     expect(kgMapPath("math")).toBe("/kg/math");

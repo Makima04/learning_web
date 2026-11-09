@@ -4,6 +4,7 @@ import { findKp } from "@/data/kg";
 import type { BookId, SubjectId, UserItemMark, UserKpState } from "./types";
 import type { ExamAttempt } from "./examAttempts";
 import type { WangdaoItem } from "./wangdao408";
+import { buildCs408Diagnostic, type Cs408Diagnostic } from "./cs408Diagnostic";
 
 export type Math1Book = "calc" | "linear" | "prob";
 export type AnalysisOrder = "personal" | "frequency" | "recent";
@@ -66,6 +67,8 @@ export interface ReviewTopic {
   sampleCount: number;
   due: boolean;
   priority: number;
+  /** 408 区分抽检证据与完整考法覆盖，避免一题通过就判稳。 */
+  diagnostic?: Cs408Diagnostic;
 }
 export type Math1Topic = ReviewTopic;
 
@@ -110,19 +113,29 @@ export function buildReviewTopics(
     const practiceConfidence = sampleWeight ? recentMarks.reduce((sum, m, i) => sum
       + (m.mark === "pass" ? .9 : m.mark === "fuzzy" ? .4 : .1) / (i + 1), 0) / sampleWeight : null;
     // 有当前题型记录时优先使用它；图谱只作共同基础参考，不把大题表现冒充选择/填空表现。
-    const confidence = practiceConfidence === null ? graphConfidence
+    let confidence = practiceConfidence === null ? graphConfidence
       : graphConfidence === null ? practiceConfidence : .7 * practiceConfidence + .3 * graphConfidence;
     const confidenceSource: Math1Topic["confidenceSource"] = practiceConfidence !== null ? "kind"
       : graphConfidence !== null ? "graph" : "unknown";
-    const status: Math1Topic["status"] = confidence === null ? "unknown"
+    let status: Math1Topic["status"] = confidence === null ? "unknown"
       : (kindMarks[0]?.mark === "fail" || (confidenceSource === "graph" && st?.status === "weak") || confidence < .35) ? "weak"
       : confidence < .8 ? "learning" : "stable";
+    const diagnostic = found.book.subject === "cs408"
+      ? buildCs408Diagnostic({ kpId, kind, questions }, catalog, marks, attempts, now) : undefined;
+    if (diagnostic) {
+      // 百分比仅作排序启发式：抽检未完成有上限，基础自检不提供整类题型掌握证据。
+      const cap = diagnostic.status === "stable" ? .85 : diagnostic.status === "preliminary" || diagnostic.status === "due" ? .7 : .55;
+      if (diagnostic.status === "weak") confidence = Math.min(confidence ?? .25, .3);
+      else if (confidence !== null || diagnostic.checksPassed) confidence = Math.min(confidence ?? .45, cap);
+      status = diagnostic.status === "weak" ? "weak" : diagnostic.status === "stable" ? "stable"
+        : confidence === null ? "unknown" : "learning";
+    }
     const annualShare = (year: number) => questions.filter((q) => q.year === year)
       .reduce((sum, q) => sum + q.points, 0) / (totals.get(year) || 1);
     const pointShare = dataset.years.reduce((sum, y) => sum + annualShare(y), 0) / dataset.years.length;
     const recentPointShare = recentYears.reduce((sum, y) => sum + annualShare(y), 0) / recentYears.length;
     const cost = Math.max(...questions.map((q) => q.cost));
-    const due = confidence !== null && Boolean(st?.due && st.due <= now);
+    const due = diagnostic ? diagnostic.status === "due" : confidence !== null && Boolean(st?.due && st.due <= now);
     // 成本为相对人工估计；未知保持中性，不直接当成完全不会。
     const gap = confidence === null ? .5 : Math.max(.08, 1 - confidence);
     const priority = (.4 * pointShare + .6 * recentPointShare) * gap
@@ -133,7 +146,7 @@ export function buildReviewTopics(
       years: [...new Set(questions.map((q) => q.year))].sort((a, b) => a - b),
       recentYears: [...new Set(questions.filter((q) => q.year >= dataset.recentStart).map((q) => q.year))],
       totalPoints: questions.reduce((sum, q) => sum + q.points, 0), pointShare, recentPointShare,
-      cost, facets: [...new Set(questions.flatMap((q) => q.facets))],
+      cost, facets: [...new Set(questions.flatMap((q) => q.facets))], diagnostic,
       prerequisites: [...new Set([...(found.kp.prereqs ?? []), ...(PREREQUISITES[kpId] ?? [])])],
       status, confidence, confidenceSource, sampleCount, due, priority,
     };
@@ -183,6 +196,7 @@ export function matchReviewTraining(
       : Boolean(item.source && item.source !== "wangdao")) continue;
     // 包括补基础也保持当前题型，不在选择/填空页静默推荐大题。
     if (item.kind !== topic.kind) continue;
+    if (!expand && item.diagnostic_eligible === false) continue;
     if (waitingIds.has(item.id) && !dueIds.has(item.id)) continue;
     if (markMap.get(item.id) === "pass" && !dueIds.has(item.id)) continue;
     const sameTopic = item.kp_ids.includes(topic.kpId);

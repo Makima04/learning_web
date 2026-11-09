@@ -65,7 +65,8 @@ async fn main() -> anyhow::Result<()> {
         .merge(routes::api_router())
         .merge(routes::spa_router())
         .layer(axum::middleware::from_fn_with_state(
-            state.clone(), routes::system_update::maintenance,
+            state.clone(),
+            routes::system_update::maintenance,
         ))
         .layer(CompressionLayer::new())
         .layer(TraceLayer::new_for_http())

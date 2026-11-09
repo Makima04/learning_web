@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LaTeX 重排试验 · 随机 10 道排版复杂题</title>
+<link rel="stylesheet" href="katex/katex.min.css" />
+<style>
+  :root {
+    --ink:#17181c; --muted:#6b7280; --line:#e6e7eb; --paper:#fff; --bg:#f4f5f7;
+    --fs: 17px;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.7 -apple-system,"PingFang SC","Noto Sans SC",sans-serif;
+    -webkit-font-smoothing:antialiased; }
+
+  .bar { position:sticky; top:0; z-index:20; background:rgba(244,245,247,.92);
+    backdrop-filter:saturate(180%) blur(12px); border-bottom:1px solid var(--line); }
+  .bar-in { max-width:1240px; margin:0 auto; padding:12px 32px; display:flex; gap:18px;
+    align-items:center; flex-wrap:wrap; }
+  .bar b { font-size:14px; font-weight:600; margin-right:auto; }
+  .seg { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#fff; }
+  .seg button { border:0; background:#fff; color:#4b5563; font:13px/1 inherit; padding:7px 11px; cursor:pointer; }
+  .seg button + button { border-left:1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background:#17181c; color:#fff; }
+
+  .sheet { max-width:1240px; margin:0 auto; padding:32px 32px 72px; }
+  header h1 { font-size:23px; margin:0 0 8px; letter-spacing:-.01em; }
+  header p { margin:0; color:var(--muted); font-size:14px; max-width:76ch; }
+  .stats { display:flex; gap:28px; margin:22px 0 30px; flex-wrap:wrap; }
+  .stat { min-width:120px; }
+  .stat dt { font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.08em;
+    text-transform:uppercase; color:#9ca3af; margin-bottom:6px; }
+  .stat dd { margin:0; font-size:19px; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+
+  .q { background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:22px 24px 18px; margin-bottom:22px; }
+  .qhead { display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .no { font:600 12px/1 ui-monospace,Menlo,monospace; color:#fff; background:#17181c;
+    border-radius:6px; padding:4px 7px; }
+  .qid { font:12px/1 ui-monospace,Menlo,monospace; color:#6b7280; }
+  .feat { display:flex; gap:6px; flex-wrap:wrap; margin-left:auto; }
+  .feat span { font-size:11px; color:#4b5563; background:#eef0f4; border-radius:999px; padding:3px 8px; }
+
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:22px; }
+  .col-h { font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.08em;
+    text-transform:uppercase; color:#9ca3af; margin-bottom:8px; }
+  .orig { background:#f0f1f4; border-radius:10px; padding:14px; }
+  .orig img { display:block; width:100%; height:auto; border-radius:4px; }
+  .cap { font:11px/1.5 ui-monospace,Menlo,monospace; color:#9ca3af; margin-top:9px; }
+
+  .render { font-size:var(--fs); line-height:1.95; color:#111; }
+  .render .stem { white-space:normal; }
+  .opts { display:grid; grid-template-columns:1fr 1fr; gap:4px 18px; margin-top:12px; }
+  .opts.one { grid-template-columns:1fr; }
+  .opts > div { font-size:var(--fs); line-height:1.95; }
+  .katex-display { margin:.5em 0 !important; }
+  details { margin-top:14px; border-top:1px dashed var(--line); padding-top:10px; }
+  summary { cursor:pointer; font:11px/1 ui-monospace,Menlo,monospace; letter-spacing:.04em;
+    color:#9ca3af; list-style:none; }
+  summary::-webkit-details-marker { display:none; }
+  summary::before { content:"▸ "; }
+  details[open] summary::before { content:"▾ "; }
+  pre { margin:10px 0 0; padding:12px; background:#f7f8fa; border-radius:8px;
+    font:12px/1.6 ui-monospace,Menlo,monospace; color:#374151; white-space:pre-wrap; word-break:break-word; }
+
+  /* 深色 */
+  body.dark { --ink:#e7e9ee; --bg:#0f1115; --line:#262b34; --paper:#161920; }
+  body.dark .bar { background:rgba(15,17,21,.92); }
+  /* 深色下原图不反相：反相会毁掉抗锯齿，只用白纸卡片托住 */
+  body.dark .orig { background:#fbfbfc; }
+  body.dark .orig .cap { color:#6b7280; }
+  body.dark .render { color:#eaecef; }
+  body.dark .katex { color:#eaecef; }
+  body.dark pre { background:#0b0d11; color:#9aa3b2; }
+  body.dark .seg, body.dark .seg button { background:#161920; color:#c7ccd6; }
+  body.dark .seg button[aria-pressed="true"] { background:#e7e9ee; color:#111; }
+
+  footer { color:var(--muted); font-size:13px; border-top:1px solid var(--line); padding-top:18px; }
+  body.mobile .sheet { max-width:440px; }
+  body.mobile .cols { grid-template-columns:1fr; }
+  body.mobile .opts { grid-template-columns:1fr; }
+  body.mobile .feat { display:none; }
+  @media (max-width:900px){ .cols{grid-template-columns:1fr} .bar-in,.sheet{padding-left:18px;padding-right:18px} }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-in">
+    <b>LaTeX 重排试验 · 10 / 2272</b>
+    <div class="seg" id="fsSeg">
+      <button data-fs="15px">小</button><button data-fs="17px" aria-pressed="true">标准</button><button data-fs="21px">大</button>
+    </div>
+    <div class="seg" id="wSeg">
+      <button data-w="0" aria-pressed="true">桌面</button><button data-w="1">手机</button>
+    </div>
+    <div class="seg" id="darkSeg">
+      <button data-dark="0" aria-pressed="true">浅色</button><button data-dark="1">深色</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet">
+  <header>
+    <h1>同样的题，右边是重排出来的</h1>
+    <p>从 2272 道题里随机抽 10 道带真实排版负担的（分式、求和、分段函数、方程组、行内极限），逐题看图转录成 LaTeX、用 KaTeX 渲染。
+       左右两侧内容完全一致，左图就是现在线上看到的样子。</p>
+    <div class="stats">
+      <div class="stat"><dt>抽样</dt><dd>10 题</dd></div>
+      <div class="stat"><dt>转录方式</dt><dd>人工逐题</dd></div>
+      <div class="stat"><dt>单题耗时</dt><dd>1.5–3 分钟</dd></div>
+      <div class="stat"><dt>文本体积</dt><dd>0.1–0.6 KB</dd></div>
+      <div class="stat"><dt>原图平均</dt><dd>15.6 KB</dd></div>
+      <div class="stat"><dt>体积比</dt><dd>≈ 1 : 40</dd></div>
+    </div>
+  </header>
+
+  <!-- 1 -->
+  <section class="q">
+    <div class="qhead"><span class="no">01</span><span class="qid">ll-hard-15-mcq-11</span>
+      <div class="feat"><span>粗体向量</span><span>转置 T</span><span>算子 tr</span><span>四个公式选项</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/ll-hard-15-mcq-11.jpg" alt="原图"><div class="cap">995 × 313 · 12 KB · JPEG 灰阶</div></div>
+      <div>
+        <div class="render-stem2" hidden>(11) 设 $A$ 是 3 阶实对称矩阵, $B=(\boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2,\boldsymbol{\alpha}_3)$ 是 3 阶可逆矩阵, 且 $AB=(\boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2-2\boldsymbol{\alpha}_3,\boldsymbol{\alpha}_3-2\boldsymbol{\alpha}_2)$, 记 $X=(x_1,x_2,x_3)^{T}$, 则二次型 $f(x_1,x_2,x_3)=\operatorname{tr}(AXX^{T})$ 的规范形为( ).</div>
+        <div class="render-opts2" hidden>A. $y_1^2-y_2^2-y_3^2$
+B. $y_1^2+y_2^2-y_3^2$
+C. $y_1^2+y_2^2+y_3^2$
+D. $-y_1^2-y_2^2-y_3^2$</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="q">
+    <div class="qhead"><span class="no">02</span><span class="qid">ll-base-8-big-4</span>
+      <div class="feat"><span>4 个求和式</span><span>嵌套分式</span><span>负指数</span><span>2×2 版式</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/ll-base-8-big-4.jpg" alt="原图"><div class="cap">995 × 380 · 15 KB · JPEG 灰阶</div></div>
+      <div>
+        <div class="render-stem2" hidden>(4) 求下列级数的收敛域:
+$$(\mathrm{I})\ \sum_{n=1}^{\infty}\frac{x^{n^{2}}}{2^{n}};\qquad(\mathrm{II})\ \sum_{n=1}^{\infty}\frac{x^{2n+1}}{3^{n}+n^{2}};$$
+$$(\mathrm{III})\ \sum_{n=1}^{\infty}\left(1+\frac{1}{n}\right)^{-n^{2}}x^{n};\qquad(\mathrm{IV})\ \sum_{n=2}^{\infty}\left(\frac{1}{n\ln n}+\frac{1}{2^{n}}\right)x^{n}.$$</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="q">
+    <div class="qhead"><span class="no">03</span><span class="qid">ll-hard-18-big-9</span>
+      <div class="feat"><span>分段函数 cases</span><span>两小问</span><span>行内公式密集</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/ll-hard-18-big-9.jpg" alt="原图"><div class="cap">995 × 348 · 14 KB · JPEG 灰阶</div></div>
+      <div>
+        <div class="render-stem2" hidden>(9) 设某手机一个月的需求量 $X$ 是随机变量, 其概率密度为
+$$f(x)=\begin{cases}x\mathrm{e}^{-x}, & x>0,\\ 0, & x\leqslant 0.\end{cases}$$
+记 $k$ 个月的需求量为 $Y_k$, 设各个月的需求量相互独立.
+(I) 求 $Y_2$ 与 $Y_3$ 的概率密度函数 $f_2(x)$ 与 $f_3(x)$;
+(II) 记连续三个月中的月最大需求量为 $Y$, 求 $Y$ 的概率密度函数.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="q">
+    <div class="qhead"><span class="no">04</span><span class="qid">ll-base-13-mcq-1</span>
+      <div class="feat"><span>选项内分式</span><span>希腊字母下标</span><span>2×2 选项</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/ll-base-13-mcq-1.jpg" alt="原图"><div class="cap">995 × 297 · 12 KB · JPEG 灰阶</div></div>
+      <div>
+        <div class="render-stem2" hidden>(1) 已知 $\eta_1,\eta_2$ 是非齐次线性方程组 $Ax=b$ 的两个不同解, $\xi_1,\xi_2$ 是对应齐次线性方程组 $Ax=0$ 的基础解系, $k_1,k_2$ 为任意常数, 则 $Ax=b$ 的通解为( ).</div>
+        <div class="render-opts2" data-cols="1" hidden>A. $k_1\xi_1+k_2(\xi_1+\xi_2)+\dfrac{\eta_1-\eta_2}{2}$
+B. $k_1\xi_1+k_2(\xi_1-\xi_2)+\dfrac{\eta_1+\eta_2}{2}$
+C. $k_1\xi_1+k_2(\eta_1+\eta_2)+\dfrac{\eta_1-\eta_2}{2}$
+D. $k_1\xi_1+k_2(\eta_1-\eta_2)+\dfrac{\eta_1+\eta_2}{2}$</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="q">
+    <div class="qhead"><span class="no">05</span><span class="qid">zy-hard-hs-3-17</span>
+      <div class="feat"><span>行内极限带下标</span><span>一列四个选项</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/zy-hard-hs-3-17.jpg" alt="原图"><div class="cap">812 × 275 · 13 KB · JPEG 灰阶</div></div>
+      <div>
+        <div class="render-stem2" hidden>17. 设 $f(x)$ 在 $x=a$ 的某邻域内有定义, 在 $x=a$ 的某去心邻域内可导, 下述论断正确的是( ).</div>
+        <div class="render-opts2" data-cols="1" hidden>(A) 若 $\lim\limits_{x\to a}f'(x)=A$, 则 $f'(a)=A$
+(B) 若 $f'(a)=A$, 则 $\lim\limits_{x\to a}f'(x)=A$
+(C) 若 $\lim\limits_{x\to a}f'(x)=\infty$, 则 $f'(a)$ 不存在
+(D) 若 $f'(a)$ 不存在, 则 $\lim\limits_{x\to a}f'(x)=\infty$</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="q">
+    <div class="qhead"><span class="no">06</span><span class="qid">ll-hard-8-mcq-9</span>
+      <div class="feat"><span>递推数列</span><span>行内求和（上下限）</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/ll-hard-8-mcq-9.jpg" alt="原图"><div class="cap">995 × 363 · 13 KB · JPEG 灰阶</div></div>
+      <div>
+        <div class="render-stem2" hidden>(9) 设正值数列 $\{a_n\},\{b_n\}$ 满足 $b_1=1$, $b_{n+1}(b_{n+1}-b_n)=a_n\ (n=1,2,\cdots)$, 则 $\{b_n\}$ 收敛是级数 $\sum\limits_{n=1}^{\infty}a_n$ 收敛的( ).</div>
+        <div class="render-opts2" hidden>A. 充分非必要条件
+B. 必要非充分条件
+C. 充分必要条件
+D. 既非充分也非必要条件</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="q">
+    <div class="qhead"><span class="no">07</span><span class="qid">zy-hard-la-5-10</span>
+      <div class="feat"><span>四元方程组 cases</span><span>公式编号 (*)</span><span>粗体向量</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/zy-hard-la-5-10.jpg" alt="原图"><div class="cap">812 × 309 · 16 KB · 底部残留下一题碎片</div></div>
+      <div>
+        <div class="render-stem2" hidden>10. 设 $\boldsymbol{\alpha}_1=[1,-2,1,0,0]^{T}$, $\boldsymbol{\alpha}_2=[1,-2,0,1,0]^{T}$, $\boldsymbol{\alpha}_3=[0,0,1,-1,0]^{T}$, $\boldsymbol{\alpha}_4=[1,-2,3,-2,0]^{T}$ 是线性方程组
+$$\begin{cases}x_1+x_2+x_3+x_4+x_5=0,\\ 3x_1+2x_2+x_3+x_4-3x_5=0,\\ x_2+2x_3+2x_4+6x_5=0,\\ 5x_1+4x_2+3x_3+3x_4-x_5=0\end{cases}\tag{*}$$
+的解向量, 则 $\boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2,\boldsymbol{\alpha}_3,\boldsymbol{\alpha}_4$ 能否构成方程组 $(*)$ 的基础解系? 若能, 说明理由; 若不能, 请增或减向量, 使之成为基础解系.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="q">
+    <div class="qhead"><span class="no">08</span><span class="qid">ll-base-22-big-13</span>
+      <div class="feat"><span>帽子符号</span><span>分式</span><span>样本记号</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/ll-base-22-big-13.jpg" alt="原图"><div class="cap">995 × 313 · 12 KB · JPEG 灰阶</div></div>
+      <div>
+        <div class="render-stem2" hidden>(13) 设总体 $X\sim U(0,\theta)\ (\theta>0)$, $(X_1,X_2,\cdots,X_n)$ 为 $X$ 的简单随机样本, $X_{(n)}=\max\{X_1,X_2,\cdots,X_n\}$.
+(I) 证明: $\hat{\theta}_1=2\bar{X}$, $\hat{\theta}_2=\frac{n+1}{n}X_{(n)}$ 是 $\theta$ 的无偏估计;
+(II) 当 $n\geqslant 2$ 时, $\hat{\theta}_1$ 和 $\hat{\theta}_2$ 哪一个有效?</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="q">
+    <div class="qhead"><span class="no">09</span><span class="qid">ll-hard-9-big-9</span>
+      <div class="feat"><span>曲线积分</span><span>行内大号 ∫</span><span>两小问</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/ll-hard-9-big-9.jpg" alt="原图"><div class="cap">995 × 338 · 15 KB · 顶部残留上一题碎片</div></div>
+      <div>
+        <div class="render-stem2" hidden>(9) 设曲面 $\Sigma: z=x^{2}+y^{2}\ (z\leqslant 1)$ 与平面 $z=1$ 所围均匀立体为 $V$, $M$ 为 $\Sigma$ 上一动点, 当曲面 $\Sigma$ 在点 $M$ 处的切平面与 $V$ 的质心距离最近时, 点 $M$ 的轨迹方程记为 $L$.
+(I) 求 $V$ 的质心坐标;
+(II) 求曲线 $L$, 并计算 $I=\int_{L}x\,\mathrm{d}y-y\,\mathrm{d}x+z\,\mathrm{d}z$, 从 $Oz$ 轴的正向往负向看去, $L$ 取逆时针方向.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="q">
+    <div class="qhead"><span class="no">10</span><span class="qid">zy-base-prob-3-13</span>
+      <div class="feat"><span>二项分布</span><span>分段密度</span><span>条件概率竖线</span></div></div>
+    <div class="cols">
+      <div class="orig"><img src="img/zy-base-prob-3-13.jpg" alt="原图"><div class="cap">812 × 248 · 12 KB · JPEG 灰阶</div></div>
+      <div>
+        <div class="render-stem2" hidden>13. 设随机变量 $X$ 与 $Y$ 相互独立, 且 $X$ 服从二项分布 $B\left(2,\dfrac{1}{2}\right)$, $Y$ 的概率密度为
+$$f_Y(y)=\begin{cases}4y^{3}, & 0\leqslant y\leqslant 1,\\ 0, & \text{其他},\end{cases}$$
+记 $Z=X+Y$, 求:
+(1) $P\left\{Z\leqslant \dfrac{5}{2}\ \middle|\ X>1\right\}$;
+(2) $Z$ 的概率密度.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    原图为线上同一文件；右侧为本页现场用 KaTeX 渲染，未做任何截图。
+    字号、宽度、深浅色三个开关只作用于渲染侧：文本能跟着换行和缩放，图片只能等比缩小。
+    深色模式下原图刻意不反相——反相会毁掉抗锯齿，只用白纸卡片托住。
+  </footer>
+</div>
+
+<script src="katex/katex.min.js"></script>
+<script src="katex/contrib/auto-render.min.js"></script>
+<script>
+(function () {
+  var DELIMS = [
+    { left: "$$", right: "$$", display: true },
+    { left: "$", right: "$", display: false }
+  ];
+
+  document.querySelectorAll("section.q").forEach(function (q) {
+    var stemSrc = q.querySelector(".render-stem2");
+    var optsSrc = q.querySelector(".render-opts2");
+    if (!stemSrc) return;
+
+    var body = document.createElement("div");
+    body.className = "render";
+
+    var stem = document.createElement("div");
+    stem.className = "stem";
+    stem.textContent = stemSrc.textContent.trim();
+    body.appendChild(stem);
+
+    var rawSource = stemSrc.textContent.trim();
+
+    if (optsSrc) {
+      var opts = document.createElement("div");
+      opts.className = "opts" + (optsSrc.dataset.cols === "1" ? " one" : "");
+      optsSrc.textContent.trim().split("\n").forEach(function (line) {
+        var d = document.createElement("div");
+        d.textContent = line.trim();
+        opts.appendChild(d);
+      });
+      body.appendChild(opts);
+      rawSource += "\n\n" + optsSrc.textContent.trim();
+    }
+
+    var det = document.createElement("details");
+    det.innerHTML = "<summary>LaTeX 源码</summary><pre></pre>";
+    det.querySelector("pre").textContent = rawSource;
+    body.appendChild(det);
+
+    stemSrc.parentNode.insertBefore(body, stemSrc);
+    stemSrc.remove();
+    if (optsSrc) optsSrc.remove();
+
+    renderMathInElement(body, { delimiters: DELIMS, throwOnError: false, strict: false });
+  });
+
+  // 字号
+  var fsSeg = document.getElementById("fsSeg");
+  fsSeg.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    document.documentElement.style.setProperty("--fs", b.dataset.fs);
+    [].forEach.call(fsSeg.children, function (x) { x.setAttribute("aria-pressed", x === b); });
+  });
+  // 深链：index.html#mobile / #dark
+  function press(seg, attr, val) {
+    if (!seg) return;
+    [].forEach.call(seg.children, function (x) { x.setAttribute("aria-pressed", x.dataset[attr] === val); });
+  }
+  if (location.hash.indexOf("mobile") >= 0) { document.body.classList.add("mobile"); press(wSeg, "w", "1"); }
+  if (location.hash.indexOf("dark") >= 0) { document.body.classList.add("dark"); press(darkSeg, "dark", "1"); }
+
+  // 宽度
+  var wSeg = document.getElementById("wSeg");
+  wSeg.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    document.body.classList.toggle("mobile", b.dataset.w === "1");
+    [].forEach.call(wSeg.children, function (x) { x.setAttribute("aria-pressed", x === b); });
+  });
+  // 深浅
+  var darkSeg = document.getElementById("darkSeg");
+  darkSeg.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    document.body.classList.toggle("dark", b.dataset.dark === "1");
+    [].forEach.call(darkSeg.children, function (x) { x.setAttribute("aria-pressed", x === b); });
+  });
+})();
+</script>
+</body>
+</html>

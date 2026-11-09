@@ -40,8 +40,20 @@ mod tests {
     #[test]
     fn offset_is_clamped() {
         // 极端偏移不 panic，仍返回合法日期
-        assert!(today_naive_with_offset(100_000).format("%Y-%m-%d").to_string().len() == 10);
-        assert!(today_naive_with_offset(-100_000).format("%Y-%m-%d").to_string().len() == 10);
+        assert!(
+            today_naive_with_offset(100_000)
+                .format("%Y-%m-%d")
+                .to_string()
+                .len()
+                == 10
+        );
+        assert!(
+            today_naive_with_offset(-100_000)
+                .format("%Y-%m-%d")
+                .to_string()
+                .len()
+                == 10
+        );
     }
 
     #[test]

@@ -19,6 +19,7 @@ import {
   type ExamSession,
   type Verdict,
 } from "@/lib/kg/examAttempts";
+import { practiceReturnPath, practiceReturnLabel } from "@/lib/kg/paths";
 import { syncExamAttemptToJournal } from "@/lib/kg/examJournal";
 import { useKgProgress } from "@/stores/kgProgress";
 import { Button } from "@/components/ui/button";
@@ -190,6 +191,8 @@ export function Cs408PracticePage() {
   const year = Number(yearParam);
   const mode: Mode = search.get("mode") === "mock" ? "mock" : "practice";
   const startQ = Math.max(1, Number(search.get("q")) || 1);
+  const single = mode === "practice" && search.get("single") === "1";
+  const returnTo = practiceReturnPath(search.get("returnTo"));
 
   const load = useKgProgress((s) => s.load);
   const recordAttempt = useKgProgress((s) => s.recordAttempt);
@@ -202,7 +205,7 @@ export function Cs408PracticePage() {
 
   const [paper, setPaper] = useState<ExamPaper | null>(null);
   const [err, setErr] = useState("");
-  const [idx, setIdx] = useState(startQ - 1);
+  const [idx, setIdx] = useState(single ? 0 : startQ - 1);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
   const [finished, setFinished] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -220,6 +223,7 @@ export function Cs408PracticePage() {
     let cancelled = false;
     setPaper(null);
     setErr("");
+    setIdx(single ? 0 : startQ - 1);
     setAnswers({});
     setFinished(false);
     loadCs408ExamPaper(year)
@@ -234,7 +238,7 @@ export function Cs408PracticePage() {
           year,
           mode,
           startedAt,
-          itemIds: p.items.map((it) => examItemId(year, it.n)),
+          itemIds: (single ? p.items.filter((it) => it.n === startQ) : p.items).map((it) => examItemId(year, it.n)),
         });
       })
       .catch((e: unknown) => {
@@ -243,7 +247,7 @@ export function Cs408PracticePage() {
     return () => {
       cancelled = true;
     };
-  }, [year, mode, saveExamSession]);
+  }, [year, mode, single, startQ, saveExamSession]);
 
   useEffect(() => {
     if (!paper || finished) return;
@@ -251,7 +255,7 @@ export function Cs408PracticePage() {
     return () => window.clearInterval(t);
   }, [paper, finished]);
 
-  const items = paper?.items ?? [];
+  const items = useMemo(() => single ? paper?.items.filter((it) => it.n === startQ) ?? [] : paper?.items ?? [], [paper, single, startQ]);
   const item = items[idx];
   const itemId = item ? examItemId(year, item.n) : "";
   const state: AnswerState = answers[itemId] ?? { submitted: false };
@@ -402,8 +406,8 @@ export function Cs408PracticePage() {
           year={year}
           mode={mode}
           report={report}
-          backTo="/kg/exams"
-          backLabel="返回年份列表"
+          backTo={returnTo ?? "/kg/exams"}
+          backLabel={returnTo ? practiceReturnLabel(returnTo) : "返回年份列表"}
         />
       </div>
     );
@@ -425,7 +429,7 @@ export function Cs408PracticePage() {
       <div className="sticky top-16 z-10 rounded-2xl border-2 border-border/70 bg-card/95 p-3 backdrop-blur">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <span className="font-semibold">
-            {year} 年 · {mode === "mock" ? "整卷模考" : "逐题练习"}
+            {year} 年 · {mode === "mock" ? "整卷模考" : single ? "单题抽检" : "逐题练习"}
           </span>
           <span className="text-muted-foreground">
             第 <b className="tabular-nums text-foreground">{idx + 1}</b>/{items.length} 题
@@ -440,7 +444,7 @@ export function Cs408PracticePage() {
                 交卷
               </Button>
             )}
-            <Button size="sm" variant="ghost" className={cn(TAP, FOCUS)} onClick={() => navigate(`/kg/exams/${year}`)}>
+            <Button size="sm" variant="ghost" className={cn(TAP, FOCUS)} onClick={() => navigate(returnTo ?? `/kg/exams/${year}`)}>
               结束
             </Button>
           </div>

@@ -945,10 +945,7 @@ mod fill_cloze_tests {
             "options": {"B": "occupied", "A": "displayed", "D": "equipped", "C": "located"}
         })];
         let text = items_corpus(&items);
-        assert_eq!(
-            text,
-            "A) displayed; B) occupied; C) located; D) equipped."
-        );
+        assert_eq!(text, "A) displayed; B) occupied; C) located; D) equipped.");
     }
 
     #[test]

@@ -16,6 +16,7 @@ from pathlib import Path
 
 import fitz
 from ocrmac import ocrmac
+from wangdao_overlay import apply_reviewed_overlay
 
 ROOT = Path("/Users/makima/program/web/english_web")
 DOWNLOADS = Path("/Users/makima/Downloads")
@@ -858,8 +859,9 @@ def classify(questions: list[dict]) -> list[dict]:
     for q in questions:
         kps = assign_kps(q)
         q["kp_ids"] = kps
-        q["kp_names"] = [KP_NAME.get(k, k) for k in kps]
         q["id"] = f"{q['book']}-{q['kind']}-{q['section']}-{q['qno']}"
+        apply_reviewed_overlay(q)
+        q["kp_names"] = [KP_NAME.get(k, k) for k in q["kp_ids"]]
     return questions
 
 
@@ -1037,6 +1039,9 @@ def main() -> int:
             row["options"] = q["options"]
         if q.get("answer"):
             row["answer"] = q["answer"]
+        for key in ("facets", "primaryFacet", "classificationNote", "diagnostic_eligible"):
+            if key in q:
+                row[key] = q[key]
         slim.append(row)
     PUBLIC_CATALOG.parent.mkdir(parents=True, exist_ok=True)
     PUBLIC_CATALOG.write_text(

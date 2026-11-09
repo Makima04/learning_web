@@ -9,6 +9,7 @@ vi.mock("@/lib/api", () => apiMocks);
 
 import { flushPending, getSyncStatus } from "@/lib/syncQueue";
 import { useKgProgress } from "@/stores/kgProgress";
+import { cs408CheckId } from "@/lib/kg/cs408Diagnostic";
 
 describe("kgProgress itemNotes", () => {
   afterEach(() => vi.restoreAllMocks());
@@ -87,5 +88,26 @@ describe("kgProgress itemNotes", () => {
     useKgProgress.setState({ itemMarks: [] });
     useKgProgress.getState().load();
     expect(useKgProgress.getState().itemMarks).toEqual([latest]);
+  });
+
+  it("408闭卷检验不抬高图谱掌握度，结果及复测日期经队列同步到另一设备", async () => {
+    const clock = vi.spyOn(Date, "now").mockReturnValue(1794182400000);
+    apiMocks.isLoggedIn.mockReturnValue(true);
+    useKgProgress.getState().recordKnowledgeCheck("os.file.alloc", "application", "pass");
+    const first = useKgProgress.getState().itemMarks[0];
+    expect(first.itemId).toBe(cs408CheckId("os.file.alloc", "application"));
+    expect(useKgProgress.getState().states).toEqual({});
+    clock.mockReturnValue(first.ts + 3 * 86400000);
+    useKgProgress.getState().recordKnowledgeCheck("os.file.alloc", "application", "pass");
+    await flushPending();
+    const remote = apiMocks.putKg.mock.calls.at(-1)![0];
+    expect(remote.itemMarks[0].passStartedAt).toBe(first.ts);
+    expect(remote.itemMarks[0].passTimes).toHaveLength(2);
+    localStorage.clear();
+    useKgProgress.setState({ itemMarks: [], states: {}, updatedAt: 0 });
+    apiMocks.getKg.mockResolvedValue({ kg: remote, updated_at: remote.updatedAt });
+    await useKgProgress.getState().syncFromServer();
+    expect(useKgProgress.getState().itemMarks).toEqual(remote.itemMarks);
+    expect(useKgProgress.getState().states).toEqual({});
   });
 });

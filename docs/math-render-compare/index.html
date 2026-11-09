@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>数学题显示方式对比 · 李林880 (1)</title>
+<style>
+  :root { --ink:#17181c; --muted:#6b7280; --line:#e6e7eb; --paper:#fff; --bg:#f4f5f7; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.65 -apple-system,"PingFang SC","Noto Sans SC",sans-serif; -webkit-font-smoothing:antialiased; }
+  .sheet { max-width:1360px; margin:0 auto; padding:40px 32px 56px; }
+  header h1 { font-size:24px; margin:0 0 6px; letter-spacing:-.01em; }
+  header p { margin:0; color:var(--muted); font-size:14px; }
+  .rule { height:1px; background:var(--line); margin:24px 0 32px; }
+
+  .row { display:grid; grid-template-columns:250px minmax(0,1fr); gap:32px; align-items:start; margin-bottom:40px; }
+  .meta { position:sticky; top:24px; }
+  .tag { display:inline-block; font:600 11px/1 ui-monospace,Menlo,monospace; letter-spacing:.08em;
+    text-transform:uppercase; padding:5px 8px; border-radius:999px; background:#e8eaef; color:#4b5563; margin-bottom:10px; }
+  .tag.best { background:#dcfce7; color:#166534; }
+  .tag.now { background:#fee2e2; color:#991b1b; }
+  .meta h2 { font-size:16px; margin:0 0 8px; }
+  .meta dl { margin:0; font-size:13px; color:var(--muted); }
+  .meta dt { color:#9ca3af; font-size:11px; letter-spacing:.04em; margin-top:10px; }
+  .meta dd { margin:2px 0 0; color:#374151; font-variant-numeric:tabular-nums; }
+
+  .stage { background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:24px 32px 18px; }
+  .stage img { display:block; width:100%; height:auto; }
+  .zoom { margin-top:16px; overflow:hidden; height:120px; border-top:1px dashed var(--line); padding-top:14px; }
+  .zoom .inner { width:236%; }
+  .zoom img { width:100%; }
+  .zoomcap { font:11px/1.5 ui-monospace,Menlo,monospace; color:#9ca3af; letter-spacing:.03em; margin-top:8px; }
+  .note { margin-top:12px; font-size:13px; color:#92400e; background:#fffbeb; border:1px solid #fde68a;
+    border-radius:8px; padding:8px 12px; }
+
+  table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font:600 11px/1 ui-monospace,Menlo,monospace; letter-spacing:.06em; text-transform:uppercase; color:#9ca3af; }
+  td.num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .bad { color:#b91c1c; } .good { color:#15803d; } .mid { color:#b45309; }
+  footer { border-top:1px solid var(--line); padding-top:18px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <h1>同一道题，两种裁法</h1>
+    <p>都在 1080px 宽的作答台里、2 倍像素密度（Retina）下渲染。下半部分是同一处放大 2.36 倍的细节。</p>
+  </header>
+  <div class="rule"></div>
+
+  <section class="row">
+    <div class="meta">
+      <span class="tag now">现状</span>
+      <h2>JPEG 灰阶 · 995px</h2>
+      <dl>
+        <dt>源尺寸</dt><dd>995 × 215 px</dd>
+        <dt>文件</dt><dd>8.2 KB</dd>
+        <dt>1080px 容器</dt><dd>0.92× 拉伸</dd>
+        <dt>乘以 2× 屏</dt><dd class="bad">1.84× 插值</dd>
+      </dl>
+    </div>
+    <div class="stage">
+      <img src="a-995.jpg" alt="JPEG 995px" />
+      <div class="zoom"><div class="inner"><img src="a-995.jpg" alt="" style="margin-top:-104px" /></div></div>
+      <div class="zoomcap">放大 2.36× · 上标 cos x 的笔画已发灰断开，分数线边缘起锯齿</div>
+      <div class="note">另外：这一刀把「一、选择题」栏目标题也切了进来，占了约 40% 的高度却不带任何题目信息。</div>
+    </div>
+  </section>
+
+  <section class="row">
+    <div class="meta">
+      <span class="tag best">推荐</span>
+      <h2>PNG 灰阶 · 300 dpi</h2>
+      <dl>
+        <dt>源尺寸</dt><dd>2181 × 390 px</dd>
+        <dt>文件</dt><dd>18 KB</dd>
+        <dt>1080px 容器</dt><dd>2.0× 降采样</dd>
+        <dt>乘以 2× 屏</dt><dd class="good">1.0× 原样</dd>
+      </dl>
+    </div>
+    <div class="stage">
+      <img src="b-300dpi.png" alt="PNG 300dpi" />
+      <div class="zoom" style="height:100px"><div class="inner"><img src="b-300dpi.png" alt="" style="margin-top:-30px" /></div></div>
+      <div class="zoomcap">同样放大 2.36× · 笔画实心、抗锯齿干净</div>
+      <div class="note">题号起点取代栏目标题作为上边界，纵向留白同时收紧约 45%。</div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <table>
+    <thead><tr><th>方案</th><th>清晰度</th><th>体积/题</th><th>可选中·可搜索</th><th>落地成本</th><th>出错风险</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>现状 JPEG 995px</td>
+        <td class="bad">2× 屏偏糊，大屏更糊</td>
+        <td class="num">8 KB</td><td class="bad">否</td><td class="num">0</td><td class="good">无</td>
+      </tr>
+      <tr>
+        <td>高 DPI 重裁（300 dpi PNG）</td>
+        <td class="good">任何屏都锐，放大到 200% 仍清晰</td>
+        <td class="num">18 KB</td><td class="bad">否</td><td class="num">一个脚本，1 小时</td><td class="good">无（只换像素）</td>
+      </tr>
+      <tr>
+        <td>SVG 矢量重裁</td>
+        <td class="good">无限缩放、可打印</td>
+        <td class="num">92 KB（gzip）</td><td class="bad">否</td><td class="num">需清洗导出瑕疵</td><td class="mid">填充/字体兼容要逐张验</td>
+      </tr>
+      <tr>
+        <td>OCR → LaTeX 文本重排</td>
+        <td class="good">最锐、可换行、字号自适应</td>
+        <td class="num">1 KB</td><td class="good">是</td><td class="num">2272 题 + 人工校对</td><td class="bad">公式识别错 = 题目错</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <footer>
+    尺寸与体积为实测：裁剪范围取源 PDF 第 3 页第 1 题，PyMuPDF 渲染；两种裁法内容完全相同。
+  </footer>
+</div>
+</body>
+</html>

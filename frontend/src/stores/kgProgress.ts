@@ -5,6 +5,7 @@ import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { discardPendingKgIfNotNewer, enqueueKg } from "@/lib/syncQueue";
 import { applyItemMark, applyMarkToKp, markCovered } from "@/lib/kg/mark";
 import { nextPracticeMark } from "@/lib/kg/techniqueTraining";
+import { cs408CheckId, type Cs408CheckPart } from "@/lib/kg/cs408Diagnostic";
 import { findKp } from "@/data/kg";
 import { journalCopyForKp } from "@/lib/kg/journalBridge";
 import { upsertItemNotes } from "@/lib/kg/itemNote";
@@ -123,6 +124,8 @@ interface KgStore extends KgDoc {
   }) => void;
   /** 思路备注：不改变掌握度，空文本则删除 */
   saveItemNote: (itemId: string, note: string) => void;
+  /** 闭卷基础自检单独记证据，不增加图谱整考点掌握度；复用 /api/kg 队列。 */
+  recordKnowledgeCheck: (kpId: string, part: Cs408CheckPart, mark: Exclude<MarkLevel, "skip">) => void;
   /**
    * 外部（学习日志复盘）回写考点：applyMarkToKp + 可选对齐 due/ivl。
    * 与 markItem 共用同一套熟练度增量。
@@ -224,6 +227,17 @@ export const useKgProgress = create<KgStore>((set, get) => ({
       nextPracticeMark(get().itemMarks.find((m) => m.itemId === itemId), itemId, mark, now, weakKpIds),
     ].slice(-20000);
     const doc: KgDoc = { ...get(), states, itemMarks, updatedAt: now };
+    persist(doc);
+    set(doc);
+  },
+
+  recordKnowledgeCheck: (kpId, part, mark) => {
+    if (findKp(kpId)?.book.subject !== "cs408") return;
+    const now = Date.now();
+    const itemId = cs408CheckId(kpId, part);
+    const itemMarks = [...get().itemMarks.filter((m) => m.itemId !== itemId),
+      nextPracticeMark(get().itemMarks.find((m) => m.itemId === itemId), itemId, mark, now)].slice(-20000);
+    const doc: KgDoc = { ...get(), itemMarks, updatedAt: now };
     persist(doc);
     set(doc);
   },
