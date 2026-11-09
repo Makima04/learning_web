@@ -13,7 +13,7 @@ import {
 } from "@/lib/kg/reviewPriority";
 import { computeRoi, kindPointsPerPaper, pct, practiceMinutes, type RoiInfo } from "@/lib/kg/reviewRoi";
 import type { BookId, SubjectId } from "@/lib/kg/types";
-import { mathFacetName, practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
+import { itemsForSource, MATH_BOOK_SOURCES, mathFacetName, practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
 import { buildTechniquePlan, type TechniquePlan, type TrainingReason } from "@/lib/kg/techniqueTraining";
 import type { Math1TrainingMatch } from "@/lib/kg/math1Analysis";
 import { hydratePracticeItems } from "@/lib/kg/catalogLoad";
@@ -165,6 +165,9 @@ export function ReviewPriorityPage() {
   const kinds = subject === "math" ? MATH1_KINDS : (["big", "mcq"] as const);
   const kindLabel = MATH1_KIND_NAMES[kind];
   const recentSamples = dataset.years.filter((y) => y >= dataset.recentStart).length;
+  const rawSource = params.get("src");
+  const source = subject === "math" && (rawSource === "lilin880" || rawSource === "zhangyu1000") ? rawSource : null;
+  const sourceLabel = source ? SOURCE_NAMES[source] : "李林 880、张宇 1000";
 
   const [open, setOpen] = useState(() => params.has("kp"));
   const [infoOpen, setInfoOpen] = useState(false);
@@ -190,12 +193,16 @@ export function ReviewPriorityPage() {
   const userId = useAuth((s) => s.user?.id);
   const entries = useJournal((s) => s.entries);
   const { items, error } = useDrillCatalog(subject === "math" ? "math" : "wangdao");
+  // 来源仅限制本次训练候选；个人排序仍使用完整题库中的历史作答证据。
+  const trainingItems = useMemo(() => items ? itemsForSource(items, source) : null, [items, source]);
 
   useEffect(() => {
     load();
     trainingRequest.current++;
     setActive(null);
     setQueue([]);
+    setQueueIndex(0);
+    setExpand(false);
     setNotice("");
     setAllEvidence(false);
     // 复用账号同步：先推离线 pending，再拉服务端图谱/错题快照。
@@ -212,12 +219,15 @@ export function ReviewPriorityPage() {
     }
     setActive(null);
     setQueue([]);
+    setQueueIndex(0);
+    setExpand(false);
+    setNotice("");
     setExpanded(false);
     setAllEvidence(false);
     setShowAllTraining(false);
     setInfoOpen(false);
     trainingRequest.current++;
-  }, [subject, book, kind]);
+  }, [subject, book, kind, source]);
 
   latestIndex.current = queueIndex;
 
@@ -277,29 +287,29 @@ export function ReviewPriorityPage() {
     return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); };
   }, []);
   const techniquePlans = useMemo(() => new Map(topics.map((t) => [t.kpId,
-    buildTechniquePlan(t, items ?? [], marks, dueIds, waitingIds, trainingNow),
-  ])), [topics, items, marks, entries, trainingNow]);
+    buildTechniquePlan(t, trainingItems ?? [], marks, dueIds, waitingIds, trainingNow),
+  ])), [topics, trainingItems, marks, entries, trainingNow]);
   const techniquePlan = selected ? techniquePlans.get(selected.kpId) : undefined;
   const hasTechniques = techniquePlan?.groups.some((g) => g.total > 0) ?? false;
   const training: TrainingRow[] = selected && techniquePlan ? selectTechniqueTraining(techniquePlan,
-    matchReviewTraining(selected, items ?? [], marks, states, dueIds, waitingIds), dueIds) : [];
+    matchReviewTraining(selected, trainingItems ?? [], marks, states, dueIds, waitingIds), dueIds) : [];
   const trainingIds = new Set(training.map((r) => r.item.id));
   const allTraining: TrainingRow[] = selected ? [...training,
-    ...matchReviewTraining(selected, items ?? [], marks, states, dueIds, waitingIds, true).filter((r) => !trainingIds.has(r.item.id)),
+    ...matchReviewTraining(selected, trainingItems ?? [], marks, states, dueIds, waitingIds, true).filter((r) => !trainingIds.has(r.item.id)),
   ] : [];
 
   // 首屏行动卡：每个考点给一道「现在就能做」的题。
   const starters = useMemo(() => {
     const map = new Map<string, WangdaoItem>();
-    if (!items) return map;
+    if (!trainingItems) return map;
     for (const t of top3) {
       const plan = techniquePlans.get(t.kpId)!;
-      const [first] = selectTechniqueTraining(plan, matchReviewTraining(t, items, marks, states, dueIds, waitingIds), dueIds);
+      const [first] = selectTechniqueTraining(plan, matchReviewTraining(t, trainingItems, marks, states, dueIds, waitingIds), dueIds);
       if (first) map.set(t.kpId, first.item);
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [top3, items, marks, states, dueIds, waitingIds, techniquePlans]);
+  }, [top3, trainingItems, marks, states, dueIds, waitingIds, techniquePlans]);
 
   const unknownCount = ranked.filter((t) => t.status === "unknown").length;
   const weakCount = ranked.filter((t) => t.status === "weak").length;
@@ -314,17 +324,23 @@ export function ReviewPriorityPage() {
 
   function choose(key: string, value: string) {
     const next = new URLSearchParams(params);
-    next.set(key, value);
+    if (key === "src" && value === "all") next.delete(key);
+    else next.set(key, value);
     if (key === "subject") {
       next.delete("book");
       next.delete("kp");
+      next.delete("src");
       if (value === "cs408" && kind === "fill") next.set("kind", "big");
     }
     if (key === "book" || key === "kind") next.delete("kp");
     if (key === "subject" || key === "book" || key === "kind") setOpen(false);
+    // 切换题集时立即作废未完成的加载，避免旧题目异步回来覆盖新筛选。
+    trainingRequest.current++;
     setParams(next, { replace: true });
     setActive(null);
     setQueue([]);
+    setQueueIndex(0);
+    setExpand(false);
     setNotice("");
     setAllEvidence(false);
     setShowAllTraining(false);
@@ -421,11 +437,18 @@ export function ReviewPriorityPage() {
   } : null;
   /** 大屏只看题面：作答台在场时才生效，否则隐藏右栏会变成空白页。 */
   const stageFull = expand && wide && !!practiceProps;
+  const sourceFilter = subject === "math" && (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-[11px] font-semibold text-muted-foreground">练习题集</span>
+      <Seg label="选择练习题集" value={source ?? "all"} onChange={(v) => choose("src", v)}
+        items={[{ value: "all", label: "全部题集" }, ...MATH_BOOK_SOURCES.map((s) => ({ value: s.id, label: SOURCE_NAMES[s.id] }))]} />
+    </div>
+  );
 
   return (
     <div className="min-h-full">
 
-      {/* ---------- 工具条：四层筛选压成一行，滚动时吸顶 ---------- */}
+      {/* ---------- 工具条：学科 / 题型 / 分科 / 排序，数学另有题集筛选 ---------- */}
       <div className="sticky top-0 z-20 border-b-2 border-border/60 bg-background/92 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-3 py-2 md:flex-nowrap md:px-6">
           {/* 手机：学科 + 题型在首行、分科折到第二行；桌面合并成一行。筛选项多时各自横向滚动，排序与口径固定在右侧 */}
@@ -487,6 +510,7 @@ export function ReviewPriorityPage() {
             {books.map((id) => <Chip key={id} active={book === id} onClick={() => choose("book", id)}>{REVIEW_BOOK_NAMES[id]}</Chip>)}
           </div>
         </div>
+        {sourceFilter && <div className="mx-auto max-w-6xl px-3 pb-2 md:px-6">{sourceFilter}</div>}
       </div>
 
       <div className="mx-auto max-w-6xl space-y-5 p-4 pb-16 md:p-6">
@@ -818,6 +842,7 @@ export function ReviewPriorityPage() {
                     ? "每种技巧先检验两道不同题，优先搭配基础题与不同来源或层级的对照题；不熟练时推荐补练，首轮通过后 3 天复测。每次可只练 2～3 题。"
                     : "当前题库缺少可用的技巧细分，暂按考点推荐；不据此判定技巧已全面覆盖。已会题及未到期错题会避开。"}
                 </p>
+                {sourceFilter && <div className="mt-3">{sourceFilter}</div>}
                 {hasTechniques && techniquePlan && (
                   <details open className="mt-3 rounded-xl border border-border/70 bg-secondary/30 p-3">
                     <summary className="cursor-pointer text-xs font-bold">
@@ -855,8 +880,8 @@ export function ReviewPriorityPage() {
                     <Play className="h-3.5 w-3.5" />连续做 {Math.min(3, queueList.length)} 题 · 约 {queueList.slice(0, 3).reduce((s, t) => s + practiceMinutes(t.item.kind ?? kind), 0)} 分钟
                   </Button>
                 )}
-                {!items && !error && <p className="mt-2 text-xs text-muted-foreground">正在查找{subject === "math" ? "李林 880、张宇 1000" : "王道 408"}的匹配题…</p>}
-                {items && queueList.length === 0 && <p className="mt-2 text-xs text-muted-foreground">{hasTechniques ? "本轮暂没有待练题，可先换一个考点；复测到期后会重新推荐。缺题技巧仍保留未完成状态。" : "当前没有适合的新题或到期题，可直接做下方真题检验。"}</p>}
+                {!items && !error && <p className="mt-2 text-xs text-muted-foreground">正在查找{subject === "math" ? sourceLabel : "王道 408"}的匹配题…</p>}
+                {items && queueList.length === 0 && <p className="mt-2 text-xs text-muted-foreground">{source ? `${sourceLabel}在当前考点和题型下暂无待练题，可切换题集或考点，或做下方真题检验。` : hasTechniques ? "本轮暂没有待练题，可先换一个考点；复测到期后会重新推荐。缺题技巧仍保留未完成状态。" : "当前没有适合的新题或到期题，可直接做下方真题检验。"}</p>}
                 {wide && active && (
                   <p className="mt-2 rounded-xl bg-primary/10 px-3 py-2 text-[11px] font-semibold text-primary">
                     第 {queueIndex + 1} 题正在左侧大屏作答，点下面任意一题可换题。
@@ -960,7 +985,7 @@ export function ReviewPriorityPage() {
                 )}
               </details>
 
-              <Link className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline" to={kgKpPath(selected.kpId, { subject, returnTo: location.pathname + location.search + location.hash })}>
+              <Link className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline" to={kgKpPath(selected.kpId, { subject, src: source, returnTo: location.pathname + location.search + location.hash })}>
                 查看图谱与全部练习 <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
