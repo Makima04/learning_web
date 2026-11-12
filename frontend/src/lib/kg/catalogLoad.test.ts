@@ -60,6 +60,12 @@ describe("catalogLoad keys", () => {
     expect(catalogIdOf({ source: "zhangyu1000" })).toBe("zhangyu1000");
     expect(catalogIdOf({})).toBe("wangdao");
   });
+
+  it("王道有原题图时仍加载文字题干，保留书面答题与解析入口", () => {
+    const question = item({ id: "ds-big-6.4-2", book: "ds", kind: "big", img: "/cs408/img/wangdao/ds-big-6.4-2.webp" });
+    expect(needsHydrate(question)).toBe(true);
+    expect(needsHydrate({ ...question, stem: "已知有向图如下图所示" })).toBe(false);
+  });
 });
 
 describe("split catalogs on disk", () => {

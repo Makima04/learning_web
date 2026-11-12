@@ -80,7 +80,7 @@ def split_public_catalog(catalog_path: Path) -> Path:
         shards.append({"key": key, "file": filename, "count": len(groups[key])})
 
     index = {
-        "ver": "split-20261109b",
+        "ver": "split-20261112-wd-all-images",
         "count": len(items),
         "shards": shards,
         "items": [slim_item(q) for q in items],

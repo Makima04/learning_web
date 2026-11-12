@@ -28,7 +28,7 @@ export interface WangdaoItem {
   part?: string;
   /** 原书题组：基础题 / 综合题 / 拓展题（题号在每组各自从头编） */
   band?: string;
-  /** 原页裁图（数学公式用，优先于 stem 文本） */
+  /** 原页裁图（保留图表、公式和完整小问，优先于 OCR stem 文本） */
   img?: string;
   /** 张宇解析册裁图 */
   ans_img?: string;

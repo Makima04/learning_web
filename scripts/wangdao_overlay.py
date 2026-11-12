@@ -5,6 +5,7 @@ import hashlib
 import json
 from functools import lru_cache
 from pathlib import Path
+from wangdao_images import apply_question_image
 
 ROOT = Path(__file__).resolve().parent.parent
 OVERLAY_PATH = ROOT / "scripts/wangdao_item_overlay.json"
@@ -16,6 +17,7 @@ def reviewed_items() -> dict[str, dict]:
 
 
 def apply_reviewed_overlay(question: dict) -> dict:
+    apply_question_image(question)
     qid = question.get("id") or f"{question['book']}-{question['kind']}-{question['section']}-{question['qno']}"
     review = reviewed_items().get(qid)
     if review is None:

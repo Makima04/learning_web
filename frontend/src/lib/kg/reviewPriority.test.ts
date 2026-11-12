@@ -4,6 +4,8 @@ import { buildReviewTopics, matchReviewTraining, REVIEW_DATASETS, REVIEW_BOOKS, 
 import { legacyMathReviewPath } from "./paths";
 import type { ExamAttempt } from "./examAttempts";
 import type { WangdaoItem } from "./wangdao408";
+import { existsSync, readFileSync } from "node:fs";
+import { math1PracticePath, math1QuestionImage } from "./math1Practice";
 
 describe("统一复习性价比的数据范围", () => {
   it("数学保留三类题，408 只用合格统计卷且题型、分科、图谱均匹配", () => {
@@ -66,6 +68,21 @@ describe("408 学习证据与配套训练", () => {
 });
 
 describe("新入口与真题深链", () => {
+  it("数学各题型直达逐题练习和解析，保留返回筛选且媒体齐全", () => {
+    const returnTo = "/review-priority?subject=math&kind=fill&book=linear&order=recent&kp=la.det.calc";
+    for (const question of REVIEW_DATASETS.math.items) {
+      for (const answer of [false, true]) {
+        const url = new URL(reviewQuestionHref("math", question, answer, returnTo), "http://localhost");
+        expect(url.pathname).toBe(`/review-priority/exams/math1/${question.year}/${question.n}`);
+        expect(url.searchParams.get("answer")).toBe(answer ? "1" : null);
+        expect(url.searchParams.get("returnTo")).toBe(returnTo);
+        const path = `public${math1QuestionImage(question, answer)}`;
+        expect(existsSync(path), path).toBe(true);
+        expect(readFileSync(path).subarray(8, 12).toString(), path).toBe("WEBP");
+      }
+    }
+    expect(math1PracticePath(REVIEW_DATASETS.math.items[0], false, "//evil.example")).not.toContain("returnTo");
+  });
   it("旧数学链接迁移时保留题型和考点，408 原题直达作答或答案位置", () => {
     const redirect = legacyMathReviewPath("?kind=fill&book=linear&kp=la.eig.value&subject=cs408");
     const url = new URL(redirect, "http://localhost");

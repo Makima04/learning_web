@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
-import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, ExternalLink, Info, Maximize2, Minimize2, Play, Target, Timer, X } from "lucide-react";
+import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, Info, Maximize2, Minimize2, Play, Target, Timer, X } from "lucide-react";
 import { findKp } from "@/data/kg";
 import { syncAccountData } from "@/lib/accountSync";
 import { isDueOnOrBefore } from "@/lib/journal";
@@ -708,7 +708,7 @@ export function ReviewPriorityPage() {
           <p className="mt-2">个人排序综合近五年与长期的主考点分值占比、当前掌握缺口、相对补齐成本和到期复习状态。未记录的考点采用中性起点，不视为不会；排名不代表下一年命题概率。</p>
           <p>{subject === "math" ? "2009—2020：选择 8 题/32 分、填空 6 题/24 分、大题 9 题/94 分。2021—2026：选择 10 题/50 分、填空 6 题/30 分、大题 6 题/70 分。" : "408 统计卷每年选择 40 题/80 分、大题 7 题/70 分。规则草稿、回忆版及分值合计异常卷暂不进入排行。"}各题型分别归一化、分别排序。近五年为 {dataset.recentStart}—{dataset.years[dataset.years.length - 1]}，其中 {recentSamples} 个有效年份。</p>
           <p>{dataset.classificationNote} {dataset.costNote} 性价比分是同科目同题型内的相对值，预计提分按当前缺口估算，不代表考试得分。</p>
-          <p>{subject === "math" ? "数学 PDF 为社区重排版，保留原页公式、水印与合订本页码。" : "408 沿用项目已有真题与主考点标注，扫描答案的 OCR 质量提示在原题页展示。"}{loggedIn ? "练习标记沿用账号同步与错题复习队列。" : "当前使用访客学习记录，登录后按账号同步。"}</p>
+          <p>{subject === "math" ? "数学真题按题展示，题面与解析保留社区重排版的公式和图形。" : "408 沿用项目已有真题与主考点标注，扫描答案的 OCR 质量提示在原题页展示。"}{loggedIn ? "练习标记沿用账号同步与错题复习队列。" : "当前使用访客学习记录，登录后按账号同步。"}</p>
           <div className="mt-1 flex flex-wrap gap-4">
             {subject === "math" ? (
               <>
@@ -966,27 +966,14 @@ export function ReviewPriorityPage() {
                 <summary className="cursor-pointer text-xs font-bold">真题依据 · {selected.questions.length} 道</summary>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {selected.questions.map((q) => (
-                    subject === "math" ? (
-                      <a
-                        key={q.id}
-                        href={reviewQuestionHref(subject, q)}
-                        target="_blank"
-                        rel="noreferrer"
-                        title={`${q.year} 年 · 第 ${q.n} 题 · ${q.points} 分`}
-                        className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[11px] font-semibold text-primary ring-1 ring-border hover:bg-accent"
-                      >
-                        {q.year}<ExternalLink className="h-2.5 w-2.5" />
-                      </a>
-                    ) : (
-                      <Link
-                        key={q.id}
-                        to={reviewQuestionHref(subject, q)}
-                        title={`${q.year} 年 · 第 ${q.n} 题 · ${q.points} 分`}
-                        className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[11px] font-semibold text-primary ring-1 ring-border hover:bg-accent"
-                      >
-                        {q.year}
-                      </Link>
-                    )
+                    <Link
+                      key={q.id}
+                      to={reviewQuestionHref(subject, q, false, location.pathname + location.search)}
+                      title={`${q.year} 年 · 第 ${q.n} 题 · ${q.points} 分`}
+                      className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[11px] font-semibold text-primary ring-1 ring-border hover:bg-accent"
+                    >
+                      {q.year}
+                    </Link>
                   ))}
                 </div>
                 <button type="button" onClick={() => setAllEvidence((v) => !v)} className="mt-2 text-[11px] font-semibold text-primary hover:underline">
@@ -1001,8 +988,8 @@ export function ReviewPriorityPage() {
                           <span className="text-[10px] text-muted-foreground">{q.classification === "source_read" ? "按题补充分类" : q.classification === "llm" ? "LLM 主考点标注" : "来源主标签映射"}</span>
                         </div>
                         <div className="mt-1 flex gap-3">
-                          <a className="font-semibold text-primary hover:underline" href={reviewQuestionHref(subject, q)} target="_blank" rel="noreferrer">打开原题</a>
-                          <a className="font-semibold text-primary hover:underline" href={reviewQuestionHref(subject, q, true)} target="_blank" rel="noreferrer">参考答案</a>
+                          <Link className="font-semibold text-primary hover:underline" to={reviewQuestionHref(subject, q, false, location.pathname + location.search)}>打开原题</Link>
+                          <Link className="font-semibold text-primary hover:underline" to={reviewQuestionHref(subject, q, true, location.pathname + location.search)}>参考答案</Link>
                         </div>
                       </div>
                     ))}

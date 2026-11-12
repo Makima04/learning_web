@@ -2,7 +2,8 @@
 """从已抽取的题干重建王道关联与分片，无需重新 OCR。
 
 用法：.venv/bin/python3 scripts/apply_wangdao_overlay.py
-逐题标注源在 wangdao_item_overlay.json；不修改题干、答案、页码或题目 ID。
+逐题标注源在 wangdao_item_overlay.json；原题图与对应版本的做题本页码见
+wangdao_question_images.json。不修改 OCR 题干、答案或题目 ID。
 """
 from __future__ import annotations
 

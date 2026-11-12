@@ -3,6 +3,7 @@ import math from "@/data/kg/math1Questions.json";
 import cs408 from "@/data/kg/cs408ReviewQuestions.json";
 import { MATH1_ITEMS, type ReviewQuestion } from "./math1Analysis";
 import type { BookId, SubjectId } from "./types";
+import { math1PracticePath } from "./math1Practice";
 export { buildReviewTopics, sortReviewTopics, matchReviewTraining } from "./math1Analysis";
 export type { ReviewTopic, ReviewQuestion } from "./math1Analysis";
 
@@ -23,9 +24,8 @@ export const REVIEW_DATASETS = {
   cs408: { ...cs408, items: cs408Items },
 };
 
-export function reviewQuestionHref(subject: SubjectId, question: ReviewQuestion, answer = false): string {
+export function reviewQuestionHref(subject: SubjectId, question: ReviewQuestion, answer = false, returnTo?: string): string {
   if (subject === "cs408") return answer ? `/kg/exams/${question.year}#q${question.n}`
     : `/kg/exams/practice/${question.year}?q=${question.n}`;
-  const path = answer ? `answers/${question.year}-answer.pdf` : `${question.year}.pdf`;
-  return `/math/exams/math1/${path}#page=${answer ? question.answerPage : question.paperPage}`;
+  return math1PracticePath(question, answer, returnTo);
 }

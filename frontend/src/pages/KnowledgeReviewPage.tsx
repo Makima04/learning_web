@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, ExternalLink, Eye, EyeOff, Lightbulb, Play, Route, ScanLine } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Eye, EyeOff, Lightbulb, Play, Route, ScanLine } from "lucide-react";
 import { findKp } from "@/data/kg";
 import { CS408_KNOWLEDGE_REVIEWS } from "@/data/kg/cs408TextbookReview";
 import { cs408KnowledgeReferences } from "@/lib/kg/cs408KnowledgeReferences";
@@ -33,21 +33,19 @@ function reviewExam(questionId: string) {
 }
 
 function ExamLinks({ questionId }: { questionId: string }) {
+  const location = useLocation();
   const question = reviewExam(questionId);
   // 知识教案允许引用统计集之外的真实题目；是否计入考频与能否学习原题是两个口径。
   const csId = /^cs408-(\d{4})-q(\d+)$/.exec(questionId);
   const subject = question ? findKp(question.kpId)?.book.subject ?? "math" : "math";
   if (!question && !csId) return <span className="text-xs text-muted-foreground">原题暂不可用</span>;
-  const href = question ? reviewQuestionHref(subject, question) : `/kg/exams/practice/${csId![1]}?q=${csId![2]}`;
-  const answerHref = question ? reviewQuestionHref(subject, question, true) : `/kg/exams/${csId![1]}#q${csId![2]}`;
+  const returnTo = location.pathname + location.search;
+  const href = question ? reviewQuestionHref(subject, question, false, returnTo) : `/kg/exams/practice/${csId![1]}?q=${csId![2]}`;
+  const answerHref = question ? reviewQuestionHref(subject, question, true, returnTo) : `/kg/exams/${csId![1]}#q${csId![2]}`;
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-primary">
-      <a className="inline-flex items-center gap-1 hover:underline" href={href} target="_blank" rel="noreferrer">
-        打开原题<ExternalLink className="h-3 w-3" aria-hidden="true" />
-      </a>
-      <a className="inline-flex items-center gap-1 hover:underline" href={answerHref} target="_blank" rel="noreferrer">
-        参考解析<ExternalLink className="h-3 w-3" aria-hidden="true" />
-      </a>
+      <Link className="inline-flex items-center gap-1 hover:underline" to={href}>打开原题</Link>
+      <Link className="inline-flex items-center gap-1 hover:underline" to={answerHref}>参考解析</Link>
     </div>
   );
 }

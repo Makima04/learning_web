@@ -57,6 +57,7 @@ const KnowledgeReviewPage = lazy(() =>
   import("@/pages/KnowledgeReviewPage").then((m) => ({ default: m.KnowledgeReviewPage }))
 );
 const MathExplanationPage = lazy(() => import("@/pages/MathExplanationPage").then((m) => ({ default: m.MathExplanationPage })));
+const Math1PracticePage = lazy(() => import("@/pages/Math1PracticePage").then((m) => ({ default: m.Math1PracticePage })));
 const LegacyMathReviewRedirect = lazy(() =>
   import("@/pages/ReviewPriorityPage").then((m) => ({ default: m.LegacyMathReviewRedirect }))
 );
@@ -137,6 +138,7 @@ export default function App() {
             <Route path="kg" element={<KgIndexRedirect />} />
             <Route path="kg/predict" element={<KgPredictPage />} />
             <Route path="review-priority" element={<ReviewPriorityPage />} />
+            <Route path="review-priority/exams/math1/:year/:n" element={<Math1PracticePage />} />
             <Route path="review-priority/knowledge" element={<KnowledgeReviewPage />} />
             <Route path="review-priority/explain/:itemId" element={<MathExplanationPage />} />
             <Route path="review-priority/knowledge/:kpId" element={<KnowledgeReviewPage />} />

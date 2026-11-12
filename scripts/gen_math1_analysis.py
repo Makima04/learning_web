@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""归档 PDF + 来源逐题元数据 → 数学一分题型分析与网页 PDF（不手改生成物）。"""
+"""归档 PDF + 来源逐题元数据 → 数学一题型分析、网页 PDF 与逐题图片。"""
 import hashlib
 import json
 from pathlib import Path
@@ -7,6 +7,7 @@ import re
 import shutil
 
 import fitz
+from export_math1_question_images import export_all
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "papers/math/math1"
@@ -92,6 +93,7 @@ def main():
         "sources": source_manifest["resources"],
     }
     OUTPUT.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    export_all(items)
     print(f"生成 {len(items)} 道题（选择 156 / 填空 108 / 大题 144）与 36 份网页 PDF：{OUTPUT}")
 
 

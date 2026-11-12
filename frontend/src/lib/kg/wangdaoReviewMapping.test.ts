@@ -12,6 +12,32 @@ const overlay = read("scripts/wangdao_item_overlay.json").items as Record<string
 }>;
 
 describe("王道大题逐章核对与前端关联", () => {
+  it("430道四科大题的原题图完整入库，目录、分片与原图版本页码一致", () => {
+    const manifest = read("scripts/wangdao_question_images.json").items as Record<string, {
+      img: string; pdf_page: number; book_ans_page: number; sha256: string;
+    }>;
+    const questions = catalog.filter((q) => q.kind === "big");
+    const index: { items: WangdaoItem[] } = read("frontend/public/cs408/wangdao2027/index.json");
+    const shard: WangdaoItem[] = ["ds", "co", "os", "cn"].flatMap((book) => read(`frontend/public/cs408/wangdao2027/${book}.json`));
+    expect(questions).toHaveLength(430);
+    expect(Object.fromEntries(["ds", "co", "os", "cn"].map((book) => [book, questions.filter((q) => q.book === book).length])))
+      .toEqual({ ds: 164, co: 77, os: 110, cn: 79 });
+    expect(Object.keys(manifest).sort()).toEqual(questions.map((q) => q.id).sort());
+    for (const q of questions) {
+      const image = manifest[q.id];
+      expect(q.img, q.id).toBe(image.img);
+      expect(q.pdf_page, q.id).toBe(image.pdf_page);
+      expect(q.book_ans_page, q.id).toBe(image.book_ans_page);
+      const bytes = readFileSync(new URL(`frontend/public${image.img}`, root));
+      expect(createHash("sha256").update(bytes).digest("hex"), q.id).toBe(image.sha256);
+      expect(index.items.find((item) => item.id === q.id)?.img, q.id).toBe(image.img);
+      expect(shard.find((item) => item.id === q.id), q.id).toEqual(q);
+    }
+    // 截图中丢失有向图的题，对应新单题版 p.103、原书答案 P254。
+    expect(manifest["ds-big-6.4-2"].pdf_page).toBe(103);
+    expect(manifest["ds-big-6.4-2"].book_ans_page).toBe(254);
+  });
+
   it("430道/26章全部对应核对源，完整目录、index和分片保留相同标注", () => {
     const big = catalog.filter((q) => q.kind === "big");
     expect(big).toHaveLength(430);
@@ -28,6 +54,19 @@ describe("王道大题逐章核对与前端关联", () => {
       expect(shards.find((x) => x.id === q.id)).toEqual(q);
       expect(index.items.find((x) => x.id === q.id)?.facets).toEqual(source.facets);
     }
+  });
+
+  it("四科使用各自原件，计组同页多题与同页跨节保持正确裁切边界", () => {
+    const manifest = read("scripts/wangdao_question_images.json");
+    expect(Object.keys(manifest.sources).sort()).toEqual(["cn", "co", "ds", "os"]);
+    expect(new Set(Object.values(manifest.sources).map((s) => (s as { source_sha256: string }).source_sha256)).size).toBe(4);
+    for (const [firstId, nextId] of [["co-big-2.3-3", "co-big-2.3-4"], ["co-big-3.2-5", "co-big-3.3-1"]]) {
+      const first = manifest.items[firstId];
+      const next = manifest.items[nextId];
+      expect(first.pdf_page).toBe(next.pdf_page);
+      expect(first.crop[3]).toBeLessThanOrEqual(next.crop[1]);
+    }
+    expect(catalog.find((q) => q.id === "co-big-4.1-1")?.book_ans_page).toBe(155);
   });
 
   it("磁盘分配补回12道大题，目录、位图和磁盘调度保持各自含义", () => {

@@ -8,6 +8,7 @@ import { resolveReviewLesson, type ReviewBlock } from "./knowledgeReview";
 import { MATH1_ITEMS } from "./math1Analysis";
 import { knowledgeReviewPath } from "./paths";
 import { reviewQuestionHref } from "./reviewPriority";
+import { math1QuestionImage } from "./math1Practice";
 import type { WangdaoItem } from "./wangdao408";
 
 const template = MATH_EXTREMA_REVIEW;
@@ -33,7 +34,8 @@ describe("知识复习的原题依据", () => {
             const question = MATH1_ITEMS.find((q) => q.id === reference.questionId);
             expect(question?.kpId).toBe(template.kpId);
             for (const answer of [false, true]) {
-              const path = reviewQuestionHref("math", question!, answer).split("#")[0];
+              expect(reviewQuestionHref("math", question!, answer)).toContain(`/review-priority/exams/math1/${question!.year}/${question!.n}`);
+              const path = math1QuestionImage(question!, answer);
               expect(existsSync(new URL(`../../../public${path}`, import.meta.url))).toBe(true);
             }
           } else {

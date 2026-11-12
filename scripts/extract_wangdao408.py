@@ -1039,7 +1039,7 @@ def main() -> int:
             row["options"] = q["options"]
         if q.get("answer"):
             row["answer"] = q["answer"]
-        for key in ("facets", "primaryFacet", "classificationNote", "diagnostic_eligible"):
+        for key in ("img", "facets", "primaryFacet", "classificationNote", "diagnostic_eligible"):
             if key in q:
                 row[key] = q[key]
         slim.append(row)

@@ -1,0 +1,6319 @@
+{
+  "items": {
+    "ds-big-1.1-1": {
+      "img": "/cs408/img/wangdao/ds-big-1.1-1.webp",
+      "pdf_page": 4,
+      "book_ans_page": 4,
+      "crop": [
+        205,
+        287,
+        1643,
+        616
+      ],
+      "width": 1438,
+      "height": 329,
+      "sha256": "3ffc470685dca4e04ef2facb17af751eca6ff4ca12d8e61b730feed663a3cf09"
+    },
+    "ds-big-1.1-2": {
+      "img": "/cs408/img/wangdao/ds-big-1.1-2.webp",
+      "pdf_page": 5,
+      "book_ans_page": 4,
+      "crop": [
+        253,
+        284,
+        2101,
+        376
+      ],
+      "width": 1848,
+      "height": 92,
+      "sha256": "b9c686b71131f911195a9ca2fcfcb19677b735e9275564591288dc4b44043899"
+    },
+    "ds-big-1.2-1": {
+      "img": "/cs408/img/wangdao/ds-big-1.2-1.webp",
+      "pdf_page": 6,
+      "book_ans_page": 11,
+      "crop": [
+        205,
+        284,
+        1311,
+        1292
+      ],
+      "width": 1106,
+      "height": 1008,
+      "sha256": "d580c295f1c9a02650685775e6bcd5f6a194d958b6ea81658e061ba65038b337"
+    },
+    "ds-big-2.2-1": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-1.webp",
+      "pdf_page": 7,
+      "book_ans_page": 22,
+      "crop": [
+        203,
+        287,
+        2276,
+        672
+      ],
+      "width": 2073,
+      "height": 385,
+      "sha256": "2731c6be8c5220a00ff85a2a8a870a6a8634edd2a3828a6b24141a0f124ee8df"
+    },
+    "ds-big-2.2-2": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-2.webp",
+      "pdf_page": 8,
+      "book_ans_page": 23,
+      "crop": [
+        253,
+        284,
+        2012,
+        377
+      ],
+      "width": 1759,
+      "height": 93,
+      "sha256": "05d32c8beb3e4e7e6399c1c6e2d4606419715000a37b27e56359f0aeef4b5ae2"
+    },
+    "ds-big-2.2-3": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-3.webp",
+      "pdf_page": 9,
+      "book_ans_page": 23,
+      "crop": [
+        253,
+        276,
+        2277,
+        427
+      ],
+      "width": 2024,
+      "height": 151,
+      "sha256": "e29d3f5dcf843d8e1816506d1e0506cf1c988639f619e8019d55b000780f2358"
+    },
+    "ds-big-2.2-4": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-4.webp",
+      "pdf_page": 10,
+      "book_ans_page": 24,
+      "crop": [
+        253,
+        276,
+        2277,
+        430
+      ],
+      "width": 2024,
+      "height": 154,
+      "sha256": "68a9ecb482859890817e5bd6f9a59358302d1baf4b81839de72d817f717509d8"
+    },
+    "ds-big-2.2-5": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-5.webp",
+      "pdf_page": 11,
+      "book_ans_page": 24,
+      "crop": [
+        254,
+        284,
+        1838,
+        376
+      ],
+      "width": 1584,
+      "height": 92,
+      "sha256": "e8dc55b3ff3d39253b7537f0daa3f19039695c8b045146ad0cf337ab2316696c"
+    },
+    "ds-big-2.2-6": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-6.webp",
+      "pdf_page": 12,
+      "book_ans_page": 24,
+      "crop": [
+        254,
+        284,
+        1882,
+        376
+      ],
+      "width": 1628,
+      "height": 92,
+      "sha256": "72d1ae97e67ae7f04f78c9e14f500dc5d2a31af82ce600028907c0807ed8e18c"
+    },
+    "ds-big-2.2-7": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-7.webp",
+      "pdf_page": 13,
+      "book_ans_page": 25,
+      "crop": [
+        254,
+        276,
+        2276,
+        432
+      ],
+      "width": 2022,
+      "height": 156,
+      "sha256": "6f57edd9fcb57d161adfbf7ed9bea83860ac67901b6fa419478b6219f0d57624"
+    },
+    "ds-big-2.2-8": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-8.webp",
+      "pdf_page": 14,
+      "book_ans_page": 25,
+      "crop": [
+        254,
+        276,
+        2277,
+        490
+      ],
+      "width": 2023,
+      "height": 214,
+      "sha256": "3492a602d3eae2025c5e2e4f557d0651ad84d8d755d000fe82648bd458be28c3"
+    },
+    "ds-big-2.2-9": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-9.webp",
+      "pdf_page": 15,
+      "book_ans_page": 26,
+      "crop": [
+        254,
+        276,
+        2277,
+        684
+      ],
+      "width": 2023,
+      "height": 408,
+      "sha256": "2493cf8b6fde97a967627037df7a63a2f4036ec729e373515dcd4f0270dc54c5"
+    },
+    "ds-big-2.2-10": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-10.webp",
+      "pdf_page": 16,
+      "book_ans_page": 26,
+      "crop": [
+        233,
+        276,
+        2277,
+        684
+      ],
+      "width": 2044,
+      "height": 408,
+      "sha256": "9ed97a903585e3dfdccba05af70ad8c7d2d453003d5c6edf7e90cf27c106492f"
+    },
+    "ds-big-2.2-11": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-11.webp",
+      "pdf_page": 17,
+      "book_ans_page": 27,
+      "crop": [
+        236,
+        276,
+        2277,
+        747
+      ],
+      "width": 2041,
+      "height": 471,
+      "sha256": "3efb4211bd828d7f18c99fc322d8e1ffa8f38cd45fb16f8d3e23d43a048ea205"
+    },
+    "ds-big-2.2-12": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-12.webp",
+      "pdf_page": 18,
+      "book_ans_page": 28,
+      "crop": [
+        233,
+        276,
+        2278,
+        747
+      ],
+      "width": 2045,
+      "height": 471,
+      "sha256": "56a81ff987e96c44cdc7cefb6f396589df4b0bdbb23b43704e020a6f6ff174d2"
+    },
+    "ds-big-2.2-13": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-13.webp",
+      "pdf_page": 19,
+      "book_ans_page": 28,
+      "crop": [
+        233,
+        276,
+        2277,
+        684
+      ],
+      "width": 2044,
+      "height": 408,
+      "sha256": "46cd8aabdadffdf1c0e952f4f5c4e22608f0677df5973cc95f02873d91330b01"
+    },
+    "ds-big-2.2-14": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-14.webp",
+      "pdf_page": 20,
+      "book_ans_page": 29,
+      "crop": [
+        233,
+        276,
+        2279,
+        747
+      ],
+      "width": 2046,
+      "height": 471,
+      "sha256": "4a8de751472f58b45003bacb33ffccfe74770ff9b9fe23bf42ebb47e95b5da72"
+    },
+    "ds-big-2.2-15": {
+      "img": "/cs408/img/wangdao/ds-big-2.2-15.webp",
+      "pdf_page": 21,
+      "book_ans_page": 30,
+      "crop": [
+        233,
+        276,
+        2279,
+        747
+      ],
+      "width": 2046,
+      "height": 471,
+      "sha256": "3c35e17c9d2d8b50968e9510a1c752d175648eafd3e87a92dd5fb02aa31a4b5a"
+    },
+    "ds-big-2.3-1": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-1.webp",
+      "pdf_page": 22,
+      "book_ans_page": 49,
+      "crop": [
+        203,
+        284,
+        2277,
+        532
+      ],
+      "width": 2074,
+      "height": 248,
+      "sha256": "153a47f93fab5a135bcdb31e98d6503c8a57cc887a4f6dc662d281c43260d840"
+    },
+    "ds-big-2.3-2": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-2.webp",
+      "pdf_page": 23,
+      "book_ans_page": 50,
+      "crop": [
+        254,
+        283,
+        2080,
+        377
+      ],
+      "width": 1826,
+      "height": 94,
+      "sha256": "101eeb6d806369b9cc8a5fec773b618896ffc9f15b885c5e747fe1bf0d177497"
+    },
+    "ds-big-2.3-3": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-3.webp",
+      "pdf_page": 24,
+      "book_ans_page": 51,
+      "crop": [
+        253,
+        284,
+        2115,
+        377
+      ],
+      "width": 1862,
+      "height": 93,
+      "sha256": "5a461af564f0b967e8e7a0ba470fb1556e1c5321ab76ea0a1ca7593203a02060"
+    },
+    "ds-big-2.3-4": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-4.webp",
+      "pdf_page": 25,
+      "book_ans_page": 52,
+      "crop": [
+        253,
+        276,
+        2276,
+        432
+      ],
+      "width": 2023,
+      "height": 156,
+      "sha256": "bc1785524683c9da61d3fe9bcf169d6840461e0bad7ab6886069264ba04bd1bf"
+    },
+    "ds-big-2.3-5": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-5.webp",
+      "pdf_page": 26,
+      "book_ans_page": 52,
+      "crop": [
+        254,
+        283,
+        1834,
+        377
+      ],
+      "width": 1580,
+      "height": 94,
+      "sha256": "03ce2c607856d1479a48ad3cbf6903b4dd67247173e26d3c66892f551d39acf5"
+    },
+    "ds-big-2.3-6": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-6.webp",
+      "pdf_page": 27,
+      "book_ans_page": 53,
+      "crop": [
+        254,
+        276,
+        2277,
+        432
+      ],
+      "width": 2023,
+      "height": 156,
+      "sha256": "f6909285c3bc4576fd92bdb3cc6b5da4bfdbf10c8141d96456f05e5e80a4dc7e"
+    },
+    "ds-big-2.3-7": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-7.webp",
+      "pdf_page": 28,
+      "book_ans_page": 53,
+      "crop": [
+        254,
+        276,
+        2277,
+        432
+      ],
+      "width": 2023,
+      "height": 156,
+      "sha256": "4db49f464874d913288e428a95eda9bdcfa8235feb42060e80a05b257fa21556"
+    },
+    "ds-big-2.3-8": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-8.webp",
+      "pdf_page": 29,
+      "book_ans_page": 53,
+      "crop": [
+        254,
+        276,
+        2277,
+        430
+      ],
+      "width": 2023,
+      "height": 154,
+      "sha256": "3cdaabc552569055ccc8d1682958eddf74a6042ffce05b817480b032b7d248e5"
+    },
+    "ds-big-2.3-9": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-9.webp",
+      "pdf_page": 30,
+      "book_ans_page": 54,
+      "crop": [
+        254,
+        276,
+        2278,
+        427
+      ],
+      "width": 2024,
+      "height": 151,
+      "sha256": "f2d63a2376a1f5e32ec3bc7258a9da4bdcc1f7bf0b66b37e89deb61947bce7e2"
+    },
+    "ds-big-2.3-10": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-10.webp",
+      "pdf_page": 31,
+      "book_ans_page": 55,
+      "crop": [
+        233,
+        276,
+        2277,
+        430
+      ],
+      "width": 2044,
+      "height": 154,
+      "sha256": "29fd6de9f67dd7776bacb044f29dd549b4bad3b793e1ad47f6a8bf9d5a97cbd6"
+    },
+    "ds-big-2.3-11": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-11.webp",
+      "pdf_page": 32,
+      "book_ans_page": 55,
+      "crop": [
+        236,
+        286,
+        1554,
+        374
+      ],
+      "width": 1318,
+      "height": 88,
+      "sha256": "f602b824f8fd4d241db8b4bdc3569292d51610c33cbb87ca1a56c317089228fd"
+    },
+    "ds-big-2.3-12": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-12.webp",
+      "pdf_page": 33,
+      "book_ans_page": 56,
+      "crop": [
+        233,
+        276,
+        2277,
+        427
+      ],
+      "width": 2044,
+      "height": 151,
+      "sha256": "1e796432ecea29fca3e828bbcda9e664d7df3a3aaa5cf571907b5ee11d5f5e31"
+    },
+    "ds-big-2.3-13": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-13.webp",
+      "pdf_page": 34,
+      "book_ans_page": 56,
+      "crop": [
+        233,
+        276,
+        2279,
+        619
+      ],
+      "width": 2046,
+      "height": 343,
+      "sha256": "eb388e331745aea8a0d41e339ad5ad00b3334b861efc770eda452a911380d51e"
+    },
+    "ds-big-2.3-14": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-14.webp",
+      "pdf_page": 35,
+      "book_ans_page": 57,
+      "crop": [
+        233,
+        276,
+        2277,
+        621
+      ],
+      "width": 2044,
+      "height": 345,
+      "sha256": "6e04419f1cd161d4b4b9ff04b8cd43de30bd2c87db1039f0582899be93ecb163"
+    },
+    "ds-big-2.3-15": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-15.webp",
+      "pdf_page": 36,
+      "book_ans_page": 57,
+      "crop": [
+        233,
+        276,
+        2276,
+        621
+      ],
+      "width": 2043,
+      "height": 345,
+      "sha256": "3235df0e01b40987a8ab2c4cdf00271648fd366fdbdd365e1cf6111be34b08e7"
+    },
+    "ds-big-2.3-16": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-16.webp",
+      "pdf_page": 37,
+      "book_ans_page": 58,
+      "crop": [
+        233,
+        276,
+        2277,
+        684
+      ],
+      "width": 2044,
+      "height": 408,
+      "sha256": "712b06eba220dfd288ce46d0c692ae4b296dde8c4203283bfa9ff6bf4ec334ed"
+    },
+    "ds-big-2.3-17": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-17.webp",
+      "pdf_page": 38,
+      "book_ans_page": 59,
+      "crop": [
+        233,
+        276,
+        2277,
+        877
+      ],
+      "width": 2044,
+      "height": 601,
+      "sha256": "188dc0cfeff0bcaa23bbcb6660b9c81645e681aa9f58faafb2324b45064c88e4"
+    },
+    "ds-big-2.3-18": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-18.webp",
+      "pdf_page": 39,
+      "book_ans_page": 59,
+      "crop": [
+        233,
+        276,
+        2276,
+        1346
+      ],
+      "width": 2043,
+      "height": 1070,
+      "sha256": "60d3fca8801f1063ac8697d27a6f40943604666b33e4736a7bb4add261ec0176"
+    },
+    "ds-big-2.3-19": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-19.webp",
+      "pdf_page": 40,
+      "book_ans_page": 60,
+      "crop": [
+        233,
+        276,
+        2277,
+        1407
+      ],
+      "width": 2044,
+      "height": 1131,
+      "sha256": "6cfa2c2d54530ad9caee3ec186213d1feedb43f6a67b7d8591dfe25db72dbb97"
+    },
+    "ds-big-2.3-20": {
+      "img": "/cs408/img/wangdao/ds-big-2.3-20.webp",
+      "pdf_page": 41,
+      "book_ans_page": 61,
+      "crop": [
+        231,
+        276,
+        2277,
+        1049
+      ],
+      "width": 2046,
+      "height": 773,
+      "sha256": "fb7936b1d2e578029599aa9d128ce5c056fb69a3f01abed572b15bcf95316a15"
+    },
+    "ds-big-3.1-1": {
+      "img": "/cs408/img/wangdao/ds-big-3.1-1.webp",
+      "pdf_page": 42,
+      "book_ans_page": 73,
+      "crop": [
+        203,
+        287,
+        2276,
+        669
+      ],
+      "width": 2073,
+      "height": 382,
+      "sha256": "7aa4e17d76947458e08bddcbaa91991ab8e292901c430ec11a66ccbf8de4dff6"
+    },
+    "ds-big-3.1-2": {
+      "img": "/cs408/img/wangdao/ds-big-3.1-2.webp",
+      "pdf_page": 43,
+      "book_ans_page": 73,
+      "crop": [
+        253,
+        276,
+        2277,
+        427
+      ],
+      "width": 2024,
+      "height": 151,
+      "sha256": "d6aa7d8a448a708d63fe0352fbdffb028f0464050ab268c600a0521ef271d5b0"
+    },
+    "ds-big-3.1-3": {
+      "img": "/cs408/img/wangdao/ds-big-3.1-3.webp",
+      "pdf_page": 44,
+      "book_ans_page": 73,
+      "crop": [
+        253,
+        276,
+        2278,
+        684
+      ],
+      "width": 2025,
+      "height": 408,
+      "sha256": "46116d38e09b7505b87a8b49001862c8e3a27f7993e210f6df9623c67f5272f3"
+    },
+    "ds-big-3.1-4": {
+      "img": "/cs408/img/wangdao/ds-big-3.1-4.webp",
+      "pdf_page": 45,
+      "book_ans_page": 74,
+      "crop": [
+        253,
+        276,
+        2277,
+        432
+      ],
+      "width": 2024,
+      "height": 156,
+      "sha256": "5951d204386c6a7e0512b2199725c15024d8e36765115b11145867b921a577cf"
+    },
+    "ds-big-3.1-5": {
+      "img": "/cs408/img/wangdao/ds-big-3.1-5.webp",
+      "pdf_page": 46,
+      "book_ans_page": 75,
+      "crop": [
+        254,
+        276,
+        2277,
+        490
+      ],
+      "width": 2023,
+      "height": 214,
+      "sha256": "13ca9ef1750716b1cbfb6d8cd86e42f2fb064ec154dbab329b43a22fad15c800"
+    },
+    "ds-big-3.2-1": {
+      "img": "/cs408/img/wangdao/ds-big-3.2-1.webp",
+      "pdf_page": 47,
+      "book_ans_page": 87,
+      "crop": [
+        203,
+        285,
+        2277,
+        595
+      ],
+      "width": 2074,
+      "height": 310,
+      "sha256": "636cd6e0b40ab905d1bef477cafbc3d1b32e17982470da58739c5d7877db7ce1"
+    },
+    "ds-big-3.2-2": {
+      "img": "/cs408/img/wangdao/ds-big-3.2-2.webp",
+      "pdf_page": 48,
+      "book_ans_page": 88,
+      "crop": [
+        253,
+        284,
+        1675,
+        376
+      ],
+      "width": 1422,
+      "height": 92,
+      "sha256": "5e8a766d510ea7f50850921258e2b12d9f7e24c8c22c2f3c5ab8410e0af3578e"
+    },
+    "ds-big-3.2-3": {
+      "img": "/cs408/img/wangdao/ds-big-3.2-3.webp",
+      "pdf_page": 49,
+      "book_ans_page": 88,
+      "crop": [
+        253,
+        276,
+        1812,
+        949
+      ],
+      "width": 1559,
+      "height": 673,
+      "sha256": "ffe3bce298ec13522ba16403f2f4bac4e670aa9fb4499a689c86b26008b89d47"
+    },
+    "ds-big-3.2-4": {
+      "img": "/cs408/img/wangdao/ds-big-3.2-4.webp",
+      "pdf_page": 50,
+      "book_ans_page": 89,
+      "crop": [
+        253,
+        276,
+        2276,
+        747
+      ],
+      "width": 2023,
+      "height": 471,
+      "sha256": "fb5e210e865a61ef92a41ec87b1ce8c2cc90008cf5029abaad8f0b854874ff31"
+    },
+    "ds-big-3.3-1": {
+      "img": "/cs408/img/wangdao/ds-big-3.3-1.webp",
+      "pdf_page": 51,
+      "book_ans_page": 100,
+      "crop": [
+        203,
+        284,
+        2277,
+        535
+      ],
+      "width": 2074,
+      "height": 251,
+      "sha256": "b75416feccd2a5bccdf3ccb3589bd7cb7a67e7561c6bf59a8f1eee16be443b7a"
+    },
+    "ds-big-4.2-1": {
+      "img": "/cs408/img/wangdao/ds-big-4.2-1.webp",
+      "pdf_page": 52,
+      "book_ans_page": 121,
+      "crop": [
+        203,
+        287,
+        1997,
+        1081
+      ],
+      "width": 1794,
+      "height": 794,
+      "sha256": "7f532cc5f883dd3befdd54b0ec22836e164ad44f7a8377a1c61c2f795591b0c4"
+    },
+    "ds-big-4.2-2": {
+      "img": "/cs408/img/wangdao/ds-big-4.2-2.webp",
+      "pdf_page": 53,
+      "book_ans_page": 121,
+      "crop": [
+        253,
+        276,
+        1471,
+        495
+      ],
+      "width": 1218,
+      "height": 219,
+      "sha256": "9bae07e1cae645739c1cf96144372f696cfe115f614b8766b0d0dc3688a7729e"
+    },
+    "ds-big-5.1-1": {
+      "img": "/cs408/img/wangdao/ds-big-5.1-1.webp",
+      "pdf_page": 54,
+      "book_ans_page": 129,
+      "crop": [
+        204,
+        287,
+        1543,
+        615
+      ],
+      "width": 1339,
+      "height": 328,
+      "sha256": "761eec0e0360a24b2448380152a7c15d4dd4a1f362315d0cfa5788378a0f0855"
+    },
+    "ds-big-5.1-2": {
+      "img": "/cs408/img/wangdao/ds-big-5.1-2.webp",
+      "pdf_page": 55,
+      "book_ans_page": 129,
+      "crop": [
+        253,
+        276,
+        2277,
+        430
+      ],
+      "width": 2024,
+      "height": 154,
+      "sha256": "b4290acdf8718bf5b077350be32ba1d94fbc7c8432b275ec28e554c47aca4092"
+    },
+    "ds-big-5.1-3": {
+      "img": "/cs408/img/wangdao/ds-big-5.1-3.webp",
+      "pdf_page": 56,
+      "book_ans_page": 129,
+      "crop": [
+        253,
+        276,
+        2276,
+        430
+      ],
+      "width": 2023,
+      "height": 154,
+      "sha256": "1f3e65deb1b8ce6d5417f465d1ef41bf6ffaf9c01d5e9eaa557be6b12449f74d"
+    },
+    "ds-big-5.2-1": {
+      "img": "/cs408/img/wangdao/ds-big-5.2-1.webp",
+      "pdf_page": 57,
+      "book_ans_page": 138,
+      "crop": [
+        204,
+        284,
+        2277,
+        535
+      ],
+      "width": 2073,
+      "height": 251,
+      "sha256": "6477bb2d3c6c98352a7ea0580141175593252d315c917ad8d2d43410e82ddc82"
+    },
+    "ds-big-5.2-2": {
+      "img": "/cs408/img/wangdao/ds-big-5.2-2.webp",
+      "pdf_page": 58,
+      "book_ans_page": 138,
+      "crop": [
+        253,
+        286,
+        2178,
+        374
+      ],
+      "width": 1925,
+      "height": 88,
+      "sha256": "3fcf5e4b0262da948a753dbaac42c1eeb8aecc7c576c8b41fc60f72cf6378818"
+    },
+    "ds-big-5.2-3": {
+      "img": "/cs408/img/wangdao/ds-big-5.2-3.webp",
+      "pdf_page": 59,
+      "book_ans_page": 139,
+      "crop": [
+        253,
+        284,
+        2242,
+        376
+      ],
+      "width": 1989,
+      "height": 92,
+      "sha256": "9b9268be5bf5118edb195786d7b0a28ba0abb9d8934028b9fa4ad23fe4038588"
+    },
+    "ds-big-5.2-4": {
+      "img": "/cs408/img/wangdao/ds-big-5.2-4.webp",
+      "pdf_page": 60,
+      "book_ans_page": 139,
+      "crop": [
+        253,
+        276,
+        2277,
+        747
+      ],
+      "width": 2024,
+      "height": 471,
+      "sha256": "226274a510ca305d6fac37340ad8439d986b54c1b540e6fab9dea8f8a6ae4c86"
+    },
+    "ds-big-5.2-5": {
+      "img": "/cs408/img/wangdao/ds-big-5.2-5.webp",
+      "pdf_page": 61,
+      "book_ans_page": 139,
+      "crop": [
+        254,
+        276,
+        2276,
+        427
+      ],
+      "width": 2022,
+      "height": 151,
+      "sha256": "82ea89638ccd34a7e2027f024e292aa183129be7bf9449c3118e1c086c1e3d48"
+    },
+    "ds-big-5.2-6": {
+      "img": "/cs408/img/wangdao/ds-big-5.2-6.webp",
+      "pdf_page": 62,
+      "book_ans_page": 140,
+      "crop": [
+        254,
+        276,
+        2277,
+        558
+      ],
+      "width": 2023,
+      "height": 282,
+      "sha256": "fbf64ea580546efabb53e5c90d0af46c2294bb3c31e164881ca95a934c8f3347"
+    },
+    "ds-big-5.3-1": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-1.webp",
+      "pdf_page": 63,
+      "book_ans_page": 158,
+      "crop": [
+        204,
+        284,
+        1950,
+        479
+      ],
+      "width": 1746,
+      "height": 195,
+      "sha256": "f2f8278912d317dec0c181cf00aea2ea0a7acf5e913a3424ef795af466bd5b3d"
+    },
+    "ds-big-5.3-2": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-2.webp",
+      "pdf_page": 64,
+      "book_ans_page": 158,
+      "crop": [
+        253,
+        285,
+        1950,
+        376
+      ],
+      "width": 1697,
+      "height": 91,
+      "sha256": "d5aa3c06cea05f478287d08ad70cd9f30250609a1beb208aed5326f5105c11a6"
+    },
+    "ds-big-5.3-3": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-3.webp",
+      "pdf_page": 65,
+      "book_ans_page": 158,
+      "crop": [
+        253,
+        284,
+        1904,
+        376
+      ],
+      "width": 1651,
+      "height": 92,
+      "sha256": "d960f4ebe89ef11774fd9fe22eb60240f3d97e1ba718460a2e8e7a80b1398f30"
+    },
+    "ds-big-5.3-4": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-4.webp",
+      "pdf_page": 66,
+      "book_ans_page": 159,
+      "crop": [
+        253,
+        284,
+        2079,
+        376
+      ],
+      "width": 1826,
+      "height": 92,
+      "sha256": "5dedb97a213f309aacbac9f7122fb5c51124a325138f743b2e542b902091b870"
+    },
+    "ds-big-5.3-5": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-5.webp",
+      "pdf_page": 67,
+      "book_ans_page": 160,
+      "crop": [
+        254,
+        276,
+        2277,
+        427
+      ],
+      "width": 2023,
+      "height": 151,
+      "sha256": "b49242ab4939451b4c28163a34ad839464bb770629840247173a7196b707a55e"
+    },
+    "ds-big-5.3-6": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-6.webp",
+      "pdf_page": 68,
+      "book_ans_page": 160,
+      "crop": [
+        254,
+        276,
+        2277,
+        427
+      ],
+      "width": 2023,
+      "height": 151,
+      "sha256": "bc61883bb6855a4da12b7cd70232ee7d2de7ade5814ce7faa428189d7b8f95eb"
+    },
+    "ds-big-5.3-7": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-7.webp",
+      "pdf_page": 69,
+      "book_ans_page": 160,
+      "crop": [
+        254,
+        276,
+        2277,
+        432
+      ],
+      "width": 2023,
+      "height": 156,
+      "sha256": "ad8f2acd938bd884006d1932914d114c11f51041d0cd29e51f188a1f6f152f0d"
+    },
+    "ds-big-5.3-8": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-8.webp",
+      "pdf_page": 70,
+      "book_ans_page": 161,
+      "crop": [
+        254,
+        276,
+        2276,
+        430
+      ],
+      "width": 2022,
+      "height": 154,
+      "sha256": "b27b41ed4a87cde1a58f12eb4189556bc2de616e57c96b9acd59f6bec2eb76de"
+    },
+    "ds-big-5.3-9": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-9.webp",
+      "pdf_page": 71,
+      "book_ans_page": 161,
+      "crop": [
+        254,
+        276,
+        2277,
+        427
+      ],
+      "width": 2023,
+      "height": 151,
+      "sha256": "18169e16cf5f6a4595a4e45d0526d4ef8419f8ff04f6b26a76303dd02a1aedce"
+    },
+    "ds-big-5.3-10": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-10.webp",
+      "pdf_page": 72,
+      "book_ans_page": 162,
+      "crop": [
+        233,
+        276,
+        2279,
+        490
+      ],
+      "width": 2046,
+      "height": 214,
+      "sha256": "f265b5f0cf3b6baf16915bc3fc5773ba8fa6c7d2493f6ab8ef59952c90b95096"
+    },
+    "ds-big-5.3-11": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-11.webp",
+      "pdf_page": 73,
+      "book_ans_page": 163,
+      "crop": [
+        236,
+        276,
+        2275,
+        432
+      ],
+      "width": 2039,
+      "height": 156,
+      "sha256": "f83f687d29415958c873c34eb421a56c0c6f7d12f90a78e8963e3879567b0c21"
+    },
+    "ds-big-5.3-12": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-12.webp",
+      "pdf_page": 74,
+      "book_ans_page": 164,
+      "crop": [
+        233,
+        276,
+        2276,
+        433
+      ],
+      "width": 2043,
+      "height": 157,
+      "sha256": "96bdffb83ed57db621257135b519b06fa1743c2e94240b149ca8e8215cca7133"
+    },
+    "ds-big-5.3-13": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-13.webp",
+      "pdf_page": 75,
+      "book_ans_page": 164,
+      "crop": [
+        233,
+        276,
+        2278,
+        430
+      ],
+      "width": 2045,
+      "height": 154,
+      "sha256": "11fb205bbf03a1e4e42194ed696a1931ae05714f37ec7a5a27f9f4f54181dfdc"
+    },
+    "ds-big-5.3-14": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-14.webp",
+      "pdf_page": 76,
+      "book_ans_page": 165,
+      "crop": [
+        233,
+        276,
+        2277,
+        490
+      ],
+      "width": 2044,
+      "height": 214,
+      "sha256": "1aba4fdf6d132015c9f1b81cf2d5b51025265b49e94e0edd73389494c0c4a1d9"
+    },
+    "ds-big-5.3-15": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-15.webp",
+      "pdf_page": 77,
+      "book_ans_page": 165,
+      "crop": [
+        233,
+        276,
+        2280,
+        877
+      ],
+      "width": 2047,
+      "height": 601,
+      "sha256": "1526d3672414f02a69348ee227b9a52deec7a4a814d9f124ecd6717f2463dd81"
+    },
+    "ds-big-5.3-16": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-16.webp",
+      "pdf_page": 78,
+      "book_ans_page": 166,
+      "crop": [
+        233,
+        276,
+        2278,
+        1388
+      ],
+      "width": 2045,
+      "height": 1112,
+      "sha256": "7acd2763fe6daad58918976fb3ad70c496d328a6d81eaded9e5b3a5f69065231"
+    },
+    "ds-big-5.3-17": {
+      "img": "/cs408/img/wangdao/ds-big-5.3-17.webp",
+      "pdf_page": 79,
+      "book_ans_page": 167,
+      "crop": [
+        233,
+        276,
+        2276,
+        1930
+      ],
+      "width": 2043,
+      "height": 1654,
+      "sha256": "b65a4f51fcc504cac503bf160344ecee1c0a343c4af2923f64b40205ac55ba2f"
+    },
+    "ds-big-5.4-1": {
+      "img": "/cs408/img/wangdao/ds-big-5.4-1.webp",
+      "pdf_page": 80,
+      "book_ans_page": 179,
+      "crop": [
+        204,
+        284,
+        2277,
+        532
+      ],
+      "width": 2073,
+      "height": 248,
+      "sha256": "6eb709b0fd845b1b2855ee9c5df91ae0e4d277e15fbdc77c30ce9fa4a7cbc9d2"
+    },
+    "ds-big-5.4-2": {
+      "img": "/cs408/img/wangdao/ds-big-5.4-2.webp",
+      "pdf_page": 81,
+      "book_ans_page": 179,
+      "crop": [
+        253,
+        276,
+        1906,
+        817
+      ],
+      "width": 1653,
+      "height": 541,
+      "sha256": "c96d0314c7e0605dd252ddfa56043d1596854615ce2306fccfe9fa38ea43b541"
+    },
+    "ds-big-5.4-3": {
+      "img": "/cs408/img/wangdao/ds-big-5.4-3.webp",
+      "pdf_page": 82,
+      "book_ans_page": 179,
+      "crop": [
+        253,
+        276,
+        2275,
+        430
+      ],
+      "width": 2022,
+      "height": 154,
+      "sha256": "a890846ee783069cbb5e899d6cc729d9d58d0920b435f5bf25b9b7c210f9699b"
+    },
+    "ds-big-5.4-4": {
+      "img": "/cs408/img/wangdao/ds-big-5.4-4.webp",
+      "pdf_page": 83,
+      "book_ans_page": 180,
+      "crop": [
+        253,
+        286,
+        1444,
+        374
+      ],
+      "width": 1191,
+      "height": 88,
+      "sha256": "78b4d0e04183544d91a46b807956d55b5fb6e343d9be8edd360cd5d075b4d9b1"
+    },
+    "ds-big-5.4-5": {
+      "img": "/cs408/img/wangdao/ds-big-5.4-5.webp",
+      "pdf_page": 84,
+      "book_ans_page": 180,
+      "crop": [
+        254,
+        284,
+        1597,
+        376
+      ],
+      "width": 1343,
+      "height": 92,
+      "sha256": "d9493474a968d91c03a212540b13e970c3148b40bfce3ca3a25ec252bdbea90c"
+    },
+    "ds-big-5.5-1": {
+      "img": "/cs408/img/wangdao/ds-big-5.5-1.webp",
+      "pdf_page": 85,
+      "book_ans_page": 191,
+      "crop": [
+        204,
+        284,
+        2243,
+        480
+      ],
+      "width": 2039,
+      "height": 196,
+      "sha256": "772593495d1d8515c155ce2fe264a4b257ed2c39111e28b0c9781e530b0cb254"
+    },
+    "ds-big-5.5-2": {
+      "img": "/cs408/img/wangdao/ds-big-5.5-2.webp",
+      "pdf_page": 86,
+      "book_ans_page": 191,
+      "crop": [
+        253,
+        276,
+        2277,
+        621
+      ],
+      "width": 2024,
+      "height": 345,
+      "sha256": "03f6bc605b5fa16696ed851abb8d3b0fec824b0e0419182b544382448c15e914"
+    },
+    "ds-big-5.5-3": {
+      "img": "/cs408/img/wangdao/ds-big-5.5-3.webp",
+      "pdf_page": 87,
+      "book_ans_page": 192,
+      "crop": [
+        253,
+        276,
+        2278,
+        684
+      ],
+      "width": 2025,
+      "height": 408,
+      "sha256": "4181959b9c2052585cc61f1cf02dd4d60b71b126b17ad3e445e445e6f544e24b"
+    },
+    "ds-big-6.1-1": {
+      "img": "/cs408/img/wangdao/ds-big-6.1-1.webp",
+      "pdf_page": 88,
+      "book_ans_page": 201,
+      "crop": [
+        204,
+        287,
+        1741,
+        616
+      ],
+      "width": 1537,
+      "height": 329,
+      "sha256": "ec6ff0895ece7312e0a322a0bc7b6d5f6bf40223e8e25cf86216883af15818c0"
+    },
+    "ds-big-6.2-1": {
+      "img": "/cs408/img/wangdao/ds-big-6.2-1.webp",
+      "pdf_page": 89,
+      "book_ans_page": 212,
+      "crop": [
+        204,
+        284,
+        1781,
+        988
+      ],
+      "width": 1577,
+      "height": 704,
+      "sha256": "a68b0e2225f4cab7e983d2b03817ef9f5eabd2cc961a8fda1ce7635f582b7db4"
+    },
+    "ds-big-6.2-2": {
+      "img": "/cs408/img/wangdao/ds-big-6.2-2.webp",
+      "pdf_page": 90,
+      "book_ans_page": 212,
+      "crop": [
+        253,
+        276,
+        1903,
+        770
+      ],
+      "width": 1650,
+      "height": 494,
+      "sha256": "01b318bb45bdbdbae4151313b1897d2b43a7da5fdfae6ee54ff3cca2df7925df"
+    },
+    "ds-big-6.2-3": {
+      "img": "/cs408/img/wangdao/ds-big-6.2-3.webp",
+      "pdf_page": 91,
+      "book_ans_page": 212,
+      "crop": [
+        253,
+        276,
+        1876,
+        558
+      ],
+      "width": 1623,
+      "height": 282,
+      "sha256": "4f952e758e2bf504d57373ec49421247c2e302d1c4a370024ae3412d51c067e8"
+    },
+    "ds-big-6.2-4": {
+      "img": "/cs408/img/wangdao/ds-big-6.2-4.webp",
+      "pdf_page": 92,
+      "book_ans_page": 212,
+      "crop": [
+        253,
+        284,
+        2256,
+        376
+      ],
+      "width": 2003,
+      "height": 92,
+      "sha256": "962f55f032c4a98b6ef32be403915b75b9e3dc2cd0a0dda0b57908744d2ddc23"
+    },
+    "ds-big-6.2-5": {
+      "img": "/cs408/img/wangdao/ds-big-6.2-5.webp",
+      "pdf_page": 93,
+      "book_ans_page": 212,
+      "crop": [
+        254,
+        286,
+        1488,
+        374
+      ],
+      "width": 1234,
+      "height": 88,
+      "sha256": "9dc87435462285c05848f721f00279b71360994dc13f113ea5bb476e73df60d3"
+    },
+    "ds-big-6.2-6": {
+      "img": "/cs408/img/wangdao/ds-big-6.2-6.webp",
+      "pdf_page": 94,
+      "book_ans_page": 213,
+      "crop": [
+        254,
+        276,
+        2218,
+        936
+      ],
+      "width": 1964,
+      "height": 660,
+      "sha256": "410ff6793502a7b0dbc88bf1a87152784985d32e74eb8f78b9bcd9e7860f597a"
+    },
+    "ds-big-6.2-7": {
+      "img": "/cs408/img/wangdao/ds-big-6.2-7.webp",
+      "pdf_page": 95,
+      "book_ans_page": 213,
+      "crop": [
+        254,
+        276,
+        2277,
+        1112
+      ],
+      "width": 2023,
+      "height": 836,
+      "sha256": "7c8272844e61f7ee0427c925b9c28f59c10ecb46c9642a41b9526edb7d859502"
+    },
+    "ds-big-6.2-8": {
+      "img": "/cs408/img/wangdao/ds-big-6.2-8.webp",
+      "pdf_page": 96,
+      "book_ans_page": 214,
+      "crop": [
+        254,
+        276,
+        2274,
+        1459
+      ],
+      "width": 2020,
+      "height": 1183,
+      "sha256": "1722d3df11b57c677c22d27cd460b6b6beda9ad8d33581a226b45686681e34db"
+    },
+    "ds-big-6.3-1": {
+      "img": "/cs408/img/wangdao/ds-big-6.3-1.webp",
+      "pdf_page": 97,
+      "book_ans_page": 223,
+      "crop": [
+        204,
+        284,
+        2278,
+        893
+      ],
+      "width": 2074,
+      "height": 609,
+      "sha256": "5fc25661d18c277db2e62d9913ae6c890b7dbc30deac22e40fe35a51a3588ef0"
+    },
+    "ds-big-6.3-2": {
+      "img": "/cs408/img/wangdao/ds-big-6.3-2.webp",
+      "pdf_page": 98,
+      "book_ans_page": 223,
+      "crop": [
+        253,
+        276,
+        2277,
+        976
+      ],
+      "width": 2024,
+      "height": 700,
+      "sha256": "c26799c8951fd6fbfc5081b0e0a7127c7f0de4d07174269e5a886d33e9a07d86"
+    },
+    "ds-big-6.3-3": {
+      "img": "/cs408/img/wangdao/ds-big-6.3-3.webp",
+      "pdf_page": 99,
+      "book_ans_page": 224,
+      "crop": [
+        253,
+        276,
+        2274,
+        424
+      ],
+      "width": 2021,
+      "height": 148,
+      "sha256": "6e03c962d13c2151fbf9b7c5e2f72cb9fb3b31fd5ae6ba04c35707b00b2717c7"
+    },
+    "ds-big-6.3-4": {
+      "img": "/cs408/img/wangdao/ds-big-6.3-4.webp",
+      "pdf_page": 100,
+      "book_ans_page": 224,
+      "crop": [
+        253,
+        276,
+        2277,
+        436
+      ],
+      "width": 2024,
+      "height": 160,
+      "sha256": "ce90c4041c2cb7db2d2e0cd7d5b399037dde2a97bcdec103b253963524a2f143"
+    },
+    "ds-big-6.3-5": {
+      "img": "/cs408/img/wangdao/ds-big-6.3-5.webp",
+      "pdf_page": 101,
+      "book_ans_page": 225,
+      "crop": [
+        254,
+        282,
+        2003,
+        379
+      ],
+      "width": 1749,
+      "height": 97,
+      "sha256": "7b2840137c433a6ea4484fd51d3601653532ac09bc57598b516fff27eedc91ce"
+    },
+    "ds-big-6.4-1": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-1.webp",
+      "pdf_page": 102,
+      "book_ans_page": 253,
+      "crop": [
+        204,
+        284,
+        2277,
+        600
+      ],
+      "width": 2073,
+      "height": 316,
+      "sha256": "caa2d85e609d9b3cacc5762bf04ff5e8931a8e7ca2b7d227adb50f4dc6e43ee7"
+    },
+    "ds-big-6.4-2": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-2.webp",
+      "pdf_page": 103,
+      "book_ans_page": 254,
+      "crop": [
+        253,
+        276,
+        1798,
+        1136
+      ],
+      "width": 1545,
+      "height": 860,
+      "sha256": "fc68308f2dc28b347ad37fda0f37dc00fcc67298728574f358eaa222cb06f70d"
+    },
+    "ds-big-6.4-3": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-3.webp",
+      "pdf_page": 104,
+      "book_ans_page": 255,
+      "crop": [
+        253,
+        276,
+        2278,
+        767
+      ],
+      "width": 2025,
+      "height": 491,
+      "sha256": "b1c07fe238da6a3e19e1020778efa8e653f3b58bc5be809550bf115892d9a81d"
+    },
+    "ds-big-6.4-4": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-4.webp",
+      "pdf_page": 105,
+      "book_ans_page": 255,
+      "crop": [
+        253,
+        276,
+        1678,
+        1136
+      ],
+      "width": 1425,
+      "height": 860,
+      "sha256": "945452ffe59dbc5b37904b4e585c94506b2eb92e98386f4691ac8c42669045fc"
+    },
+    "ds-big-6.4-5": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-5.webp",
+      "pdf_page": 106,
+      "book_ans_page": 256,
+      "crop": [
+        254,
+        276,
+        2277,
+        888
+      ],
+      "width": 2023,
+      "height": 612,
+      "sha256": "0a8e4adcab1dbde670991454b4df555a5d4cc3a77684eb05082e80838db0573a"
+    },
+    "ds-big-6.4-6": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-6.webp",
+      "pdf_page": 107,
+      "book_ans_page": 257,
+      "crop": [
+        254,
+        276,
+        2277,
+        427
+      ],
+      "width": 2023,
+      "height": 151,
+      "sha256": "f53c9c3e88502ff477984d65e9bd0ecc2f396fb995c92a35a32678670fc3c991"
+    },
+    "ds-big-6.4-7": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-7.webp",
+      "pdf_page": 108,
+      "book_ans_page": 257,
+      "crop": [
+        254,
+        286,
+        1459,
+        374
+      ],
+      "width": 1205,
+      "height": 88,
+      "sha256": "62d7bbaa4e2acb8acc2442ece5b7fbc405025aff9e5e28e315d5f41687ddb0c4"
+    },
+    "ds-big-6.4-8": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-8.webp",
+      "pdf_page": 109,
+      "book_ans_page": 257,
+      "crop": [
+        254,
+        276,
+        2278,
+        745
+      ],
+      "width": 2024,
+      "height": 469,
+      "sha256": "0a3173ac702d5372e1c98053b98e2063fa4b964b8424bff244f6712682fe5c00"
+    },
+    "ds-big-6.4-9": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-9.webp",
+      "pdf_page": 110,
+      "book_ans_page": 257,
+      "crop": [
+        254,
+        276,
+        2277,
+        751
+      ],
+      "width": 2023,
+      "height": 475,
+      "sha256": "18b862ca1ee4be0d2844c06188f7438afe1ea6421a297b293a24d0fdc0c4196a"
+    },
+    "ds-big-6.4-10": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-10.webp",
+      "pdf_page": 111,
+      "book_ans_page": 258,
+      "crop": [
+        233,
+        276,
+        2278,
+        2038
+      ],
+      "width": 2045,
+      "height": 1762,
+      "sha256": "242ae9bf013e69ff5810e04457f2a9bcad5379486f2d4e6e8df51df62b526d6a"
+    },
+    "ds-big-6.4-11": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-11.webp",
+      "pdf_page": 112,
+      "book_ans_page": 259,
+      "crop": [
+        236,
+        276,
+        2276,
+        1020
+      ],
+      "width": 2040,
+      "height": 744,
+      "sha256": "9f837d5399dc353631032de8b3370cfb1f9d2a337dc37ab92d45f3a97a170ef5"
+    },
+    "ds-big-6.4-12": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-12.webp",
+      "pdf_page": 113,
+      "book_ans_page": 260,
+      "crop": [
+        233,
+        276,
+        2278,
+        1310
+      ],
+      "width": 2045,
+      "height": 1034,
+      "sha256": "5a0a7758eeccbd6c35a7ebcf701c97b7b1e390be2a272d6d23e1c36d2cd68dfa"
+    },
+    "ds-big-6.4-13": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-13.webp",
+      "pdf_page": 114,
+      "book_ans_page": 260,
+      "crop": [
+        233,
+        276,
+        2277,
+        1175
+      ],
+      "width": 2044,
+      "height": 899,
+      "sha256": "d63a99f124a3d6d2e0dbe78e2b5d62efda6c74acbdc10cf05bc31830965c78e9"
+    },
+    "ds-big-6.4-14": {
+      "img": "/cs408/img/wangdao/ds-big-6.4-14.webp",
+      "pdf_page": 115,
+      "book_ans_page": 261,
+      "crop": [
+        233,
+        276,
+        2277,
+        1343
+      ],
+      "width": 2044,
+      "height": 1067,
+      "sha256": "2552bf243f6c3ed5e5ad5f7a9e505e5212874f8cd969a5c49b935a57e1315477"
+    },
+    "ds-big-7.2-1": {
+      "img": "/cs408/img/wangdao/ds-big-7.2-1.webp",
+      "pdf_page": 116,
+      "book_ans_page": 276,
+      "crop": [
+        204,
+        287,
+        2277,
+        863
+      ],
+      "width": 2073,
+      "height": 576,
+      "sha256": "2e27b98768517686cd508cd68f5dac51d0cc009fa727f9ca73338cca5b7d0b17"
+    },
+    "ds-big-7.2-2": {
+      "img": "/cs408/img/wangdao/ds-big-7.2-2.webp",
+      "pdf_page": 117,
+      "book_ans_page": 276,
+      "crop": [
+        253,
+        276,
+        2265,
+        558
+      ],
+      "width": 2012,
+      "height": 282,
+      "sha256": "7cde9e6aeb2d7a33d210cc2c3ade84396e13942b0c7763777e01337f24731b97"
+    },
+    "ds-big-7.2-3": {
+      "img": "/cs408/img/wangdao/ds-big-7.2-3.webp",
+      "pdf_page": 118,
+      "book_ans_page": 276,
+      "crop": [
+        253,
+        276,
+        2279,
+        747
+      ],
+      "width": 2026,
+      "height": 471,
+      "sha256": "b7a1a1109af440edbf6f726a2088bf6ffa1f58f5a821457cee6accd3b68ee4aa"
+    },
+    "ds-big-7.2-4": {
+      "img": "/cs408/img/wangdao/ds-big-7.2-4.webp",
+      "pdf_page": 119,
+      "book_ans_page": 277,
+      "crop": [
+        253,
+        283,
+        1778,
+        377
+      ],
+      "width": 1525,
+      "height": 94,
+      "sha256": "a3e86c78eac0a5eb86cc3aa51ad154f19285930075fc83059b25a8fb42146e88"
+    },
+    "ds-big-7.2-5": {
+      "img": "/cs408/img/wangdao/ds-big-7.2-5.webp",
+      "pdf_page": 120,
+      "book_ans_page": 277,
+      "crop": [
+        254,
+        276,
+        2276,
+        490
+      ],
+      "width": 2022,
+      "height": 214,
+      "sha256": "359577108bf72d5ca894d0bf211916ba124ec4fa0719322ce1d9eb03399c24da"
+    },
+    "ds-big-7.2-6": {
+      "img": "/cs408/img/wangdao/ds-big-7.2-6.webp",
+      "pdf_page": 121,
+      "book_ans_page": 278,
+      "crop": [
+        254,
+        276,
+        2277,
+        803
+      ],
+      "width": 2023,
+      "height": 527,
+      "sha256": "5e6474874e22de1707d40af2de0cc6c59d2821c33dede295fd893a3b454471f3"
+    },
+    "ds-big-7.2-7": {
+      "img": "/cs408/img/wangdao/ds-big-7.2-7.webp",
+      "pdf_page": 122,
+      "book_ans_page": 278,
+      "crop": [
+        254,
+        276,
+        2278,
+        742
+      ],
+      "width": 2024,
+      "height": 466,
+      "sha256": "71f717e33e7f88d91f4eb14ccd99d07567ba66d7fe43bca985cf2df78dd40e2f"
+    },
+    "ds-big-7.3-1": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-1.webp",
+      "pdf_page": 123,
+      "book_ans_page": 301,
+      "crop": [
+        204,
+        284,
+        2277,
+        534
+      ],
+      "width": 2073,
+      "height": 250,
+      "sha256": "f5322ee285c986e6ae207dee4563a461d112a38d16d38a288dcc10f23c8e3368"
+    },
+    "ds-big-7.3-2": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-2.webp",
+      "pdf_page": 124,
+      "book_ans_page": 301,
+      "crop": [
+        253,
+        276,
+        2277,
+        430
+      ],
+      "width": 2024,
+      "height": 154,
+      "sha256": "b940589408c5b6c2f0ec6871d82e5eb2a70049b0d0bc8dbee75744120a6b8043"
+    },
+    "ds-big-7.3-3": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-3.webp",
+      "pdf_page": 125,
+      "book_ans_page": 301,
+      "crop": [
+        253,
+        276,
+        2278,
+        427
+      ],
+      "width": 2025,
+      "height": 151,
+      "sha256": "1c996d67c8ecaca4e1bc41e15736273d45003b7aded523a410d2f06b425161e2"
+    },
+    "ds-big-7.3-4": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-4.webp",
+      "pdf_page": 126,
+      "book_ans_page": 302,
+      "crop": [
+        253,
+        276,
+        2277,
+        427
+      ],
+      "width": 2024,
+      "height": 151,
+      "sha256": "c8f08fad4125e338e90f9b4db18f7a5e5eaf5fa15cf162138a0a943e123072d8"
+    },
+    "ds-big-7.3-5": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-5.webp",
+      "pdf_page": 127,
+      "book_ans_page": 302,
+      "crop": [
+        254,
+        284,
+        1554,
+        376
+      ],
+      "width": 1300,
+      "height": 92,
+      "sha256": "8abdf5fd95cc7ad7fdb5bb0a560fa2cc6ad7499013a3b6017f93c11764d974fc"
+    },
+    "ds-big-7.3-6": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-6.webp",
+      "pdf_page": 128,
+      "book_ans_page": 302,
+      "crop": [
+        254,
+        284,
+        1597,
+        376
+      ],
+      "width": 1343,
+      "height": 92,
+      "sha256": "8e2ddea291caebc1e51d4eb64ab7b61af23e8a0c90bb26c7170a16a6687a8bd1"
+    },
+    "ds-big-7.3-7": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-7.webp",
+      "pdf_page": 129,
+      "book_ans_page": 303,
+      "crop": [
+        254,
+        286,
+        1838,
+        374
+      ],
+      "width": 1584,
+      "height": 88,
+      "sha256": "aee4f4e8c59793ad5f3392b9378dbf3fa5f5fc9e7b3f496af6cd34e64232db78"
+    },
+    "ds-big-7.3-8": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-8.webp",
+      "pdf_page": 130,
+      "book_ans_page": 303,
+      "crop": [
+        254,
+        284,
+        1641,
+        376
+      ],
+      "width": 1387,
+      "height": 92,
+      "sha256": "ee78580249b49abf03076b730c39cdcd9dfa65dd46af56d1d29bbde18f4a2929"
+    },
+    "ds-big-7.3-9": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-9.webp",
+      "pdf_page": 131,
+      "book_ans_page": 304,
+      "crop": [
+        254,
+        284,
+        1819,
+        376
+      ],
+      "width": 1565,
+      "height": 92,
+      "sha256": "5abd43a949afe5ae31707457ee4a16fb324acf9c9859b9fe2012d271b018cba1"
+    },
+    "ds-big-7.3-10": {
+      "img": "/cs408/img/wangdao/ds-big-7.3-10.webp",
+      "pdf_page": 132,
+      "book_ans_page": 304,
+      "crop": [
+        233,
+        276,
+        2276,
+        493
+      ],
+      "width": 2043,
+      "height": 217,
+      "sha256": "9da3a4564ff8b3ae48128dc81d2f441cfff14478d1451524afa04d41f4519173"
+    },
+    "ds-big-7.4-1": {
+      "img": "/cs408/img/wangdao/ds-big-7.4-1.webp",
+      "pdf_page": 133,
+      "book_ans_page": 315,
+      "crop": [
+        204,
+        284,
+        1920,
+        480
+      ],
+      "width": 1716,
+      "height": 196,
+      "sha256": "c1aef2c3af7e88eb45490384ca2c98062d2412193ac386b627218c3c94945931"
+    },
+    "ds-big-7.4-2": {
+      "img": "/cs408/img/wangdao/ds-big-7.4-2.webp",
+      "pdf_page": 134,
+      "book_ans_page": 316,
+      "crop": [
+        253,
+        276,
+        1802,
+        820
+      ],
+      "width": 1549,
+      "height": 544,
+      "sha256": "b5db745618d436d26008be4a9a7d3336b56d129435e9bc3381d1316cbef2553b"
+    },
+    "ds-big-7.4-3": {
+      "img": "/cs408/img/wangdao/ds-big-7.4-3.webp",
+      "pdf_page": 135,
+      "book_ans_page": 317,
+      "crop": [
+        253,
+        276,
+        2277,
+        556
+      ],
+      "width": 2024,
+      "height": 280,
+      "sha256": "a49cbae2bc1d19f539eb6b55e9927845a68f98aa5b67a5634f2142996e7d3dcc"
+    },
+    "ds-big-7.5-1": {
+      "img": "/cs408/img/wangdao/ds-big-7.5-1.webp",
+      "pdf_page": 136,
+      "book_ans_page": 327,
+      "crop": [
+        204,
+        284,
+        2277,
+        532
+      ],
+      "width": 2073,
+      "height": 248,
+      "sha256": "6e8d1756aee36d08439fdb32f5c5e9b92715b10ade536fe9df6cb79d54a137aa"
+    },
+    "ds-big-7.5-2": {
+      "img": "/cs408/img/wangdao/ds-big-7.5-2.webp",
+      "pdf_page": 137,
+      "book_ans_page": 327,
+      "crop": [
+        253,
+        276,
+        2277,
+        748
+      ],
+      "width": 2024,
+      "height": 472,
+      "sha256": "8ac2d963abe957bc17b722296bce22fd1b2c2046096c5e131fff27613d65c8c8"
+    },
+    "ds-big-7.5-3": {
+      "img": "/cs408/img/wangdao/ds-big-7.5-3.webp",
+      "pdf_page": 138,
+      "book_ans_page": 327,
+      "crop": [
+        253,
+        276,
+        2277,
+        619
+      ],
+      "width": 2024,
+      "height": 343,
+      "sha256": "a9c19bab2c90932b901c135d40294a5e436c5462c89de32c279d534543d72893"
+    },
+    "ds-big-7.5-4": {
+      "img": "/cs408/img/wangdao/ds-big-7.5-4.webp",
+      "pdf_page": 139,
+      "book_ans_page": 328,
+      "crop": [
+        253,
+        276,
+        2277,
+        621
+      ],
+      "width": 2024,
+      "height": 345,
+      "sha256": "735785050d894a1dc1f673ff5ee4e97085b55ed2c4d56411ae69196d74f41465"
+    },
+    "ds-big-7.5-5": {
+      "img": "/cs408/img/wangdao/ds-big-7.5-5.webp",
+      "pdf_page": 140,
+      "book_ans_page": 329,
+      "crop": [
+        254,
+        276,
+        2276,
+        810
+      ],
+      "width": 2022,
+      "height": 534,
+      "sha256": "c61e880940fcf2721afd1c56d09e5118545cff00adc7f2f18719980df350df6e"
+    },
+    "ds-big-7.5-6": {
+      "img": "/cs408/img/wangdao/ds-big-7.5-6.webp",
+      "pdf_page": 141,
+      "book_ans_page": 329,
+      "crop": [
+        254,
+        276,
+        2278,
+        621
+      ],
+      "width": 2024,
+      "height": 345,
+      "sha256": "56f6955cb4585152cda5068d527a018205c35fba2c486a77ee4724633e62c3c4"
+    },
+    "ds-big-7.5-7": {
+      "img": "/cs408/img/wangdao/ds-big-7.5-7.webp",
+      "pdf_page": 142,
+      "book_ans_page": 329,
+      "crop": [
+        254,
+        276,
+        2277,
+        684
+      ],
+      "width": 2023,
+      "height": 408,
+      "sha256": "bf3fff9ff4eb4cbde0724a0a7a7d723d213766d889b9d05977f5da63752c3e43"
+    },
+    "ds-big-8.2-1": {
+      "img": "/cs408/img/wangdao/ds-big-8.2-1.webp",
+      "pdf_page": 143,
+      "book_ans_page": 339,
+      "crop": [
+        204,
+        287,
+        1530,
+        617
+      ],
+      "width": 1326,
+      "height": 330,
+      "sha256": "287a5d6e2bbd2f4a1a3da91e2d49e1d858c0110bb482cb1904920da66b4fb034"
+    },
+    "ds-big-8.2-2": {
+      "img": "/cs408/img/wangdao/ds-big-8.2-2.webp",
+      "pdf_page": 144,
+      "book_ans_page": 340,
+      "crop": [
+        253,
+        276,
+        2277,
+        432
+      ],
+      "width": 2024,
+      "height": 156,
+      "sha256": "81b3e07d4ccf305685ca0f7c9992588f64be1592deba65d0aca95cd47928cabd"
+    },
+    "ds-big-8.3-1": {
+      "img": "/cs408/img/wangdao/ds-big-8.3-1.webp",
+      "pdf_page": 145,
+      "book_ans_page": 348,
+      "crop": [
+        204,
+        284,
+        2276,
+        537
+      ],
+      "width": 2072,
+      "height": 253,
+      "sha256": "7aaa852d060fc593121a3526604dbfc6f33ba27506634a6599e055a7e49d20b9"
+    },
+    "ds-big-8.3-2": {
+      "img": "/cs408/img/wangdao/ds-big-8.3-2.webp",
+      "pdf_page": 146,
+      "book_ans_page": 349,
+      "crop": [
+        253,
+        276,
+        2277,
+        432
+      ],
+      "width": 2024,
+      "height": 156,
+      "sha256": "fa153bffd7076c403c18071a4d767084742e7baf690d2797b7b328d8508bdeef"
+    },
+    "ds-big-8.3-3": {
+      "img": "/cs408/img/wangdao/ds-big-8.3-3.webp",
+      "pdf_page": 147,
+      "book_ans_page": 349,
+      "crop": [
+        253,
+        276,
+        2277,
+        647
+      ],
+      "width": 2024,
+      "height": 371,
+      "sha256": "dc49314d55769f99ec7e1ba127298e6a859b6d398f2913811b68a28ea4679bfe"
+    },
+    "ds-big-8.3-4": {
+      "img": "/cs408/img/wangdao/ds-big-8.3-4.webp",
+      "pdf_page": 148,
+      "book_ans_page": 350,
+      "crop": [
+        253,
+        276,
+        2277,
+        684
+      ],
+      "width": 2024,
+      "height": 408,
+      "sha256": "e2de4490dae0f65c89fa220fe44c0b42aca722cca0e8c84be5dc62dd20813ccd"
+    },
+    "ds-big-8.4-1": {
+      "img": "/cs408/img/wangdao/ds-big-8.4-1.webp",
+      "pdf_page": 149,
+      "book_ans_page": 360,
+      "crop": [
+        204,
+        284,
+        1053,
+        477
+      ],
+      "width": 849,
+      "height": 193,
+      "sha256": "674b37f34d823e287c4bf7b47a5e2cb626219e5575e96fb300b101fc41b13f42"
+    },
+    "ds-big-8.4-2": {
+      "img": "/cs408/img/wangdao/ds-big-8.4-2.webp",
+      "pdf_page": 150,
+      "book_ans_page": 360,
+      "crop": [
+        253,
+        284,
+        1860,
+        376
+      ],
+      "width": 1607,
+      "height": 92,
+      "sha256": "1c6d2c4140ab11d30a72b92190e967f59100d6b6b2e1cb8bd6bf37efd6e48e4d"
+    },
+    "ds-big-8.4-3": {
+      "img": "/cs408/img/wangdao/ds-big-8.4-3.webp",
+      "pdf_page": 151,
+      "book_ans_page": 361,
+      "crop": [
+        253,
+        276,
+        2276,
+        427
+      ],
+      "width": 2023,
+      "height": 151,
+      "sha256": "5f7967176a7465f89d0ec0de3ef663d28ab6f1918109aab3dff1813cc73e122f"
+    },
+    "ds-big-8.4-4": {
+      "img": "/cs408/img/wangdao/ds-big-8.4-4.webp",
+      "pdf_page": 152,
+      "book_ans_page": 361,
+      "crop": [
+        253,
+        276,
+        2276,
+        1157
+      ],
+      "width": 2023,
+      "height": 881,
+      "sha256": "63ffb7302e79b239609b25b10711cb1ce93df6b343b344d014bf36dc7ab949ec"
+    },
+    "ds-big-8.4-5": {
+      "img": "/cs408/img/wangdao/ds-big-8.4-5.webp",
+      "pdf_page": 153,
+      "book_ans_page": 361,
+      "crop": [
+        254,
+        284,
+        1947,
+        376
+      ],
+      "width": 1693,
+      "height": 92,
+      "sha256": "3a65e56f9911219f6f7df71b0111f42c3f898337b93c02e3f2ad3fa1466147dd"
+    },
+    "ds-big-8.4-6": {
+      "img": "/cs408/img/wangdao/ds-big-8.4-6.webp",
+      "pdf_page": 154,
+      "book_ans_page": 362,
+      "crop": [
+        254,
+        284,
+        1597,
+        376
+      ],
+      "width": 1343,
+      "height": 92,
+      "sha256": "af9bd4e1f457b35c047a9bdff620618ea31197a533a43295acf97b2f9529a654"
+    },
+    "ds-big-8.4-7": {
+      "img": "/cs408/img/wangdao/ds-big-8.4-7.webp",
+      "pdf_page": 155,
+      "book_ans_page": 362,
+      "crop": [
+        254,
+        276,
+        2280,
+        1175
+      ],
+      "width": 2026,
+      "height": 899,
+      "sha256": "50fd51408179b380e467bf1f2b7dceecc9a814850f75252733aa5b96f99419a1"
+    },
+    "ds-big-8.4-8": {
+      "img": "/cs408/img/wangdao/ds-big-8.4-8.webp",
+      "pdf_page": 156,
+      "book_ans_page": 363,
+      "crop": [
+        254,
+        276,
+        2277,
+        621
+      ],
+      "width": 2023,
+      "height": 345,
+      "sha256": "3c4c42546189953df9998e5068f8371dc449ba0ad14b3889cd0b0731f5e7d4cd"
+    },
+    "ds-big-8.5-1": {
+      "img": "/cs408/img/wangdao/ds-big-8.5-1.webp",
+      "pdf_page": 157,
+      "book_ans_page": 372,
+      "crop": [
+        204,
+        284,
+        2277,
+        532
+      ],
+      "width": 2073,
+      "height": 248,
+      "sha256": "1d141e20ace8b9adde11452693036146d18462f62737c4d4973b1c590ab55802"
+    },
+    "ds-big-8.5-2": {
+      "img": "/cs408/img/wangdao/ds-big-8.5-2.webp",
+      "pdf_page": 158,
+      "book_ans_page": 372,
+      "crop": [
+        253,
+        276,
+        2277,
+        430
+      ],
+      "width": 2024,
+      "height": 154,
+      "sha256": "efc6a1ec7d67b77f037bba79f44e77b2d3dd638d3554e92d14234869494f4019"
+    },
+    "ds-big-8.5-3": {
+      "img": "/cs408/img/wangdao/ds-big-8.5-3.webp",
+      "pdf_page": 159,
+      "book_ans_page": 372,
+      "crop": [
+        253,
+        276,
+        2102,
+        1414
+      ],
+      "width": 1849,
+      "height": 1138,
+      "sha256": "825a574fba9c151b6a8ee514dcacd3e78a8423f4453b049e562fbfa3e2998593"
+    },
+    "ds-big-8.6-1": {
+      "img": "/cs408/img/wangdao/ds-big-8.6-1.webp",
+      "pdf_page": 160,
+      "book_ans_page": 379,
+      "crop": [
+        204,
+        284,
+        2003,
+        480
+      ],
+      "width": 1799,
+      "height": 196,
+      "sha256": "7eb4b7b7e28d59c4cf5155e934c9e88ae39616a7eee4728772babd75ece21467"
+    },
+    "ds-big-8.6-2": {
+      "img": "/cs408/img/wangdao/ds-big-8.6-2.webp",
+      "pdf_page": 161,
+      "book_ans_page": 379,
+      "crop": [
+        253,
+        276,
+        2277,
+        621
+      ],
+      "width": 2024,
+      "height": 345,
+      "sha256": "b835890b10cb96877261fca061d9d3b8b10d176e571d47e3184aff07039f3a61"
+    },
+    "ds-big-8.6-3": {
+      "img": "/cs408/img/wangdao/ds-big-8.6-3.webp",
+      "pdf_page": 162,
+      "book_ans_page": 380,
+      "crop": [
+        253,
+        276,
+        2276,
+        430
+      ],
+      "width": 2023,
+      "height": 154,
+      "sha256": "56031639c8927748763d8ec6164d366cbf1804b38dbf622a4da7a757e1bf2858"
+    },
+    "ds-big-8.7-1": {
+      "img": "/cs408/img/wangdao/ds-big-8.7-1.webp",
+      "pdf_page": 163,
+      "book_ans_page": 388,
+      "crop": [
+        204,
+        284,
+        2277,
+        661
+      ],
+      "width": 2073,
+      "height": 377,
+      "sha256": "753ac85301530bdcf44615583e83284b1b0216c4135a4b4fa5117b73f4138974"
+    },
+    "ds-big-8.7-2": {
+      "img": "/cs408/img/wangdao/ds-big-8.7-2.webp",
+      "pdf_page": 164,
+      "book_ans_page": 389,
+      "crop": [
+        253,
+        276,
+        2276,
+        558
+      ],
+      "width": 2023,
+      "height": 282,
+      "sha256": "05b48fe6b35d0405cf78af5007b6e633d9e3ab1acb722d8a2df5b1f6a05a6561"
+    },
+    "ds-big-8.7-3": {
+      "img": "/cs408/img/wangdao/ds-big-8.7-3.webp",
+      "pdf_page": 165,
+      "book_ans_page": 389,
+      "crop": [
+        253,
+        276,
+        2277,
+        430
+      ],
+      "width": 2024,
+      "height": 154,
+      "sha256": "69d83123073592142c874940dd90bb7f2a2fdc3b90bd280f81f56d2eb1190f27"
+    },
+    "ds-big-8.7-4": {
+      "img": "/cs408/img/wangdao/ds-big-8.7-4.webp",
+      "pdf_page": 166,
+      "book_ans_page": 389,
+      "crop": [
+        253,
+        276,
+        2277,
+        430
+      ],
+      "width": 2024,
+      "height": 154,
+      "sha256": "991ca1b767db2f196782bcda3920e0ec6824c2f476f3d834873739ab6e590ce9"
+    },
+    "ds-big-8.7-5": {
+      "img": "/cs408/img/wangdao/ds-big-8.7-5.webp",
+      "pdf_page": 167,
+      "book_ans_page": 390,
+      "crop": [
+        254,
+        276,
+        2277,
+        621
+      ],
+      "width": 2023,
+      "height": 345,
+      "sha256": "22caf0e51dadf5e08cd3ef68d9b79f185d133b7c6614b51d4ea459c58682bab1"
+    },
+    "os-big-1.2-1": {
+      "img": "/cs408/img/wangdao/os-big-1.2-1.webp",
+      "pdf_page": 4,
+      "book_ans_page": 14,
+      "pdf_edition": "单题",
+      "crop": [
+        205,
+        287,
+        2277,
+        735
+      ],
+      "width": 2072,
+      "height": 448,
+      "sha256": "a9609b8790cda1555d24178509fde086c9754b2a727650a918b30dfaebca15b6"
+    },
+    "os-big-1.2-2": {
+      "img": "/cs408/img/wangdao/os-big-1.2-2.webp",
+      "pdf_page": 5,
+      "book_ans_page": 14,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2280,
+        747
+      ],
+      "width": 2027,
+      "height": 471,
+      "sha256": "00210ffc7dae4a59d7ab017fd7b960d73d7d279ee30db156a1bffb9d4d7d5851"
+    },
+    "os-big-2.1-1": {
+      "img": "/cs408/img/wangdao/os-big-2.1-1.webp",
+      "pdf_page": 6,
+      "book_ans_page": 66,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        287,
+        2277,
+        2123
+      ],
+      "width": 2074,
+      "height": 1836,
+      "sha256": "a9e4e8d79ed384ac481d263d06610bac0c19f3e8941b26ce16c5a03f5345f7ba"
+    },
+    "os-big-2.2-1": {
+      "img": "/cs408/img/wangdao/os-big-2.2-1.webp",
+      "pdf_page": 7,
+      "book_ans_page": 94,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2277,
+        846
+      ],
+      "width": 2074,
+      "height": 562,
+      "sha256": "abe93c5f9a672430b2aae7c15996f80666be21e391a3f24486b9d94d2c959ed5"
+    },
+    "os-big-2.2-2": {
+      "img": "/cs408/img/wangdao/os-big-2.2-2.webp",
+      "pdf_page": 8,
+      "book_ans_page": 94,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        1182
+      ],
+      "width": 2024,
+      "height": 906,
+      "sha256": "e41e41c5b64f53f14693a7200124893f5c6639a4336c1fa36ebd9ef9db0c05fa"
+    },
+    "os-big-2.2-3": {
+      "img": "/cs408/img/wangdao/os-big-2.2-3.webp",
+      "pdf_page": 9,
+      "book_ans_page": 95,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2153,
+        1547
+      ],
+      "width": 1900,
+      "height": 1271,
+      "sha256": "7d52bb90349a2624728a4d685ecfb57f0f01771abbb24324cfce4f7f85ffb98d"
+    },
+    "os-big-2.2-4": {
+      "img": "/cs408/img/wangdao/os-big-2.2-4.webp",
+      "pdf_page": 10,
+      "book_ans_page": 95,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        951
+      ],
+      "width": 2024,
+      "height": 675,
+      "sha256": "f5b2f0d00b3e978dc928bbeefe0131fc195352799e77f2814fa5e61001599efe"
+    },
+    "os-big-2.2-5": {
+      "img": "/cs408/img/wangdao/os-big-2.2-5.webp",
+      "pdf_page": 11,
+      "book_ans_page": 96,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        970
+      ],
+      "width": 2023,
+      "height": 694,
+      "sha256": "c26cd4260536799df6e766f169f3443108e26c072b20c63e14a64cfbd8af0c7a"
+    },
+    "os-big-2.2-6": {
+      "img": "/cs408/img/wangdao/os-big-2.2-6.webp",
+      "pdf_page": 12,
+      "book_ans_page": 96,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2276,
+        889
+      ],
+      "width": 2022,
+      "height": 613,
+      "sha256": "eecec904a83d7432f780e88e569a965a2a72084e064fc279828815b429cddce7"
+    },
+    "os-big-2.2-7": {
+      "img": "/cs408/img/wangdao/os-big-2.2-7.webp",
+      "pdf_page": 13,
+      "book_ans_page": 97,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        747
+      ],
+      "width": 2023,
+      "height": 471,
+      "sha256": "529a1e27d18a3e98a1171b9321b704ddc8b359508a26ca1627899f58f1c9e7e4"
+    },
+    "os-big-2.2-8": {
+      "img": "/cs408/img/wangdao/os-big-2.2-8.webp",
+      "pdf_page": 14,
+      "book_ans_page": 97,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        884
+      ],
+      "width": 2023,
+      "height": 608,
+      "sha256": "a3089a6b226d2799c70c79bee842ed618a98c915219323771d7876d8fbe47947"
+    },
+    "os-big-2.2-9": {
+      "img": "/cs408/img/wangdao/os-big-2.2-9.webp",
+      "pdf_page": 15,
+      "book_ans_page": 97,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2280,
+        1164
+      ],
+      "width": 2026,
+      "height": 888,
+      "sha256": "b19a93ef15d0af29c0ee6147820d01720c838fd64bd1a6283e3d7a565bd93bb1"
+    },
+    "os-big-2.2-10": {
+      "img": "/cs408/img/wangdao/os-big-2.2-10.webp",
+      "pdf_page": 16,
+      "book_ans_page": 98,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        742
+      ],
+      "width": 2045,
+      "height": 466,
+      "sha256": "4787aabf64283e38f33c674d6097cb560e791d71f4ee0b2d82636996d7f16c66"
+    },
+    "os-big-2.3-1": {
+      "img": "/cs408/img/wangdao/os-big-2.3-1.webp",
+      "pdf_page": 17,
+      "book_ans_page": 132,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        1934,
+        1060
+      ],
+      "width": 1731,
+      "height": 776,
+      "sha256": "c27b81fd554560075399d3955b1995713aaa3e63b5edaca2edfb552d5538370b"
+    },
+    "os-big-2.3-2": {
+      "img": "/cs408/img/wangdao/os-big-2.3-2.webp",
+      "pdf_page": 18,
+      "book_ans_page": 133,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        1685,
+        619
+      ],
+      "width": 1432,
+      "height": 343,
+      "sha256": "a83a05efe691e53e6b7058787fee9d8a7bd1f738c0018d5c4aae3961a1aa6d1f"
+    },
+    "os-big-2.3-3": {
+      "img": "/cs408/img/wangdao/os-big-2.3-3.webp",
+      "pdf_page": 19,
+      "book_ans_page": 133,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        491
+      ],
+      "width": 2024,
+      "height": 215,
+      "sha256": "8cf81261c3574ceedab964e246b580eb6eedc877fa1c5451f187f93fd90881f6"
+    },
+    "os-big-2.3-4": {
+      "img": "/cs408/img/wangdao/os-big-2.3-4.webp",
+      "pdf_page": 20,
+      "book_ans_page": 133,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        556
+      ],
+      "width": 2025,
+      "height": 280,
+      "sha256": "006320da7d48a9471d4d19f2e85beebdf812e978787f77ab076b8c31c1c86d3f"
+    },
+    "os-big-2.3-5": {
+      "img": "/cs408/img/wangdao/os-big-2.3-5.webp",
+      "pdf_page": 21,
+      "book_ans_page": 134,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        490
+      ],
+      "width": 2023,
+      "height": 214,
+      "sha256": "9786c4dea12c541a8bb1672fc503527f3227b5066b4370d65436259aef6a9108"
+    },
+    "os-big-2.3-6": {
+      "img": "/cs408/img/wangdao/os-big-2.3-6.webp",
+      "pdf_page": 22,
+      "book_ans_page": 135,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        999
+      ],
+      "width": 2024,
+      "height": 723,
+      "sha256": "d14bb5eb95efc6c2e6732c0b2b8aa6f965b39404fe051d8d0fba809beab388a3"
+    },
+    "os-big-2.3-7": {
+      "img": "/cs408/img/wangdao/os-big-2.3-7.webp",
+      "pdf_page": 23,
+      "book_ans_page": 135,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2274,
+        1028
+      ],
+      "width": 2020,
+      "height": 752,
+      "sha256": "11edd0d61740f78cc79b88dca103ce92f548ba570c944b76ceb50363a3f090d8"
+    },
+    "os-big-2.3-8": {
+      "img": "/cs408/img/wangdao/os-big-2.3-8.webp",
+      "pdf_page": 24,
+      "book_ans_page": 136,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2276,
+        1477
+      ],
+      "width": 2022,
+      "height": 1201,
+      "sha256": "5c36f31aea5ee5b7272d4d0ba25d810a32e243392c9386b845bc602aee645e47"
+    },
+    "os-big-2.3-9": {
+      "img": "/cs408/img/wangdao/os-big-2.3-9.webp",
+      "pdf_page": 25,
+      "book_ans_page": 137,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        921
+      ],
+      "width": 2023,
+      "height": 645,
+      "sha256": "a74787b915da3fe2e1894f72182a7b9091f20988ddfc91ad68f85a7ebbc489d0"
+    },
+    "os-big-2.3-10": {
+      "img": "/cs408/img/wangdao/os-big-2.3-10.webp",
+      "pdf_page": 26,
+      "book_ans_page": 138,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2275,
+        430
+      ],
+      "width": 2042,
+      "height": 154,
+      "sha256": "5481851daf7dfa3af6f4a55484eec48de08569244c6158c282e2e3a6e6da2a3e"
+    },
+    "os-big-2.3-11": {
+      "img": "/cs408/img/wangdao/os-big-2.3-11.webp",
+      "pdf_page": 27,
+      "book_ans_page": 138,
+      "pdf_edition": "单题",
+      "crop": [
+        236,
+        276,
+        2277,
+        493
+      ],
+      "width": 2041,
+      "height": 217,
+      "sha256": "bbde6e93721d3a8709c9a1935f07a25ba22b95a930861d91d18c3d6070c8d1c5"
+    },
+    "os-big-2.3-12": {
+      "img": "/cs408/img/wangdao/os-big-2.3-12.webp",
+      "pdf_page": 28,
+      "book_ans_page": 139,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        808
+      ],
+      "width": 2044,
+      "height": 532,
+      "sha256": "20a191f47a311f0a414cd0061b81d2d56ce366b19e88b928a26ae8efd07fce94"
+    },
+    "os-big-2.3-13": {
+      "img": "/cs408/img/wangdao/os-big-2.3-13.webp",
+      "pdf_page": 29,
+      "book_ans_page": 140,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2279,
+        1033
+      ],
+      "width": 2046,
+      "height": 757,
+      "sha256": "566ffafdc6bf97881f6eba747b4a9eee1a231226181bb92443e86df6f90d4658"
+    },
+    "os-big-2.3-14": {
+      "img": "/cs408/img/wangdao/os-big-2.3-14.webp",
+      "pdf_page": 30,
+      "book_ans_page": 140,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        811
+      ],
+      "width": 2044,
+      "height": 535,
+      "sha256": "43374038d3c1c07c366e05f03f90e1d3e3273c685581a25fca52cd2e632a472b"
+    },
+    "os-big-2.3-15": {
+      "img": "/cs408/img/wangdao/os-big-2.3-15.webp",
+      "pdf_page": 31,
+      "book_ans_page": 141,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2280,
+        559
+      ],
+      "width": 2047,
+      "height": 283,
+      "sha256": "3369ebc045a1f653246508fd2273bad7c9fc6d2f484aa5f6effb86ecfcf8c724"
+    },
+    "os-big-2.3-16": {
+      "img": "/cs408/img/wangdao/os-big-2.3-16.webp",
+      "pdf_page": 32,
+      "book_ans_page": 141,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        616
+      ],
+      "width": 2044,
+      "height": 340,
+      "sha256": "a18cf705af505e78112897cb023aaa46c20d940d152491e571a1660abfa9fe6a"
+    },
+    "os-big-2.3-17": {
+      "img": "/cs408/img/wangdao/os-big-2.3-17.webp",
+      "pdf_page": 33,
+      "book_ans_page": 142,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        621
+      ],
+      "width": 2044,
+      "height": 345,
+      "sha256": "9b9ab4a9f3f358b5ed034598e494e4f34664993382dbc647ad7a563c0e2fee77"
+    },
+    "os-big-2.3-18": {
+      "img": "/cs408/img/wangdao/os-big-2.3-18.webp",
+      "pdf_page": 34,
+      "book_ans_page": 143,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        1488
+      ],
+      "width": 2045,
+      "height": 1212,
+      "sha256": "42a189721a115f7bf0d181fbbaf43b4465a341ddd7ff9da1f64e6c825c072d66"
+    },
+    "os-big-2.3-19": {
+      "img": "/cs408/img/wangdao/os-big-2.3-19.webp",
+      "pdf_page": 35,
+      "book_ans_page": 143,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1299
+      ],
+      "width": 2044,
+      "height": 1023,
+      "sha256": "296753a56841d5ca72fa979788b5f9d3b3eecf3e6b17a3f07a37a14b489c7882"
+    },
+    "os-big-2.3-20": {
+      "img": "/cs408/img/wangdao/os-big-2.3-20.webp",
+      "pdf_page": 36,
+      "book_ans_page": 144,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2278,
+        619
+      ],
+      "width": 2047,
+      "height": 343,
+      "sha256": "d2ae99cc58fa1760ae807bb0b946c329bca7840ecd26d07aac7f5c4dc136a847"
+    },
+    "os-big-2.3-21": {
+      "img": "/cs408/img/wangdao/os-big-2.3-21.webp",
+      "pdf_page": 37,
+      "book_ans_page": 144,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2280,
+        1375
+      ],
+      "width": 2049,
+      "height": 1099,
+      "sha256": "a6ad33bbd6adbd67cf383879c30c4517f94f72b9e6891699447617d23302d885"
+    },
+    "os-big-2.3-22": {
+      "img": "/cs408/img/wangdao/os-big-2.3-22.webp",
+      "pdf_page": 38,
+      "book_ans_page": 145,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2277,
+        1414
+      ],
+      "width": 2046,
+      "height": 1138,
+      "sha256": "2f43ba9ad8c61b39c703b828788552ccdffe6a29c97ce33d0ff211477793a224"
+    },
+    "os-big-2.3-23": {
+      "img": "/cs408/img/wangdao/os-big-2.3-23.webp",
+      "pdf_page": 39,
+      "book_ans_page": 146,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2277,
+        616
+      ],
+      "width": 2046,
+      "height": 340,
+      "sha256": "db97a3ae465ed12ea96c401dc37e8b5e7ed19ab5603cd210e26b511e8d9c3fda"
+    },
+    "os-big-2.3-24": {
+      "img": "/cs408/img/wangdao/os-big-2.3-24.webp",
+      "pdf_page": 40,
+      "book_ans_page": 147,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2278,
+        493
+      ],
+      "width": 2047,
+      "height": 217,
+      "sha256": "eebc2109f533ed5f441dfc9540451beb86b84c8696b4bd6a4b869f51d540e0e4"
+    },
+    "os-big-2.3-25": {
+      "img": "/cs408/img/wangdao/os-big-2.3-25.webp",
+      "pdf_page": 41,
+      "book_ans_page": 147,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2277,
+        1607
+      ],
+      "width": 2046,
+      "height": 1331,
+      "sha256": "10ddb7aee02148d2290fa01d27eb0d6be0c4bb3c30140b98f110580994a85ddc"
+    },
+    "os-big-2.3-26": {
+      "img": "/cs408/img/wangdao/os-big-2.3-26.webp",
+      "pdf_page": 42,
+      "book_ans_page": 148,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2277,
+        887
+      ],
+      "width": 2046,
+      "height": 611,
+      "sha256": "301a9fb682eb2ca8e0bd1752d88519b8e6cf7e4e08a8ce1377413964e9a0a44f"
+    },
+    "os-big-2.3-27": {
+      "img": "/cs408/img/wangdao/os-big-2.3-27.webp",
+      "pdf_page": 43,
+      "book_ans_page": 148,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2277,
+        1328
+      ],
+      "width": 2046,
+      "height": 1052,
+      "sha256": "0cb9ff2b65567dc44a4201642bf32df1c02a82b98e1e94298d596a4e1ce13764"
+    },
+    "os-big-2.3-28": {
+      "img": "/cs408/img/wangdao/os-big-2.3-28.webp",
+      "pdf_page": 44,
+      "book_ans_page": 148,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2278,
+        871
+      ],
+      "width": 2047,
+      "height": 595,
+      "sha256": "cc0fb01099ee765f70319c816ef1b358b5515ea265e523948572cd9135f1f100"
+    },
+    "os-big-2.3-29": {
+      "img": "/cs408/img/wangdao/os-big-2.3-29.webp",
+      "pdf_page": 45,
+      "book_ans_page": 149,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2277,
+        619
+      ],
+      "width": 2046,
+      "height": 343,
+      "sha256": "7e47a8598fffe58a3b865b785ba4b01f58aa12740210d0c05a21979754a4c3ae"
+    },
+    "os-big-2.4-1": {
+      "img": "/cs408/img/wangdao/os-big-2.4-1.webp",
+      "pdf_page": 46,
+      "book_ans_page": 172,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2276,
+        860
+      ],
+      "width": 2073,
+      "height": 576,
+      "sha256": "61988cd9034de3251344bbdb5b0dca0e0eeb8ff500df52be32e993d395ad6346"
+    },
+    "os-big-2.4-2": {
+      "img": "/cs408/img/wangdao/os-big-2.4-2.webp",
+      "pdf_page": 47,
+      "book_ans_page": 172,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2276,
+        558
+      ],
+      "width": 2023,
+      "height": 282,
+      "sha256": "44c646cda5f9a9fefd116e48f3fd35f2681cd92f13659a3b0e7bc9cc395800a5"
+    },
+    "os-big-2.4-3": {
+      "img": "/cs408/img/wangdao/os-big-2.4-3.webp",
+      "pdf_page": 48,
+      "book_ans_page": 172,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        1236
+      ],
+      "width": 2025,
+      "height": 960,
+      "sha256": "a9b2f3fbbebfd2a844bcf881a818869d428f6b8f59e366ff9dcf19f76594197c"
+    },
+    "os-big-2.4-4": {
+      "img": "/cs408/img/wangdao/os-big-2.4-4.webp",
+      "pdf_page": 49,
+      "book_ans_page": 173,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2220,
+        1031
+      ],
+      "width": 1967,
+      "height": 755,
+      "sha256": "55c515d5ccf0f8fc8c27dd0d2bb8e0512623a841d754acaeaa98b60ed30a4bf5"
+    },
+    "os-big-2.4-5": {
+      "img": "/cs408/img/wangdao/os-big-2.4-5.webp",
+      "pdf_page": 50,
+      "book_ans_page": 174,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        1098
+      ],
+      "width": 2023,
+      "height": 822,
+      "sha256": "5bee826301be6adb22e6b71fa0a1bdf6e7ccd211a37bb3474296c8ce50df8d78"
+    },
+    "os-big-3.1-1": {
+      "img": "/cs408/img/wangdao/os-big-3.1-1.webp",
+      "pdf_page": 51,
+      "book_ans_page": 208,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        287,
+        2279,
+        1137
+      ],
+      "width": 2076,
+      "height": 850,
+      "sha256": "a54695b6b9fc16682cff2653b91a94769c63fc8de6126f9159c4e7bb1a958bf5"
+    },
+    "os-big-3.1-2": {
+      "img": "/cs408/img/wangdao/os-big-3.1-2.webp",
+      "pdf_page": 52,
+      "book_ans_page": 208,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        684
+      ],
+      "width": 2024,
+      "height": 408,
+      "sha256": "e2b2214092b750b466b6026dacdb6d4cc01fd470eb8bf6a7b974a4a99457ff86"
+    },
+    "os-big-3.1-3": {
+      "img": "/cs408/img/wangdao/os-big-3.1-3.webp",
+      "pdf_page": 53,
+      "book_ans_page": 209,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        1087
+      ],
+      "width": 2024,
+      "height": 811,
+      "sha256": "5a0fe4c4d1899c4cb14eecc02bbaeff96d53c9063c2c7284dca48c3c6b21dceb"
+    },
+    "os-big-3.1-4": {
+      "img": "/cs408/img/wangdao/os-big-3.1-4.webp",
+      "pdf_page": 54,
+      "book_ans_page": 209,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2216,
+        963
+      ],
+      "width": 1963,
+      "height": 687,
+      "sha256": "17b3532f1cbe69a21f8b3f4c2658b3c89b0fb21986d451d57e46d69357763ed2"
+    },
+    "os-big-3.1-5": {
+      "img": "/cs408/img/wangdao/os-big-3.1-5.webp",
+      "pdf_page": 55,
+      "book_ans_page": 209,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        904
+      ],
+      "width": 2023,
+      "height": 628,
+      "sha256": "6ff3d94f2317b8adfbb564b2afbe5a39c28d7e61bb2937bbf18f6b4750ea281b"
+    },
+    "os-big-3.1-6": {
+      "img": "/cs408/img/wangdao/os-big-3.1-6.webp",
+      "pdf_page": 56,
+      "book_ans_page": 209,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        684
+      ],
+      "width": 2023,
+      "height": 408,
+      "sha256": "d9d77612877a26a51ba8caa586ab518fa2713e2fd2a1f690861c35d8978fdc4b"
+    },
+    "os-big-3.1-7": {
+      "img": "/cs408/img/wangdao/os-big-3.1-7.webp",
+      "pdf_page": 57,
+      "book_ans_page": 210,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        1089
+      ],
+      "width": 2023,
+      "height": 813,
+      "sha256": "38843105f7c7a3579d9971b7df3b3b6b495baf548b4e574261a3b05985561124"
+    },
+    "os-big-3.1-8": {
+      "img": "/cs408/img/wangdao/os-big-3.1-8.webp",
+      "pdf_page": 58,
+      "book_ans_page": 210,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        553
+      ],
+      "width": 2023,
+      "height": 277,
+      "sha256": "e319a1189eef4a6238f98606e43ef1fe9eb4ee51dd019d4ebdd2971815a65914"
+    },
+    "os-big-3.1-9": {
+      "img": "/cs408/img/wangdao/os-big-3.1-9.webp",
+      "pdf_page": 59,
+      "book_ans_page": 210,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        556
+      ],
+      "width": 2024,
+      "height": 280,
+      "sha256": "bf7d9025b9e477ae7afae96c5130f21f4b3f980f80205ade65a479fffb5b6566"
+    },
+    "os-big-3.1-10": {
+      "img": "/cs408/img/wangdao/os-big-3.1-10.webp",
+      "pdf_page": 60,
+      "book_ans_page": 211,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1359
+      ],
+      "width": 2044,
+      "height": 1083,
+      "sha256": "d6d2904161e2c25f0481db7055c80f3f2f96880467456acf76ec23b06933e97c"
+    },
+    "os-big-3.1-11": {
+      "img": "/cs408/img/wangdao/os-big-3.1-11.webp",
+      "pdf_page": 61,
+      "book_ans_page": 211,
+      "pdf_edition": "单题",
+      "crop": [
+        236,
+        276,
+        2278,
+        1612
+      ],
+      "width": 2042,
+      "height": 1336,
+      "sha256": "94eb51a0287de7de586e6bb74dc8c42725787bf33ed11af253777bb433bb0d40"
+    },
+    "os-big-3.2-1": {
+      "img": "/cs408/img/wangdao/os-big-3.2-1.webp",
+      "pdf_page": 62,
+      "book_ans_page": 243,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        283,
+        2277,
+        1331
+      ],
+      "width": 2074,
+      "height": 1048,
+      "sha256": "75f7f970eebe021d553f5fc2ffc22d86ff8182d74884ee784e689898cbcad15a"
+    },
+    "os-big-3.2-2": {
+      "img": "/cs408/img/wangdao/os-big-3.2-2.webp",
+      "pdf_page": 63,
+      "book_ans_page": 243,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        558
+      ],
+      "width": 2024,
+      "height": 282,
+      "sha256": "4284404ae0cbe11e2d016c163fd37d571f4fa9b65cd0894e7076bca27a42ada0"
+    },
+    "os-big-3.2-3": {
+      "img": "/cs408/img/wangdao/os-big-3.2-3.webp",
+      "pdf_page": 64,
+      "book_ans_page": 243,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2274,
+        490
+      ],
+      "width": 2021,
+      "height": 214,
+      "sha256": "87c9237e234ffc127292f84aed7b97d4613a35d74f547fe9960250db010bc986"
+    },
+    "os-big-3.2-4": {
+      "img": "/cs408/img/wangdao/os-big-3.2-4.webp",
+      "pdf_page": 65,
+      "book_ans_page": 244,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        684
+      ],
+      "width": 2024,
+      "height": 408,
+      "sha256": "212efa6a4d95caf917da43004d1df34b2bae0b72c3daf143f9611de2dbc7da69"
+    },
+    "os-big-3.2-5": {
+      "img": "/cs408/img/wangdao/os-big-3.2-5.webp",
+      "pdf_page": 66,
+      "book_ans_page": 245,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        684
+      ],
+      "width": 2023,
+      "height": 408,
+      "sha256": "4c0ce02914c6e72c2c34ecf0bc06775e40d0195fb8bac1cbbad4c83d9a9daed6"
+    },
+    "os-big-3.2-6": {
+      "img": "/cs408/img/wangdao/os-big-3.2-6.webp",
+      "pdf_page": 67,
+      "book_ans_page": 245,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        553
+      ],
+      "width": 2023,
+      "height": 277,
+      "sha256": "19da4813ae9cb460808f9794e8d565c8bc3e9c83da9982ff08351b69c48d60cd"
+    },
+    "os-big-3.2-7": {
+      "img": "/cs408/img/wangdao/os-big-3.2-7.webp",
+      "pdf_page": 68,
+      "book_ans_page": 245,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        810
+      ],
+      "width": 2023,
+      "height": 534,
+      "sha256": "b4f0b8fa2897a975ae88e2db904ca9b216e415c12d2978c9d1e50ba138ec6641"
+    },
+    "os-big-3.2-8": {
+      "img": "/cs408/img/wangdao/os-big-3.2-8.webp",
+      "pdf_page": 69,
+      "book_ans_page": 246,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        490
+      ],
+      "width": 2023,
+      "height": 214,
+      "sha256": "57d2c3dec16628af182334c20ec37a04ae7ac9ac0cea270196202e7657e5e1b0"
+    },
+    "os-big-3.2-9": {
+      "img": "/cs408/img/wangdao/os-big-3.2-9.webp",
+      "pdf_page": 70,
+      "book_ans_page": 246,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        1094
+      ],
+      "width": 2023,
+      "height": 818,
+      "sha256": "e378ccf9471e40ea47dcd911051c0b8b7fa204f5a86199f90c5af9d7ae590bba"
+    },
+    "os-big-3.2-10": {
+      "img": "/cs408/img/wangdao/os-big-3.2-10.webp",
+      "pdf_page": 71,
+      "book_ans_page": 246,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        432
+      ],
+      "width": 2044,
+      "height": 156,
+      "sha256": "c136550a81cd89324b63453f50e59c06087fd25b3939ea36a7f11b84117bf603"
+    },
+    "os-big-3.2-11": {
+      "img": "/cs408/img/wangdao/os-big-3.2-11.webp",
+      "pdf_page": 72,
+      "book_ans_page": 247,
+      "pdf_edition": "单题",
+      "crop": [
+        236,
+        276,
+        2278,
+        824
+      ],
+      "width": 2042,
+      "height": 548,
+      "sha256": "b5fd07c35d157cd2b179312ddcccf632791a7d43c52a2f3ea97bcdfdcbfe6a54"
+    },
+    "os-big-3.2-12": {
+      "img": "/cs408/img/wangdao/os-big-3.2-12.webp",
+      "pdf_page": 73,
+      "book_ans_page": 247,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2279,
+        836
+      ],
+      "width": 2046,
+      "height": 560,
+      "sha256": "46e9da531eeba7db50e4546367bf9948369cbe801269265df150f7bd9b124322"
+    },
+    "os-big-3.2-13": {
+      "img": "/cs408/img/wangdao/os-big-3.2-13.webp",
+      "pdf_page": 74,
+      "book_ans_page": 247,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        868
+      ],
+      "width": 2045,
+      "height": 592,
+      "sha256": "29f490afdfee342d18d5b5e99cef1d03a9f3f73ecb7db091a43b307aa88649b5"
+    },
+    "os-big-3.2-14": {
+      "img": "/cs408/img/wangdao/os-big-3.2-14.webp",
+      "pdf_page": 75,
+      "book_ans_page": 248,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        805
+      ],
+      "width": 2044,
+      "height": 529,
+      "sha256": "aca34cbc783102ed619632e434c6c2bfbd04720cd2e77bc2f6e0e803aa8c5e48"
+    },
+    "os-big-3.2-15": {
+      "img": "/cs408/img/wangdao/os-big-3.2-15.webp",
+      "pdf_page": 76,
+      "book_ans_page": 248,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1151
+      ],
+      "width": 2044,
+      "height": 875,
+      "sha256": "a87dcd658b744bf543a330357c0c8ebc034482b15a047909a809adebbbbf1ed5"
+    },
+    "os-big-3.2-16": {
+      "img": "/cs408/img/wangdao/os-big-3.2-16.webp",
+      "pdf_page": 77,
+      "book_ans_page": 248,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1664
+      ],
+      "width": 2044,
+      "height": 1388,
+      "sha256": "59de0ccb1ea127cc2dbb6da9635204a60128fd01dc637a025341d845cd097794"
+    },
+    "os-big-3.2-17": {
+      "img": "/cs408/img/wangdao/os-big-3.2-17.webp",
+      "pdf_page": 78,
+      "book_ans_page": 248,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        936
+      ],
+      "width": 2045,
+      "height": 660,
+      "sha256": "2f6272d1abb71259e42b455e9178f48c3db830e1d78f684f9d2c569f0e5198da"
+    },
+    "os-big-3.2-18": {
+      "img": "/cs408/img/wangdao/os-big-3.2-18.webp",
+      "pdf_page": 79,
+      "book_ans_page": 249,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        809
+      ],
+      "width": 2044,
+      "height": 533,
+      "sha256": "47147b8df0bbe573da16f5cc14cb28341a86db38212f67a812c9c780dbe6bc63"
+    },
+    "os-big-3.2-19": {
+      "img": "/cs408/img/wangdao/os-big-3.2-19.webp",
+      "pdf_page": 80,
+      "book_ans_page": 249,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        937
+      ],
+      "width": 2045,
+      "height": 661,
+      "sha256": "eeebf46044337fe0a66125a9054a43617f44a5156124ca49c9e03f3b61a5b765"
+    },
+    "os-big-3.2-20": {
+      "img": "/cs408/img/wangdao/os-big-3.2-20.webp",
+      "pdf_page": 81,
+      "book_ans_page": 249,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2278,
+        1801
+      ],
+      "width": 2047,
+      "height": 1525,
+      "sha256": "6a46533fa33b75ddb97fd2fae451e7c173838b1d94783b9bed8c95c96d09e303"
+    },
+    "os-big-3.2-21": {
+      "img": "/cs408/img/wangdao/os-big-3.2-21.webp",
+      "pdf_page": 82,
+      "book_ans_page": 249,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2278,
+        1061
+      ],
+      "width": 2047,
+      "height": 785,
+      "sha256": "7ae49e001332e7c8898085a3d4ec1c98f4d8749917e2078d7d7b24891ebf387d"
+    },
+    "os-big-3.2-22": {
+      "img": "/cs408/img/wangdao/os-big-3.2-22.webp",
+      "pdf_page": 83,
+      "book_ans_page": 250,
+      "pdf_edition": "单题",
+      "crop": [
+        231,
+        276,
+        2279,
+        1061
+      ],
+      "width": 2048,
+      "height": 785,
+      "sha256": "6b8ada52d00fbb3ab10c2b0f80d562e62245dcd60fd258890928bc88f469270c"
+    },
+    "os-big-4.2-1": {
+      "img": "/cs408/img/wangdao/os-big-4.2-1.webp",
+      "pdf_page": 84,
+      "book_ans_page": 289,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        287,
+        1948,
+        616
+      ],
+      "width": 1745,
+      "height": 329,
+      "sha256": "47177eb7bdd9dbd5c16eb4bb1fd9464a5fbd729338433c71a00184cbe1d6df09"
+    },
+    "os-big-4.2-2": {
+      "img": "/cs408/img/wangdao/os-big-4.2-2.webp",
+      "pdf_page": 85,
+      "book_ans_page": 289,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        747
+      ],
+      "width": 2024,
+      "height": 471,
+      "sha256": "59b5a1b8876c0ed1fd736a89de5a92e46ddee24f9b9fcee74518815a33f66de9"
+    },
+    "os-big-4.2-3": {
+      "img": "/cs408/img/wangdao/os-big-4.2-3.webp",
+      "pdf_page": 86,
+      "book_ans_page": 290,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        1707,
+        1128
+      ],
+      "width": 1454,
+      "height": 852,
+      "sha256": "16e849bc8c735352b0ed7d007fa0dea13fbdde4f2d69097e3e3d2f04c594af45"
+    },
+    "os-big-4.2-4": {
+      "img": "/cs408/img/wangdao/os-big-4.2-4.webp",
+      "pdf_page": 87,
+      "book_ans_page": 290,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        1126
+      ],
+      "width": 2024,
+      "height": 850,
+      "sha256": "f0b8329ce001bfcce7c8e273c36afa460dd3b8e65656375f1967836b5cd78f23"
+    },
+    "os-big-4.2-5": {
+      "img": "/cs408/img/wangdao/os-big-4.2-5.webp",
+      "pdf_page": 88,
+      "book_ans_page": 290,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        1729
+      ],
+      "width": 2024,
+      "height": 1453,
+      "sha256": "bc5d00d8560bde5925c1fb32dc0f50de43c11f9b2bcff31ed59ca46b0b2fc1ac"
+    },
+    "os-big-4.2-6": {
+      "img": "/cs408/img/wangdao/os-big-4.2-6.webp",
+      "pdf_page": 89,
+      "book_ans_page": 291,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        1205
+      ],
+      "width": 2024,
+      "height": 929,
+      "sha256": "116b93534a8d2e58dfb0f24bfb583aacc1879a32b1c125f21dc078c6714f3ff6"
+    },
+    "os-big-4.2-7": {
+      "img": "/cs408/img/wangdao/os-big-4.2-7.webp",
+      "pdf_page": 90,
+      "book_ans_page": 291,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        426
+      ],
+      "width": 2023,
+      "height": 150,
+      "sha256": "c5c8014c2ac6e50d0ce2322d04c329c8357dae91369a744833d7778957c5a001"
+    },
+    "os-big-4.2-8": {
+      "img": "/cs408/img/wangdao/os-big-4.2-8.webp",
+      "pdf_page": 91,
+      "book_ans_page": 291,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        1693
+      ],
+      "width": 2023,
+      "height": 1417,
+      "sha256": "35cfde9d5368a70fcfcdd0e5987e45a4efc70605862a457ba63aac33a10adc56"
+    },
+    "os-big-4.2-9": {
+      "img": "/cs408/img/wangdao/os-big-4.2-9.webp",
+      "pdf_page": 92,
+      "book_ans_page": 291,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        684
+      ],
+      "width": 2023,
+      "height": 408,
+      "sha256": "c8ff368240729238f50ae3ed9ca16fac4802378de63171a935af36c03442fd59"
+    },
+    "os-big-4.2-10": {
+      "img": "/cs408/img/wangdao/os-big-4.2-10.webp",
+      "pdf_page": 93,
+      "book_ans_page": 292,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        742
+      ],
+      "width": 2044,
+      "height": 466,
+      "sha256": "5fafaf7f25bc931ac90c72be0bcfb114e42dad2ff3c521ac4b19fb2f10908c35"
+    },
+    "os-big-4.2-11": {
+      "img": "/cs408/img/wangdao/os-big-4.2-11.webp",
+      "pdf_page": 94,
+      "book_ans_page": 292,
+      "pdf_edition": "单题",
+      "crop": [
+        236,
+        276,
+        2278,
+        1379
+      ],
+      "width": 2042,
+      "height": 1103,
+      "sha256": "12230b8075df886f4f183b60ec81c3a8df7a97759c94c2c5ffced355fa87f53b"
+    },
+    "os-big-4.2-12": {
+      "img": "/cs408/img/wangdao/os-big-4.2-12.webp",
+      "pdf_page": 95,
+      "book_ans_page": 292,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2276,
+        621
+      ],
+      "width": 2043,
+      "height": 345,
+      "sha256": "f38c886d20dfbc9bbc1851c1d4cc63c013ae73ea517456fdfaa6771e55abab39"
+    },
+    "os-big-4.2-13": {
+      "img": "/cs408/img/wangdao/os-big-4.2-13.webp",
+      "pdf_page": 96,
+      "book_ans_page": 292,
+      "pdf_edition": "单题",
+      "crop": [
+        234,
+        276,
+        2279,
+        807
+      ],
+      "width": 2045,
+      "height": 531,
+      "sha256": "5aee6d36a5b3abe41674805055b74b2b78f5846db8001cd7ce525dd73a5180e4"
+    },
+    "os-big-4.2-14": {
+      "img": "/cs408/img/wangdao/os-big-4.2-14.webp",
+      "pdf_page": 97,
+      "book_ans_page": 293,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        805
+      ],
+      "width": 2044,
+      "height": 529,
+      "sha256": "ec8f835fb542de32d39172f4c1d7ea6746251e07892b4022ed8c6ea89f0586ba"
+    },
+    "os-big-4.2-15": {
+      "img": "/cs408/img/wangdao/os-big-4.2-15.webp",
+      "pdf_page": 98,
+      "book_ans_page": 293,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1528
+      ],
+      "width": 2044,
+      "height": 1252,
+      "sha256": "136d0d862df13fde432e403e0a8d61332b32c3b7f118be6d4fee0d3ff3dccb07"
+    },
+    "os-big-4.3-1": {
+      "img": "/cs408/img/wangdao/os-big-4.3-1.webp",
+      "pdf_page": 99,
+      "book_ans_page": 304,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2277,
+        1156
+      ],
+      "width": 2074,
+      "height": 872,
+      "sha256": "39919c6c45d3a19a160f0ea810bcd7362540e17efeabb7acb788b3aaeb340be2"
+    },
+    "os-big-4.3-2": {
+      "img": "/cs408/img/wangdao/os-big-4.3-2.webp",
+      "pdf_page": 100,
+      "book_ans_page": 304,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2035,
+        558
+      ],
+      "width": 1782,
+      "height": 282,
+      "sha256": "fda04cdfa4c2f8da5661175dbbe4dc996078c452cdf489181252625573bed130"
+    },
+    "os-big-5.1-1": {
+      "img": "/cs408/img/wangdao/os-big-5.1-1.webp",
+      "pdf_page": 101,
+      "book_ans_page": 319,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        287,
+        2277,
+        672
+      ],
+      "width": 2073,
+      "height": 385,
+      "sha256": "235425bd0f2ae1ad1769a7a8771d3cf89b05a4a7f0d483c4d6a942443b1ea258"
+    },
+    "os-big-5.1-2": {
+      "img": "/cs408/img/wangdao/os-big-5.1-2.webp",
+      "pdf_page": 102,
+      "book_ans_page": 320,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2276,
+        556
+      ],
+      "width": 2023,
+      "height": 280,
+      "sha256": "fac3c62a018596f2bb26300d6424738836c72d415e6bc8224740b53470dd7824"
+    },
+    "os-big-5.2-1": {
+      "img": "/cs408/img/wangdao/os-big-5.2-1.webp",
+      "pdf_page": 103,
+      "book_ans_page": 339,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        284,
+        2277,
+        789
+      ],
+      "width": 2073,
+      "height": 505,
+      "sha256": "31d047a63ffc7cf4b7c8336048c840999a7d950fffa819b429bd5326c7c013dc"
+    },
+    "os-big-5.2-2": {
+      "img": "/cs408/img/wangdao/os-big-5.2-2.webp",
+      "pdf_page": 104,
+      "book_ans_page": 339,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        493
+      ],
+      "width": 2025,
+      "height": 217,
+      "sha256": "ef5708c234c0362e8b6ecfa6116c33a86f84c2a197343c2fc61722f9cd02f8f3"
+    },
+    "os-big-5.2-3": {
+      "img": "/cs408/img/wangdao/os-big-5.2-3.webp",
+      "pdf_page": 105,
+      "book_ans_page": 339,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        936
+      ],
+      "width": 2025,
+      "height": 660,
+      "sha256": "f76de38e96c3ac33f58d5f88a92ed4c7e76842cf9549b2670c79b5b6cd8486a5"
+    },
+    "os-big-5.3-1": {
+      "img": "/cs408/img/wangdao/os-big-5.3-1.webp",
+      "pdf_page": 106,
+      "book_ans_page": 356,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        284,
+        2277,
+        661
+      ],
+      "width": 2073,
+      "height": 377,
+      "sha256": "4bffe00befaa7045c6aa15c29593fcd7424c599ca1052657b38a4a795ac9a56f"
+    },
+    "os-big-5.3-2": {
+      "img": "/cs408/img/wangdao/os-big-5.3-2.webp",
+      "pdf_page": 107,
+      "book_ans_page": 356,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        621
+      ],
+      "width": 2024,
+      "height": 345,
+      "sha256": "5a0ab6dde3c447f7cf4c57be3e263b9de64560f5619e3adda690fa69d3fbc592"
+    },
+    "os-big-5.3-3": {
+      "img": "/cs408/img/wangdao/os-big-5.3-3.webp",
+      "pdf_page": 108,
+      "book_ans_page": 357,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        558
+      ],
+      "width": 2025,
+      "height": 282,
+      "sha256": "9a67d85cc4111a55974ef4545b0a859a1a4ef8315dc069a5b8968725f8d6dd5a"
+    },
+    "os-big-5.3-4": {
+      "img": "/cs408/img/wangdao/os-big-5.3-4.webp",
+      "pdf_page": 109,
+      "book_ans_page": 357,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        556
+      ],
+      "width": 2025,
+      "height": 280,
+      "sha256": "4359c3d637747fdd7fd8e554ae7772007e862053705684705ca2527798363b35"
+    },
+    "os-big-5.3-5": {
+      "img": "/cs408/img/wangdao/os-big-5.3-5.webp",
+      "pdf_page": 110,
+      "book_ans_page": 357,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        978
+      ],
+      "width": 2023,
+      "height": 702,
+      "sha256": "3c47db96ed7ae3eeb9561052ce45d00b14e1b923b084d811abfae8cacb50ee7d"
+    },
+    "os-big-5.3-6": {
+      "img": "/cs408/img/wangdao/os-big-5.3-6.webp",
+      "pdf_page": 111,
+      "book_ans_page": 357,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        1410
+      ],
+      "width": 2023,
+      "height": 1134,
+      "sha256": "3a6a589843a9afc111c037b7e6b5b29701eb522b15390a78c6beef67ae3b51d5"
+    },
+    "os-big-5.3-7": {
+      "img": "/cs408/img/wangdao/os-big-5.3-7.webp",
+      "pdf_page": 112,
+      "book_ans_page": 358,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        742
+      ],
+      "width": 2023,
+      "height": 466,
+      "sha256": "05420f0a7501af99e2a29136ceb1e688b3443a9956e85bdb9df855e1a503cb0d"
+    },
+    "os-big-5.3-8": {
+      "img": "/cs408/img/wangdao/os-big-5.3-8.webp",
+      "pdf_page": 113,
+      "book_ans_page": 358,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        936
+      ],
+      "width": 2023,
+      "height": 660,
+      "sha256": "084093184a8763c7144ac33fc6cdf899127883227d91d0d703e7c7164a845c17"
+    },
+    "cn-big-1.1-1": {
+      "img": "/cs408/img/wangdao/cn-big-1.1-1.webp",
+      "pdf_page": 4,
+      "book_ans_page": 14,
+      "pdf_edition": "单题",
+      "crop": [
+        205,
+        287,
+        2277,
+        798
+      ],
+      "width": 2072,
+      "height": 511,
+      "sha256": "006f734c2d03dfa6f78bdbc3ad52a7e9cb1ca0b48e844ed73aeae40e53269d48"
+    },
+    "cn-big-1.1-2": {
+      "img": "/cs408/img/wangdao/cn-big-1.1-2.webp",
+      "pdf_page": 5,
+      "book_ans_page": 14,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2276,
+        432
+      ],
+      "width": 2023,
+      "height": 156,
+      "sha256": "7a49c4d79faea39a1376b9aa769b8a493813145abe5b254478356b6b8bfbe3eb"
+    },
+    "cn-big-1.1-3": {
+      "img": "/cs408/img/wangdao/cn-big-1.1-3.webp",
+      "pdf_page": 6,
+      "book_ans_page": 15,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        490
+      ],
+      "width": 2024,
+      "height": 214,
+      "sha256": "2eb5391514fc137d5cf575eb92b0b36696403967219572382fce5ede0ca1071e"
+    },
+    "cn-big-2.1-1": {
+      "img": "/cs408/img/wangdao/cn-big-2.1-1.webp",
+      "pdf_page": 7,
+      "book_ans_page": 41,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        287,
+        2276,
+        1024
+      ],
+      "width": 2073,
+      "height": 737,
+      "sha256": "d9cc530a3153bb19ec91bfd97a5e0e3d3f80d445e09596059544a261d06f44f7"
+    },
+    "cn-big-2.1-2": {
+      "img": "/cs408/img/wangdao/cn-big-2.1-2.webp",
+      "pdf_page": 8,
+      "book_ans_page": 41,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        553
+      ],
+      "width": 2024,
+      "height": 277,
+      "sha256": "02b8f156cf2125b529056f83062586fe1e3b22f92f7ba8536d76f382d8e245b8"
+    },
+    "cn-big-3.2-1": {
+      "img": "/cs408/img/wangdao/cn-big-3.2-1.webp",
+      "pdf_page": 9,
+      "book_ans_page": 56,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        287,
+        2277,
+        989
+      ],
+      "width": 2074,
+      "height": 702,
+      "sha256": "5cd09e42002d8e5aad9199afa627a07b9a1161d3d4064861ee4b10fc6ea604ac"
+    },
+    "cn-big-3.3-1": {
+      "img": "/cs408/img/wangdao/cn-big-3.3-1.webp",
+      "pdf_page": 10,
+      "book_ans_page": 61,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2276,
+        595
+      ],
+      "width": 2073,
+      "height": 311,
+      "sha256": "6ccea9a454a70b2a7898bd09d609dad80842169ed53d49c4c5f719fa02a17e5d"
+    },
+    "cn-big-3.4-1": {
+      "img": "/cs408/img/wangdao/cn-big-3.4-1.webp",
+      "pdf_page": 11,
+      "book_ans_page": 75,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2277,
+        532
+      ],
+      "width": 2074,
+      "height": 248,
+      "sha256": "9fd2e0db21d229eec94d82b63902939bc8e00e1929a4ece219121619fd622db9"
+    },
+    "cn-big-3.4-2": {
+      "img": "/cs408/img/wangdao/cn-big-3.4-2.webp",
+      "pdf_page": 12,
+      "book_ans_page": 76,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        432
+      ],
+      "width": 2024,
+      "height": 156,
+      "sha256": "4460907d7239cb86551d95dd2aedaec781c0328586786ca80c8830a840801fe9"
+    },
+    "cn-big-3.4-3": {
+      "img": "/cs408/img/wangdao/cn-big-3.4-3.webp",
+      "pdf_page": 13,
+      "book_ans_page": 76,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        490
+      ],
+      "width": 2024,
+      "height": 214,
+      "sha256": "85ccf21c594aab51bc4dc3d67cf3a7bb6c6e3ff8e1a39bb4e551a77ef17129d4"
+    },
+    "cn-big-3.4-4": {
+      "img": "/cs408/img/wangdao/cn-big-3.4-4.webp",
+      "pdf_page": 14,
+      "book_ans_page": 76,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        621
+      ],
+      "width": 2024,
+      "height": 345,
+      "sha256": "8eda8ff777ea5368f6936041aa828080597e91fd76116d8a0633640c782b1ead"
+    },
+    "cn-big-3.4-5": {
+      "img": "/cs408/img/wangdao/cn-big-3.4-5.webp",
+      "pdf_page": 15,
+      "book_ans_page": 77,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2008,
+        649
+      ],
+      "width": 1754,
+      "height": 373,
+      "sha256": "00e59f60029945a2271a1117478ae444549eff9d72a2f85247e62830754e6be1"
+    },
+    "cn-big-3.4-6": {
+      "img": "/cs408/img/wangdao/cn-big-3.4-6.webp",
+      "pdf_page": 16,
+      "book_ans_page": 77,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        493
+      ],
+      "width": 2024,
+      "height": 217,
+      "sha256": "25ea4fdf363bba14500eb3db7383392d3f6d3609575a3667dd60acb7fc94f27d"
+    },
+    "cn-big-3.4-7": {
+      "img": "/cs408/img/wangdao/cn-big-3.4-7.webp",
+      "pdf_page": 17,
+      "book_ans_page": 77,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        1857
+      ],
+      "width": 2024,
+      "height": 1581,
+      "sha256": "e26161f0b3678636a09ec531a6ac5a472792b37d7436c8c04510c33b685c7890"
+    },
+    "cn-big-3.6-1": {
+      "img": "/cs408/img/wangdao/cn-big-3.6-1.webp",
+      "pdf_page": 18,
+      "book_ans_page": 111,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2277,
+        532
+      ],
+      "width": 2074,
+      "height": 248,
+      "sha256": "86be10e7a8c7d1f26602924c39806c124a341bfe41dcb93e60b1e48f6763b7ed"
+    },
+    "cn-big-3.6-2": {
+      "img": "/cs408/img/wangdao/cn-big-3.6-2.webp",
+      "pdf_page": 19,
+      "book_ans_page": 112,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        427
+      ],
+      "width": 2024,
+      "height": 151,
+      "sha256": "8ea3c6921c8791a95f32d904c197b7070cebe876b6846054234ab863df92044f"
+    },
+    "cn-big-3.6-3": {
+      "img": "/cs408/img/wangdao/cn-big-3.6-3.webp",
+      "pdf_page": 20,
+      "book_ans_page": 112,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        427
+      ],
+      "width": 2024,
+      "height": 151,
+      "sha256": "0f67dfef0d2be44f913d8a0a69b8b9fcd7c8a3b590431d9e8ac428b2431f4356"
+    },
+    "cn-big-3.6-4": {
+      "img": "/cs408/img/wangdao/cn-big-3.6-4.webp",
+      "pdf_page": 21,
+      "book_ans_page": 112,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        434
+      ],
+      "width": 2024,
+      "height": 158,
+      "sha256": "b166d9b2bea07cd9239859902f7f673e35a8f46fb8723820a0ef3349cd131432"
+    },
+    "cn-big-3.6-5": {
+      "img": "/cs408/img/wangdao/cn-big-3.6-5.webp",
+      "pdf_page": 22,
+      "book_ans_page": 112,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        873
+      ],
+      "width": 2023,
+      "height": 597,
+      "sha256": "8a100af7a9548fb770d7dcefb954e36d210707487f94bcf8db0d97b0e5de250d"
+    },
+    "cn-big-4.2-1": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-1.webp",
+      "pdf_page": 23,
+      "book_ans_page": 174,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        287,
+        2277,
+        732
+      ],
+      "width": 2074,
+      "height": 445,
+      "sha256": "e329d688ecabed901e36c1e3c71df9e9db5504486edda3453ed4ab3dd450ccb0"
+    },
+    "cn-big-4.2-2": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-2.webp",
+      "pdf_page": 24,
+      "book_ans_page": 174,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        553
+      ],
+      "width": 2024,
+      "height": 277,
+      "sha256": "7ead1c95c05cadc411e450bec159ee9e8b144aee2a4dea33cbb1dbc010da1754"
+    },
+    "cn-big-4.2-3": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-3.webp",
+      "pdf_page": 25,
+      "book_ans_page": 174,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2275,
+        427
+      ],
+      "width": 2022,
+      "height": 151,
+      "sha256": "d9b09e00c18968c12f9e09d9a12f15ffc8d0b43de73c6d928bdef62ca4f10cd6"
+    },
+    "cn-big-4.2-4": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-4.webp",
+      "pdf_page": 26,
+      "book_ans_page": 174,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2279,
+        424
+      ],
+      "width": 2026,
+      "height": 148,
+      "sha256": "24051c51faa907761c0b2917686d70da9a2155383a7a3e59e9da4d43ecb653fe"
+    },
+    "cn-big-4.2-5": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-5.webp",
+      "pdf_page": 27,
+      "book_ans_page": 175,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        621
+      ],
+      "width": 2023,
+      "height": 345,
+      "sha256": "d6d924b47b3dc8818028cc6c8732cc5f7bd21c19719bf0af39e606432fe3b6a6"
+    },
+    "cn-big-4.2-6": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-6.webp",
+      "pdf_page": 28,
+      "book_ans_page": 175,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2279,
+        1277
+      ],
+      "width": 2025,
+      "height": 1001,
+      "sha256": "53222c5fd1d0c746dd102cda35e6e3b87332f9d388db7e12fe33491a9d9102f5"
+    },
+    "cn-big-4.2-7": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-7.webp",
+      "pdf_page": 29,
+      "book_ans_page": 176,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2274,
+        808
+      ],
+      "width": 2020,
+      "height": 532,
+      "sha256": "e1e30dfda6c1fef342f23402429b9c5f5724fa291b9790fccdb2bdaa43f89b74"
+    },
+    "cn-big-4.2-8": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-8.webp",
+      "pdf_page": 30,
+      "book_ans_page": 176,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        746
+      ],
+      "width": 2023,
+      "height": 470,
+      "sha256": "ee190755194deeec6c20c66a5ddbb262f801d0884d911331b9b1e79820e7030f"
+    },
+    "cn-big-4.2-9": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-9.webp",
+      "pdf_page": 31,
+      "book_ans_page": 176,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        684
+      ],
+      "width": 2023,
+      "height": 408,
+      "sha256": "bcda700a78781b8120f4103afbefcd38f548fc57b1eb45c551d23abb22761922"
+    },
+    "cn-big-4.2-10": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-10.webp",
+      "pdf_page": 32,
+      "book_ans_page": 176,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        1487
+      ],
+      "width": 2045,
+      "height": 1211,
+      "sha256": "509a0da57a2a5fe1b3fd7f6d2656b17e97f4f354ba0bf1458533f58358beaeff"
+    },
+    "cn-big-4.2-11": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-11.webp",
+      "pdf_page": 33,
+      "book_ans_page": 177,
+      "pdf_edition": "单题",
+      "crop": [
+        236,
+        276,
+        2277,
+        941
+      ],
+      "width": 2041,
+      "height": 665,
+      "sha256": "a0b40a9c0cbb42e7104278f55313389aedd608814b5bc6a4702ed806a5e23a8c"
+    },
+    "cn-big-4.2-12": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-12.webp",
+      "pdf_page": 34,
+      "book_ans_page": 177,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1503
+      ],
+      "width": 2044,
+      "height": 1227,
+      "sha256": "2008e74fc1621eeaf7f7cefe6614a96050d5f501c08e5eb0f0bd9adf8d38146b"
+    },
+    "cn-big-4.2-13": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-13.webp",
+      "pdf_page": 35,
+      "book_ans_page": 178,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        1563
+      ],
+      "width": 2045,
+      "height": 1287,
+      "sha256": "6fe73b06e401eaedfac438e9dff461a6aab17a070ac72022b6cd2a357017641b"
+    },
+    "cn-big-4.2-14": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-14.webp",
+      "pdf_page": 36,
+      "book_ans_page": 179,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1534
+      ],
+      "width": 2044,
+      "height": 1258,
+      "sha256": "6a18a7d400c4e82fb185d35cec1d4284f53880b1257b58819616331d3935c06d"
+    },
+    "cn-big-4.2-15": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-15.webp",
+      "pdf_page": 37,
+      "book_ans_page": 179,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1167
+      ],
+      "width": 2044,
+      "height": 891,
+      "sha256": "a3c68890393d666ad5edd2b1b547fb564717b1115acedd3968b0727bd14513bb"
+    },
+    "cn-big-4.2-16": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-16.webp",
+      "pdf_page": 38,
+      "book_ans_page": 179,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        1736
+      ],
+      "width": 2044,
+      "height": 1460,
+      "sha256": "86f9a18f6bd1523fc536539eabeb0a1d51076e602a0a87c3ce00b7bd4c93f6ba"
+    },
+    "cn-big-4.2-17": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-17.webp",
+      "pdf_page": 39,
+      "book_ans_page": 180,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        1771
+      ],
+      "width": 2045,
+      "height": 1495,
+      "sha256": "0fbce09fb003cc5b564456a2ccdf679cdbd8ade077dc98445a07a1f3859947c1"
+    },
+    "cn-big-4.2-18": {
+      "img": "/cs408/img/wangdao/cn-big-4.2-18.webp",
+      "pdf_page": 40,
+      "book_ans_page": 180,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        2001
+      ],
+      "width": 2045,
+      "height": 1725,
+      "sha256": "cf41184c4d8537bcbea96ecda139431427553a895f1d86f64c043d2a731fdecd"
+    },
+    "cn-big-4.4-1": {
+      "img": "/cs408/img/wangdao/cn-big-4.4-1.webp",
+      "pdf_page": 41,
+      "book_ans_page": 206,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2276,
+        532
+      ],
+      "width": 2073,
+      "height": 248,
+      "sha256": "212ab2aff37f9b5c2a5623737e83ac1fe526c6be8e239191bb46ea7cd2f71f03"
+    },
+    "cn-big-4.4-2": {
+      "img": "/cs408/img/wangdao/cn-big-4.4-2.webp",
+      "pdf_page": 42,
+      "book_ans_page": 206,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        1091
+      ],
+      "width": 2024,
+      "height": 815,
+      "sha256": "b788dff1920d09b176b9ca81263bccf1260ca0188efd3f21939e87dd8ce90a5a"
+    },
+    "cn-big-4.4-3": {
+      "img": "/cs408/img/wangdao/cn-big-4.4-3.webp",
+      "pdf_page": 43,
+      "book_ans_page": 206,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        1013
+      ],
+      "width": 2025,
+      "height": 737,
+      "sha256": "4213c691e6bd93a8e9c05cc652474688bfc2662480579b518cd7c19cd439113e"
+    },
+    "cn-big-4.4-4": {
+      "img": "/cs408/img/wangdao/cn-big-4.4-4.webp",
+      "pdf_page": 44,
+      "book_ans_page": 207,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        1523
+      ],
+      "width": 2025,
+      "height": 1247,
+      "sha256": "9d26ef494d6f9658ddc58d3f50ab3c25d693d7e2e84d41a1f5caccba33d99b67"
+    },
+    "cn-big-4.4-5": {
+      "img": "/cs408/img/wangdao/cn-big-4.4-5.webp",
+      "pdf_page": 45,
+      "book_ans_page": 207,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        2172
+      ],
+      "width": 2024,
+      "height": 1896,
+      "sha256": "f61bc5f7d8b272a64a23e160ef70a8a1a205d7dcb87b8cc21618e1c7e35f1305"
+    },
+    "cn-big-4.4-6": {
+      "img": "/cs408/img/wangdao/cn-big-4.4-6.webp",
+      "pdf_page": 46,
+      "book_ans_page": 207,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        2383
+      ],
+      "width": 2024,
+      "height": 2107,
+      "sha256": "1edbc2a46261a4c32b026a20fdd744c6c7ffa27f2e6097a611d4774b0d63bc67"
+    },
+    "cn-big-4.5-1": {
+      "img": "/cs408/img/wangdao/cn-big-4.5-1.webp",
+      "pdf_page": 47,
+      "book_ans_page": 211,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2044,
+        477
+      ],
+      "width": 1841,
+      "height": 193,
+      "sha256": "03bd5f72e0416b46f9c1deaf17e36a191045098db30ba3b5659281598509e7d5"
+    },
+    "cn-big-4.7-1": {
+      "img": "/cs408/img/wangdao/cn-big-4.7-1.webp",
+      "pdf_page": 48,
+      "book_ans_page": 221,
+      "pdf_edition": "单题",
+      "crop": [
+        203,
+        284,
+        2276,
+        1918
+      ],
+      "width": 2073,
+      "height": 1634,
+      "sha256": "614475595dcbcc448f5430631dc879b98ef6b59b14414cae4c28d8bd26424279"
+    },
+    "cn-big-4.7-2": {
+      "img": "/cs408/img/wangdao/cn-big-4.7-2.webp",
+      "pdf_page": 49,
+      "book_ans_page": 222,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        286,
+        1226,
+        374
+      ],
+      "width": 973,
+      "height": 88,
+      "sha256": "c05e18867396b3594f14c0cf4beaf4579803be9d0d0c2916308bf45bf8a01ae1"
+    },
+    "cn-big-4.7-3": {
+      "img": "/cs408/img/wangdao/cn-big-4.7-3.webp",
+      "pdf_page": 50,
+      "book_ans_page": 222,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        1524
+      ],
+      "width": 2025,
+      "height": 1248,
+      "sha256": "cbdbc2ac9c152fbb3b226c7d110637740a9b8206cd5bc51f2048395de2a8f9d9"
+    },
+    "cn-big-5.2-1": {
+      "img": "/cs408/img/wangdao/cn-big-5.2-1.webp",
+      "pdf_page": 51,
+      "book_ans_page": 235,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        287,
+        1855,
+        615
+      ],
+      "width": 1651,
+      "height": 328,
+      "sha256": "c3db6fb490b2a0aa809428b4523000ccfbbad9c39eb01c5c3f51c0d18ca2cab6"
+    },
+    "cn-big-5.2-2": {
+      "img": "/cs408/img/wangdao/cn-big-5.2-2.webp",
+      "pdf_page": 52,
+      "book_ans_page": 235,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        286,
+        2126,
+        374
+      ],
+      "width": 1873,
+      "height": 88,
+      "sha256": "9c12c5301f0a300f2ac31afe640fbc2250891a084f18b6aac6cfb41588712cd2"
+    },
+    "cn-big-5.2-3": {
+      "img": "/cs408/img/wangdao/cn-big-5.2-3.webp",
+      "pdf_page": 53,
+      "book_ans_page": 235,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        553
+      ],
+      "width": 2025,
+      "height": 277,
+      "sha256": "eba7594accb1320bd930a1c615599b8def18854391f74c2bf2c9164b3c162ee5"
+    },
+    "cn-big-5.2-4": {
+      "img": "/cs408/img/wangdao/cn-big-5.2-4.webp",
+      "pdf_page": 54,
+      "book_ans_page": 235,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2276,
+        1055
+      ],
+      "width": 2023,
+      "height": 779,
+      "sha256": "4c0c0c6f23358bd344d5aa60db6fb78bef5e0f48b367327789ad4901de4c4ef7"
+    },
+    "cn-big-5.2-5": {
+      "img": "/cs408/img/wangdao/cn-big-5.2-5.webp",
+      "pdf_page": 55,
+      "book_ans_page": 235,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        427
+      ],
+      "width": 2023,
+      "height": 151,
+      "sha256": "8bc39601600f2696237dd3eb34965001222c15aea336ccff18b1b156e3408d74"
+    },
+    "cn-big-5.3-1": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-1.webp",
+      "pdf_page": 56,
+      "book_ans_page": 262,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        290,
+        2276,
+        532
+      ],
+      "width": 2072,
+      "height": 242,
+      "sha256": "ab5455038c17f7776aad74d60f75f8133770b88adef756ea4daca675cbaa7faf"
+    },
+    "cn-big-5.3-2": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-2.webp",
+      "pdf_page": 57,
+      "book_ans_page": 262,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        558
+      ],
+      "width": 2024,
+      "height": 282,
+      "sha256": "d76818a0885698e6e7ff02b471316b19db66b8540fc2f5f2eb024c82af12eeab"
+    },
+    "cn-big-5.3-3": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-3.webp",
+      "pdf_page": 58,
+      "book_ans_page": 262,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        430
+      ],
+      "width": 2024,
+      "height": 154,
+      "sha256": "e1938e9af78c08eacead82a1a8387f903e96cb5206d9ce028f6dab2d4561df49"
+    },
+    "cn-big-5.3-4": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-4.webp",
+      "pdf_page": 59,
+      "book_ans_page": 263,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        432
+      ],
+      "width": 2024,
+      "height": 156,
+      "sha256": "1a695b926d6b765335d234a0e1a9e988e701dd00768234fa495577a98cd88e26"
+    },
+    "cn-big-5.3-5": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-5.webp",
+      "pdf_page": 60,
+      "book_ans_page": 263,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        495
+      ],
+      "width": 2023,
+      "height": 219,
+      "sha256": "0d7be6e0c3b39e3a19d9a1c648510c1cc6e34d6bff49e1d4ae488ff2f2df415e"
+    },
+    "cn-big-5.3-6": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-6.webp",
+      "pdf_page": 61,
+      "book_ans_page": 263,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        616
+      ],
+      "width": 2023,
+      "height": 340,
+      "sha256": "f0277cfba2ce39096bad3a43f4ec2772aefc83ad861348ef462d5b9b5d6d609c"
+    },
+    "cn-big-5.3-7": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-7.webp",
+      "pdf_page": 62,
+      "book_ans_page": 263,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2277,
+        430
+      ],
+      "width": 2023,
+      "height": 154,
+      "sha256": "ece9d5dbb99f53c6b661793f8d99292a1ab63ebf14c92d4af6b643b6f183ab5a"
+    },
+    "cn-big-5.3-8": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-8.webp",
+      "pdf_page": 63,
+      "book_ans_page": 263,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        430
+      ],
+      "width": 2024,
+      "height": 154,
+      "sha256": "3f01d26b4d13ad68794ebd04917de1acc24e2043bc50ffb815fe05c1566e8b20"
+    },
+    "cn-big-5.3-9": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-9.webp",
+      "pdf_page": 64,
+      "book_ans_page": 263,
+      "pdf_edition": "单题",
+      "crop": [
+        254,
+        276,
+        2278,
+        432
+      ],
+      "width": 2024,
+      "height": 156,
+      "sha256": "352a985460206e73842b34b767795441e6b1bdc24c85f3b1b563b27587bb9d7f"
+    },
+    "cn-big-5.3-10": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-10.webp",
+      "pdf_page": 65,
+      "book_ans_page": 263,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2279,
+        432
+      ],
+      "width": 2046,
+      "height": 156,
+      "sha256": "d1615abb78ae6f0b8963a130212fa9cb166aeefd4ecfbf870c2bb3cc5d7f7476"
+    },
+    "cn-big-5.3-11": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-11.webp",
+      "pdf_page": 66,
+      "book_ans_page": 264,
+      "pdf_edition": "单题",
+      "crop": [
+        236,
+        276,
+        2276,
+        430
+      ],
+      "width": 2040,
+      "height": 154,
+      "sha256": "92afa81c6967f7e2b3626182291b0c5d207be85dd6c8aa972510489027d3067d"
+    },
+    "cn-big-5.3-12": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-12.webp",
+      "pdf_page": 67,
+      "book_ans_page": 264,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        1249
+      ],
+      "width": 2045,
+      "height": 973,
+      "sha256": "03200043644ffc96958791c4e723f781d1a966f9b0eea1389f4faa8feb36181d"
+    },
+    "cn-big-5.3-13": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-13.webp",
+      "pdf_page": 68,
+      "book_ans_page": 264,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2278,
+        2445
+      ],
+      "width": 2045,
+      "height": 2169,
+      "sha256": "f0078dc587710dc57d5d98cd961808e63c2574a5cda9fa2cff6fd0d5fe886dfd"
+    },
+    "cn-big-5.3-14": {
+      "img": "/cs408/img/wangdao/cn-big-5.3-14.webp",
+      "pdf_page": 69,
+      "book_ans_page": 264,
+      "pdf_edition": "单题",
+      "crop": [
+        233,
+        276,
+        2277,
+        2044
+      ],
+      "width": 2044,
+      "height": 1768,
+      "sha256": "21be67059ad2887cb2da389a312876c1d1ab521c10ccd911c7b457202a3b9ab9"
+    },
+    "cn-big-6.2-1": {
+      "img": "/cs408/img/wangdao/cn-big-6.2-1.webp",
+      "pdf_page": 70,
+      "book_ans_page": 277,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        287,
+        2277,
+        669
+      ],
+      "width": 2073,
+      "height": 382,
+      "sha256": "ecd438c26b4d0d162a1ff50c9ef5be6caa5ca9d6ac5ea9c5b77629a5889e1ae1"
+    },
+    "cn-big-6.2-2": {
+      "img": "/cs408/img/wangdao/cn-big-6.2-2.webp",
+      "pdf_page": 71,
+      "book_ans_page": 277,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        286,
+        2221,
+        374
+      ],
+      "width": 1968,
+      "height": 88,
+      "sha256": "a6459e1205e6749b7cd8ef1bb19543a08a21d88ddad3920ab189441dd5b8a835"
+    },
+    "cn-big-6.3-1": {
+      "img": "/cs408/img/wangdao/cn-big-6.3-1.webp",
+      "pdf_page": 72,
+      "book_ans_page": 282,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        284,
+        1914,
+        477
+      ],
+      "width": 1710,
+      "height": 193,
+      "sha256": "0e63592cb2a76c22e37f909437d9e6679ace500813304782e2735cb1430881bf"
+    },
+    "cn-big-6.3-2": {
+      "img": "/cs408/img/wangdao/cn-big-6.3-2.webp",
+      "pdf_page": 73,
+      "book_ans_page": 282,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        284,
+        1653,
+        376
+      ],
+      "width": 1400,
+      "height": 92,
+      "sha256": "a91f7e980f74b52217ad1166237cff616761ff22c1cf44701efde64754d3f817"
+    },
+    "cn-big-6.3-3": {
+      "img": "/cs408/img/wangdao/cn-big-6.3-3.webp",
+      "pdf_page": 74,
+      "book_ans_page": 282,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        283,
+        2195,
+        377
+      ],
+      "width": 1942,
+      "height": 94,
+      "sha256": "0817f83fef0ad38c19bc03e98f79440029b86516fc0035b888548c5656f8d6d1"
+    },
+    "cn-big-6.3-4": {
+      "img": "/cs408/img/wangdao/cn-big-6.3-4.webp",
+      "pdf_page": 75,
+      "book_ans_page": 282,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        1372
+      ],
+      "width": 2025,
+      "height": 1096,
+      "sha256": "681d4a588f71be2b8463f010b72f318bb42ecf7d39e2a01d5066fe7d02543505"
+    },
+    "cn-big-6.4-1": {
+      "img": "/cs408/img/wangdao/cn-big-6.4-1.webp",
+      "pdf_page": 76,
+      "book_ans_page": 289,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        284,
+        2277,
+        532
+      ],
+      "width": 2073,
+      "height": 248,
+      "sha256": "93f82d2fced0e0a5f646610c1bc11967c6e4da9d306fc84d7ad77cf6ccaa6116"
+    },
+    "cn-big-6.4-2": {
+      "img": "/cs408/img/wangdao/cn-big-6.4-2.webp",
+      "pdf_page": 77,
+      "book_ans_page": 289,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        286,
+        1144,
+        374
+      ],
+      "width": 891,
+      "height": 88,
+      "sha256": "5ad6d0feb6c61b9c0c0ac557b98962be48cdc053d43b5c9b889c2ad3f4f80c17"
+    },
+    "cn-big-6.4-3": {
+      "img": "/cs408/img/wangdao/cn-big-6.4-3.webp",
+      "pdf_page": 78,
+      "book_ans_page": 289,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        1018
+      ],
+      "width": 2024,
+      "height": 742,
+      "sha256": "1c9802f17a0cce024db9223cd2c39d23281ba9a09b6c2f0d073f56691abb403b"
+    },
+    "cn-big-6.5-1": {
+      "img": "/cs408/img/wangdao/cn-big-6.5-1.webp",
+      "pdf_page": 79,
+      "book_ans_page": 301,
+      "pdf_edition": "单题",
+      "crop": [
+        204,
+        284,
+        2277,
+        535
+      ],
+      "width": 2073,
+      "height": 251,
+      "sha256": "d8f2db121d5da0f460d607d5753c4fe4da7644f287eaa767660c321195e6e43d"
+    },
+    "cn-big-6.5-2": {
+      "img": "/cs408/img/wangdao/cn-big-6.5-2.webp",
+      "pdf_page": 80,
+      "book_ans_page": 301,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2277,
+        684
+      ],
+      "width": 2024,
+      "height": 408,
+      "sha256": "8514099667be2cd1a445b408322177757f734ab815f40f949f7c68a9844331f0"
+    },
+    "cn-big-6.5-3": {
+      "img": "/cs408/img/wangdao/cn-big-6.5-3.webp",
+      "pdf_page": 81,
+      "book_ans_page": 301,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        2328
+      ],
+      "width": 2025,
+      "height": 2052,
+      "sha256": "a08044432b8285573efd4a7c3c7a7ec00678d3e7c314aa0c6ab4ec60a8c9ccfd"
+    },
+    "cn-big-6.5-4": {
+      "img": "/cs408/img/wangdao/cn-big-6.5-4.webp",
+      "pdf_page": 82,
+      "book_ans_page": 302,
+      "pdf_edition": "单题",
+      "crop": [
+        253,
+        276,
+        2278,
+        1666
+      ],
+      "width": 2025,
+      "height": 1390,
+      "sha256": "88c1ebf32d3c0b3292455623247208ea45ceda4a6ea5c09cf9172dc77a64a84d"
+    },
+    "co-big-1.3-1": {
+      "img": "/cs408/img/wangdao/co-big-1.3-1.webp",
+      "pdf_page": 4,
+      "book_ans_page": 17,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        523,
+        1903,
+        800
+      ],
+      "width": 1648,
+      "height": 277,
+      "sha256": "dee5a47ba2b358c4728d488a11544cc447ed6f41cd3fdcb84dc08fbc064d0c3d"
+    },
+    "co-big-1.3-2": {
+      "img": "/cs408/img/wangdao/co-big-1.3-2.webp",
+      "pdf_page": 5,
+      "book_ans_page": 17,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2279,
+        1014
+      ],
+      "width": 2026,
+      "height": 725,
+      "sha256": "5257ba006e9cd88e8cad29f4a569ccefbf228ae1a83cf340979290cdf48e9b90"
+    },
+    "co-big-2.2-1": {
+      "img": "/cs408/img/wangdao/co-big-2.2-1.webp",
+      "pdf_page": 6,
+      "book_ans_page": 52,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        523,
+        2278,
+        921
+      ],
+      "width": 2023,
+      "height": 398,
+      "sha256": "4380b1a9b1c3666ce6cbf8904dc96e3c428d5de13520f7c952d4d9bbdf0ea484"
+    },
+    "co-big-2.2-2": {
+      "img": "/cs408/img/wangdao/co-big-2.2-2.webp",
+      "pdf_page": 7,
+      "book_ans_page": 52,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        276,
+        2278,
+        805
+      ],
+      "width": 2025,
+      "height": 529,
+      "sha256": "46ef153cf532c6a4e2b4867fa7b06aebf5c0a08e9f97e67080531487543488ff"
+    },
+    "co-big-2.2-3": {
+      "img": "/cs408/img/wangdao/co-big-2.2-3.webp",
+      "pdf_page": 8,
+      "book_ans_page": 52,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        284,
+        2278,
+        1422
+      ],
+      "width": 2025,
+      "height": 1138,
+      "sha256": "f89e949c3a7dc48d8b343a32a7fbcc59798e93d7803be34eb8d73912b8c90b95"
+    },
+    "co-big-2.2-4": {
+      "img": "/cs408/img/wangdao/co-big-2.2-4.webp",
+      "pdf_page": 9,
+      "book_ans_page": 53,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2277,
+        1299
+      ],
+      "width": 2024,
+      "height": 1010,
+      "sha256": "88b1ac1b528342ea489517e87018dea0e87ee716a229eb39905e0b11215becc2"
+    },
+    "co-big-2.3-1": {
+      "img": "/cs408/img/wangdao/co-big-2.3-1.webp",
+      "pdf_page": 10,
+      "book_ans_page": 72,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        391,
+        1639,
+        726
+      ],
+      "width": 1384,
+      "height": 335,
+      "sha256": "63090d45359ae17da6f9d0a10dc3f6faf163e09453d61833d445d4bbb3a50b8f"
+    },
+    "co-big-2.3-2": {
+      "img": "/cs408/img/wangdao/co-big-2.3-2.webp",
+      "pdf_page": 10,
+      "book_ans_page": 73,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        1655,
+        2277,
+        2052
+      ],
+      "width": 2023,
+      "height": 397,
+      "sha256": "1f9ccb8bf8a174d28a58a7e81ed21eaf348a5b97279b821542710ec7534cb382"
+    },
+    "co-big-2.3-3": {
+      "img": "/cs408/img/wangdao/co-big-2.3-3.webp",
+      "pdf_page": 11,
+      "book_ans_page": 73,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        284,
+        2277,
+        684
+      ],
+      "width": 2024,
+      "height": 400,
+      "sha256": "82478790ff0f05f500a2d07a6553f6a78fa468a41ee52b44b3658876c5839600"
+    },
+    "co-big-2.3-4": {
+      "img": "/cs408/img/wangdao/co-big-2.3-4.webp",
+      "pdf_page": 11,
+      "book_ans_page": 74,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1614,
+        2279,
+        2010
+      ],
+      "width": 2026,
+      "height": 396,
+      "sha256": "339bbc30c3c04645a394342362200fef1ff73f85ac744cf7a06b3d4ede96a84c"
+    },
+    "co-big-3.2-1": {
+      "img": "/cs408/img/wangdao/co-big-3.2-1.webp",
+      "pdf_page": 13,
+      "book_ans_page": 96,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        518,
+        2279,
+        926
+      ],
+      "width": 2024,
+      "height": 408,
+      "sha256": "161ec25f5cfa2c2d5114e136df8950633d4e2fced2b7aaa50ccc5817f418b192"
+    },
+    "co-big-3.2-2": {
+      "img": "/cs408/img/wangdao/co-big-3.2-2.webp",
+      "pdf_page": 13,
+      "book_ans_page": 96,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1853,
+        2278,
+        2064
+      ],
+      "width": 2025,
+      "height": 211,
+      "sha256": "d31db77260d7a0baa465e8c4152c09dd42b9c0f2c20afd73df4c5b0b3f47359d"
+    },
+    "co-big-3.2-3": {
+      "img": "/cs408/img/wangdao/co-big-3.2-3.webp",
+      "pdf_page": 14,
+      "book_ans_page": 96,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2280,
+        490
+      ],
+      "width": 2027,
+      "height": 201,
+      "sha256": "c5bb7ea2793bb24bd6b9a5f971f61c9572b29c033ab237d739b8f74fb5ce0e71"
+    },
+    "co-big-3.2-4": {
+      "img": "/cs408/img/wangdao/co-big-3.2-4.webp",
+      "pdf_page": 14,
+      "book_ans_page": 96,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1414,
+        2278,
+        1879
+      ],
+      "width": 2025,
+      "height": 465,
+      "sha256": "b82e1599878c374be39f22fdeec6136f3b3dff45dd3a74a370b2b35dd1915996"
+    },
+    "co-big-3.2-5": {
+      "img": "/cs408/img/wangdao/co-big-3.2-5.webp",
+      "pdf_page": 15,
+      "book_ans_page": 97,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2277,
+        430
+      ],
+      "width": 2023,
+      "height": 141,
+      "sha256": "f77b8e78021cd564597273d6c7af7a088cf8d9401cbf3fab5a4d271a1ad34312"
+    },
+    "co-big-3.3-1": {
+      "img": "/cs408/img/wangdao/co-big-3.3-1.webp",
+      "pdf_page": 15,
+      "book_ans_page": 102,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        1583,
+        2276,
+        1920
+      ],
+      "width": 2021,
+      "height": 337,
+      "sha256": "ef2379bcc4acdbed2f5b594a6e99318d410a545dabdbc5102831525d11c8e5a5"
+    },
+    "co-big-3.4-1": {
+      "img": "/cs408/img/wangdao/co-big-3.4-1.webp",
+      "pdf_page": 16,
+      "book_ans_page": 108,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        380,
+        2277,
+        910
+      ],
+      "width": 2022,
+      "height": 530,
+      "sha256": "fdfb876c7d5d91caccd5c537586bb723c1035071de739676251eb84fd24164ca"
+    },
+    "co-big-3.5-1": {
+      "img": "/cs408/img/wangdao/co-big-3.5-1.webp",
+      "pdf_page": 17,
+      "book_ans_page": 127,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        386,
+        2277,
+        726
+      ],
+      "width": 2022,
+      "height": 340,
+      "sha256": "4d7ec06ca2d39936a7cbcb7edf083a573ba84716e2d38f6cd0951ab6ac66255b"
+    },
+    "co-big-3.5-2": {
+      "img": "/cs408/img/wangdao/co-big-3.5-2.webp",
+      "pdf_page": 17,
+      "book_ans_page": 127,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        1655,
+        2277,
+        2052
+      ],
+      "width": 2023,
+      "height": 397,
+      "sha256": "fea844a2811bc3baa0f9c0cc6d7967e0a2b054b1868fe13b9b333f4553d8fb40"
+    },
+    "co-big-3.5-3": {
+      "img": "/cs408/img/wangdao/co-big-3.5-3.webp",
+      "pdf_page": 18,
+      "book_ans_page": 127,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        279,
+        2276,
+        986
+      ],
+      "width": 2023,
+      "height": 707,
+      "sha256": "f9ef4db49f4a9010acbba434ffe5d8a3e84aa2e9c2d787b5c1dc1a80b89a58d8"
+    },
+    "co-big-3.5-4": {
+      "img": "/cs408/img/wangdao/co-big-3.5-4.webp",
+      "pdf_page": 19,
+      "book_ans_page": 128,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2277,
+        1490
+      ],
+      "width": 2024,
+      "height": 1201,
+      "sha256": "ff1ebea3f2719bfd2224a7cd30b1be0d3b5f18fa27e6e8944d56c31b5dddc393"
+    },
+    "co-big-3.5-5": {
+      "img": "/cs408/img/wangdao/co-big-3.5-5.webp",
+      "pdf_page": 20,
+      "book_ans_page": 129,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        281,
+        2277,
+        934
+      ],
+      "width": 2023,
+      "height": 653,
+      "sha256": "84980e6c080b8340704bf951cce40a054158a52e7691d32fa1cdab8b5b9397f2"
+    },
+    "co-big-3.5-6": {
+      "img": "/cs408/img/wangdao/co-big-3.5-6.webp",
+      "pdf_page": 21,
+      "book_ans_page": 129,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        279,
+        2277,
+        1047
+      ],
+      "width": 2023,
+      "height": 768,
+      "sha256": "01557a751e38bc67823d52e8b937c6f9e3595dd2278538fa3a22baa9892c2459"
+    },
+    "co-big-3.6-1": {
+      "img": "/cs408/img/wangdao/co-big-3.6-1.webp",
+      "pdf_page": 22,
+      "book_ans_page": 143,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        391,
+        2277,
+        1134
+      ],
+      "width": 2022,
+      "height": 743,
+      "sha256": "1698bb971f9ebccf5b79cd402ee4e607f405dbbe46dce97ac977c75d79f6c05e"
+    },
+    "co-big-3.6-2": {
+      "img": "/cs408/img/wangdao/co-big-3.6-2.webp",
+      "pdf_page": 23,
+      "book_ans_page": 143,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        276,
+        2277,
+        1289
+      ],
+      "width": 2024,
+      "height": 1013,
+      "sha256": "d3e8198387ab08b965635dd7bc92e2c338fb2dbf6082a8851f07542409ab101f"
+    },
+    "co-big-3.6-3": {
+      "img": "/cs408/img/wangdao/co-big-3.6-3.webp",
+      "pdf_page": 24,
+      "book_ans_page": 143,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        284,
+        2276,
+        621
+      ],
+      "width": 2023,
+      "height": 337,
+      "sha256": "3c1f0ed72cefb4f09f380c67bf06e387220b548b7bdcf783ce82fca949f31b9d"
+    },
+    "co-big-3.6-4": {
+      "img": "/cs408/img/wangdao/co-big-3.6-4.webp",
+      "pdf_page": 25,
+      "book_ans_page": 144,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2278,
+        1872
+      ],
+      "width": 2025,
+      "height": 1583,
+      "sha256": "ef86ab7bc3a3491bd67f934761450e9f38c6c03483b789ba5908c31922034abd"
+    },
+    "co-big-3.6-5": {
+      "img": "/cs408/img/wangdao/co-big-3.6-5.webp",
+      "pdf_page": 26,
+      "book_ans_page": 144,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2277,
+        1545
+      ],
+      "width": 2023,
+      "height": 1256,
+      "sha256": "3b4d13047dcc4445a358d02011a3bcb8df0398f31b5cd609e6e2cdfc25020e59"
+    },
+    "co-big-3.6-6": {
+      "img": "/cs408/img/wangdao/co-big-3.6-6.webp",
+      "pdf_page": 27,
+      "book_ans_page": 144,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2279,
+        1796
+      ],
+      "width": 2025,
+      "height": 1507,
+      "sha256": "1ee67efbe33e2657fac7e7137a4331882fc1367d4d94620464f587326825dfe3"
+    },
+    "co-big-3.6-7": {
+      "img": "/cs408/img/wangdao/co-big-3.6-7.webp",
+      "pdf_page": 28,
+      "book_ans_page": 145,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        284,
+        2280,
+        810
+      ],
+      "width": 2026,
+      "height": 526,
+      "sha256": "e5384b7727fa0cd4b3150dc308a572437ed4848d5940320f862f27463cea3d0f"
+    },
+    "co-big-3.6-8": {
+      "img": "/cs408/img/wangdao/co-big-3.6-8.webp",
+      "pdf_page": 29,
+      "book_ans_page": 145,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        284,
+        2278,
+        1661
+      ],
+      "width": 2024,
+      "height": 1377,
+      "sha256": "021b038817590a101559907213c8ca238508c9d8e7c0298d658ce50bb000e8a7"
+    },
+    "co-big-3.6-9": {
+      "img": "/cs408/img/wangdao/co-big-3.6-9.webp",
+      "pdf_page": 30,
+      "book_ans_page": 146,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        284,
+        2277,
+        1425
+      ],
+      "width": 2023,
+      "height": 1141,
+      "sha256": "f937659adea0bf86c25c2f50aeaa8f391da0d35ac0c0144b68a878d347e904f0"
+    },
+    "co-big-4.1-1": {
+      "img": "/cs408/img/wangdao/co-big-4.1-1.webp",
+      "pdf_page": 31,
+      "book_ans_page": 155,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        518,
+        2278,
+        989
+      ],
+      "width": 2023,
+      "height": 471,
+      "sha256": "4b5dee1d73b932ab29650ee2c2f67d4e9e745922d8ce587df5e9cdfcb295e0e5",
+      "previous_book_ans_page": 15
+    },
+    "co-big-4.1-2": {
+      "img": "/cs408/img/wangdao/co-big-4.1-2.webp",
+      "pdf_page": 31,
+      "book_ans_page": 155,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1920,
+        2210,
+        2189
+      ],
+      "width": 1957,
+      "height": 269,
+      "sha256": "5214ccfade1f37cc5ccb3d1c512532fd5ba90ec8f353ff63f780cb817c5bd1db"
+    },
+    "co-big-4.1-3": {
+      "img": "/cs408/img/wangdao/co-big-4.1-3.webp",
+      "pdf_page": 32,
+      "book_ans_page": 155,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        1897,
+        558
+      ],
+      "width": 1644,
+      "height": 269,
+      "sha256": "3250b52f1b9cbd4799c6190ff65345bfd78f71afc86ff0a3ca62536cff23c047"
+    },
+    "co-big-4.2-1": {
+      "img": "/cs408/img/wangdao/co-big-4.2-1.webp",
+      "pdf_page": 32,
+      "book_ans_page": 170,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        1659,
+        2178,
+        2255
+      ],
+      "width": 1923,
+      "height": 596,
+      "sha256": "1e2249f9c4407ed7bdcbe71283e36e8de664fa4b68ea6bfdbe043bd638cf8c85"
+    },
+    "co-big-4.2-2": {
+      "img": "/cs408/img/wangdao/co-big-4.2-2.webp",
+      "pdf_page": 33,
+      "book_ans_page": 170,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        284,
+        2277,
+        747
+      ],
+      "width": 2024,
+      "height": 463,
+      "sha256": "6acffc0812cf45c41ebb2d1985812f7285d495f11944c4afde828373a33eb7a7"
+    },
+    "co-big-4.2-3": {
+      "img": "/cs408/img/wangdao/co-big-4.2-3.webp",
+      "pdf_page": 34,
+      "book_ans_page": 170,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2278,
+        1689
+      ],
+      "width": 2025,
+      "height": 1400,
+      "sha256": "d52d16c89f7111bfdce005f1d908ed2d0713a7e465d68acbdf41dacb27af39d2"
+    },
+    "co-big-4.2-4": {
+      "img": "/cs408/img/wangdao/co-big-4.2-4.webp",
+      "pdf_page": 35,
+      "book_ans_page": 170,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2278,
+        2159
+      ],
+      "width": 2025,
+      "height": 1870,
+      "sha256": "6e0c1923bab8ec8b96d3a38916785a5be92cdecda771117921392e7d1e240030"
+    },
+    "co-big-4.2-5": {
+      "img": "/cs408/img/wangdao/co-big-4.2-5.webp",
+      "pdf_page": 36,
+      "book_ans_page": 171,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        284,
+        2279,
+        1666
+      ],
+      "width": 2025,
+      "height": 1382,
+      "sha256": "306780ce25a1efe084a55884fc03ba635a0a98952d7154385124c7d9ebd94e62"
+    },
+    "co-big-4.3-1": {
+      "img": "/cs408/img/wangdao/co-big-4.3-1.webp",
+      "pdf_page": 37,
+      "book_ans_page": 188,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        386,
+        2279,
+        2296
+      ],
+      "width": 2024,
+      "height": 1910,
+      "sha256": "4ed5dab3c9c483330726f2d05f3b9a5af0d65730eba12409aeeef82a47c425f7"
+    },
+    "co-big-4.3-3": {
+      "img": "/cs408/img/wangdao/co-big-4.3-3.webp",
+      "pdf_page": 39,
+      "book_ans_page": 189,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        284,
+        2277,
+        621
+      ],
+      "width": 2024,
+      "height": 337,
+      "sha256": "fa525599f88daee314dbc7af929deb10e30a97ae5958e118bd866192760d0167"
+    },
+    "co-big-4.3-4": {
+      "img": "/cs408/img/wangdao/co-big-4.3-4.webp",
+      "pdf_page": 40,
+      "book_ans_page": 189,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2278,
+        1705
+      ],
+      "width": 2025,
+      "height": 1416,
+      "sha256": "40bf12840be0ea5d6acf07adae4a8bb76a8b6646b83c2ca320ebb42c209176be"
+    },
+    "co-big-4.3-5": {
+      "img": "/cs408/img/wangdao/co-big-4.3-5.webp",
+      "pdf_page": 41,
+      "book_ans_page": 189,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2279,
+        2106
+      ],
+      "width": 2025,
+      "height": 1817,
+      "sha256": "ad8e82e46aed33958bc273be87015a357733f4b966553196223db5761837c069"
+    },
+    "co-big-4.3-6": {
+      "img": "/cs408/img/wangdao/co-big-4.3-6.webp",
+      "pdf_page": 42,
+      "book_ans_page": 190,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        279,
+        2277,
+        1659
+      ],
+      "width": 2023,
+      "height": 1380,
+      "sha256": "9b6410f2fcdf05848d1ad8e207cf46f633674c420bc780a66adf9d730976d794"
+    },
+    "co-big-4.3-7": {
+      "img": "/cs408/img/wangdao/co-big-4.3-7.webp",
+      "pdf_page": 43,
+      "book_ans_page": 190,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2278,
+        1932
+      ],
+      "width": 2024,
+      "height": 1643,
+      "sha256": "02a5db65fd40f511274cb50a15bb673e3b7638d0bdcfdb093bea70db47ed906a"
+    },
+    "co-big-5.3-1": {
+      "img": "/cs408/img/wangdao/co-big-5.3-1.webp",
+      "pdf_page": 44,
+      "book_ans_page": 223,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        528,
+        2277,
+        1487
+      ],
+      "width": 2022,
+      "height": 959,
+      "sha256": "fd55ff25b88599c13c17708257e3f16e6dbdb55f59bd54435ef9b65dd524c702"
+    },
+    "co-big-5.3-2": {
+      "img": "/cs408/img/wangdao/co-big-5.3-2.webp",
+      "pdf_page": 45,
+      "book_ans_page": 223,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        284,
+        2277,
+        1891
+      ],
+      "width": 2024,
+      "height": 1607,
+      "sha256": "a214eea196ca51e424785b59b278d2924aa7a752940306cfa3b5df4a4cd95e28"
+    },
+    "co-big-5.3-3": {
+      "img": "/cs408/img/wangdao/co-big-5.3-3.webp",
+      "pdf_page": 46,
+      "book_ans_page": 224,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2276,
+        1672
+      ],
+      "width": 2023,
+      "height": 1383,
+      "sha256": "e9a8cdbea93641d3ee0aa1891d7edb3985afb33de60f8ea40914fafb2a9b555e"
+    },
+    "co-big-5.3-4": {
+      "img": "/cs408/img/wangdao/co-big-5.3-4.webp",
+      "pdf_page": 47,
+      "book_ans_page": 224,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        289,
+        2277,
+        1671
+      ],
+      "width": 2024,
+      "height": 1382,
+      "sha256": "ff3909c21d9f91bc5e33d6c58b572d4df1d0acafe4e8a6afe82bde73e8c4831d"
+    },
+    "co-big-5.3-5": {
+      "img": "/cs408/img/wangdao/co-big-5.3-5.webp",
+      "pdf_page": 48,
+      "book_ans_page": 225,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2279,
+        1259
+      ],
+      "width": 2025,
+      "height": 970,
+      "sha256": "8e0a1028834000967ae1b65d878a7679b3dfe33cebcf0c211fc261025b2e836a"
+    },
+    "co-big-5.3-6": {
+      "img": "/cs408/img/wangdao/co-big-5.3-6.webp",
+      "pdf_page": 49,
+      "book_ans_page": 225,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2277,
+        1326
+      ],
+      "width": 2023,
+      "height": 1037,
+      "sha256": "76faad91f7ac8403ff2e6b3de54737c909dda03db8fec48b2aa5ba483b2b8573"
+    },
+    "co-big-5.3-7": {
+      "img": "/cs408/img/wangdao/co-big-5.3-7.webp",
+      "pdf_page": 50,
+      "book_ans_page": 226,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2277,
+        2207
+      ],
+      "width": 2023,
+      "height": 1918,
+      "sha256": "00b5bb0bf24a6a3e06966c8b621d7973af93e61bd5aa4b4e24e339cd477c15d0"
+    },
+    "co-big-5.3-8": {
+      "img": "/cs408/img/wangdao/co-big-5.3-8.webp",
+      "pdf_page": 51,
+      "book_ans_page": 227,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2279,
+        1906
+      ],
+      "width": 2025,
+      "height": 1617,
+      "sha256": "1d3740463f1fc8788f22c7913c3d63bec54cbdb503ef85c7ec2d101058481715"
+    },
+    "co-big-5.3-9": {
+      "img": "/cs408/img/wangdao/co-big-5.3-9.webp",
+      "pdf_page": 52,
+      "book_ans_page": 227,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2278,
+        2321
+      ],
+      "width": 2024,
+      "height": 2032,
+      "sha256": "cc8b60fc6899f60e2a1b7cbf89627c332cb9bf03cef5c5c3e36dc8b1e9ecd354"
+    },
+    "co-big-5.3-10": {
+      "img": "/cs408/img/wangdao/co-big-5.3-10.webp",
+      "pdf_page": 53,
+      "book_ans_page": 227,
+      "pdf_edition": "留空",
+      "crop": [
+        233,
+        289,
+        2278,
+        1906
+      ],
+      "width": 2045,
+      "height": 1617,
+      "sha256": "b2573934c9f3e47d75583c7480a9197de338782e4372fd6beee939ec4add8b14"
+    },
+    "co-big-5.4-1": {
+      "img": "/cs408/img/wangdao/co-big-5.4-1.webp",
+      "pdf_page": 54,
+      "book_ans_page": 241,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        385,
+        2277,
+        789
+      ],
+      "width": 2022,
+      "height": 404,
+      "sha256": "899289dedd521e2ff46376ea1c502d157694b8ec3f7b21f05f9f90382f3552ac"
+    },
+    "co-big-5.4-2": {
+      "img": "/cs408/img/wangdao/co-big-5.4-2.webp",
+      "pdf_page": 54,
+      "book_ans_page": 241,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1711,
+        2277,
+        1861
+      ],
+      "width": 2024,
+      "height": 150,
+      "sha256": "c39de7b7d7d123d9aab86d648b56b55d5487300a645eb003a3f9bc357b5acb7b"
+    },
+    "co-big-5.4-3": {
+      "img": "/cs408/img/wangdao/co-big-5.4-3.webp",
+      "pdf_page": 55,
+      "book_ans_page": 241,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        283,
+        2277,
+        493
+      ],
+      "width": 2024,
+      "height": 210,
+      "sha256": "f4d80d01507e4abe2b6abac4f8e633c0674738175badd33529c356437f7ac91b"
+    },
+    "co-big-5.4-4": {
+      "img": "/cs408/img/wangdao/co-big-5.4-4.webp",
+      "pdf_page": 55,
+      "book_ans_page": 241,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1420,
+        2278,
+        1693
+      ],
+      "width": 2025,
+      "height": 273,
+      "sha256": "bf0821287fa688b49e548e967a73eb5087ae7512be016350e7ca558e4e77e544"
+    },
+    "co-big-5.4-5": {
+      "img": "/cs408/img/wangdao/co-big-5.4-5.webp",
+      "pdf_page": 56,
+      "book_ans_page": 241,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2279,
+        1188
+      ],
+      "width": 2025,
+      "height": 899,
+      "sha256": "3da7e193743f49fd82e13ba786d1257815a749d75056d1ed5bdc376b973c6c22"
+    },
+    "co-big-5.6-1": {
+      "img": "/cs408/img/wangdao/co-big-5.6-1.webp",
+      "pdf_page": 57,
+      "book_ans_page": 265,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        391,
+        2279,
+        2618
+      ],
+      "width": 2024,
+      "height": 2227,
+      "sha256": "16d17c6fae3e981624107e694b512af7a3147fe2e42aaafe58f99f1051c05e54"
+    },
+    "co-big-5.6-2": {
+      "img": "/cs408/img/wangdao/co-big-5.6-2.webp",
+      "pdf_page": 58,
+      "book_ans_page": 265,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        284,
+        2278,
+        1845
+      ],
+      "width": 2025,
+      "height": 1561,
+      "sha256": "887895759b0e896bdbee8b9672e1bc6251da290f72a4200a4b0aed820ddf5038"
+    },
+    "co-big-5.6-3": {
+      "img": "/cs408/img/wangdao/co-big-5.6-3.webp",
+      "pdf_page": 59,
+      "book_ans_page": 266,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        279,
+        2277,
+        808
+      ],
+      "width": 2024,
+      "height": 529,
+      "sha256": "f6521581d8902fddf88e5b2bb0853c1a99b4960eb26d77ff4ae3dc2f76f9689c"
+    },
+    "co-big-6.1-1": {
+      "img": "/cs408/img/wangdao/co-big-6.1-1.webp",
+      "pdf_page": 60,
+      "book_ans_page": 283,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        518,
+        2278,
+        800
+      ],
+      "width": 2023,
+      "height": 282,
+      "sha256": "72bf42f5a0fe0889cc96aa8badb97dcd4ca538dfbec7c724ba96cafec2bd95ff"
+    },
+    "co-big-6.1-2": {
+      "img": "/cs408/img/wangdao/co-big-6.1-2.webp",
+      "pdf_page": 60,
+      "book_ans_page": 283,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1726,
+        2277,
+        2184
+      ],
+      "width": 2024,
+      "height": 458,
+      "sha256": "18ff252e63cfc5a35e3bfae3a28fbcbe7f1eda9cf96b2bd5c0f1548304340d6d"
+    },
+    "co-big-7.3-1": {
+      "img": "/cs408/img/wangdao/co-big-7.3-1.webp",
+      "pdf_page": 61,
+      "book_ans_page": 323,
+      "pdf_edition": "留空",
+      "crop": [
+        255,
+        528,
+        1672,
+        609
+      ],
+      "width": 1417,
+      "height": 81,
+      "sha256": "e4f5e75368d9f3dce1666d1c6e799928caefc1a3136de50276358ac534ddfac0"
+    },
+    "co-big-7.3-2": {
+      "img": "/cs408/img/wangdao/co-big-7.3-2.webp",
+      "pdf_page": 61,
+      "book_ans_page": 323,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1537,
+        2277,
+        1684
+      ],
+      "width": 2024,
+      "height": 147,
+      "sha256": "55564d71b8fae763cd02357151848dc4b01a6243e9ce8370e4a2ff2d17740a61"
+    },
+    "co-big-7.3-3": {
+      "img": "/cs408/img/wangdao/co-big-7.3-3.webp",
+      "pdf_page": 62,
+      "book_ans_page": 323,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        284,
+        2278,
+        556
+      ],
+      "width": 2025,
+      "height": 272,
+      "sha256": "d385fc005891faf3c563e66519289a3dd804c650699937d4b4c142a1f2e0910e"
+    },
+    "co-big-7.3-4": {
+      "img": "/cs408/img/wangdao/co-big-7.3-4.webp",
+      "pdf_page": 62,
+      "book_ans_page": 323,
+      "pdf_edition": "留空",
+      "crop": [
+        253,
+        1481,
+        2274,
+        2234
+      ],
+      "width": 2021,
+      "height": 753,
+      "sha256": "462f396a42f3561287ea923dd0586e6ca5dbfa83d3c022023d40649abf4fcb55"
+    },
+    "co-big-7.3-5": {
+      "img": "/cs408/img/wangdao/co-big-7.3-5.webp",
+      "pdf_page": 63,
+      "book_ans_page": 324,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        284,
+        2279,
+        558
+      ],
+      "width": 2025,
+      "height": 274,
+      "sha256": "191a51e11959e8e91cd341f7e860fd19068a6a3b034d8c434bae1b21564aee2c"
+    },
+    "co-big-7.3-6": {
+      "img": "/cs408/img/wangdao/co-big-7.3-6.webp",
+      "pdf_page": 63,
+      "book_ans_page": 324,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        1486,
+        2278,
+        2068
+      ],
+      "width": 2024,
+      "height": 582,
+      "sha256": "b5900183a77badf8da1e0bf4f083349d5920097e910d71e5e65c20cccf024e2f"
+    },
+    "co-big-7.3-7": {
+      "img": "/cs408/img/wangdao/co-big-7.3-7.webp",
+      "pdf_page": 64,
+      "book_ans_page": 324,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        279,
+        2277,
+        810
+      ],
+      "width": 2023,
+      "height": 531,
+      "sha256": "56c77727843f5caf555d7c45ab1a9cf5b960c78167aebb3b7fe6d4595aff8ebb"
+    },
+    "co-big-7.3-8": {
+      "img": "/cs408/img/wangdao/co-big-7.3-8.webp",
+      "pdf_page": 65,
+      "book_ans_page": 325,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        279,
+        2277,
+        1060
+      ],
+      "width": 2023,
+      "height": 781,
+      "sha256": "63a18434d4f6d58ce737d30045541371a40a0a3f484a1b460023530fa178964a"
+    },
+    "co-big-7.3-9": {
+      "img": "/cs408/img/wangdao/co-big-7.3-9.webp",
+      "pdf_page": 66,
+      "book_ans_page": 325,
+      "pdf_edition": "留空",
+      "crop": [
+        254,
+        289,
+        2277,
+        1338
+      ],
+      "width": 2023,
+      "height": 1049,
+      "sha256": "dbf77b583a750283935db1a514878b15dbdf718b7c55e8b302803e6c7dc99bde"
+    },
+    "co-big-7.3-10": {
+      "img": "/cs408/img/wangdao/co-big-7.3-10.webp",
+      "pdf_page": 67,
+      "book_ans_page": 325,
+      "pdf_edition": "留空",
+      "crop": [
+        233,
+        276,
+        2277,
+        931
+      ],
+      "width": 2044,
+      "height": 655,
+      "sha256": "186b83c575f0a60e9b3731980abcf0e957527e14c3702a81a7bd21be1eda35cf"
+    },
+    "co-big-7.3-11": {
+      "img": "/cs408/img/wangdao/co-big-7.3-11.webp",
+      "pdf_page": 68,
+      "book_ans_page": 325,
+      "pdf_edition": "留空",
+      "crop": [
+        236,
+        279,
+        2279,
+        929
+      ],
+      "width": 2043,
+      "height": 650,
+      "sha256": "c2551da9dbe72a3c6e4ad40edfc12bb3d2903ce7be3e458e005ddc2f9dbddcff"
+    }
+  },
+  "sources": {
+    "ds": {
+      "source": "数据结构大题.pdf",
+      "source_sha256": "814235960d16abc3485a5d329a42849df0241d114ef43342df391d25aa8d8bf1",
+      "layout": "single"
+    },
+    "os": {
+      "source": "计算机操作系统大题.pdf",
+      "source_sha256": "2c35f2e55a5b6e40011bc84691eb8d2167ca7a3508a20c87f7a8320fa11a7443",
+      "layout": "single",
+      "unindexed_questions": []
+    },
+    "cn": {
+      "source": "计算机网络.pdf",
+      "source_sha256": "81360524b87704c9146b13b06212b4fa9707a5834785e81a2065358fe90b84e8",
+      "layout": "single",
+      "unindexed_questions": []
+    },
+    "co": {
+      "source": "计算机组成原理大题.pdf",
+      "source_sha256": "b45df14ae20367719469dbef9ad639e24348f063b9bf832e007baf9d41e35753",
+      "layout": "compact",
+      "unindexed_questions": [
+        "co-big-2.3-5",
+        "co-big-4.3-2"
+      ]
+    }
+  }
+}

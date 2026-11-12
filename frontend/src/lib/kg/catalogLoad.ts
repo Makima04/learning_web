@@ -1,9 +1,9 @@
 // 王道 / 李林880 / 张宇1000：index（计数）+ 分片（题干）懒加载。
-// 数学题有 img，index 即可作答；王道题干在分片里，展示前 hydrate。
+// 数学题有 img，index 即可作答；王道原题图保留完整题面，OCR 题干仍需 hydrate 供解析等功能使用。
 import { useEffect, useState } from "react";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
 
-export const PRACTICE_CATALOG_VER = "split-20261109b";
+export const PRACTICE_CATALOG_VER = "split-20261112-wd-all-images";
 
 export type CatalogId = "wangdao" | "lilin880" | "zhangyu1000";
 export type CatalogWhich = "wangdao" | "math" | "all" | "none";
@@ -80,9 +80,9 @@ export function shardKeyOf(item: WangdaoItem): string {
   return item.book || "misc";
 }
 
-/** 有题图或已有题干就不需要再拉分片。 */
+/** 数学题图即可作答；王道即便有图，也补齐供解析使用的 OCR 题干。 */
 export function needsHydrate(item: WangdaoItem): boolean {
-  if (item.img) return false;
+  if (item.img && catalogIdOf(item) !== "wangdao") return false;
   return !item.stem;
 }
 
