@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """2026-11 数学考点去重的一次性重标（幂等，可重复执行）。
 
 改动口径：
@@ -108,13 +108,14 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def dump_preserve(path: Path, data, *, indent: int | None, compact: bool = False) -> None:
+def dump_preserve(path: Path, data) -> None:
+    """按文件原有格式写回：紧凑（[{ 开头）或缩进 2，保留末尾换行，避免无谓重排。"""
     raw = path.read_text(encoding="utf-8")
     trailing = "\n" if raw.endswith("\n") else ""
-    if compact:
+    if raw.lstrip()[:2] in ("[{", "{\""):
         text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     else:
-        text = json.dumps(data, ensure_ascii=False, indent=indent)
+        text = json.dumps(data, ensure_ascii=False, indent=2)
     path.write_text(text + trailing, encoding="utf-8")
 
 
@@ -166,7 +167,7 @@ def retag_exams(names: dict[str, str]) -> None:
             changed += 1
     if review["version"].endswith("-v1"):
         review["version"] = review["version"][:-3] + "-v2-kp-dedup"
-    dump_preserve(REVIEW, review, indent=2)
+    dump_preserve(REVIEW, review)
 
     data = load_json(GENERATED)
     for q in data["items"]:
@@ -175,7 +176,7 @@ def retag_exams(names: dict[str, str]) -> None:
         q["kpId"], q["secondaryKpIds"] = kp, secondary
         q["book"] = "calc" if kp.startswith("calc.") else "linear" if kp.startswith("la.") else "prob"
     data["version"] = review["version"]
-    dump_preserve(GENERATED, data, indent=2)
+    dump_preserve(GENERATED, data)
 
     # —— 复跑生成器的非 PDF 校验 ——
     assert len(data["items"]) == 408
@@ -221,7 +222,7 @@ def retag_catalogs(names: dict[str, str]) -> None:
                 keep_formula.add(item["id"])
         for item in items:
             assert all(k in names for k in item["kp_ids"]), f"未知考点 {item['id']}: {item['kp_ids']}"
-        dump_preserve(path, items, indent=None, compact=True)
+        dump_preserve(path, items)
         print(f"{path.name}：{changed} 题重标，共 {len(items)} 题")
     # overlay 里其余条目也过一遍别名（含未进目录的旧条目）
     for oid, ov in overlay.items():
@@ -234,7 +235,7 @@ def retag_catalogs(names: dict[str, str]) -> None:
         assert all(k in names for k in ov.get("kp_ids", [])), f"overlay 未知考点 {oid}"
         assert FORMULA not in ov.get("kp_ids", []) or oid in keep_formula, \
             f"overlay 残留 formula 且目录未保留：{oid}"
-    dump_preserve(OVERLAY, overlay, indent=2)
+    dump_preserve(OVERLAY, overlay)
     print(f"overlay：{overlay_changed} 条更新")
 
 
@@ -252,7 +253,7 @@ def retag_split_catalogs(names: dict[str, str]) -> None:
                 item["kp_ids"] = list(expected)
                 touched += 1
         index["ver"] = CATALOG_VER
-        dump_preserve(index_path, index, indent=None, compact=True)
+        dump_preserve(index_path, index)
         shard_touched = 0
         for shard in index["shards"]:
             path = directory / shard["file"]
@@ -265,7 +266,7 @@ def retag_split_catalogs(names: dict[str, str]) -> None:
                     item["kp_ids"] = list(expected)
                     shard_touched += 1
                 assert all(k in names for k in item["kp_ids"]), f"未知考点 {item['id']}"
-            dump_preserve(path, items, indent=None, compact=True)
+            dump_preserve(path, items)
         print(f"{directory.name}/：index {touched} 题、分片 {shard_touched} 题同步，ver → {CATALOG_VER}")
 
 
