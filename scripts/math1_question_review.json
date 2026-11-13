@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "20261113-question-review-v1",
+  "version": "20261113-question-review-v2-kp-dedup",
   "reviewMethod": "逐题读取2009—2026年归档题干；复杂与歧义题对照解析。主标签按主要任务归类，辅助标签仅记录题干直接要求或解题中实质使用的知识，不展开先修闭包。分类为AI复核，可根据原题继续纠正。",
   "frequencyPolicy": "主考点与辅助考点均计入考查年份，同年同考点去重；当前题型分别统计。",
   "pointsPolicy": "整题分值仅分配给唯一主考点；辅助考点不分配整题分值。未拆小问评分，主考点占分不等于单个知识点的实际得分份额。",
@@ -1154,7 +1154,6 @@
     "2011-18": {
       "kpId": "calc.limit.seq",
       "secondaryKpIds": [
-        "calc.d1.ineq",
         "calc.d1.mvt"
       ],
       "facets": [
@@ -1435,7 +1434,7 @@
       "questionTextSha256": "480613a03df92db5bcbcbd7090be20bbb11fbc845ead3f6cec7e023968cdea4d"
     },
     "2012-15": {
-      "kpId": "calc.d1.ineq",
+      "kpId": "calc.d1.mvt",
       "secondaryKpIds": [
         "calc.d1.sketch"
       ],
@@ -1934,7 +1933,7 @@
     "2014-2": {
       "kpId": "calc.d1.sketch",
       "secondaryKpIds": [
-        "calc.d1.ineq"
+        "calc.d1.mvt"
       ],
       "facets": [
         "convex",
@@ -2598,7 +2597,7 @@
       "questionTextSha256": "52839e55616680d9fc9da835414eb428bcdc5c0cb5da2716f878fa3112fe4505"
     },
     "2016-2": {
-      "kpId": "calc.i1.indef",
+      "kpId": "calc.i1.tech",
       "secondaryKpIds": [
         "calc.limit.cont"
       ],
@@ -3462,10 +3461,8 @@
       "questionTextSha256": "c73d098019ae77017696ab6687684a8ea819534b79d91a879522ae27952a6d31"
     },
     "2018-15": {
-      "kpId": "calc.i1.indef",
-      "secondaryKpIds": [
-        "calc.i1.tech"
-      ],
+      "kpId": "calc.i1.tech",
+      "secondaryKpIds": [],
       "facets": [
         "subst",
         "parts"
@@ -3523,7 +3520,7 @@
     "2018-19": {
       "kpId": "calc.limit.seq",
       "secondaryKpIds": [
-        "calc.d1.ineq"
+        "calc.d1.mvt"
       ],
       "facets": [
         "seq_rec",

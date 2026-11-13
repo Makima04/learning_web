@@ -6073,8 +6073,7 @@
   },
   "ll-base-2-big-12": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "lagrange",
@@ -6100,7 +6099,7 @@
   },
   "ll-base-2-big-15": {
     "kp_ids": [
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "ineq_proof",
@@ -6161,7 +6160,7 @@
   "ll-hard-2-mcq-2": {
     "kp_ids": [
       "calc.d1.sketch",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "convex"
@@ -6329,8 +6328,7 @@
   },
   "ll-hard-2-mcq-20": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "lagrange",
@@ -6359,7 +6357,7 @@
   "ll-hard-2-mcq-23": {
     "kp_ids": [
       "calc.d1.sketch",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "convex"
@@ -6376,7 +6374,7 @@
   },
   "ll-hard-2-mcq-25": {
     "kp_ids": [
-      "calc.d1.ineq",
+      "calc.d1.mvt",
       "calc.ode.1st"
     ],
     "facets": [
@@ -6531,8 +6529,7 @@
   },
   "ll-hard-2-big-7": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "taylor_thm",
@@ -6541,7 +6538,7 @@
   },
   "ll-hard-2-big-8": {
     "kp_ids": [
-      "calc.d1.ineq",
+      "calc.d1.mvt",
       "calc.i1.def"
     ],
     "facets": [
@@ -6552,7 +6549,7 @@
   "ll-hard-2-big-9": {
     "kp_ids": [
       "calc.d1.sketch",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "extremum"
@@ -6599,7 +6596,7 @@
   },
   "ll-hard-2-big-14": {
     "kp_ids": [
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "convex",
@@ -6608,7 +6605,6 @@
   },
   "ll-hard-2-big-15": {
     "kp_ids": [
-      "calc.d1.ineq",
       "calc.d1.mvt"
     ],
     "facets": [
@@ -6637,8 +6633,7 @@
   },
   "ll-hard-2-big-2-x2": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "taylor_thm",
@@ -7344,7 +7339,7 @@
   "zy-base-hs-5-4": {
     "kp_ids": [
       "calc.d1.sketch",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "extremum",
@@ -7443,7 +7438,7 @@
   "zy-base-hs-5-16-x2": {
     "kp_ids": [
       "calc.d1.sketch",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "convex",
@@ -7567,7 +7562,7 @@
   "zy-hard-hs-5-5": {
     "kp_ids": [
       "calc.d1.sketch",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "extremum",
@@ -7577,7 +7572,7 @@
   "zy-hard-hs-5-6": {
     "kp_ids": [
       "calc.d1.sketch",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "extremum",
@@ -7873,8 +7868,7 @@
   },
   "zy-base-hs-6-6": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "lagrange",
@@ -7883,8 +7877,7 @@
   },
   "zy-base-hs-6-7": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "lagrange",
@@ -7893,8 +7886,7 @@
   },
   "zy-base-hs-6-8": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "lagrange",
@@ -7930,7 +7922,7 @@
   "zy-base-hs-6-12": {
     "kp_ids": [
       "calc.d1.lhopital",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "taylor_exp",
@@ -7950,7 +7942,7 @@
   },
   "zy-base-hs-6-14": {
     "kp_ids": [
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "ineq_proof",
@@ -7978,7 +7970,7 @@
   },
   "zy-base-hs-6-17": {
     "kp_ids": [
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "ineq_proof",
@@ -7987,7 +7979,7 @@
   },
   "zy-base-hs-6-18": {
     "kp_ids": [
-      "calc.d1.ineq",
+      "calc.d1.mvt",
       "calc.d1.sketch"
     ],
     "facets": [
@@ -8093,8 +8085,7 @@
   },
   "zy-hard-hs-6-3": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "eq_proof",
@@ -8112,7 +8103,7 @@
   "zy-hard-hs-6-5": {
     "kp_ids": [
       "calc.d1.lhopital",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "taylor_exp",
@@ -8121,8 +8112,7 @@
   },
   "zy-hard-hs-6-6": {
     "kp_ids": [
-      "calc.d1.mvt",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "lagrange",
@@ -8133,7 +8123,7 @@
   "zy-hard-hs-6-7": {
     "kp_ids": [
       "calc.d1.lhopital",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "taylor_thm",
@@ -8142,7 +8132,7 @@
   },
   "zy-hard-hs-6-8": {
     "kp_ids": [
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "ineq_proof",
@@ -8151,7 +8141,7 @@
   },
   "zy-hard-hs-6-9": {
     "kp_ids": [
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "ineq_proof",
@@ -8197,7 +8187,7 @@
   },
   "zy-hard-hs-6-15": {
     "kp_ids": [
-      "calc.d1.ineq",
+      "calc.d1.mvt",
       "calc.d1.def"
     ],
     "facets": [
@@ -8228,7 +8218,7 @@
   },
   "zy-hard-hs-6-18": {
     "kp_ids": [
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "ineq_proof",
@@ -8237,7 +8227,7 @@
   },
   "zy-hard-hs-6-19": {
     "kp_ids": [
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "ineq_proof",
@@ -8247,7 +8237,7 @@
   "zy-hard-hs-6-20": {
     "kp_ids": [
       "calc.d1.lhopital",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "taylor_exp",
@@ -8257,7 +8247,7 @@
   "zy-hard-hs-6-21": {
     "kp_ids": [
       "calc.d1.lhopital",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "taylor_thm",
@@ -8292,7 +8282,7 @@
   },
   "ll-base-3-mcq-1": {
     "kp_ids": [
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "indef",
@@ -8340,7 +8330,7 @@
   },
   "ll-base-3-mcq-6": {
     "kp_ids": [
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "indef",
@@ -8442,7 +8432,7 @@
   },
   "ll-base-3-fill-1": {
     "kp_ids": [
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "indef",
@@ -8451,7 +8441,7 @@
   },
   "ll-base-3-fill-2": {
     "kp_ids": [
-      "calc.i1.indef",
+      "calc.i1.tech",
       "calc.limit.fn"
     ],
     "facets": [
@@ -8473,7 +8463,7 @@
   "ll-base-3-fill-4": {
     "kp_ids": [
       "calc.i1.def",
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "var_limit",
@@ -8484,7 +8474,7 @@
   "ll-base-3-fill-5": {
     "kp_ids": [
       "calc.i1.def",
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "var_limit",
@@ -8928,7 +8918,7 @@
   "ll-hard-3-fill-2": {
     "kp_ids": [
       "calc.d1.def",
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "der_def",
@@ -9157,7 +9147,7 @@
   "ll-hard-3-big-9": {
     "kp_ids": [
       "calc.d1.def",
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "der_def",
@@ -9718,7 +9708,6 @@
   },
   "zy-base-hs-9-1": {
     "kp_ids": [
-      "calc.i1.indef",
       "calc.i1.tech"
     ],
     "facets": [
@@ -10322,7 +10311,7 @@
   },
   "zy-base-hs-10-31": {
     "kp_ids": [
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "indef",
@@ -10367,7 +10356,7 @@
   },
   "zy-base-hs-10-36": {
     "kp_ids": [
-      "calc.i1.indef"
+      "calc.i1.tech"
     ],
     "facets": [
       "indef",
@@ -10955,7 +10944,7 @@
   "zy-hard-hs-11-1": {
     "kp_ids": [
       "calc.i1.ineq",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "int_ineq",
@@ -13342,7 +13331,7 @@
   "ll-hard-6-big-26": {
     "kp_ids": [
       "calc.m.app",
-      "calc.d1.ineq"
+      "calc.d1.mvt"
     ],
     "facets": [
       "centroid_m",
@@ -16125,7 +16114,6 @@
   },
   "ll-base-9-mcq-4": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16221,7 +16209,6 @@
   },
   "ll-base-9-big-2": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16231,7 +16218,6 @@
   },
   "ll-base-9-big-3": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16241,7 +16227,6 @@
   },
   "ll-base-9-big-4": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16251,7 +16236,6 @@
   },
   "ll-base-9-big-5": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16270,7 +16254,6 @@
   },
   "ll-base-9-big-7": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16288,7 +16271,6 @@
   },
   "ll-base-9-big-9": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16297,7 +16279,6 @@
   },
   "ll-base-9-big-10": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16314,7 +16295,6 @@
   },
   "ll-base-9-big-12": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16324,7 +16304,6 @@
   },
   "ll-base-9-big-13": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16334,7 +16313,6 @@
   },
   "ll-base-9-big-14": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16344,8 +16322,7 @@
   },
   "ll-base-9-big-15": {
     "kp_ids": [
-      "calc.m.surf2",
-      "calc.m.formula"
+      "calc.m.surf2"
     ],
     "facets": [
       "flux",
@@ -16374,7 +16351,6 @@
   },
   "ll-hard-9-mcq-2": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16384,7 +16360,7 @@
   },
   "ll-hard-9-mcq-3": {
     "kp_ids": [
-      "calc.m.formula"
+      "calc.m.line2"
     ],
     "facets": [
       "green"
@@ -16409,7 +16385,6 @@
   },
   "ll-hard-9-fill-2": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16438,7 +16413,6 @@
   },
   "ll-hard-9-fill-5": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16456,7 +16430,6 @@
   },
   "ll-hard-9-fill-7": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16475,7 +16448,6 @@
   },
   "ll-hard-9-big-2": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16484,7 +16456,6 @@
   },
   "ll-hard-9-big-3": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16494,7 +16465,6 @@
   },
   "ll-hard-9-big-4": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16503,7 +16473,6 @@
   },
   "ll-hard-9-big-5": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16513,7 +16482,6 @@
   },
   "ll-hard-9-big-6": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16532,7 +16500,6 @@
   },
   "ll-hard-9-big-8": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16599,7 +16566,6 @@
   },
   "ll-hard-9-big-15": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16619,7 +16585,6 @@
   },
   "ll-hard-9-big-17": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16629,7 +16594,6 @@
   },
   "ll-hard-9-big-18": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16639,7 +16603,6 @@
   },
   "ll-hard-9-big-19": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16650,7 +16613,6 @@
   },
   "ll-hard-9-big-20": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16678,7 +16640,6 @@
   },
   "ll-hard-9-big-23": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16707,8 +16668,8 @@
   },
   "ll-hard-9-big-1-x2": {
     "kp_ids": [
-      "calc.m.formula",
-      "calc.m.dbl"
+      "calc.m.dbl",
+      "calc.m.line2"
     ],
     "facets": [
       "green",
@@ -16717,7 +16678,7 @@
   },
   "ll-hard-9-big-2-x2": {
     "kp_ids": [
-      "calc.m.formula",
+      "calc.m.surf2",
       "calc.m.surf"
     ],
     "facets": [
@@ -16780,7 +16741,6 @@
   },
   "zy-base-hs-18-7": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16789,7 +16749,6 @@
   },
   "zy-base-hs-18-8": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16799,8 +16758,8 @@
   },
   "zy-base-hs-18-9": {
     "kp_ids": [
-      "calc.m.formula",
-      "calc.m.dbl"
+      "calc.m.dbl",
+      "calc.m.line2"
     ],
     "facets": [
       "green",
@@ -16809,7 +16768,6 @@
   },
   "zy-base-hs-18-10": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16818,7 +16776,6 @@
   },
   "zy-base-hs-18-11": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16836,7 +16793,6 @@
   },
   "zy-base-hs-18-13": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16854,7 +16810,6 @@
   },
   "zy-base-hs-18-15": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -16864,7 +16819,6 @@
   },
   "zy-base-hs-18-16": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16889,7 +16843,6 @@
   },
   "zy-hard-hs-18-3": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16930,7 +16883,6 @@
   },
   "zy-hard-hs-18-8": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16939,7 +16891,6 @@
   },
   "zy-hard-hs-18-9": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16949,8 +16900,8 @@
   },
   "zy-hard-hs-18-10": {
     "kp_ids": [
-      "calc.m.formula",
-      "calc.m.impl"
+      "calc.m.impl",
+      "calc.m.line2"
     ],
     "facets": [
       "stokes"
@@ -16958,7 +16909,6 @@
   },
   "zy-hard-hs-18-11": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16975,7 +16925,6 @@
   },
   "zy-hard-hs-18-13": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -16984,7 +16933,7 @@
   },
   "zy-hard-hs-18-14": {
     "kp_ids": [
-      "calc.m.formula"
+      "calc.m.line2"
     ],
     "facets": [
       "green"
@@ -16992,7 +16941,6 @@
   },
   "zy-hard-hs-18-15": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -17009,7 +16957,6 @@
   },
   "zy-hard-hs-18-17": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -17019,7 +16966,6 @@
   },
   "zy-hard-hs-18-18": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [
@@ -17029,7 +16975,7 @@
   },
   "zy-hard-hs-18-19": {
     "kp_ids": [
-      "calc.m.formula",
+      "calc.m.line2",
       "calc.ode.1st"
     ],
     "facets": [
@@ -17039,7 +16985,7 @@
   },
   "zy-hard-hs-18-20": {
     "kp_ids": [
-      "calc.m.formula",
+      "calc.m.line2",
       "calc.m.ext"
     ],
     "facets": [
@@ -17058,7 +17004,6 @@
   },
   "zy-hard-hs-18-22": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.surf2"
     ],
     "facets": [
@@ -17107,7 +17052,6 @@
   },
   "zy-hard-hs-18-27": {
     "kp_ids": [
-      "calc.m.formula",
       "calc.m.line2"
     ],
     "facets": [

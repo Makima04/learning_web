@@ -1,5 +1,5 @@
 {
-  "version": "20261113-question-review-v1",
+  "version": "20261113-question-review-v2-kp-dedup",
   "years": [
     2009,
     2010,
@@ -1573,7 +1573,6 @@
       "kpId": "calc.limit.seq",
       "book": "calc",
       "secondaryKpIds": [
-        "calc.d1.ineq",
         "calc.d1.mvt"
       ],
       "facets": [
@@ -2053,7 +2052,7 @@
       "kind": "big",
       "points": 10,
       "sourceLabel": "不等式的证明",
-      "kpId": "calc.d1.ineq",
+      "kpId": "calc.d1.mvt",
       "book": "calc",
       "secondaryKpIds": [
         "calc.d1.sketch"
@@ -2883,7 +2882,7 @@
       "kpId": "calc.d1.sketch",
       "book": "calc",
       "secondaryKpIds": [
-        "calc.d1.ineq"
+        "calc.d1.mvt"
       ],
       "facets": [
         "convex",
@@ -4006,7 +4005,7 @@
       "kind": "mcq",
       "points": 4,
       "sourceLabel": "不定积分的计算",
-      "kpId": "calc.i1.indef",
+      "kpId": "calc.i1.tech",
       "book": "calc",
       "secondaryKpIds": [
         "calc.limit.cont"
@@ -5460,11 +5459,9 @@
       "kind": "big",
       "points": 10,
       "sourceLabel": "不定积分的计算",
-      "kpId": "calc.i1.indef",
+      "kpId": "calc.i1.tech",
       "book": "calc",
-      "secondaryKpIds": [
-        "calc.i1.tech"
-      ],
+      "secondaryKpIds": [],
       "facets": [
         "subst",
         "parts"
@@ -5562,7 +5559,7 @@
       "kpId": "calc.limit.seq",
       "book": "calc",
       "secondaryKpIds": [
-        "calc.d1.ineq"
+        "calc.d1.mvt"
       ],
       "facets": [
         "seq_rec",

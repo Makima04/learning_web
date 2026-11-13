@@ -4,6 +4,7 @@ import * as api from "@/lib/api";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 import { discardPendingKgIfNotNewer, enqueueKg } from "@/lib/syncQueue";
 import { applyItemMark, applyMarkToKp, markCovered } from "@/lib/kg/mark";
+import { migrateKpProgress } from "@/lib/kg/kpAlias";
 import { nextPracticeMark } from "@/lib/kg/techniqueTraining";
 import { cs408CheckId, type Cs408CheckPart } from "@/lib/kg/cs408Diagnostic";
 import { findKp } from "@/data/kg";
@@ -182,7 +183,15 @@ function archiveJournalForKp(kpId: string) {
 export const useKgProgress = create<KgStore>((set, get) => ({
   ...emptyDoc(),
 
-  load: () => set(loadDoc()),
+  load: () => {
+    // 考点合并迁移：本地立即改写并入队，服务端随下次 flush 收敛。
+    const { doc, changed } = migrateKpProgress(loadDoc());
+    if (changed) {
+      doc.updatedAt = Date.now();
+      persist(doc);
+    }
+    set(doc);
+  },
 
   setCovered: (kpId, covered) => {
     const now = Date.now();
@@ -337,9 +346,9 @@ export const useKgProgress = create<KgStore>((set, get) => ({
     try {
       const r = await api.getKg();
       if (!stillInScope(epoch) || !api.isLoggedIn()) return;
-      const remote = r?.kg as KgDoc | null | undefined;
-      const local = loadDoc();
-      if (!remote || !remote.updatedAt) {
+      const remoteRaw = r?.kg as KgDoc | null | undefined;
+      const local = migrateKpProgress(loadDoc()).doc;
+      if (!remoteRaw || !remoteRaw.updatedAt) {
         if (local.updatedAt > 0) {
           enqueueKg(toPayload(local));
         }
@@ -347,8 +356,11 @@ export const useKgProgress = create<KgStore>((set, get) => ({
         set(local);
         return;
       }
+      // 远端可能还是合并前的旧考点 id：先迁移再比较；时间戳仍用远端原值，避免迁移抬高版本覆盖更新的本地。
+      const remoteMig = migrateKpProgress(remoteRaw);
+      const remote = remoteMig.doc;
       // 服务端权威：远端更新则覆盖；否则入队推本地（flush 由 accountSync 负责）
-      if ((remote.updatedAt || 0) >= (local.updatedAt || 0)) {
+      if ((remoteRaw.updatedAt || 0) >= (local.updatedAt || 0)) {
         const doc: KgDoc = {
           states: remote.states ?? {},
           itemMarks: remote.itemMarks ?? [],
@@ -357,10 +369,12 @@ export const useKgProgress = create<KgStore>((set, get) => ({
           attempts: remote.attempts ?? [],
           favorites: remote.favorites ?? [],
           examSessions: remote.examSessions ?? [],
-          updatedAt: remote.updatedAt ?? 0,
+          updatedAt: remoteMig.changed ? Date.now() : (remote.updatedAt ?? 0),
         };
         saveJSON(storageKey(), doc);
         discardPendingKgIfNotNewer(doc.updatedAt);
+        // 迁移过的远端快照回推一次，让服务端也收敛到新 id。
+        if (remoteMig.changed) enqueueKg(toPayload(doc));
         set(doc);
       } else {
         enqueueKg(toPayload(local));
@@ -369,14 +383,13 @@ export const useKgProgress = create<KgStore>((set, get) => ({
       }
     } catch (e) {
       console.warn("kg sync failed:", e);
-      if (stillInScope(epoch)) set(loadDoc());
+      if (stillInScope(epoch)) set(migrateKpProgress(loadDoc()).doc);
     }
   },
 
   replaceAll: (doc) => {
     const next: KgDoc = {
-      ...emptyDoc(),
-      ...doc,
+      ...migrateKpProgress({ ...emptyDoc(), ...doc }).doc,
       itemNotes: doc.itemNotes ?? {},
       updatedAt: Date.now(),
     };

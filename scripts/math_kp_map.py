@@ -162,7 +162,7 @@ LILIN_KEYWORDS: dict[int, list[tuple[list[str], str]]] = {
     ],
     2: [
         (["速度", "加速度", "质点", "变化率"], "calc.d1.phys"),
-        (["不等式", "证明"], "calc.d1.ineq"),
+        (["不等式", "证明"], "calc.d1.mvt"),
         (["罗尔", "拉格朗日", "柯西", "中值定理"], "calc.d1.mvt"),
         (["洛必达", "泰勒", "麦克劳林"], "calc.d1.lhopital"),
         (["极值", "拐点", "凹凸", "单调", "渐近", "作图", "最值"], "calc.d1.sketch"),
@@ -174,7 +174,7 @@ LILIN_KEYWORDS: dict[int, list[tuple[list[str], str]]] = {
         (["路程", "变力", "压力", "功", "平均速度"], "calc.i1.phys"),
         (["反常", "无穷限", "瑕"], "calc.i1.improper"),
         (["不等式", "中值定理", "≥", "≤", "证明"], "calc.i1.ineq"),
-        (["不定积分", "原函数"], "calc.i1.indef"),
+        (["不定积分", "原函数"], "calc.i1.tech"),
         (["换元", "分部", "有理"], "calc.i1.tech"),
         (["定积分", "积分上限", "变限"], "calc.i1.def"),
     ],
@@ -206,7 +206,11 @@ LILIN_KEYWORDS: dict[int, list[tuple[list[str], str]]] = {
         (["数项", "正项", "交错", "绝对收敛", "条件收敛"], "calc.series.num"),
     ],
     9: [
-        (["斯托克斯", "Stokes", "高斯公式", "格林", "散度", "旋度", "div", "rot"], "calc.m.formula"),
+        # 三大公式是曲线/曲面积分的计算方法，归对应积分考点；formula 只留散度/旋度计算。
+        (["斯托克斯", "Stokes"], "calc.m.line2"),
+        (["高斯公式", "高斯"], "calc.m.surf2"),
+        (["格林"], "calc.m.line2"),
+        (["散度", "旋度", "div", "rot"], "calc.m.formula"),
         (["dydz", "第二类曲", "对坐标的曲"], "calc.m.surf2"),
         (["dS", "第一类曲", "对面积"], "calc.m.surf"),
         (["Pdx", "Qdy", "对坐标", "第二类曲"], "calc.m.line2"),
@@ -276,7 +280,10 @@ LILIN_KEYWORDS: dict[int, list[tuple[list[str], str]]] = {
 
 # 张宇第 18 章（多元积分）再拆
 ZHANGYU_CH18_KEYWORDS: list[tuple[list[str], str]] = [
-    (["斯托克斯", "Stokes", "高斯公式", "格林", "散度", "旋度"], "calc.m.formula"),
+    (["斯托克斯", "Stokes"], "calc.m.line2"),
+    (["高斯公式", "高斯"], "calc.m.surf2"),
+    (["格林"], "calc.m.line2"),
+    (["散度", "旋度"], "calc.m.formula"),
     (["dydz", "第二类曲", "通量", "曲面积分"], "calc.m.surf2"),
     (["dS", "第一类曲", "对面积"], "calc.m.surf"),
     (["Pdx", "Qdy", "xdx", "ydy", "zdz", "第二类曲", "对坐标", "曲线积分"], "calc.m.line2"),

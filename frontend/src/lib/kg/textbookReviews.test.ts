@@ -22,8 +22,8 @@ function verify(blocks:ReviewBlock[]) {
  }
 }
 describe("教材体系知识复习覆盖与排版",()=>{
- it("覆盖75个数学和92个408考点，正文无重复或悬空入口",()=>{
-  expect(mathPoints).toHaveLength(75); expect(csPoints).toHaveLength(92);
+ it("覆盖73个数学和92个408考点，正文无重复或悬空入口",()=>{
+  expect(mathPoints).toHaveLength(73); expect(csPoints).toHaveLength(92);
   expect(CS408_TEXTBOOK_REVIEWS).toHaveLength(92);
   expect(Object.keys(CS408_KNOWLEDGE_REVIEWS).sort()).toEqual(csPoints.map(k=>k.id).sort());
   expect(Object.keys(MATH_TEXTBOOK_KNOWLEDGE).sort()).toEqual(mathPoints.map(k=>k.id).filter(id=>id!=="calc.m.surf2").sort());

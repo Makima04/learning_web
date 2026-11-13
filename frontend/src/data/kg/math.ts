@@ -31,9 +31,8 @@ export const MATH_BOOKS: KgBook[] = [
           { id: "calc.d1.def", name: "导数定义与几何意义", freq: 4, bigWeight: 0.35, scope: "both" },
           { id: "calc.d1.rules", name: "求导法则与高阶导", freq: 5, bigWeight: 0.4, scope: "both" },
           { id: "calc.d1.mvt", name: "中值定理、微分等式与不等式", freq: 5, bigWeight: 0.7, scope: "both" },
-          { id: "calc.d1.lhopital", name: "洛必达与泰勒", freq: 5, bigWeight: 0.55, scope: "both" },
+          { id: "calc.d1.lhopital", name: "泰勒公式与余项应用", freq: 4, bigWeight: 0.5, scope: "both" },
           { id: "calc.d1.sketch", name: "单调/凹凸/极值/作图", freq: 4, bigWeight: 0.45, scope: "both" },
-          { id: "calc.d1.ineq", name: "微分等式与不等式证明", freq: 4, bigWeight: 0.5, scope: "both" },
           { id: "calc.d1.phys", name: "微分学物理应用", freq: 2, bigWeight: 0.3, scope: "both" },
         ],
       },
@@ -43,8 +42,7 @@ export const MATH_BOOKS: KgBook[] = [
         order: 3,
         kps: [
           { id: "calc.i1.def", name: "定积分定义与性质", freq: 4, bigWeight: 0.4, scope: "both" },
-          { id: "calc.i1.indef", name: "不定积分计算", freq: 5, bigWeight: 0.5, scope: "both" },
-          { id: "calc.i1.tech", name: "换元/分部/有理函数", freq: 5, bigWeight: 0.45, scope: "both" },
+          { id: "calc.i1.tech", name: "不定积分与积分技巧", freq: 5, bigWeight: 0.5, scope: "both" },
           { id: "calc.i1.improper", name: "反常积分", freq: 4, bigWeight: 0.4, scope: "both" },
           { id: "calc.i1.app", name: "积分几何应用", freq: 4, bigWeight: 0.5, scope: "both" },
           { id: "calc.i1.ineq", name: "积分等式与不等式", freq: 4, bigWeight: 0.55, scope: "both" },
@@ -112,7 +110,9 @@ export const MATH_BOOKS: KgBook[] = [
           { id: "calc.m.line2", name: "第二类曲线积分", freq: 4, bigWeight: 0.55, scope: "math1" },
           { id: "calc.m.surf", name: "第一类曲面积分", freq: 3, bigWeight: 0.4, scope: "math1" },
           { id: "calc.m.surf2", name: "第二类曲面积分", freq: 4, bigWeight: 0.55, scope: "math1" },
-          { id: "calc.m.formula", name: "格林 / 高斯 / 斯托克斯公式", freq: 4, bigWeight: 0.6, scope: "math1" },
+          // 格林/高斯/斯托克斯是曲线/曲面积分的计算方法，归入 line2/surf2 的模板；
+          // 本考点只保留散度、旋度与保守场这一独立小知识（真题极少单独主考）。
+          { id: "calc.m.formula", name: "散度、旋度与保守场", freq: 2, bigWeight: 0.25, scope: "math1" },
         ],
       },
     ],

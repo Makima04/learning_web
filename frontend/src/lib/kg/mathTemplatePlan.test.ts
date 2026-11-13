@@ -25,9 +25,9 @@ describe("题型模板注册表", () => {
     expect(mathTemplateName("la.eig.quad.ortho")).toContain("正交变换");
   });
 
-  it("75 个数学考点每类都有模板，模板只挂在数学考点上", () => {
+  it("73 个数学考点每类都有模板，模板只挂在数学考点上", () => {
     const kps = MATH_BOOKS.flatMap((b) => b.modules.flatMap((m) => m.kps));
-    expect(kps).toHaveLength(75);
+    expect(kps).toHaveLength(73);
     for (const kp of kps) expect(templatesForKp(kp.id).length, kp.id).toBeGreaterThan(0);
     expect(templatesForKp("ds.linear")).toHaveLength(0);
   });

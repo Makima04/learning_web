@@ -14,8 +14,8 @@ const catalog = ["lilin880", "zhangyu1000"].flatMap((source) => JSON.parse(
 ).items as WangdaoItem[]);
 
 describe("数学知识模板全量覆盖与教学内容", () => {
-  it("三个分科的 75 个考点均有入口和真实模板，数学入口独立于408覆盖统计", () => {
-    expect(points).toHaveLength(75);
+  it("三个分科的 73 个考点均有入口和真实模板，数学入口独立于408覆盖统计", () => {
+    expect(points).toHaveLength(73);
     expect(Object.keys(MATH_KNOWLEDGE_REVIEWS).sort()).toEqual(points.map((kp) => kp.id).sort());
     expect(Object.keys(KNOWLEDGE_REVIEW_TOPICS).filter(id => points.some(kp => kp.id === id)).sort()).toEqual(Object.keys(MATH_KNOWLEDGE_REVIEWS).sort());
   });

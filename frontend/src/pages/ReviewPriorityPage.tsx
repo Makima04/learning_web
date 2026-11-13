@@ -30,6 +30,16 @@ import { buildCs408Diagnostic } from "@/lib/kg/cs408Diagnostic";
 import { PracticeQuestionCard } from "@/pages/practiceQuestion";
 import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
+/** 知识复习入口的考点数随图谱定义动态统计，考点合并/拆分后不再需要手改文案。 */
+const KNOWLEDGE_KP_COUNT = Object.keys(KNOWLEDGE_REVIEW_TOPICS).reduce(
+  (acc, id) => {
+    const subject = findKp(id)?.book.subject;
+    if (subject === "math" || subject === "cs408") acc[subject] += 1;
+    return acc;
+  },
+  { math: 0, cs408: 0 } as Record<"math" | "cs408", number>,
+);
+
 const STATUS = {
   unknown: { text: "待诊断", cls: "bg-muted text-muted-foreground" },
   weak: { text: "优先补弱", cls: "bg-destructive/10 text-ink-danger" },
@@ -534,7 +544,7 @@ export function ReviewPriorityPage() {
       <div className="mx-auto max-w-6xl space-y-5 p-4 pb-16 md:p-6">
         <Link to={`/review-priority/knowledge?${new URLSearchParams({ subject, kind, order })}`} className="flex items-center gap-3 rounded-xl border border-primary/30 bg-accent/40 px-4 py-3 text-primary hover:bg-accent/70">
           <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
-          <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{subject === "math" ? "数学知识复习 · 75 个考点" : "408知识复习 · 92 个考点"}</span><span className="mt-1 block text-xs text-muted-foreground">{subject === "math" ? "高数、线代、概率统计 · 公式与完整演算" : "数据结构、计组、操作系统、计网 · 原理与过程推演"}</span></span>
+          <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{subject === "math" ? `数学知识复习 · ${KNOWLEDGE_KP_COUNT.math} 个考点` : `408知识复习 · ${KNOWLEDGE_KP_COUNT.cs408} 个考点`}</span><span className="mt-1 block text-xs text-muted-foreground">{subject === "math" ? "高数、线代、概率统计 · 公式与完整演算" : "数据结构、计组、操作系统、计网 · 原理与过程推演"}</span></span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
         </Link>
         {/* ---------- 结论层：一句话 + Top3 行动卡 ---------- */}

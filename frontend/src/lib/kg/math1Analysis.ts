@@ -49,7 +49,6 @@ const PREREQUISITES: Record<string, string[]> = {
   "calc.m.surf": ["calc.m.dbl"],
   "calc.series.power": ["calc.i1.tech", "calc.series.num"],
   "calc.d1.mvt": ["calc.d1.rules"],
-  "calc.d1.ineq": ["calc.d1.mvt"],
   "calc.ode.2nd": ["calc.d1.rules"],
   "prob.stat.est": ["prob.num.ex", "prob.rv.dist"],
   "prob.mv.joint": ["prob.rv.dist"],

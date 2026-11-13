@@ -80,7 +80,8 @@ def split_public_catalog(catalog_path: Path) -> Path:
         shards.append({"key": key, "file": filename, "count": len(groups[key])})
 
     index = {
-        "ver": "split-20261112-wd-all-images",
+        # 与 frontend/src/lib/kg/catalogLoad.ts 的 PRACTICE_CATALOG_VER 保持一致
+        "ver": "split-20261113-kp-dedup",
         "count": len(items),
         "shards": shards,
         "items": [slim_item(q) for q in items],
