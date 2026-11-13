@@ -17,5 +17,6 @@
 这些来源可能存在共同上游；尚未逐题人工复核题干公式、填空答案及大题推导。
 
 数学一三种题型已接入左侧“复习性价比”：`/review-priority?subject=math`，默认大题，支持选择/填空切换。旧路径 `/kg/math/review-priority` 自动迁移并保留筛选。
-分析数据和网页 PDF 由 `.venv/bin/python3 scripts/gen_math1_analysis.py` 生成；逐题标签映射与成本档位在 `scripts/math1_topic_mapping.json` 维护。
+分析数据和网页 PDF 由 `.venv/bin/python3 scripts/gen_math1_analysis.py` 生成；全部 408 道题的主考点、辅助考点、考法和逐题依据在 `scripts/math1_question_review.json` 维护。旧来源标签及成本档位仍在 `scripts/math1_topic_mapping.json`，来源标签只作追溯，不再决定分类。
+只更新分类时运行 `.venv/bin/python3 scripts/gen_math1_analysis.py --metadata-only`，它仍校验全部原卷和解析哈希、题干文本及页码，重新生成分析 JSON、考法词汇与 [完整逐题复核表](math1-question-review.md)，不重复导出未改变的 PDF/图片。
 原始资料遵循项目现有 `papers/` 忽略规则，不入 Git；网页所需 PDF 和分析 JSON 是生成的前端数据产物。

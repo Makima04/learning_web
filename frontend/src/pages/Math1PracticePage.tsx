@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { findKp } from "@/data/kg";
 import { syncAccountData } from "@/lib/accountSync";
-import { MATH1_ITEMS, MATH1_KIND_NAMES, type Math1Question } from "@/lib/kg/math1Analysis";
+import { MATH1_ITEMS, MATH1_KIND_NAMES, reviewQuestionKpIds, type Math1Question } from "@/lib/kg/math1Analysis";
+import { mathFacetName } from "@/lib/kg/mathPractice";
 import { math1PracticePath, math1QuestionImage } from "@/lib/kg/math1Practice";
 import { practiceReturnLabel, practiceReturnPath, reviewPriorityPath } from "@/lib/kg/paths";
 import { useAuth } from "@/stores/auth";
@@ -45,7 +46,13 @@ function Math1Question({ question, answerInitially }: { question: Math1Question;
   return (
     <Card>
       <CardContent className="space-y-5 p-4 sm:p-6">
-        <p className="text-xs leading-6 text-muted-foreground">考点：{[question.kpId, ...question.secondaryKpIds].map((id) => findKp(id)?.kp.name).filter(Boolean).join(" · ")}</p>
+        <p className="text-xs leading-6 text-muted-foreground">主考点：{findKp(question.kpId)?.kp.name}；辅助考点：{question.secondaryKpIds.map((id) => findKp(id)?.kp.name).filter(Boolean).join(" · ") || "无"}。</p>
+        <details className="rounded-lg bg-secondary/40 p-3 text-xs leading-6">
+          <summary className="cursor-pointer font-semibold">查看逐题分类依据</summary>
+          <p className="mt-2">{question.reviewReason}</p>
+          <p className="text-muted-foreground">考法：{question.facets.map(mathFacetName).join(" · ")}</p>
+          <p className="text-muted-foreground">主、辅考点都计入考查年份；整题 {question.points} 分仅归属主考点，不代表每个知识点各占 {question.points} 分。</p>
+        </details>
         <QuestionImage key={question.id} question={question} />
         <Button variant="outline" className="gap-2" aria-expanded={revealed} aria-controls="math1-answer" onClick={() => setRevealed((v) => !v)}>
           {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}{revealed ? "收起解析" : "查看答案与解析"}
@@ -88,7 +95,9 @@ export function Math1PracticePage() {
 
   if (!question) return <div className="space-y-4"><p>未找到这道数学真题。</p><Button asChild variant="outline"><Link to={returnTo}>返回复习性价比</Link></Button></div>;
   // 与考点抽屉的真题顺序一致，换题始终留在当前考点和题型。
-  const related = MATH1_ITEMS.filter((q) => q.kpId === question.kpId && q.kind === question.kind).sort((a, b) => b.year - a.year || a.n - b.n);
+  const contextKp = new URLSearchParams(returnTo.split("?")[1] ?? "").get("kp");
+  const navigationKp = contextKp && reviewQuestionKpIds(question).includes(contextKp) ? contextKp : question.kpId;
+  const related = MATH1_ITEMS.filter((q) => reviewQuestionKpIds(q).includes(navigationKp) && q.kind === question.kind).sort((a, b) => b.year - a.year || a.n - b.n);
   const index = related.findIndex((q) => q.id === question.id);
   const previous = related[index - 1];
   const next = related[index + 1];

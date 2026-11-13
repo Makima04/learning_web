@@ -3,6 +3,8 @@
 import type { ReviewTopic } from "./math1Analysis";
 
 export interface RoiInfo {
+  /** 有近年辅助考查但没有主考归属分值，不能据此声称收益为零或性价比低。 */
+  unallocated: boolean;
   /** 组内归一化 0–100；样本不足时为 null（只显示高/中/低） */
   score: number | null;
   tier: "高" | "中" | "低";
@@ -43,8 +45,10 @@ export function computeRoi(topics: ReviewTopic[], pointsPerPaper: number): Map<s
     const gap = t.confidence === null ? 0.5 : Math.max(0.08, 1 - t.confidence);
     const perPaper = pointsPerPaper * t.recentPointShare;
     const raw = Math.round((t.priority / max) * 100);
+    const unallocated = t.recentYears.length > 0 && t.recentPointShare === 0;
     map.set(t.kpId, {
-      score: reliable ? raw : null,
+      unallocated,
+      score: reliable && !unallocated ? raw : null,
       tier: tierOf(raw),
       gap,
       perPaper,

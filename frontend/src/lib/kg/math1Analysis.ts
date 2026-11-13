@@ -24,11 +24,21 @@ export const MATH1_ITEMS = data.items.map((q) => {
 });
 export const MATH1_BIG_ITEMS = MATH1_ITEMS.filter((q) => q.kind === "big");
 export type Math1Question = (typeof MATH1_ITEMS)[number];
-export type ReviewQuestion = Omit<Math1Question, "book"> & { book: string };
+export type ReviewQuestion = Omit<Math1Question, "book" | "reviewReason" | "questionTextSha256"> & {
+  book: string;
+  reviewReason?: string;
+  questionTextSha256?: string;
+};
 export interface ReviewDataset {
   years: number[];
   recentStart: number;
   items: ReviewQuestion[];
+  /** 已逐题复核的数据集才启用辅助考点考频。 */
+  includeSecondary?: boolean;
+}
+
+export function reviewQuestionKpIds(question: Pick<ReviewQuestion, "kpId" | "secondaryKpIds">): string[] {
+  return [...new Set([question.kpId, ...question.secondaryKpIds])];
 }
 
 // 图谱中未完整列出的数学先修：只作为补基础候选，不算作真题命中次数。
@@ -52,6 +62,8 @@ export interface ReviewTopic {
   name: string;
   book: BookId;
   questions: ReviewQuestion[];
+  /** 分值和整题作答证据仅归主考点；questions 包含辅助考查依据。 */
+  primaryQuestions: ReviewQuestion[];
   years: number[];
   recentYears: number[];
   totalPoints: number;
@@ -83,7 +95,10 @@ export function buildReviewTopics(
 ): ReviewTopic[] {
   const questionsOfKind = dataset.items.filter((q) => q.kind === kind);
   const byKp = new Map<string, ReviewQuestion[]>();
-  for (const q of questionsOfKind) byKp.set(q.kpId, [...(byKp.get(q.kpId) ?? []), q]);
+  for (const q of questionsOfKind) {
+    const ids = dataset.includeSecondary ? reviewQuestionKpIds(q) : [q.kpId];
+    for (const id of ids) byKp.set(id, [...(byKp.get(id) ?? []), q]);
+  }
   const totals = new Map(dataset.years.map((year) => [year,
     questionsOfKind.filter((q) => q.year === year).reduce((sum, q) => sum + q.points, 0),
   ]));
@@ -99,9 +114,11 @@ export function buildReviewTopics(
     }
   }
   return [...byKp].map(([kpId, questions]) => {
+    const primaryQuestions = questions.filter((q) => q.kpId === kpId);
     const found = findKp(kpId)!;
     const related = catalog.filter((q) => q.kind === kind && q.kp_ids.includes(kpId));
-    const kindMarks = [...new Set([...related.map((q) => q.id), ...questions.map((q) => q.id)])]
+    // 综合题整题通过不等于其中每个辅助考点都已单独检验。
+    const kindMarks = [...new Set([...related.map((q) => q.id), ...primaryQuestions.map((q) => q.id)])]
       .map((id) => marksById.get(id))
       .filter((m): m is UserItemMark => Boolean(m && m.mark !== "skip"))
       .sort((a, b) => b.ts - a.ts);
@@ -130,10 +147,10 @@ export function buildReviewTopics(
       status = diagnostic.status === "weak" ? "weak" : diagnostic.status === "stable" ? "stable"
         : confidence === null ? "unknown" : "learning";
     }
-    const annualShare = (year: number) => questions.filter((q) => q.year === year)
+    const annualShare = (year: number) => primaryQuestions.filter((q) => q.year === year)
       .reduce((sum, q) => sum + q.points, 0) / (totals.get(year) || 1);
     const pointShare = dataset.years.reduce((sum, y) => sum + annualShare(y), 0) / dataset.years.length;
-    const recentPointShare = recentYears.reduce((sum, y) => sum + annualShare(y), 0) / recentYears.length;
+    const recentPointShare = recentYears.length ? recentYears.reduce((sum, y) => sum + annualShare(y), 0) / recentYears.length : 0;
     const cost = Math.max(...questions.map((q) => q.cost));
     const due = diagnostic ? diagnostic.status === "due" : confidence !== null && Boolean(st?.due && st.due <= now);
     // 成本为相对人工估计；未知保持中性，不直接当成完全不会。
@@ -143,10 +160,12 @@ export function buildReviewTopics(
     return {
       subject: found.book.subject, kind, kpId, name: found.kp.name, book: found.book.id,
       questions: [...questions].sort((a, b) => b.year - a.year || a.n - b.n),
+      primaryQuestions: [...primaryQuestions].sort((a, b) => b.year - a.year || a.n - b.n),
       years: [...new Set(questions.map((q) => q.year))].sort((a, b) => a - b),
       recentYears: [...new Set(questions.filter((q) => q.year >= dataset.recentStart).map((q) => q.year))],
-      totalPoints: questions.reduce((sum, q) => sum + q.points, 0), pointShare, recentPointShare,
-      cost, facets: [...new Set(questions.flatMap((q) => q.facets))], diagnostic,
+      totalPoints: primaryQuestions.reduce((sum, q) => sum + q.points, 0), pointShare, recentPointShare,
+      // 辅助考查保留原题依据，但不把整道综合题的全部考法扩散成该考点的必练技巧。
+      cost, facets: [...new Set(primaryQuestions.flatMap((q) => q.facets))], diagnostic,
       prerequisites: [...new Set([...(found.kp.prereqs ?? []), ...(PREREQUISITES[kpId] ?? [])])],
       status, confidence, confidenceSource, sampleCount, due, priority,
     };

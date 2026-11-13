@@ -136,6 +136,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 // 每行的「性价比」一栏：数字 + 条，样本不足时只给高/中/低。
 function RoiCell({ info }: { info: RoiInfo }) {
+  if (info.unallocated) return <span title="近年作为辅助考点出现，未拆分小问分值，不能据此评为低收益" className="text-[11px] font-semibold text-muted-foreground">综合考查<br />收益未估</span>;
   if (info.score === null) {
     return (
       <span title="掌握记录不足 3 类，先用高/中/低显示" className="inline-block whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground">
@@ -569,7 +570,7 @@ export function ReviewPriorityPage() {
                       <span className="min-w-0 truncate text-sm font-bold">{topic.name}</span>
                     </span>
                     <span className="mt-2 flex items-baseline gap-1.5">
-                      <span className="text-2xl font-extrabold tabular-nums leading-none">{info.score ?? info.tier}</span>
+                      <span className="text-2xl font-extrabold tabular-nums leading-none">{info.unallocated ? "待估" : info.score ?? info.tier}</span>
                       <span className="text-[11px] text-muted-foreground">性价比{info.score === null ? "（档）" : ""}</span>
                       <span className={cn("ml-auto text-[11px] font-semibold", info.score === null ? "text-muted-foreground" : "text-ink-danger")}>{info.score === null ? "待诊断" : `缺口 ${pct(info.gap, 0)}`}</span>
                     </span>
@@ -579,9 +580,9 @@ export function ReviewPriorityPage() {
                       </span>
                     )}
                     <span className="mt-2 block text-[11px] leading-5 text-muted-foreground">
-                      每年约 {info.perPaper.toFixed(1)} 分 · 补齐约 {info.estMinutes} 分钟
+                      主考归属每年约 {info.perPaper.toFixed(1)} 分 · 补齐约 {info.estMinutes} 分钟
                       <br />
-                      <span className="text-foreground">预计可拿回 {info.estGain} 分（估算）</span>
+                      <span className="text-foreground">{info.unallocated ? "综合考查分值未拆分，收益待估" : `预计可拿回 ${info.estGain} 分（估算）`}</span>
                     </span>
                   </button>
                   <div className="mt-2.5 flex items-center justify-between gap-2">
@@ -624,7 +625,7 @@ export function ReviewPriorityPage() {
                 <th className="w-9 py-2 pl-4 pr-1">#</th>
                 <th className="py-2 pr-2">考点</th>
                 <th className="w-24 py-2 pr-2">性价比</th>
-                <th className="hidden w-24 py-2 pr-2 md:table-cell">近五年占分</th>
+                <th className="hidden w-24 py-2 pr-2 md:table-cell">主考占分 / 考查年份</th>
                 <th className="hidden w-20 py-2 pr-2 sm:table-cell">掌握</th>
                 <th className="hidden w-16 py-2 pr-2 lg:table-cell">成本</th>
                 <th className="w-12 py-2 pr-4" />
@@ -666,13 +667,13 @@ export function ReviewPriorityPage() {
                         {topic.due && <span className="text-[10px] font-semibold text-ink-danger">到期</span>}
                       </div>
                       <p className="mt-0.5 text-[11px] text-muted-foreground md:hidden">
-                        {topic.recentYears.length}/{recentSamples} 年 · 每年约 {info?.perPaper.toFixed(1)} 分
+                        考查 {topic.recentYears.length}/{recentSamples} 年 · 主考归属每年约 {info?.perPaper.toFixed(1)} 分
                       </p>
                     </td>
                     <td className="py-2.5 pr-2 align-middle">{info ? <RoiCell info={info} /> : null}</td>
                     <td className="hidden py-2.5 pr-2 align-middle md:table-cell">
                       <span className="text-xs font-semibold tabular-nums">{pct(topic.recentPointShare)}</span>
-                      <span className="block text-[10px] text-muted-foreground">{topic.recentYears.length}/{recentSamples} 年</span>
+                      <span className="block text-[10px] text-muted-foreground">考查 {topic.recentYears.length}/{recentSamples} 年</span>
                     </td>
                     <td className="hidden py-2.5 pr-2 align-middle sm:table-cell">
                       <span className="text-xs font-semibold tabular-nums">{topic.diagnostic ? topic.diagnostic.label : topic.confidence === null ? "—" : pct(topic.confidence, 0)}</span>
@@ -797,7 +798,7 @@ export function ReviewPriorityPage() {
                   <Status topic={selected} plan={techniquePlan} />
                 </div>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  性价比 {drawerRoi.score ?? drawerRoi.tier} · 每年约 {drawerRoi.perPaper.toFixed(1)} 分 · 补齐约 {drawerRoi.estMinutes} 分钟
+                  {drawerRoi.unallocated ? "综合考查 · 分值未拆分，收益待估" : `性价比 ${drawerRoi.score ?? drawerRoi.tier} · 主考归属每年约 ${drawerRoi.perPaper.toFixed(1)} 分 · 补齐约 ${drawerRoi.estMinutes} 分钟`}
                 </p>
               </div>
               <button type="button" onClick={closeDrawer} aria-label="关闭" className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary">
@@ -814,17 +815,19 @@ export function ReviewPriorityPage() {
                 </Link>
               )}
               <p className="rounded-xl bg-accent/40 p-3 text-[13px] leading-6">
-                近五年考了 <strong>{selected.recentYears.length}/{recentSamples}</strong> 次，平均每年约 <strong>{drawerRoi.perPaper.toFixed(1)} 分</strong>。
+                当前{kindLabel}近五年考查 <strong>{selected.recentYears.length}/{recentSamples}</strong> 年{subject === "math" ? "（含辅助考点）" : ""}，主考点归属分值平均每年约 <strong>{drawerRoi.perPaper.toFixed(1)} 分</strong>。
                 {selected.diagnostic
                   ? `已检验 ${selected.diagnostic.sampleCount} 道主考题；${selected.diagnostic.label}。掌握缺口仅作排序估计，完整考法覆盖仍需核对。`
                   : selected.confidence === null
                   ? "还没有同题型记录，建议先做一道代表题判断起点。"
                   : `最近 ${selected.sampleCount} 道同题型记录显示掌握度约 ${pct(selected.confidence, 0)}${selected.confidenceSource === "graph" ? "（暂用共享图谱参考）" : ""}。`}
-                补齐预计 <strong>{drawerRoi.estMinutes} 分钟</strong>，按当前缺口估算可拿回 <strong>{drawerRoi.estGain} 分</strong>。
+                {selected.recentYears.length > 0 && drawerRoi.perPaper === 0
+                  ? "近五年作为辅助考点出现，未拆分小问分值；主考占分为零不代表没考过，也不代表无需复习。"
+                  : <>补齐预计 <strong>{drawerRoi.estMinutes} 分钟</strong>，按主考归属分值与当前缺口估算可拿回 <strong>{drawerRoi.estGain} 分</strong>。</>}
               </p>
 
               <div className="grid grid-cols-3 divide-x divide-border/60 rounded-xl bg-secondary/50 py-2.5 text-center">
-                <div><strong className="block text-sm tabular-nums">{pct(selected.recentPointShare)}</strong><span className="text-[10px] text-muted-foreground">近五年占分</span></div>
+                <div><strong className="block text-sm tabular-nums">{pct(selected.recentPointShare)}</strong><span className="text-[10px] text-muted-foreground">近五年主考归属占分</span></div>
                 <div><strong className="block text-sm tabular-nums">{selected.confidence === null ? "—" : pct(drawerRoi.gap, 0)}</strong><span className="text-[10px] text-muted-foreground">掌握缺口</span></div>
                 <div><strong className="block text-sm">{COST[selected.cost]}</strong><span className="text-[10px] text-muted-foreground">补齐成本</span></div>
               </div>
@@ -969,10 +972,10 @@ export function ReviewPriorityPage() {
                     <Link
                       key={q.id}
                       to={reviewQuestionHref(subject, q, false, location.pathname + location.search)}
-                      title={`${q.year} 年 · 第 ${q.n} 题 · ${q.points} 分`}
+                      title={`${q.year} 年 · 第 ${q.n} 题 · ${q.kpId === selected.kpId ? "主考点" : "辅助考点"} · 整题 ${q.points} 分`}
                       className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[11px] font-semibold text-primary ring-1 ring-border hover:bg-accent"
                     >
-                      {q.year}
+                      {q.year}·{q.n}{q.kpId === selected.kpId ? "主" : "辅"}
                     </Link>
                   ))}
                 </div>
@@ -985,8 +988,11 @@ export function ReviewPriorityPage() {
                       <div key={q.id} className="py-2 text-[11px]">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-semibold">{q.year} 年 · {kindLabel} · 第 {q.n} 题 · {q.points} 分</span>
-                          <span className="text-[10px] text-muted-foreground">{q.classification === "source_read" ? "按题补充分类" : q.classification === "llm" ? "LLM 主考点标注" : "来源主标签映射"}</span>
+                          <span className="text-[10px] text-muted-foreground">{q.kpId === selected.kpId ? "主考点 · 分值归属" : "辅助考点 · 不重复计分"} · {q.classification === "question_reviewed" ? "逐题复核" : q.classification === "source_read" ? "按题补充分类" : q.classification === "llm" ? "LLM 主考点标注" : "来源主标签映射"}</span>
                         </div>
+                        <p className="mt-1 leading-5 text-muted-foreground">主考点：{findKp(q.kpId)?.kp.name}；辅助：{q.secondaryKpIds.map((id) => findKp(id)?.kp.name).join("、") || "无"}。</p>
+                        {q.reviewReason && <p className="mt-1 leading-5">分类依据：{q.reviewReason}</p>}
+                        {subject === "math" && <p className="mt-1 leading-5 text-muted-foreground">考法：{q.facets.map(mathFacetName).join(" · ")}</p>}
                         <div className="mt-1 flex gap-3">
                           <Link className="font-semibold text-primary hover:underline" to={reviewQuestionHref(subject, q, false, location.pathname + location.search)}>打开原题</Link>
                           <Link className="font-semibold text-primary hover:underline" to={reviewQuestionHref(subject, q, true, location.pathname + location.search)}>参考答案</Link>

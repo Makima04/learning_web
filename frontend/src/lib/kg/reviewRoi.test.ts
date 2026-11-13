@@ -5,7 +5,7 @@ import type { ReviewTopic } from "./math1Analysis";
 function topic(over: Partial<ReviewTopic> & { kpId: string }): ReviewTopic {
   return {
     subject: "math", kind: "big", name: over.kpId, book: "calc",
-    questions: [], years: [2024], recentYears: [2024], totalPoints: 10,
+    questions: [], primaryQuestions: [], years: [2024], recentYears: [2024], totalPoints: 10,
     pointShare: 0.05, recentPointShare: 0.06, cost: 2, facets: [], prerequisites: [],
     status: "unknown", confidence: null, confidenceSource: "unknown", sampleCount: 0,
     due: false, priority: 0.1,
@@ -57,5 +57,13 @@ describe("复习性价比 ROI 换算", () => {
     expect(practiceMinutes("big")).toBe(12);
     expect(practiceMinutes("mcq")).toBe(4);
     expect(practiceMinutes("unknown-kind")).toBe(10);
+  });
+
+  it("只有辅助考查且未拆分分值时标为收益待估，不展示零分性价比", () => {
+    const topics = [topic({ kpId: "ortho", priority: 0, pointShare: 0, recentPointShare: 0 }),
+      ...["a", "b", "c"].map((kpId) => topic({ kpId, status: "stable" }))];
+    const info = computeRoi(topics, 70).get("ortho")!;
+    expect(info.unallocated).toBe(true);
+    expect(info.score).toBeNull();
   });
 });

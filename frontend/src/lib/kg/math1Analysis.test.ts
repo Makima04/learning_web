@@ -6,6 +6,7 @@ import {
   MATH1_BIG_ITEMS, MATH1_ITEMS, MATH1_ANALYSIS, MATH1_KINDS, parseMath1Kind,
 } from "./math1Analysis";
 import { newKpState } from "./mark";
+import { mathFacetName } from "./mathPractice";
 import type { WangdaoItem } from "./wangdao408";
 
 describe("数学一真题统计的来源完整性", () => {
@@ -32,6 +33,11 @@ describe("数学一真题统计的来源完整性", () => {
       expect(findKp(q.kpId)?.book.id).toBe(q.book);
       for (const id of q.secondaryKpIds) expect(findKp(id)).toBeTruthy();
       expect(q.sourceLabel).toBeTruthy();
+      expect(q.classification).toBe("question_reviewed");
+      expect(q.reviewReason.length).toBeGreaterThan(10);
+      expect(q.questionTextSha256).toMatch(/^[a-f0-9]{64}$/);
+      expect(q.facets.length).toBeGreaterThan(0);
+      for (const facet of q.facets) expect(mathFacetName(facet), `${q.id}: ${facet}`).not.toBe(facet);
       expect(q.paperPage).toBeGreaterThan(1);
       expect(q.answerPage).toBeGreaterThan(1);
       expect(existsSync(`public/math/exams/math1/${q.year}.pdf`)).toBe(true);
@@ -41,7 +47,7 @@ describe("数学一真题统计的来源完整性", () => {
     expect(math1PdfHref(MATH1_BIG_ITEMS[0], true)).toContain("answers/2009-answer.pdf#page=");
   });
 
-  it("每年去重计频、主考点只分配一次分值，辅助考点不重复累加", () => {
+  it("主辅考点每年去重计频、分值仅归唯一主考点", () => {
     for (const kind of MATH1_KINDS) {
       const topics = buildMath1Topics({}, [], [], 100, kind);
       const allPoints = MATH1_ITEMS.filter((q) => q.kind === kind).reduce((sum, q) => sum + q.points, 0);
@@ -53,6 +59,14 @@ describe("数学一真题统计的来源完整性", () => {
         expect(topic.questions.every((q) => q.kind === kind)).toBe(true);
         expect(topic.years.length).toBe(new Set(topic.questions.map((q) => q.year)).size);
         expect(topic.recentYears.every((y) => y >= 2022)).toBe(true);
+        expect(topic.primaryQuestions.every((q) => q.kpId === topic.kpId)).toBe(true);
+        for (const q of topic.questions) expect([q.kpId, ...q.secondaryKpIds]).toContain(topic.kpId);
+      }
+      // 不仅验证总数：每一道题的每一个主辅标签都必须真的出现在对应考点里。
+      for (const q of MATH1_ITEMS.filter((q) => q.kind === kind)) {
+        for (const kpId of [q.kpId, ...q.secondaryKpIds]) {
+          expect(topics.find((t) => t.kpId === kpId)?.questions.map((r) => r.id), `${q.id}: ${kpId}`).toContain(q.id);
+        }
       }
       const history = sortMath1Topics(topics, "frequency");
       expect(history[0].years.length).toBeGreaterThanOrEqual(history[1].years.length);
@@ -60,6 +74,37 @@ describe("数学一真题统计的来源完整性", () => {
     expect(parseMath1Kind(null)).toBe("big");
     expect(parseMath1Kind("invalid")).toBe("big");
     expect(parseMath1Kind("fill")).toBe("fill");
+  });
+
+  it("纠正基与过渡矩阵误标，并保留综合大题中的正交考查", () => {
+    for (const id of ["math1-2009-q5", "math1-2010-q13", "math1-2015-q20", "math1-2019-q20"]) {
+      const q = MATH1_ITEMS.find((q) => q.id === id)!;
+      expect(q.kpId).toBe("la.sp.basis");
+      expect(q.secondaryKpIds).not.toContain("la.sp.ortho");
+    }
+    const topics = buildMath1Topics({}, [], [], 100, "big");
+    const ortho = topics.find((t) => t.kpId === "la.sp.ortho")!;
+    expect(ortho.recentYears.slice().sort()).toEqual([2022, 2023]);
+    expect(ortho.questions.map((q) => q.id)).toEqual(expect.arrayContaining(["math1-2022-q21", "math1-2023-q21"]));
+    expect(ortho.recentPointShare).toBe(0); // 没有拆小问分，不把二次型整题重复算给正交。
+    expect(ortho.facets).not.toContain("inertia"); // 不把综合题的其他考法扩成正交必练项。
+    const fill = buildMath1Topics({}, [], [], 100, "fill").find((t) => t.kpId === "la.sp.ortho")!;
+    expect(fill.recentYears).toEqual([2023]);
+    expect(fill.recentPointShare).toBeCloseTo(5 / (30 * 5));
+  });
+
+  it("细分大数定律、切比雪夫及欧拉方程，不再沿用粗标签", () => {
+    const get = (year: number, n: number) => MATH1_ITEMS.find((q) => q.year === year && q.n === n)!;
+    expect(get(2014, 23).secondaryKpIds).toContain("prob.limit.lln");
+    expect(get(2014, 23).kpId).toBe("prob.stat.est");
+    expect(get(2022, 9).kpId).toBe("prob.num.ineq");
+    expect(get(2025, 18).kpId).toBe("calc.ode.euler");
+  });
+
+  it("综合题整题通过不会冒充辅助考点的独立作答样本", () => {
+    const topics = buildMath1Topics({}, [{ itemId: "math1-2022-q21", mark: "pass", ts: 100 }]);
+    expect(topics.find((t) => t.kpId === "la.eig.quad")!.sampleCount).toBe(1);
+    expect(topics.find((t) => t.kpId === "la.sp.ortho")!.sampleCount).toBe(0);
   });
 });
 
@@ -83,7 +128,7 @@ describe("个性化复习排序", () => {
 
   it("分值先在每年内归一化，再结合近五年与长期；不是直接累加旧卷分值", () => {
     const t = topic(undefined);
-    const annual = MATH1_ANALYSIS.years.map((year) => ({ year, share: t.questions.filter((q) => q.year === year)
+    const annual = MATH1_ANALYSIS.years.map((year) => ({ year, share: t.primaryQuestions.filter((q) => q.year === year)
       .reduce((sum, q) => sum + q.points, 0) / (year <= 2020 ? 94 : 70) }));
     expect(t.pointShare).toBeCloseTo(annual.reduce((sum, y) => sum + y.share, 0) / 18);
     expect(t.priority).toBeCloseTo((.4 * t.pointShare + .6 * t.recentPointShare) * .5 / (1 + .35 * (t.cost - 1)));

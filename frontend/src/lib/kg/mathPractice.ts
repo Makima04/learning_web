@@ -8,6 +8,7 @@ import {
 } from "@/lib/kg/catalogLoad";
 import { useWangdao408, type WangdaoItem } from "@/lib/kg/wangdao408";
 import type { BookDrillSpec } from "@/lib/kg/mathBookToc";
+import math1ReviewFacets from "@/data/kg/math1ReviewFacets.json";
 
 export const MATH_CATALOG_VER = PRACTICE_CATALOG_VER;
 
@@ -416,6 +417,8 @@ export const MATH_FACETS: { id: string; name: string }[] = [
   { id: "unbiased", name: "无偏性" },
   { id: "interval", name: "区间估计" },
   { id: "hyp_test", name: "假设检验" },
+  // 真题逐题复核新增的细考法；已有教辅考法保持原有 ID，保证方法匹配可复用。
+  ...Object.entries(math1ReviewFacets).map(([id, name]) => ({ id, name })),
 ];
 
 const FACET_NAME = new Map(MATH_FACETS.map((f) => [f.id, f.name]));
