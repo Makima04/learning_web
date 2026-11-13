@@ -9,6 +9,14 @@ import { mathFacetLabels } from "@/lib/kg/mathPractice";
 import { cn } from "@/lib/utils";
 
 type LlmPane = "answer" | "explain";
+
+/** 服务端 detail 兜底文案：裸英文错误映射成中文 */
+function explainErrorText(detail?: string): string {
+  if (!detail) return "生成失败";
+  if (detail === "parse failed") return "模型返回格式异常，请重试";
+  return detail;
+}
+
 const MathExplanationPanel = lazy(() => import("./MathExplanationPanel").then((m) => ({ default: m.MathExplanationPanel })));
 
 const OPT_KEYS = ["A", "B", "C", "D"] as const;
@@ -133,7 +141,7 @@ function LegacyWangdaoAnalysis({
       .then((r) => {
         if (cancelled) return;
         if (r.status === "unconfigured") setErr("未配置 LLM（服务端）");
-        else if (r.status !== "ok") setErr(r.detail || "生成失败");
+        else if (r.status !== "ok") setErr(explainErrorText(r.detail));
         else setLlm(r);
       })
       .catch((e: unknown) => {
@@ -165,7 +173,7 @@ function LegacyWangdaoAnalysis({
       if (r.status === "unconfigured") {
         setErr("未配置 LLM（服务端）");
       } else if (r.status !== "ok") {
-        setErr(r.detail || "生成失败");
+        setErr(explainErrorText(r.detail));
       } else {
         setLlm(r);
       }

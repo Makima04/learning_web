@@ -23,8 +23,7 @@ const MAX_ITEM_ID_CHARS: usize = 64;
 
 const EXPLAIN_SYS_PROMPT: &str = concat!(
     "你是考研 408 综合应用题辅导老师。根据题干同时给出两种文本，用途完全不同。",
-    "只输出 JSON 对象，不要 markdown 围栏。字段：",
-    "answer（字符串，考场书面作答全文）、",
+    "字段：answer（字符串，考场书面作答全文）、",
     "solution（字符串，给复习用的解析，不是卷面）。",
     "answer 的写法：像抄到答题纸上。按（1）（2）分问；每问写公式或定义、代入、得数；",
     "语气是作答不是讲解；不要写「易错点」「注意」「由此可见」等旁白；不要写阅卷说明。",
@@ -35,7 +34,19 @@ const EXPLAIN_SYS_PROMPT: &str = concat!(
     "涉及磁盘块/页/帧等容量时，每块能装几个向下取整，需要几块向上取整；",
     "顺序查找且等概率时，平均访问次数用 (1+N)/2；",
     "FCB/目录项分解后，先顺序查文件名部分，命中后再访一次其余描述信息；",
-    "中文作答。"
+    "中文作答。",
+    // 格式约束放末尾并给示例：代码类答案易诱发 markdown 模式，需最强位置强调
+    "输出格式：只输出一个 JSON 对象，不要 markdown 围栏，不要任何旁白；",
+    "字符串内换行必须转义为 \\n，双引号必须转义为 \\\"；C 代码也整段放在 answer 字符串里。",
+    r#"示例：{"answer":"（1）每块装 8 个，共需 32 块。\n（2）平均访问 16.5 次。","solution":"每块个数向下取整、块数向上取整是常见错法。"}"#
+);
+
+/// 首轮输出不是合法 JSON 时，把原文交还模型转换为 JSON（修复重试）。
+const REPAIR_SYS_PROMPT: &str = concat!(
+    "用户给出一段考研题解答原文，但它不是合法 JSON。请把它转换为 JSON 对象，只输出 JSON，不要围栏。",
+    "字段：answer（字符串，考场书面作答全文，含代码与公式）、solution（字符串，复习用解析）。",
+    "原文没有独立解析时，solution 写设计思想与复杂度分析。",
+    "保留原文内容，不要删改；字符串内换行转义为 \\n，双引号转义为 \\\"。"
 );
 
 #[derive(Deserialize)]
@@ -366,7 +377,8 @@ async fn do_explain(
         format!("{loc}\n请解答：\n{stem}")
     };
 
-    match llm::chat_completion(
+    // JSON 模式强制合法 JSON 语法：算法题答案含 C 代码，模型易滑入 markdown 模式
+    match llm::chat_completion_json(
         &state.http,
         &llm_conf,
         &model,
@@ -376,16 +388,28 @@ async fn do_explain(
     .await
     {
         Ok(raw) => {
-            let Some((answer, solution)) = parse_explain_json(&raw) else {
-                tracing::warn!(item_id, "explain LLM parse failed");
-                return Ok(Json(json!({
-                    "item_id": item_id,
-                    "answer": "",
-                    "solution": "",
-                    "status": "error",
-                    "cached": false,
-                    "detail": "parse failed",
-                })));
+            let mut parsed = parse_explain_json(&raw);
+            if parsed.is_none() {
+                tracing::warn!(item_id, raw_head = %head_chars(&raw, 500), "explain LLM parse failed, repairing");
+                if let Ok(fixed) = llm::chat_completion_json(
+                    &state.http,
+                    &llm_conf,
+                    &model,
+                    REPAIR_SYS_PROMPT,
+                    &raw,
+                )
+                .await
+                {
+                    parsed = parse_explain_json(&fixed);
+                }
+            }
+            let (answer, solution) = match parsed {
+                Some(p) => p,
+                None => {
+                    // 兜底：原文去围栏后作为解析展示，不再报错（answer 为空时前端回退显示 solution）
+                    tracing::warn!(item_id, raw_head = %head_chars(&raw, 500), "explain LLM parse failed after repair, fallback to raw");
+                    (String::new(), strip_code_fences(&raw))
+                }
             };
 
             let now = Utc::now();
@@ -439,13 +463,51 @@ async fn do_explain(
 
 fn parse_explain_json(content: &str) -> Option<(String, String)> {
     let trimmed = content.trim();
-    let json_str = if let Some(start) = trimmed.find('{') {
-        let end = trimmed.rfind('}')?;
-        &trimmed[start..=end]
-    } else {
-        return None;
-    };
-    let v: Value = serde_json::from_str(json_str).ok()?;
+    for json_str in explain_json_candidates(trimmed) {
+        let Ok(v) = serde_json::from_str::<Value>(json_str) else {
+            continue;
+        };
+        if let Some(pair) = explain_fields(&v) {
+            return Some(pair);
+        }
+    }
+    None
+}
+
+/// 候选 JSON 片段，按可信度排序：整串 → 围栏块 → 首尾花括号 → 紧跟 answer/solution 键的起点。
+/// 最后一类用于跳过散文/C 代码里的花括号（算法题答案常带代码，首 `{` 往往是 struct）。
+fn explain_json_candidates(trimmed: &str) -> Vec<&str> {
+    let mut out = vec![trimmed];
+    let mut rest = trimmed;
+    while let Some(open) = rest.find("```") {
+        let after = &rest[open + 3..];
+        let Some(close) = after.find("```") else {
+            break;
+        };
+        let block = after[..close].trim();
+        let block = block.strip_prefix("json").map(str::trim).unwrap_or(block);
+        out.push(block);
+        rest = &after[close + 3..];
+    }
+    if let (Some(start), Some(end)) = (trimmed.find('{'), trimmed.rfind('}')) {
+        if start < end {
+            out.push(&trimmed[start..=end]);
+            for key in ["{\"answer\"", "{\"solution\""] {
+                let mut from = 0;
+                while let Some(pos) = trimmed[from..].find(key) {
+                    let s = from + pos;
+                    if s < end {
+                        out.push(&trimmed[s..=end]);
+                    }
+                    from = s + key.len();
+                }
+            }
+        }
+    }
+    out
+}
+
+fn explain_fields(v: &Value) -> Option<(String, String)> {
     let answer = v
         .get("answer")
         .and_then(|x| x.as_str())
@@ -467,6 +529,20 @@ fn parse_explain_json(content: &str) -> Option<(String, String)> {
         solution
     };
     Some((answer, solution))
+}
+
+/// 兜底展示时去掉 ``` 围栏标记行，保留代码本身。
+fn strip_code_fences(content: &str) -> String {
+    content
+        .trim()
+        .lines()
+        .filter(|l| !l.trim().starts_with("```"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn head_chars(s: &str, n: usize) -> String {
+    s.chars().take(n).collect()
 }
 
 #[cfg(test)]
@@ -498,5 +574,37 @@ mod tests {
     fn parse_explain_json_in_prose() {
         let raw = "如下：\n{\"answer\":\"4\",\"solution\":\"先算每块个数\"}\n完";
         assert!(parse_explain_json(raw).is_some());
+    }
+
+    #[test]
+    fn parse_explain_json_in_fence() {
+        let raw = "讲解如下：\n```json\n{\"answer\":\"4\",\"solution\":\"先算每块个数\"}\n```\n完";
+        let (a, s) = parse_explain_json(raw).expect("fenced json");
+        assert_eq!(a, "4");
+        assert!(s.contains("每块"));
+    }
+
+    #[test]
+    fn parse_explain_skips_c_braces_before_json() {
+        // 散文/C 代码的花括号在 JSON 之前：首尾花括号截取会失败，候选起点应救回
+        let raw = "typedef struct { int a; } S;\n{\"answer\":\"ok\",\"solution\":\"s\"}";
+        let (a, _) = parse_explain_json(raw).expect("json after code braces");
+        assert_eq!(a, "ok");
+    }
+
+    #[test]
+    fn parse_explain_markdown_c_code_is_none() {
+        // 真实失败形态（ds-big-2.2-6）：纯 markdown + C 代码，无 JSON → 提取失败，走修复/兜底
+        let raw = "设顺序表升序。\n\n```c\ntypedef struct {\n    int data[100];\n    int length;\n} SqList;\nSqList Merge(SqList A, SqList B) {\n    SqList C;\n    return C;\n}\n```";
+        assert!(parse_explain_json(raw).is_none());
+    }
+
+    #[test]
+    fn fallback_strips_fence_markers_keeps_code() {
+        let raw = "思路\n```c\nint x;\n```\n完";
+        let s = strip_code_fences(raw);
+        assert!(!s.contains("```"));
+        assert!(s.contains("int x;"));
+        assert!(s.contains("思路"));
     }
 }

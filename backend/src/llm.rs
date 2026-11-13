@@ -164,13 +164,36 @@ pub async fn chat_completion(
     system: &str,
     user: &str,
 ) -> Result<String, anyhow::Error> {
+    chat_completion_inner(http, conf, model, system, user, false).await
+}
+
+/// 同 chat_completion，但启用 response_format=json_object，强制网关返回合法 JSON 语法。
+/// 用于答案含代码、模型易滑入 markdown 模式的场景（如 408 算法大题书面作答）。
+pub async fn chat_completion_json(
+    http: &Client,
+    conf: &Config,
+    model: &str,
+    system: &str,
+    user: &str,
+) -> Result<String, anyhow::Error> {
+    chat_completion_inner(http, conf, model, system, user, true).await
+}
+
+async fn chat_completion_inner(
+    http: &Client,
+    conf: &Config,
+    model: &str,
+    system: &str,
+    user: &str,
+    json_mode: bool,
+) -> Result<String, anyhow::Error> {
     ensure_configured(conf)?;
     if model.is_empty() {
         return Err(LlmNotConfigured("LLM 未配置：未选择 model".into()).into());
     }
 
     let url = join_url(&conf.llm_url, "/chat/completions");
-    let payload = json!({
+    let mut payload = json!({
         "model": model,
         "temperature": 0,
         "messages": [
@@ -178,6 +201,9 @@ pub async fn chat_completion(
             {"role": "user", "content": user},
         ],
     });
+    if json_mode {
+        payload["response_format"] = json!({"type": "json_object"});
+    }
 
     let resp = http
         .post(&url)
