@@ -1,6 +1,6 @@
 {
-  "version": "20261109",
-  "scope": "王道408大题逐章题干复核；主考点在前，辅助考点不冒充主考证据。",
+  "version": "20261113",
+  "scope": "王道408大题逐章题干复核；主考点在前，辅助考点不冒充主考证据。；算法设计题主考归入 ds.algo.design，按设计方法细分考法。",
   "items": {
     "os-big-1.2-1": {
       "kp_ids": [
@@ -1601,10 +1601,11 @@
         "ds.algo.design"
       ],
       "facets": [
+        "ds.algo.design::分治递推与复杂度分析",
         "ds.algo.design::循环程序复杂度分析"
       ],
-      "primaryFacet": "ds.algo.design::循环程序复杂度分析",
-      "review_note": "循环程序复杂度分析",
+      "primaryFacet": "ds.algo.design::分治递推与复杂度分析",
+      "review_note": "循环程序复杂度分析；算法设计题，主考归入 ds.algo.design::分治递推与复杂度分析",
       "stem_sha256": "6c9e186c1d83c815b8cdf67eaeeeb92df950e0e63a4894ad2f39694d5dde6a85",
       "previous_kp_ids": [
         "ds.algo.design"
@@ -1612,13 +1613,15 @@
     },
     "ds-big-2.2-1": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::扫描筛选与计数",
         "ds.linear.seq::顺序扫描与元素筛选"
       ],
-      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
-      "review_note": "顺序扫描与元素筛选",
+      "primaryFacet": "ds.algo.design::扫描筛选与计数",
+      "review_note": "顺序扫描与元素筛选；算法设计题，主考归入 ds.algo.design::扫描筛选与计数",
       "stem_sha256": "25cd1f7c1aafcb51753698a055df500f954134bf46df4cc40cc2d20974c06c7e",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1626,13 +1629,15 @@
     },
     "ds-big-2.2-3": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::扫描筛选与计数",
         "ds.linear.seq::顺序扫描与元素筛选"
       ],
-      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
-      "review_note": "顺序扫描与元素筛选",
+      "primaryFacet": "ds.algo.design::扫描筛选与计数",
+      "review_note": "顺序扫描与元素筛选；算法设计题，主考归入 ds.algo.design::扫描筛选与计数",
       "stem_sha256": "bdce957140ff629aa3500c552d50fe24b2b76c757e318ea7c7aae522f59fd06a",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1640,13 +1645,15 @@
     },
     "ds-big-2.2-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::扫描筛选与计数",
         "ds.linear.seq::顺序扫描与元素筛选"
       ],
-      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
-      "review_note": "顺序扫描与元素筛选",
+      "primaryFacet": "ds.algo.design::扫描筛选与计数",
+      "review_note": "顺序扫描与元素筛选；算法设计题，主考归入 ds.algo.design::扫描筛选与计数",
       "stem_sha256": "5f54e17eb1bb3cfa902a712b3cca35b5cf51a18332377882e490da115ceb9176",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1654,13 +1661,15 @@
     },
     "ds-big-2.2-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::扫描筛选与计数",
         "ds.linear.seq::顺序扫描与元素筛选"
       ],
-      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
-      "review_note": "顺序扫描与元素筛选",
+      "primaryFacet": "ds.algo.design::扫描筛选与计数",
+      "review_note": "顺序扫描与元素筛选；算法设计题，主考归入 ds.algo.design::扫描筛选与计数",
       "stem_sha256": "9c02d7fe250befc769baa415fd6eb0e3278521f36f9503e595a082355e31b7cf",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1668,13 +1677,15 @@
     },
     "ds-big-2.2-12": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::扫描筛选与计数",
         "ds.linear.seq::顺序扫描与元素筛选"
       ],
-      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
-      "review_note": "顺序扫描与元素筛选",
+      "primaryFacet": "ds.algo.design::扫描筛选与计数",
+      "review_note": "顺序扫描与元素筛选；算法设计题，主考归入 ds.algo.design::扫描筛选与计数",
       "stem_sha256": "1e22f6579b7b72bffcc08a2209b3dcffc4caf20e302cee050a26de5921cc03f1",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1682,13 +1693,15 @@
     },
     "ds-big-2.2-13": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::扫描筛选与计数",
         "ds.linear.seq::顺序扫描与元素筛选"
       ],
-      "primaryFacet": "ds.linear.seq::顺序扫描与元素筛选",
-      "review_note": "顺序扫描与元素筛选",
+      "primaryFacet": "ds.algo.design::扫描筛选与计数",
+      "review_note": "顺序扫描与元素筛选；算法设计题，主考归入 ds.algo.design::扫描筛选与计数",
       "stem_sha256": "abdd148fa812d1e2bae5268e27b2d598e5f8acea66624207479cabf54a60a3ed",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1696,13 +1709,15 @@
     },
     "ds-big-2.2-2": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::逆置重排与循环移动",
         "ds.linear.seq::原地逆置与循环移动"
       ],
-      "primaryFacet": "ds.linear.seq::原地逆置与循环移动",
-      "review_note": "原地逆置与循环移动",
+      "primaryFacet": "ds.algo.design::逆置重排与循环移动",
+      "review_note": "原地逆置与循环移动；算法设计题，主考归入 ds.algo.design::逆置重排与循环移动",
       "stem_sha256": "44cca4952c880c554738ac7511038645dd3b9319254bf0880d479e8b1194e6c1",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1710,13 +1725,15 @@
     },
     "ds-big-2.2-7": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::逆置重排与循环移动",
         "ds.linear.seq::原地逆置与循环移动"
       ],
-      "primaryFacet": "ds.linear.seq::原地逆置与循环移动",
-      "review_note": "原地逆置与循环移动",
+      "primaryFacet": "ds.algo.design::逆置重排与循环移动",
+      "review_note": "原地逆置与循环移动；算法设计题，主考归入 ds.algo.design::逆置重排与循环移动",
       "stem_sha256": "7f6305ed97e639b156b951656ac7f9017c4687695f5b61c99f78454d9771dbad",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1724,13 +1741,15 @@
     },
     "ds-big-2.2-10": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::逆置重排与循环移动",
         "ds.linear.seq::原地逆置与循环移动"
       ],
-      "primaryFacet": "ds.linear.seq::原地逆置与循环移动",
-      "review_note": "原地逆置与循环移动",
+      "primaryFacet": "ds.algo.design::逆置重排与循环移动",
+      "review_note": "原地逆置与循环移动；算法设计题，主考归入 ds.algo.design::逆置重排与循环移动",
       "stem_sha256": "084f448d0c3f4e7f725ecee0eebc32f496374185b3c2cd6c9d31cc33074bfa78",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1738,13 +1757,15 @@
     },
     "ds-big-2.2-6": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::多指针与有序序列",
         "ds.linear.seq::有序序列与多指针"
       ],
-      "primaryFacet": "ds.linear.seq::有序序列与多指针",
-      "review_note": "有序序列与多指针",
+      "primaryFacet": "ds.algo.design::多指针与有序序列",
+      "review_note": "有序序列与多指针；算法设计题，主考归入 ds.algo.design::多指针与有序序列",
       "stem_sha256": "d7a8b80c85a2da9eb67993e4addd5d4c63f26b86b18ff06c32278c960e3608b4",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1752,13 +1773,15 @@
     },
     "ds-big-2.2-9": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::多指针与有序序列",
         "ds.linear.seq::有序序列与多指针"
       ],
-      "primaryFacet": "ds.linear.seq::有序序列与多指针",
-      "review_note": "有序序列与多指针",
+      "primaryFacet": "ds.algo.design::多指针与有序序列",
+      "review_note": "有序序列与多指针；算法设计题，主考归入 ds.algo.design::多指针与有序序列",
       "stem_sha256": "8f09f4035b1a4e618412516b91510f97dc85f828bd02361d0107aef788638fb0",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1766,13 +1789,15 @@
     },
     "ds-big-2.2-14": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::多指针与有序序列",
         "ds.linear.seq::有序序列与多指针"
       ],
-      "primaryFacet": "ds.linear.seq::有序序列与多指针",
-      "review_note": "有序序列与多指针",
+      "primaryFacet": "ds.algo.design::多指针与有序序列",
+      "review_note": "有序序列与多指针；算法设计题，主考归入 ds.algo.design::多指针与有序序列",
       "stem_sha256": "40308a9e36e9a640c07af2a8aaf23667b4d9714333e46bf65e56f222f795480e",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1780,14 +1805,16 @@
     },
     "ds-big-2.2-8": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.seq-bin",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.seq-bin::折半查找与边界处理"
       ],
-      "primaryFacet": "ds.search.seq-bin::折半查找与边界处理",
-      "review_note": "折半查找与边界处理",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "折半查找与边界处理；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "64975ac2bae5ed27d3880438b71d64803c0aeda69a187a7a1b338c27177cb101",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1795,14 +1822,16 @@
     },
     "ds-big-2.2-11": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.algo.recur",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::分治递推与复杂度分析",
         "ds.algo.recur::有序序列的分治选择"
       ],
-      "primaryFacet": "ds.algo.recur::有序序列的分治选择",
-      "review_note": "有序序列的分治选择",
+      "primaryFacet": "ds.algo.design::分治递推与复杂度分析",
+      "review_note": "有序序列的分治选择；算法设计题，主考归入 ds.algo.design::分治递推与复杂度分析",
       "stem_sha256": "b2a240a46c7b2434c575f8f7a33708c3836ecfa2fcbd4b4bf8d748cd63586083",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1810,14 +1839,16 @@
     },
     "ds-big-2.2-15": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.algo.dp",
         "ds.linear.seq"
       ],
       "facets": [
+        "ds.algo.design::分治递推与复杂度分析",
         "ds.algo.dp::后缀状态与线性递推"
       ],
-      "primaryFacet": "ds.algo.dp::后缀状态与线性递推",
-      "review_note": "后缀状态与线性递推",
+      "primaryFacet": "ds.algo.design::分治递推与复杂度分析",
+      "review_note": "后缀状态与线性递推；算法设计题，主考归入 ds.algo.design::分治递推与复杂度分析",
       "stem_sha256": "48a7886dde6cdd4f74e9239918a25fef9773018b8bc12e5a3c990eff2b542b05",
       "previous_kp_ids": [
         "ds.linear.seq"
@@ -1825,13 +1856,15 @@
     },
     "ds-big-2.3-1": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::链表删除与结点释放"
       ],
-      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
-      "review_note": "链表删除与结点释放",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "链表删除与结点释放；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "3904c8b028373d32b9327a8278fc211151aa0648fe3acf6bde4137c7d62ff833",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1839,13 +1872,15 @@
     },
     "ds-big-2.3-2": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::链表删除与结点释放"
       ],
-      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
-      "review_note": "链表删除与结点释放",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "链表删除与结点释放；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "60bb8309c4f5628a6aaf35f77a640e62e4d735076180aafbf812c8c6d75778c4",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1853,13 +1888,15 @@
     },
     "ds-big-2.3-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::链表删除与结点释放"
       ],
-      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
-      "review_note": "链表删除与结点释放",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "链表删除与结点释放；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "37e8475dccadfddf1d503b2a93309a05343440f0f87e23c90905326c192b0366",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1867,13 +1904,15 @@
     },
     "ds-big-2.3-7": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::扫描筛选与计数",
         "ds.linear.linked::链表删除与结点释放"
       ],
-      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
-      "review_note": "链表删除与结点释放",
+      "primaryFacet": "ds.algo.design::扫描筛选与计数",
+      "review_note": "链表删除与结点释放；算法设计题，主考归入 ds.algo.design::扫描筛选与计数",
       "stem_sha256": "7f4f8796214cef2519df8607285a250377592c9843340463ffa2e27c8beff364",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1881,13 +1920,15 @@
     },
     "ds-big-2.3-19": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::扫描筛选与计数",
         "ds.linear.linked::链表删除与结点释放"
       ],
-      "primaryFacet": "ds.linear.linked::链表删除与结点释放",
-      "review_note": "链表删除与结点释放",
+      "primaryFacet": "ds.algo.design::扫描筛选与计数",
+      "review_note": "链表删除与结点释放；算法设计题，主考归入 ds.algo.design::扫描筛选与计数",
       "stem_sha256": "a9b72878259c1c4f30016ffcef1ed3ba8ea13d1c27db5fc71e326020e8c776f0",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1895,14 +1936,16 @@
     },
     "ds-big-2.3-3": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.poly",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::逆置重排与循环移动",
         "ds.linear.poly::链表逆置分拆与合并"
       ],
-      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
-      "review_note": "链表逆置分拆与合并",
+      "primaryFacet": "ds.algo.design::逆置重排与循环移动",
+      "review_note": "链表逆置分拆与合并；算法设计题，主考归入 ds.algo.design::逆置重排与循环移动",
       "stem_sha256": "223d1ae4de215140e238d968f68c04ae6862b67f97ea693e926b95c1b3d3d3a6",
       "previous_kp_ids": [
         "ds.linear.poly"
@@ -1910,11 +1953,14 @@
     },
     "ds-big-2.3-6": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
-      "facets": [],
-      "primaryFacet": null,
-      "review_note": "题干在“将其”处截断，暂保留原顺序分类；待原页核对，不作代表题。",
+      "facets": [
+        "ds.algo.design::链表指针操作"
+      ],
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "题干在“将其”处截断，暂保留原顺序分类；待原页核对，不作代表题。；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "91e2b3d6e0a07f5de3c7dd6a3d9ce6fff80e8a3bac42c7ada817dcd94f0bbc10",
       "diagnostic_eligible": false,
       "previous_kp_ids": [
@@ -1923,14 +1969,16 @@
     },
     "ds-big-2.3-8": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.poly",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::多指针与有序序列",
         "ds.linear.poly::链表逆置分拆与合并"
       ],
-      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
-      "review_note": "链表逆置分拆与合并",
+      "primaryFacet": "ds.algo.design::多指针与有序序列",
+      "review_note": "链表逆置分拆与合并；算法设计题，主考归入 ds.algo.design::多指针与有序序列",
       "stem_sha256": "5b9f23c9dce2e1b8a1804ff2e9f3d9b2104a60648ffd91301613f1dabd89ea1e",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1938,14 +1986,16 @@
     },
     "ds-big-2.3-9": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.poly",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::多指针与有序序列",
         "ds.linear.poly::链表逆置分拆与合并"
       ],
-      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
-      "review_note": "链表逆置分拆与合并",
+      "primaryFacet": "ds.algo.design::多指针与有序序列",
+      "review_note": "链表逆置分拆与合并；算法设计题，主考归入 ds.algo.design::多指针与有序序列",
       "stem_sha256": "6689b21472563c196abec3bd6e794b1e857d19ee1743eb693582f66f9b88b32e",
       "previous_kp_ids": [
         "ds.linear.poly"
@@ -1953,14 +2003,16 @@
     },
     "ds-big-2.3-14": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.poly",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::逆置重排与循环移动",
         "ds.linear.poly::链表逆置分拆与合并"
       ],
-      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
-      "review_note": "链表逆置分拆与合并",
+      "primaryFacet": "ds.algo.design::逆置重排与循环移动",
+      "review_note": "链表逆置分拆与合并；算法设计题，主考归入 ds.algo.design::逆置重排与循环移动",
       "stem_sha256": "42a47f8357fbd849e49723473bf4d1e6d3554ea4ec48b6392dbf2a862186e6f9",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1968,14 +2020,16 @@
     },
     "ds-big-2.3-16": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.poly",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::逆置重排与循环移动",
         "ds.linear.poly::链表逆置分拆与合并"
       ],
-      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
-      "review_note": "链表逆置分拆与合并",
+      "primaryFacet": "ds.algo.design::逆置重排与循环移动",
+      "review_note": "链表逆置分拆与合并；算法设计题，主考归入 ds.algo.design::逆置重排与循环移动",
       "stem_sha256": "bcc87a50b61db34cb3a68086693f36514d6331783891b8852ef1c30d3066b48a",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1983,14 +2037,16 @@
     },
     "ds-big-2.3-20": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.poly",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::逆置重排与循环移动",
         "ds.linear.poly::链表逆置分拆与合并"
       ],
-      "primaryFacet": "ds.linear.poly::链表逆置分拆与合并",
-      "review_note": "链表逆置分拆与合并",
+      "primaryFacet": "ds.algo.design::逆置重排与循环移动",
+      "review_note": "链表逆置分拆与合并；算法设计题，主考归入 ds.algo.design::逆置重排与循环移动",
       "stem_sha256": "c1f2736a02e19879c7f872e9a5209848dfa25150e83b45516c80e59638fdbc9d",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -1998,14 +2054,16 @@
     },
     "ds-big-2.3-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.poly",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.poly::公共结点与共享后缀"
       ],
-      "primaryFacet": "ds.linear.poly::公共结点与共享后缀",
-      "review_note": "公共结点与共享后缀",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "公共结点与共享后缀；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "862de867e770b1b0922e50210e88c42398968cd2305c4a33f0d9d44b497a8550",
       "previous_kp_ids": [
         "ds.linear.poly"
@@ -2013,14 +2071,16 @@
     },
     "ds-big-2.3-18": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.poly",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.poly::公共结点与共享后缀"
       ],
-      "primaryFacet": "ds.linear.poly::公共结点与共享后缀",
-      "review_note": "公共结点与共享后缀",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "公共结点与共享后缀；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "3bd64985c6264168225371ab28edf154448fab8f02075d39bf4abf8aa30a119c",
       "previous_kp_ids": [
         "ds.linear.poly"
@@ -2028,13 +2088,15 @@
     },
     "ds-big-2.3-10": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::链表定位与双指针"
       ],
-      "primaryFacet": "ds.linear.linked::链表定位与双指针",
-      "review_note": "链表定位与双指针",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "链表定位与双指针；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "39d34d1be3a8a6a20a1a7d477b933fd81e7d625cb1d9bcfc5fba9219fd6472f7",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -2042,13 +2104,15 @@
     },
     "ds-big-2.3-15": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::链表定位与双指针"
       ],
-      "primaryFacet": "ds.linear.linked::链表定位与双指针",
-      "review_note": "链表定位与双指针",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "链表定位与双指针；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "86388d62fbdb5270e73ac2562c702b58f9afe53f6820f2e2443a45ffc25ecf48",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -2056,13 +2120,15 @@
     },
     "ds-big-2.3-17": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::链表定位与双指针"
       ],
-      "primaryFacet": "ds.linear.linked::链表定位与双指针",
-      "review_note": "链表定位与双指针",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "链表定位与双指针；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "58c1220f38b195f4a4d2a25a40dfd8f33fc88e41da9617f3564dc341ab5106b1",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -2070,13 +2136,15 @@
     },
     "ds-big-2.3-11": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::循环双链表与指针维护"
       ],
-      "primaryFacet": "ds.linear.linked::循环双链表与指针维护",
-      "review_note": "循环双链表与指针维护",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "循环双链表与指针维护；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "d0413a66b591c02842367c402c1c7875503c155c1de1998f9defcf45c2d6a78b",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -2084,13 +2152,15 @@
     },
     "ds-big-2.3-12": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::循环双链表与指针维护"
       ],
-      "primaryFacet": "ds.linear.linked::循环双链表与指针维护",
-      "review_note": "循环双链表与指针维护",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "循环双链表与指针维护；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "248e3ee0fc9226cf5b069130609827c6e3a85c620b7e95c518b2f0fce01798ee",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -2098,13 +2168,15 @@
     },
     "ds-big-2.3-13": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::链表指针操作",
         "ds.linear.linked::循环双链表与指针维护"
       ],
-      "primaryFacet": "ds.linear.linked::循环双链表与指针维护",
-      "review_note": "循环双链表与指针维护",
+      "primaryFacet": "ds.algo.design::链表指针操作",
+      "review_note": "循环双链表与指针维护；算法设计题，主考归入 ds.algo.design::链表指针操作",
       "stem_sha256": "96ee87e99ddf157b0fba967ca055d45e0d903f9503da1c166451420c7c891d97",
       "previous_kp_ids": [
         "ds.linear.linked"
@@ -2140,13 +2212,15 @@
     },
     "ds-big-3.1-3": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sq.stack"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sq.stack::栈序列合法性"
       ],
-      "primaryFacet": "ds.sq.stack::栈序列合法性",
-      "review_note": "栈序列合法性",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "栈序列合法性；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "d41ac9b016937e6b14d11ce983f71f96114dedf5b0de70f4eb71d43fe0f19873",
       "previous_kp_ids": [
         "ds.sq.stack"
@@ -2154,15 +2228,17 @@
     },
     "ds-big-3.1-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sq.apply",
         "ds.sq.stack",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sq.apply::栈辅助序列判定"
       ],
-      "primaryFacet": "ds.sq.apply::栈辅助序列判定",
-      "review_note": "栈辅助序列判定",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "栈辅助序列判定；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "053e4eaf4fb68bfafda8884536842bf14755ab955fcb83b687ae952fe5797c3c",
       "previous_kp_ids": [
         "ds.sq.stack"
@@ -2170,13 +2246,15 @@
     },
     "ds-big-3.1-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sq.stack"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sq.stack::共享栈的入栈出栈"
       ],
-      "primaryFacet": "ds.sq.stack::共享栈的入栈出栈",
-      "review_note": "共享栈的入栈出栈",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "共享栈的入栈出栈；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "b08ae1ef49015a27d7e35500bbd39a6942702041cba6be85e9b977675ddb014d",
       "previous_kp_ids": [
         "ds.sq.stack"
@@ -2184,13 +2262,15 @@
     },
     "ds-big-3.2-1": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sq.queue"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sq.queue::队列结构与空满判定"
       ],
-      "primaryFacet": "ds.sq.queue::队列结构与空满判定",
-      "review_note": "队列结构与空满判定",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "队列结构与空满判定；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "861c817d7f06118256e4123a6a35116f8cd2da1c04c642fd619c9fa0b492b344",
       "previous_kp_ids": [
         "ds.sq.queue"
@@ -2198,13 +2278,15 @@
     },
     "ds-big-3.2-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sq.queue"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sq.queue::队列结构与空满判定"
       ],
-      "primaryFacet": "ds.sq.queue::队列结构与空满判定",
-      "review_note": "队列结构与空满判定",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "队列结构与空满判定；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "352d3da75dc818e4d77fc5ce3a22ca95ff9ee749590676a3a86de71d584bbbd6",
       "previous_kp_ids": [
         "ds.sq.queue"
@@ -2212,15 +2294,17 @@
     },
     "ds-big-3.2-2": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sq.apply",
         "ds.sq.stack",
         "ds.sq.queue"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sq.apply::栈与队列相互模拟"
       ],
-      "primaryFacet": "ds.sq.apply::栈与队列相互模拟",
-      "review_note": "栈与队列相互模拟",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "栈与队列相互模拟；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "77cf738d2454cc28ab9c18c28a33db02844e55488c5c05a40f14a41c7cbf0e28",
       "previous_kp_ids": [
         "ds.sq.queue"
@@ -2228,15 +2312,17 @@
     },
     "ds-big-3.2-3": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sq.apply",
         "ds.sq.stack",
         "ds.sq.queue"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sq.apply::栈与队列相互模拟"
       ],
-      "primaryFacet": "ds.sq.apply::栈与队列相互模拟",
-      "review_note": "栈与队列相互模拟",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "栈与队列相互模拟；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "fbd21d1a2c9d00457246e89cc4792701aa4e588a780a52414a3ede34c97af742",
       "previous_kp_ids": [
         "ds.sq.queue"
@@ -2244,13 +2330,15 @@
     },
     "ds-big-3.3-1": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sq.stack"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sq.stack::括号匹配"
       ],
-      "primaryFacet": "ds.sq.stack::括号匹配",
-      "review_note": "括号匹配",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "括号匹配；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "74e831fd900dad2afae5c916e49ea94ff0903abe76372e1aa40806e61c61c615",
       "previous_kp_ids": [
         "ds.sq.apply"
@@ -2398,13 +2486,15 @@
     },
     "ds-big-5.2-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.bt"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.bt::顺序存储与祖先定位"
       ],
-      "primaryFacet": "ds.tree.bt::顺序存储与祖先定位",
-      "review_note": "顺序存储与祖先定位",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "顺序存储与祖先定位；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "4d92e038bbec00f2239cac6ac485a8e1aaad7e487e1c20ef04c3df3279a8df95",
       "previous_kp_ids": [
         "ds.tree.bt"
@@ -2440,13 +2530,15 @@
     },
     "ds-big-5.3-12": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历序列与树形恢复"
       ],
-      "primaryFacet": "ds.tree.trav::遍历序列与树形恢复",
-      "review_note": "遍历序列与树形恢复",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历序列与树形恢复；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "65a4202d1d2e4cda30887432508010b6c29876d419bc792e23b2dcfc82944659",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2454,13 +2546,15 @@
     },
     "ds-big-5.3-3": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "c2d24e1462978a17e75748ba79355abdadd66e0e6f8a1127e5e60c7f9b92e12a",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2468,13 +2562,15 @@
     },
     "ds-big-5.3-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "233857cf556999cb41dbef3b735a23e195c040a0aee79e847615d77e60e12d83",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2482,13 +2578,15 @@
     },
     "ds-big-5.3-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "fe437d482b66cc9917879fda3acacafd9265bd5da6d90e67fb626eb7deb6bf12",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2496,13 +2594,15 @@
     },
     "ds-big-5.3-6": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "32cf0085ec50ad6beef14dbfffbe16c92a5aff77aa68fb2455d2becbc6e35d67",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2510,13 +2610,15 @@
     },
     "ds-big-5.3-7": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "14cabc9b7f04939c5ec2981570bd6450794214e5fd19b7db27234d2b7c13c7aa",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2524,13 +2626,15 @@
     },
     "ds-big-5.3-8": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "8561b5ebab970f7e03c5cf9df78a4b95b35a60486b56de6bde0eb77489cd3ec0",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2538,13 +2642,15 @@
     },
     "ds-big-5.3-9": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "9aa968fcc8608c7c069b7e2e600f648c7aa2ac5ea950240404f6be38f5545126",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2552,13 +2658,15 @@
     },
     "ds-big-5.3-10": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "93b83a79c1e1baa4d8890c13d0d65c26de34c6fa4c90aaf252f348fa349abcf5",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2566,13 +2674,15 @@
     },
     "ds-big-5.3-11": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "48c3abf2700c3dfcbb378b31712fe79e99e2e613d2ba9b8b9792e9eff4675330",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2580,13 +2690,15 @@
     },
     "ds-big-5.3-13": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "905814a92860a8b45c5e250f335a7776014979e40aec9eb3cd735e353642acf8",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2594,13 +2706,15 @@
     },
     "ds-big-5.3-14": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "85238c2202565be19caa15016b8bea08bb32e9eaacc3b84c1873848c786a0360",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2608,14 +2722,16 @@
     },
     "ds-big-5.3-15": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav",
         "ds.tree.huffman"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::遍历框架与结点处理"
       ],
-      "primaryFacet": "ds.tree.trav::遍历框架与结点处理",
-      "review_note": "遍历框架与结点处理",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "遍历框架与结点处理；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "3bf080dee47fc12a468089167110ce61820b7c023518875c54bdc23bf0b1c4bf",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2623,14 +2739,16 @@
     },
     "ds-big-5.3-16": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.trav",
         "ds.sq.stack"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.trav::表达式树与遍历输出"
       ],
-      "primaryFacet": "ds.tree.trav::表达式树与遍历输出",
-      "review_note": "表达式树与遍历输出",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "表达式树与遍历输出；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "0329d04fd7c96852e98939a0602011506c983b9b0ae868bf29d802202cdb9dce",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2638,14 +2756,16 @@
     },
     "ds-big-5.3-17": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.bst",
         "ds.tree.bt"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.bst::二叉排序树性质判定"
       ],
-      "primaryFacet": "ds.search.bst::二叉排序树性质判定",
-      "review_note": "二叉排序树性质判定",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "二叉排序树性质判定；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "be479096a81a0dc6c6be2510be5acddd8ed45a0337490f2fd076af56dc1565cc",
       "previous_kp_ids": [
         "ds.tree.thread"
@@ -2698,14 +2818,16 @@
     },
     "ds-big-5.4-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.forest",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.forest::孩子兄弟表示与递归统计"
       ],
-      "primaryFacet": "ds.tree.forest::孩子兄弟表示与递归统计",
-      "review_note": "孩子兄弟表示与递归统计",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "孩子兄弟表示与递归统计；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "45a2098254e65daf40f287b2f9c64f7b06a5541f1d988660f91e7136bfaff33c",
       "previous_kp_ids": [
         "ds.tree.forest"
@@ -2713,14 +2835,16 @@
     },
     "ds-big-5.4-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.tree.forest",
         "ds.tree.trav"
       ],
       "facets": [
+        "ds.algo.design::递归与遍历框架",
         "ds.tree.forest::孩子兄弟表示与递归统计"
       ],
-      "primaryFacet": "ds.tree.forest::孩子兄弟表示与递归统计",
-      "review_note": "孩子兄弟表示与递归统计",
+      "primaryFacet": "ds.algo.design::递归与遍历框架",
+      "review_note": "孩子兄弟表示与递归统计；算法设计题，主考归入 ds.algo.design::递归与遍历框架",
       "stem_sha256": "29e9773cab3e4701073451b2cf35e87b3b49618f437999688709538fbc3d7c7e",
       "previous_kp_ids": [
         "ds.tree.forest"
@@ -2828,13 +2952,15 @@
     },
     "ds-big-6.2-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.store"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.store::图的存储转换与度数计算"
       ],
-      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
-      "review_note": "图的存储转换与度数计算",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "图的存储转换与度数计算；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "16037f4f2a9b192476bbb6606e172b60b3dc487d78f0ffde3a3c9036f16589cd",
       "previous_kp_ids": [
         "ds.graph.store"
@@ -2856,13 +2982,15 @@
     },
     "ds-big-6.2-7": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.store"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.store::图的存储转换与度数计算"
       ],
-      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
-      "review_note": "图的存储转换与度数计算",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "图的存储转换与度数计算；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "ad843e4e168798b7de71a3d9700364c4b5550f1e76bab6a53cc570c74aef66dd",
       "previous_kp_ids": [
         "ds.graph.store"
@@ -2870,13 +2998,15 @@
     },
     "ds-big-6.2-8": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.store"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.store::图的存储转换与度数计算"
       ],
-      "primaryFacet": "ds.graph.store::图的存储转换与度数计算",
-      "review_note": "图的存储转换与度数计算",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "图的存储转换与度数计算；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "fcb48af9d4d0ada1bb60bd5b30f5e867f7cae0b861a6628a381b38c703c4a40f",
       "previous_kp_ids": [
         "ds.graph.store"
@@ -2913,13 +3043,15 @@
     },
     "ds-big-6.3-2": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.dfs-bfs"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.dfs-bfs::遍历判定与路径搜索"
       ],
-      "primaryFacet": "ds.graph.dfs-bfs::遍历判定与路径搜索",
-      "review_note": "遍历判定与路径搜索",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "遍历判定与路径搜索；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "f7ebe498f5eff6cc82a51b394779c41cfa7fa90e69cf25333a1558163b964648",
       "previous_kp_ids": [
         "ds.graph.dfs-bfs"
@@ -2927,13 +3059,15 @@
     },
     "ds-big-6.3-3": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.dfs-bfs"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.dfs-bfs::遍历判定与路径搜索"
       ],
-      "primaryFacet": "ds.graph.dfs-bfs::遍历判定与路径搜索",
-      "review_note": "遍历判定与路径搜索",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "遍历判定与路径搜索；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "6125638ffcb847c827c95daa609be7a719c17d1bbf617a6710b4a3613cbfcc36",
       "previous_kp_ids": [
         "ds.graph.dfs-bfs"
@@ -2941,13 +3075,15 @@
     },
     "ds-big-6.3-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.dfs-bfs"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.dfs-bfs::遍历判定与路径搜索"
       ],
-      "primaryFacet": "ds.graph.dfs-bfs::遍历判定与路径搜索",
-      "review_note": "遍历判定与路径搜索",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "遍历判定与路径搜索；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "de9102079ca3776b131bce065f470513fe762a28a1c825e93db4c05d8248a687",
       "previous_kp_ids": [
         "ds.graph.dfs-bfs"
@@ -2955,13 +3091,15 @@
     },
     "ds-big-6.3-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.dfs-bfs"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.dfs-bfs::遍历判定与路径搜索"
       ],
-      "primaryFacet": "ds.graph.dfs-bfs::遍历判定与路径搜索",
-      "review_note": "遍历判定与路径搜索",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "遍历判定与路径搜索；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "6863bae673bf8db9e8057ce580e444ab7207f58d09d152c67e9d6f8f8cce30a4",
       "previous_kp_ids": [
         "ds.graph.dfs-bfs"
@@ -3127,13 +3265,15 @@
     },
     "ds-big-6.4-7": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.topo"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.topo::拓扑序与有向无环图"
       ],
-      "primaryFacet": "ds.graph.topo::拓扑序与有向无环图",
-      "review_note": "拓扑序与有向无环图",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "拓扑序与有向无环图；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "c0e1d95d19ce03dda88384a9c64a336f9f9d2590b765f53f3a64b3bc0f982c50",
       "previous_kp_ids": [
         "ds.graph.topo"
@@ -3141,13 +3281,15 @@
     },
     "ds-big-6.4-13": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.graph.topo"
       ],
       "facets": [
+        "ds.algo.design::图遍历与判定",
         "ds.graph.topo::拓扑序与有向无环图"
       ],
-      "primaryFacet": "ds.graph.topo::拓扑序与有向无环图",
-      "review_note": "拓扑序与有向无环图",
+      "primaryFacet": "ds.algo.design::图遍历与判定",
+      "review_note": "拓扑序与有向无环图；算法设计题，主考归入 ds.algo.design::图遍历与判定",
       "stem_sha256": "fad856251d2d82fac95cd5638940a85ad7cabbb289a8c3da543bec9649e9a6bc",
       "previous_kp_ids": [
         "ds.graph.topo"
@@ -3226,13 +3368,15 @@
     },
     "ds-big-7.2-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.seq-bin"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.seq-bin::有序查找与搜索空间缩减"
       ],
-      "primaryFacet": "ds.search.seq-bin::有序查找与搜索空间缩减",
-      "review_note": "有序查找与搜索空间缩减",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "有序查找与搜索空间缩减；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "e31f95c9d2c016c1a0eaab26ce7c13c4be1e1c48655b67133f9a5ad5c6701f81",
       "previous_kp_ids": [
         "ds.search.seq-bin"
@@ -3240,13 +3384,15 @@
     },
     "ds-big-7.2-6": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.seq-bin"
       ],
       "facets": [
+        "ds.algo.design::多指针与有序序列",
         "ds.search.seq-bin::有序查找与搜索空间缩减"
       ],
-      "primaryFacet": "ds.search.seq-bin::有序查找与搜索空间缩减",
-      "review_note": "有序查找与搜索空间缩减",
+      "primaryFacet": "ds.algo.design::多指针与有序序列",
+      "review_note": "有序查找与搜索空间缩减；算法设计题，主考归入 ds.algo.design::多指针与有序序列",
       "stem_sha256": "5db3210d3bcc9768c93e839a66b5d84afecda02f9684b318b4c926f053753c1e",
       "previous_kp_ids": [
         "ds.search.seq-bin"
@@ -3254,14 +3400,16 @@
     },
     "ds-big-7.2-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.seq-bin",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.seq-bin::查找概率与自调整"
       ],
-      "primaryFacet": "ds.search.seq-bin::查找概率与自调整",
-      "review_note": "查找概率与自调整",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "查找概率与自调整；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "91bd41d0bddb22dd2e2ddedb9586fc0960294e0c94d9bb9e0dab0c00b4a6be6b",
       "previous_kp_ids": [
         "ds.search.seq-bin"
@@ -3326,14 +3474,16 @@
     },
     "ds-big-7.3-7": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.avl",
         "ds.search.bst"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.avl::平衡树构造与判定"
       ],
-      "primaryFacet": "ds.search.avl::平衡树构造与判定",
-      "review_note": "平衡树构造与判定",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "平衡树构造与判定；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "f9a6569a586753a4560132e0d604e51b7ff5142a087a0a0b8e2f413f0b6cd2a1",
       "previous_kp_ids": [
         "ds.search.avl"
@@ -3341,13 +3491,15 @@
     },
     "ds-big-7.3-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.bst"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.bst::排序树性质与查找算法"
       ],
-      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
-      "review_note": "排序树性质与查找算法",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "排序树性质与查找算法；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "75553412a3be733d7a4bf0c18aeb0addb5b9d7f86807460e873715f68a1c0e95",
       "previous_kp_ids": [
         "ds.search.bst"
@@ -3355,13 +3507,15 @@
     },
     "ds-big-7.3-6": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.bst"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.bst::排序树性质与查找算法"
       ],
-      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
-      "review_note": "排序树性质与查找算法",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "排序树性质与查找算法；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "02e17e58d1299b0c9b2186098b8cdac9585c115eb7cd562c0a63a49ff4b20611",
       "previous_kp_ids": [
         "ds.search.bst"
@@ -3369,13 +3523,15 @@
     },
     "ds-big-7.3-8": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.bst"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.bst::排序树性质与查找算法"
       ],
-      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
-      "review_note": "排序树性质与查找算法",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "排序树性质与查找算法；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "2be78e1ad81c67c240d1eaf91706f596f730bf773dd89bf61027ef39d8274b0d",
       "previous_kp_ids": [
         "ds.search.bst"
@@ -3383,13 +3539,15 @@
     },
     "ds-big-7.3-9": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.bst"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.bst::排序树性质与查找算法"
       ],
-      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
-      "review_note": "排序树性质与查找算法",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "排序树性质与查找算法；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "c58940c0cbd849239076ba04eba3b4abde784651234e46938a8b1c7616e18cb5",
       "previous_kp_ids": [
         "ds.search.bst"
@@ -3397,13 +3555,15 @@
     },
     "ds-big-7.3-10": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.search.bst"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.search.bst::排序树性质与查找算法"
       ],
-      "primaryFacet": "ds.search.bst::排序树性质与查找算法",
-      "review_note": "排序树性质与查找算法",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "排序树性质与查找算法；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "c57483c024556334809ed4303cee3616ee172b0d0e93abfc4eb444ec9ccf63b4",
       "previous_kp_ids": [
         "ds.search.bst"
@@ -3579,13 +3739,15 @@
     },
     "ds-big-8.3-1": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.swap"
       ],
       "facets": [
+        "ds.algo.design::划分与第k选择",
         "ds.sort.swap::划分操作与选择算法"
       ],
-      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
-      "review_note": "划分操作与选择算法",
+      "primaryFacet": "ds.algo.design::划分与第k选择",
+      "review_note": "划分操作与选择算法；算法设计题，主考归入 ds.algo.design::划分与第k选择",
       "stem_sha256": "ec530e35a9cd3dc1faa4d1c15710863f076d779a8786edcdfefac9a8101c4bfd",
       "previous_kp_ids": [
         "ds.sort.swap"
@@ -3593,13 +3755,15 @@
     },
     "ds-big-8.3-2": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.swap"
       ],
       "facets": [
+        "ds.algo.design::划分与第k选择",
         "ds.sort.swap::划分操作与选择算法"
       ],
-      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
-      "review_note": "划分操作与选择算法",
+      "primaryFacet": "ds.algo.design::划分与第k选择",
+      "review_note": "划分操作与选择算法；算法设计题，主考归入 ds.algo.design::划分与第k选择",
       "stem_sha256": "87438dda65c82a6191de8d2c1068c4353953bcab8e0e2072d1eadf1e34282671",
       "previous_kp_ids": [
         "ds.sort.swap"
@@ -3607,13 +3771,15 @@
     },
     "ds-big-8.3-3": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.swap"
       ],
       "facets": [
+        "ds.algo.design::划分与第k选择",
         "ds.sort.swap::划分操作与选择算法"
       ],
-      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
-      "review_note": "划分操作与选择算法",
+      "primaryFacet": "ds.algo.design::划分与第k选择",
+      "review_note": "划分操作与选择算法；算法设计题，主考归入 ds.algo.design::划分与第k选择",
       "stem_sha256": "219f9db0ca7c3cceeca4becb73068d50360a1830d042f8fe915e1259bac8f174",
       "previous_kp_ids": [
         "ds.sort.swap"
@@ -3621,13 +3787,15 @@
     },
     "ds-big-8.3-4": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.swap"
       ],
       "facets": [
+        "ds.algo.design::划分与第k选择",
         "ds.sort.swap::划分操作与选择算法"
       ],
-      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
-      "review_note": "划分操作与选择算法",
+      "primaryFacet": "ds.algo.design::划分与第k选择",
+      "review_note": "划分操作与选择算法；算法设计题，主考归入 ds.algo.design::划分与第k选择",
       "stem_sha256": "f5e9786e4472eaf02f8576582fca9a5ff2017ac2843a321e2590d3dc3e94ba04",
       "previous_kp_ids": [
         "ds.sort.swap"
@@ -3679,13 +3847,15 @@
     },
     "ds-big-8.4-8": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.select"
       ],
       "facets": [
+        "ds.algo.design::划分与第k选择",
         "ds.sort.select::堆与部分排序"
       ],
-      "primaryFacet": "ds.sort.select::堆与部分排序",
-      "review_note": "堆与部分排序",
+      "primaryFacet": "ds.algo.design::划分与第k选择",
+      "review_note": "堆与部分排序；算法设计题，主考归入 ds.algo.design::划分与第k选择",
       "stem_sha256": "a428ba8d5e5d7903c6aa297621d2333b0aa7aba93bf2eb0f6b44246b83e0fcf9",
       "previous_kp_ids": [
         "ds.sort.select"
@@ -3707,13 +3877,15 @@
     },
     "ds-big-8.4-6": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.select"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.sort.select::堆结构与调整操作"
       ],
-      "primaryFacet": "ds.sort.select::堆结构与调整操作",
-      "review_note": "堆结构与调整操作",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "堆结构与调整操作；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "dee1f1674714ee2ebf8fc1ed0fc255b777d5102c6bd6b2e638abf8bd71c85cdf",
       "previous_kp_ids": [
         "ds.sort.select"
@@ -3721,13 +3893,15 @@
     },
     "ds-big-8.4-7": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.select"
       ],
       "facets": [
+        "ds.algo.design::栈与队列应用",
         "ds.sort.select::堆结构与调整操作"
       ],
-      "primaryFacet": "ds.sort.select::堆结构与调整操作",
-      "review_note": "堆结构与调整操作",
+      "primaryFacet": "ds.algo.design::栈与队列应用",
+      "review_note": "堆结构与调整操作；算法设计题，主考归入 ds.algo.design::栈与队列应用",
       "stem_sha256": "f4773cb91de02d698a26b40dcdb6beae10b880ae6277390335dee05490c1baf3",
       "previous_kp_ids": [
         "ds.sort.select"
@@ -3735,14 +3909,16 @@
     },
     "ds-big-8.4-5": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.select",
         "ds.linear.linked"
       ],
       "facets": [
+        "ds.algo.design::查找与排序算法实现",
         "ds.sort.select::简单选择排序"
       ],
-      "primaryFacet": "ds.sort.select::简单选择排序",
-      "review_note": "简单选择排序",
+      "primaryFacet": "ds.algo.design::查找与排序算法实现",
+      "review_note": "简单选择排序；算法设计题，主考归入 ds.algo.design::查找与排序算法实现",
       "stem_sha256": "6801021577ec0c87da521029f96b474dd6f830b4598fef8ccb697e5c42b3543d",
       "previous_kp_ids": [
         "ds.sort.select"
@@ -3806,13 +3982,15 @@
     },
     "ds-big-8.6-2": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.merge"
       ],
       "facets": [
+        "ds.algo.design::多指针与有序序列",
         "ds.sort.merge::归并过程与有序段合并"
       ],
-      "primaryFacet": "ds.sort.merge::归并过程与有序段合并",
-      "review_note": "归并过程与有序段合并",
+      "primaryFacet": "ds.algo.design::多指针与有序序列",
+      "review_note": "归并过程与有序段合并；算法设计题，主考归入 ds.algo.design::多指针与有序序列",
       "stem_sha256": "11956d4063e77726842ec94fb7016c414d6535b82bfc15ed812057212b39f59e",
       "previous_kp_ids": [
         "ds.sort.compare"
@@ -3820,13 +3998,15 @@
     },
     "ds-big-8.6-3": {
       "kp_ids": [
+        "ds.algo.design",
         "ds.sort.swap"
       ],
       "facets": [
+        "ds.algo.design::划分与第k选择",
         "ds.sort.swap::划分操作与选择算法"
       ],
-      "primaryFacet": "ds.sort.swap::划分操作与选择算法",
-      "review_note": "划分操作与选择算法",
+      "primaryFacet": "ds.algo.design::划分与第k选择",
+      "review_note": "划分操作与选择算法；算法设计题，主考归入 ds.algo.design::划分与第k选择",
       "stem_sha256": "96dd365ad7660f366bd44381e809825c6fc5a245e715c75aca88ca8a35fe0fe1",
       "previous_kp_ids": [
         "ds.sort.compare"

@@ -83,8 +83,12 @@ describe("王道大题逐章核对与前端关联", () => {
 
   it("节标题不再把遍历误挂线索树、归并误挂基数排序、性能计算误挂总线仲裁", () => {
     const kp = (id: string) => catalog.find((q) => q.id === id)!.kp_ids[0];
-    expect(kp("ds-big-5.3-3")).toBe("ds.tree.trav");
-    expect(kp("ds-big-5.3-17")).toBe("ds.search.bst");
+    const kps = (id: string) => catalog.find((q) => q.id === id)!.kp_ids;
+    // 算法设计题主考归入 ds.algo.design，结构考点保留为辅助（不再误挂线索树等）。
+    expect(kp("ds-big-5.3-3")).toBe("ds.algo.design");
+    expect(kps("ds-big-5.3-3")).toContain("ds.tree.trav");
+    expect(kp("ds-big-5.3-17")).toBe("ds.algo.design");
+    expect(kps("ds-big-5.3-17")).toContain("ds.search.bst");
     expect(kp("ds-big-8.5-1")).toBe("ds.sort.merge");
     expect(kp("co-big-6.1-1")).toBe("co.bus.perf");
     expect(kp("cn-big-2.1-1")).toBe("cn.intro.perf");

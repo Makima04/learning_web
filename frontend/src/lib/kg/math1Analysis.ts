@@ -91,6 +91,8 @@ export function buildReviewTopics(
   now = Date.now(),
   kind: Math1Kind = "big",
   attempts: ExamAttempt[] = [],
+  /** 额外考点：真题没主考过、但题库有题的知识点（408 应用题 track 用），无真题占分。 */
+  extraKpIds: string[] = [],
 ): ReviewTopic[] {
   const questionsOfKind = dataset.items.filter((q) => q.kind === kind);
   const byKp = new Map<string, ReviewQuestion[]>();
@@ -98,6 +100,7 @@ export function buildReviewTopics(
     const ids = dataset.includeSecondary ? reviewQuestionKpIds(q) : [q.kpId];
     for (const id of ids) byKp.set(id, [...(byKp.get(id) ?? []), q]);
   }
+  for (const kpId of extraKpIds) if (!byKp.has(kpId) && findKp(kpId)) byKp.set(kpId, []);
   const totals = new Map(dataset.years.map((year) => [year,
     questionsOfKind.filter((q) => q.year === year).reduce((sum, q) => sum + q.points, 0),
   ]));
@@ -150,7 +153,7 @@ export function buildReviewTopics(
       .reduce((sum, q) => sum + q.points, 0) / (totals.get(year) || 1);
     const pointShare = dataset.years.reduce((sum, y) => sum + annualShare(y), 0) / dataset.years.length;
     const recentPointShare = recentYears.length ? recentYears.reduce((sum, y) => sum + annualShare(y), 0) / recentYears.length : 0;
-    const cost = Math.max(...questions.map((q) => q.cost));
+    const cost = questions.length ? Math.max(...questions.map((q) => q.cost)) : 2;
     const due = diagnostic ? diagnostic.status === "due" : confidence !== null && Boolean(st?.due && st.due <= now);
     // 成本为相对人工估计；未知保持中性，不直接当成完全不会。
     const gap = confidence === null ? .5 : Math.max(.08, 1 - confidence);

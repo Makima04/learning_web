@@ -81,7 +81,7 @@ def split_public_catalog(catalog_path: Path) -> Path:
 
     index = {
         # 与 frontend/src/lib/kg/catalogLoad.ts 的 PRACTICE_CATALOG_VER 保持一致
-        "ver": "split-20261113-kp-dedup",
+        "ver": "split-20261113-kp-dedup-algo",
         "count": len(items),
         "shards": shards,
         "items": [slim_item(q) for q in items],

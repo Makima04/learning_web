@@ -14,8 +14,13 @@ import {
 import { computeRoi, kindPointsPerPaper, pct, practiceMinutes, type RoiInfo } from "@/lib/kg/reviewRoi";
 import type { BookId, SubjectId } from "@/lib/kg/types";
 import { itemsForSource, MATH_BOOK_SOURCES, mathFacetName, practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
-import { buildTemplatePlan, type TemplatePlan, type TemplateReason } from "@/lib/kg/mathTemplatePlan";
+import { buildTemplatePlan, type TemplateGroup, type TemplatePlan, type TemplateReason } from "@/lib/kg/mathTemplatePlan";
 import { mathTemplateName } from "@/data/kg/mathTemplates";
+import { cs408TemplateName } from "@/data/kg/cs408Templates";
+import {
+  ALGO_DESIGN_KP, CS408_TRACK_NAMES, cs408ExtraKpIds, cs408TrackApplicable, filterCs408TrackTopics,
+  parseCs408Track, type Cs408Track,
+} from "@/lib/kg/cs408Track";
 import type { Math1TrainingMatch } from "@/lib/kg/math1Analysis";
 import { hydratePracticeItems } from "@/lib/kg/catalogLoad";
 import { applyWangdaoPractice, isCollected, toggleWangdaoCollect } from "@/lib/kg/wangdaoPractice";
@@ -170,6 +175,114 @@ export function LegacyMathReviewRedirect() {
   return <Navigate to={legacyMathReviewPath(search)} replace />;
 }
 
+/** 算法题轨外层列表：10 类设计方法考法直接铺开，点考法进抽屉看路线与题目。 */
+function AlgoMethodList({ plan, activeFacet, onOpen, onPractice }: {
+  plan: TemplatePlan; activeFacet: string | null;
+  onOpen: (facetId: string) => void; onPractice: (facetId: string, items: WangdaoItem[]) => void;
+}) {
+  const total = plan.groups.reduce((s, g) => s + g.total, 0);
+  return (
+    <section aria-label="算法题考法分类" className="rounded-2xl bg-card p-5 shadow-edge md:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-muted-foreground">
+            <span className="rounded-full bg-app-orange/20 px-2 py-0.5 text-ink-warning">408 · 数据结构 · 算法题</span>
+            <span>按设计方法分类 · 跨结构归类</span>
+          </p>
+          <h1 className="mt-2 text-xl font-extrabold tracking-tight md:text-2xl">算法设计 · {plan.groups.length} 类考法</h1>
+          <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-muted-foreground">
+            共 {total} 道王道算法题。每类先通过两道不同题（至少一道主考该考法），三天后复测。点考法看识别信号、标准路线与全部题目。
+          </p>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl bg-secondary/60 px-3 py-2 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1"><Target className="h-3.5 w-3.5" />已覆盖 {plan.preliminary}/{plan.groups.length} 类</span>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-2.5 md:grid-cols-2">
+        {plan.groups.map((g, index) => {
+          const active = activeFacet === g.template.id;
+          const progress = g.total ? Math.round((g.practiced / g.total) * 100) : 0;
+          return (
+            <div
+              key={g.template.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => onOpen(g.template.id)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(g.template.id); } }}
+              className={cn(
+                "group flex min-w-0 cursor-pointer flex-col rounded-xl border-2 p-3.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active ? "border-primary bg-accent/50" : "border-border/70 bg-card-soft/40 hover:border-primary/50 hover:bg-accent/30"
+              )}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className={cn("grid h-5 w-5 shrink-0 place-items-center rounded-md text-[11px] font-extrabold", index < 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{index + 1}</span>
+                  <span className="min-w-0 truncate text-sm font-bold">{g.template.name}</span>
+                </span>
+                <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", g.status === "weak" ? "bg-destructive/10 text-ink-danger" : g.status === "stable" ? "bg-success/10 text-ink-success" : "bg-primary/10 text-primary")}>{TEMPLATE_STATUS[g.status]}</span>
+              </div>
+              <p className="mt-2 line-clamp-2 text-[11px] leading-5 text-muted-foreground">{g.template.recognize}</p>
+              <span className="mt-2.5 block h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+                <span className="block h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
+              </span>
+              <p className="mt-1.5 text-[10px] text-muted-foreground">王道 {g.total} 道 · 练过 {g.practiced}/{g.total} · 本轮通过 {g.passed}/2{g.reviewOn && g.status !== "stable" ? ` · ${g.reviewOn} 复测` : ""}</p>
+              <div className="mt-2.5 flex items-center gap-3">
+                <button type="button" onClick={(e) => { e.stopPropagation(); onPractice(g.template.id, g.recommendations.length ? g.recommendations : g.items); }}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline">
+                  <Play className="h-3 w-3" />{g.status === "weak" ? "针对补练" : g.status === "due" ? "开始复测" : "练这个考法"}
+                </button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); onPractice(g.template.id, g.items); }}
+                  className="text-[11px] font-semibold text-muted-foreground hover:text-primary hover:underline">全部 {g.total} 题</button>
+                <ArrowRight className="ml-auto h-3.5 w-3.5 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** 算法题轨抽屉正文：单类考法的识别、路线与全部题目。 */
+function AlgoGroupDetail({ group, onPractice }: {
+  group: TemplateGroup; onPractice: (items: WangdaoItem[], startAt?: number) => void;
+}) {
+  const minutes = group.items.reduce((s, q) => s + practiceMinutes(q.kind ?? "big"), 0);
+  return (
+    <div className="space-y-4">
+      <section className="rounded-xl bg-accent/40 p-3">
+        <h3 className="flex items-center gap-1.5 text-xs font-extrabold"><Target className="h-3.5 w-3.5 text-primary" aria-hidden />识别信号</h3>
+        <p className="mt-1.5 text-xs leading-6 text-muted-foreground">{group.template.recognize}</p>
+      </section>
+      <section className="rounded-xl border border-border/60 bg-card p-3">
+        <h3 className="flex items-center gap-1.5 text-xs font-extrabold"><BookOpen className="h-3.5 w-3.5 text-primary" aria-hidden />标准路线</h3>
+        <p className="mt-1.5 text-xs leading-6 text-muted-foreground">{group.template.route}</p>
+      </section>
+      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <span>王道 {group.total} 道 · 练过 {group.practiced}/{group.total} · 本轮通过 {group.passed}/2</span>
+        <span className="flex items-center gap-1"><Timer className="h-3 w-3" />约 {minutes} 分钟</span>
+      </div>
+      {group.total > 0 && (
+        <Button className="h-9 w-full gap-1.5 text-xs" onClick={() => onPractice(group.items)}>
+          <Play className="h-3.5 w-3.5" />连续做 {group.total} 题
+        </Button>
+      )}
+      <ul className="space-y-1.5">
+        {group.items.map((item, at) => (
+          <li key={item.id}>
+            <button type="button" onClick={() => onPractice(group.items, at)}
+              className="flex w-full items-center gap-2 rounded-xl border border-border/60 bg-card p-2.5 text-left transition-colors hover:border-primary/50 hover:bg-accent/30">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-muted text-[10px] font-extrabold text-muted-foreground">{at + 1}</span>
+              <span className="min-w-0 flex-1 break-words text-xs leading-5">{practiceQuestionLocation(item)}</span>
+              <Play className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function ReviewPriorityPage() {
   const location = useLocation();
   const [params, setParams] = useSearchParams();
@@ -188,6 +301,10 @@ export function ReviewPriorityPage() {
   const rawSource = params.get("src");
   const source = subject === "math" && (rawSource === "lilin880" || rawSource === "zhangyu1000") ? rawSource : null;
   const sourceLabel = source ? SOURCE_NAMES[source] : "李林 880、张宇 1000";
+  const track: Cs408Track = parseCs408Track(params.get("track"));
+  const trackApplicable = cs408TrackApplicable(subject, book, kind);
+  const algoTrackActive = trackApplicable && track === "algo";
+  const algoFacet = params.get("facet");
 
   const [open, setOpen] = useState(() => params.has("kp"));
   const [infoOpen, setInfoOpen] = useState(false);
@@ -248,7 +365,7 @@ export function ReviewPriorityPage() {
     setShowAllTraining(false);
     setInfoOpen(false);
     trainingRequest.current++;
-  }, [subject, book, kind, source]);
+  }, [subject, book, kind, source, track]);
 
   latestIndex.current = queueIndex;
 
@@ -287,13 +404,20 @@ export function ReviewPriorityPage() {
   }, [activeId, wide]);
 
   const [trainingNow, setTrainingNow] = useState(() => Date.now());
+  const extraKpIds = useMemo(
+    () => subject === "cs408" && kind === "big" ? cs408ExtraKpIds(items ?? [], book, kind) : [],
+    [subject, kind, book, items]
+  );
   const topics = useMemo(
-    () => buildReviewTopics(dataset, states, marks, items ?? [], trainingNow, kind, attempts),
-    [dataset, states, marks, items, kind, attempts, trainingNow]
+    () => buildReviewTopics(dataset, states, marks, items ?? [], trainingNow, kind, attempts, extraKpIds),
+    [dataset, states, marks, items, kind, attempts, trainingNow, extraKpIds]
   );
   const pointsPerPaper = useMemo(() => kindPointsPerPaper(dataset.items, kind), [dataset, kind]);
   const roi = useMemo(() => computeRoi(topics, pointsPerPaper), [topics, pointsPerPaper]);
-  const ranked = useMemo(() => sortReviewTopics(topics.filter((t) => t.book === book), order), [topics, book, order]);
+  const ranked = useMemo(() => {
+    const sorted = sortReviewTopics(topics.filter((t) => t.book === book), order);
+    return trackApplicable ? filterCs408TrackTopics(sorted, track) : sorted;
+  }, [topics, book, order, trackApplicable, track]);
   const selected = ranked.find((t) => t.kpId === params.get("kp")) ?? ranked[0];
   const top3 = ranked.slice(0, 3);
 
@@ -312,6 +436,10 @@ export function ReviewPriorityPage() {
   ])), [topics, trainingItems, marks, entries, trainingNow]);
   const templatePlan = selected ? templatePlans.get(selected.kpId) : undefined;
   const hasTemplates = (templatePlan?.groups.length ?? 0) > 0;
+  // 算法题轨：10 类设计方法考法直接铺在外层列表，点考法进抽屉看题与路线。
+  const algoPlan = templatePlans.get(ALGO_DESIGN_KP);
+  const algoGroup = algoPlan?.groups.find((g) => g.template.id === algoFacet) ?? null;
+  const drawerTitle = algoTrackActive && algoGroup ? algoGroup.template.name : selected?.name ?? "";
   const examGroups = templatePlan?.groups.filter((g) => g.examCount > 0) ?? [];
   const diagnostic = selected && subject === "cs408" ? buildCs408Diagnostic(selected, trainingItems ?? [], marks, attempts, trainingNow, dueIds, waitingIds) : undefined;
   const alternateKind = kind === "big" ? "mcq" : "big";
@@ -359,8 +487,8 @@ export function ReviewPriorityPage() {
       next.delete("src");
       if (value === "cs408" && kind === "fill") next.set("kind", "big");
     }
-    if (key === "book" || key === "kind") next.delete("kp");
-    if (key === "subject" || key === "book" || key === "kind") setOpen(false);
+    if (key === "book" || key === "kind" || key === "track") { next.delete("kp"); next.delete("facet"); }
+    if (key === "subject" || key === "book" || key === "kind" || key === "track") setOpen(false);
     // 切换题集时立即作废未完成的加载，避免旧题目异步回来覆盖新筛选。
     trainingRequest.current++;
     setParams(next, { replace: true });
@@ -393,9 +521,25 @@ export function ReviewPriorityPage() {
     void openPractice(list);
   }
 
+  /** 算法题轨：选一类考法开抽屉，题面与路线都按这类考法展示。 */
+  function openAlgoGroup(facetId: string) {
+    const next = new URLSearchParams(params);
+    next.set("facet", facetId);
+    next.delete("kp");
+    setParams(next, { replace: true });
+    setOpen(true);
+    setActive(null);
+    setQueue([]);
+    setQueueIndex(0);
+    setExpand(false);
+    setNotice("");
+    trainingRequest.current++;
+  }
+
   function closeDrawer() {
     const next = new URLSearchParams(params);
     next.delete("kp");
+    next.delete("facet");
     setParams(next, { replace: true });
     setOpen(false);
     setExpand(false);
@@ -493,6 +637,17 @@ export function ReviewPriorityPage() {
               onChange={(v) => choose("kind", v)}
               items={kinds.map((k) => ({ value: k, label: MATH1_KIND_NAMES[k], hint: String(dataset.items.filter((q) => q.kind === k).length) }))}
             />
+            {trackApplicable && (
+              <>
+                <span className="h-5 w-px shrink-0 bg-border" aria-hidden />
+                <Seg
+                  label="选择大题类别"
+                  value={track}
+                  onChange={(v) => choose("track", v)}
+                  items={(["algo", "apply"] as Cs408Track[]).map((t) => ({ value: t, label: CS408_TRACK_NAMES[t] }))}
+                />
+              </>
+            )}
           </div>
 
           <div className="order-2 flex shrink-0 items-center gap-1 md:order-3">
@@ -547,6 +702,11 @@ export function ReviewPriorityPage() {
           <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{subject === "math" ? `数学知识复习 · ${KNOWLEDGE_KP_COUNT.math} 个考点` : `408知识复习 · ${KNOWLEDGE_KP_COUNT.cs408} 个考点`}</span><span className="mt-1 block text-xs text-muted-foreground">{subject === "math" ? "高数、线代、概率统计 · 公式与完整演算" : "数据结构、计组、操作系统、计网 · 原理与过程推演"}</span></span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
         </Link>
+        {algoTrackActive ? (
+          algoPlan && algoPlan.groups.length > 0
+            ? <AlgoMethodList plan={algoPlan} activeFacet={algoFacet} onOpen={openAlgoGroup} onPractice={(facetId, list) => { openAlgoGroup(facetId); void openPractice(list); }} />
+            : <div className="rounded-2xl bg-card p-6 text-sm text-muted-foreground shadow-edge">{error ? `王道题库加载失败：${error}` : "正在加载王道算法题…"}</div>
+        ) : (<>
         {/* ---------- 结论层：一句话 + Top3 行动卡 ---------- */}
         <section aria-label="本周推荐" className="rounded-2xl bg-card p-5 shadow-edge md:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -716,6 +876,7 @@ export function ReviewPriorityPage() {
             </button>
           )}
         </section>
+        </>)}
 
         {/* ---------- 口径与来源（下沉） ---------- */}
         <details className="rounded-2xl bg-card/60 px-4 py-3 text-[11px] leading-6 text-muted-foreground">
@@ -736,12 +897,12 @@ export function ReviewPriorityPage() {
       </div>
 
       {/* ---------- 下钻抽屉：结论 / 三因子 / 训练队列 / 真题依据 ---------- */}
-      {open && selected && drawerRoi && (
+      {open && selected && drawerRoi && (!algoTrackActive || !!algoGroup) && (
         <div
           className="fixed inset-0 z-40 flex"
           role="dialog"
           aria-modal="true"
-          aria-label={active ? `${selected.name} · 第 ${active.qno} 题作答与训练队列` : `${selected.name} 的依据与训练`}
+          aria-label={active ? `${drawerTitle} · 第 ${active.qno} 题作答与训练队列` : `${drawerTitle} 的依据与训练`}
         >
           <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} onClick={closeDrawer} aria-hidden />
 
@@ -753,7 +914,7 @@ export function ReviewPriorityPage() {
                   {queueIndex + 1}/{queue.length || 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-bold">{selected.name}</p>
+                  <p className="truncate text-[13px] font-bold">{drawerTitle}</p>
                   <p className="break-words text-[11px] leading-5 text-muted-foreground">
                     {practiceQuestionLocation(active)}
                     {active.year ? ` · ${active.year} 真题` : ""}
@@ -808,11 +969,15 @@ export function ReviewPriorityPage() {
             <div className="flex items-start justify-between gap-3 border-b border-border/60 p-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-base font-extrabold">{selected.name}</h2>
-                  <Status topic={selected} plan={templatePlan} />
+                  <h2 className="text-base font-extrabold">{drawerTitle}</h2>
+                  {algoTrackActive && algoGroup
+                    ? <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", algoGroup.status === "weak" ? "bg-destructive/10 text-ink-danger" : algoGroup.status === "stable" ? "bg-success/10 text-ink-success" : "bg-primary/10 text-primary")}>{TEMPLATE_STATUS[algoGroup.status]}</span>
+                    : <Status topic={selected} plan={templatePlan} />}
                 </div>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  {drawerRoi.unallocated ? "综合考查 · 分值未拆分，收益待估" : `性价比 ${drawerRoi.score ?? drawerRoi.tier} · 主考归属每年约 ${drawerRoi.perPaper.toFixed(1)} 分 · 补齐约 ${drawerRoi.estMinutes} 分钟`}
+                  {algoTrackActive && algoGroup
+                    ? `算法题 · 王道 ${algoGroup.total} 道 · 练过 ${algoGroup.practiced}/${algoGroup.total} · 本轮通过 ${algoGroup.passed}/2`
+                    : drawerRoi.unallocated ? "综合考查 · 分值未拆分，收益待估" : `性价比 ${drawerRoi.score ?? drawerRoi.tier} · 主考归属每年约 ${drawerRoi.perPaper.toFixed(1)} 分 · 补齐约 ${drawerRoi.estMinutes} 分钟`}
                 </p>
               </div>
               <button type="button" onClick={closeDrawer} aria-label="关闭" className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary">
@@ -821,6 +986,8 @@ export function ReviewPriorityPage() {
             </div>
 
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+              {algoTrackActive && algoGroup && <AlgoGroupDetail group={algoGroup} onPractice={(list, at) => void openPractice(list, at)} />}
+              {!algoTrackActive && (<>
               {KNOWLEDGE_REVIEW_TOPICS[selected.kpId] && (
                 <Link to={knowledgeReviewPath(selected.kpId, params.toString())} className="flex items-start gap-3 rounded-xl border-2 border-primary/30 bg-accent/50 p-3 transition-colors hover:border-primary/60">
                   <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
@@ -845,6 +1012,7 @@ export function ReviewPriorityPage() {
                 <div><strong className="block text-sm tabular-nums">{selected.confidence === null ? "—" : pct(drawerRoi.gap, 0)}</strong><span className="text-[10px] text-muted-foreground">掌握缺口</span></div>
                 <div><strong className="block text-sm">{COST[selected.cost]}</strong><span className="text-[10px] text-muted-foreground">补齐成本</span></div>
               </div>
+              </>)}
 
               {/* 窄屏：作答卡排在训练队列之前，点一下就能看到题；宽屏由左侧大屏承担 */}
               {!wide && practiceProps && (
@@ -864,7 +1032,7 @@ export function ReviewPriorityPage() {
                 </div>
               )}
 
-              {diagnostic ? <Cs408DiagnosticSummary plan={diagnostic}
+              {!algoTrackActive && (subject === "cs408" && diagnostic && !hasTemplates ? <Cs408DiagnosticSummary plan={diagnostic}
                 checkHref={knowledgeCheckPath(selected.kpId, params.toString())}
                 returnTo={location.pathname + location.search} catalogReady={items !== null} catalogError={error}
                 alternateHref={alternateCount ? `${location.pathname}?${alternateParams}` : undefined}
@@ -877,16 +1045,18 @@ export function ReviewPriorityPage() {
                 </div>
                 <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
                   {hasTemplates
-                    ? "李林 880、张宇 1000 合为一个检验题池，按题型模板归类。真题只作依据与性价比参考，不进检验队列。每类先通过两道不同题（至少一道主考该考点），三天后复测。"
+                    ? subject === "math"
+                      ? "李林 880、张宇 1000 合为一个检验题池，按题型模板归类。真题只作依据与性价比参考，不进检验队列。每类先通过两道不同题（至少一道主考该考点），三天后复测。"
+                      : "王道大题按考法归类，真题只作依据与性价比参考。每类先通过两道不同题（至少一道主考该考点），三天后复测。"
                     : "当前考点暂无模板细分，按知识点合池推荐。已会题及未到期错题会避开。"}
                 </p>
                 {sourceFilter && <div className="mt-3">{sourceFilter}</div>}
                 {hasTemplates && templatePlan && (
                   <details open className="mt-3 rounded-xl border border-border/70 bg-secondary/30 p-3">
                     <summary className="cursor-pointer text-xs font-bold">
-                      题型模板 · 已练 {templatePlan.tested}/{templatePlan.groups.length} · 初步掌握 {templatePlan.preliminary}/{templatePlan.groups.length} · 掌握较稳 {templatePlan.stable}/{templatePlan.groups.length}
+                      {subject === "math" ? "题型模板" : "考法模板"} · 已练 {templatePlan.tested}/{templatePlan.groups.length} · 初步掌握 {templatePlan.preliminary}/{templatePlan.groups.length} · 掌握较稳 {templatePlan.stable}/{templatePlan.groups.length}
                     </summary>
-                    <p className="mt-2 text-[11px] leading-5 text-muted-foreground">模板按「给什么条件、求什么结论」归类，技巧写在标准路线里，不再单独计覆盖。当天重复点会不算延迟复测；模糊或不会后需重新通过两道题。</p>
+                    <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{subject === "math" ? "模板按「给什么条件、求什么结论」归类，技巧写在标准路线里，不再单独计覆盖。" : "算法题按设计方法归类、应用题按知识点考法归类，技巧写在标准路线里。"}当天重复点会不算延迟复测；模糊或不会后需重新通过两道题。</p>
                     {examGroups.length > 0 && (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <span className="text-[10px] font-bold text-muted-foreground">真题考过</span>
@@ -907,21 +1077,24 @@ export function ReviewPriorityPage() {
                             <span className="text-xs font-semibold leading-5">{g.template.name}</span>
                             <span className={cn("shrink-0 text-[11px] font-semibold", g.status === "weak" ? "text-ink-danger" : g.status === "stable" ? "text-ink-success" : "text-primary")}>{TEMPLATE_STATUS[g.status]}</span>
                           </div>
-                          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">识别：{g.template.recognize}</p>
-                          <details className="mt-1">
+                          {g.template.recognize && <p className="mt-1 text-[11px] leading-5 text-muted-foreground">识别：{g.template.recognize}</p>}
+                          {g.template.route && <details className="mt-1">
                             <summary className="cursor-pointer text-[11px] font-semibold text-primary hover:underline">标准路线</summary>
                             <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{g.template.route}</p>
-                          </details>
+                          </details>}
                           <p className="mt-1 text-[11px] text-muted-foreground">
-                            880 {g.counts.lilin880} · 1000 {g.counts.zhangyu1000} · 真题考过 {g.examCount} · 练过 {g.practiced}/{g.total} · 本轮通过 {g.passed}/2
+                            {subject === "math"
+                              ? `880 ${g.counts.lilin880} · 1000 ${g.counts.zhangyu1000} · 真题考过 ${g.examCount} · `
+                              : `王道 ${g.total} · `}
+                            练过 {g.practiced}/{g.total} · 本轮通过 {g.passed}/2
                             {g.reviewOn && g.status !== "stable" ? ` · ${g.reviewOn} 复测` : ""}
                           </p>
-                          {g.total === 0 && g.examCount > 0 && <p className="mt-1 text-[11px] text-muted-foreground">教辅暂缺该模板题，可先查看真题依据。</p>}
+                          {g.total === 0 && g.examCount > 0 && <p className="mt-1 text-[11px] text-muted-foreground">{subject === "math" ? "教辅" : "王道"}暂缺该模板题，可先查看真题依据。</p>}
                           <div className="mt-1.5 flex flex-wrap items-center gap-3">
                             {g.recommendations.length > 0 && (
                               <button type="button" className="text-[11px] font-bold text-primary hover:underline"
                                 onClick={() => void openPractice(g.recommendations)}>
-                                {g.status === "weak" ? "针对补练" : g.status === "due" ? "开始复测" : "练这个模板"} · {g.recommendations.length} 题
+                                {g.status === "weak" ? "针对补练" : g.status === "due" ? "开始复测" : subject === "math" ? "练这个模板" : "练这个考法"} · {g.recommendations.length} 题
                               </button>
                             )}
                             {g.total > 0 && (
@@ -983,7 +1156,7 @@ export function ReviewPriorityPage() {
                               ? `${practiceSourceLabel(item)} · ${item.section_name || `章节 ${item.section}`} · 第 ${item.qno} 题`
                               : practiceQuestionLocation(item)}
                           </span>
-                          {templateIds?.length ? <span className="mt-1 block truncate text-[10px] text-muted-foreground">{templateIds.map(mathTemplateName).join(" · ")}</span> : null}
+                          {templateIds?.length ? <span className="mt-1 block truncate text-[10px] text-muted-foreground">{templateIds.map((id) => subject === "math" ? mathTemplateName(id) : cs408TemplateName(id)).join(" · ")}</span> : null}
                         </span>
                         <span className="shrink-0 text-[10px] text-muted-foreground">约 {practiceMinutes(item.kind ?? kind)} 分钟</span>
                         <Play className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -999,7 +1172,7 @@ export function ReviewPriorityPage() {
                 )}
               </div>
 
-              )}
+              ))}
 
               {/* 窄屏：作答卡就放在抽屉里，且排在看训练队列之前；宽屏已移到左侧大屏，两处只挂一份 */}
               {wide && active && (
@@ -1009,6 +1182,7 @@ export function ReviewPriorityPage() {
               )}
               {notice && !(wide && active) && <p role="status" className="text-xs font-semibold text-primary">{notice}</p>}
 
+              {!algoTrackActive && (<>
               <details ref={evidenceRef} className="rounded-xl bg-secondary/40 p-3" open>
                 <summary className="cursor-pointer text-xs font-bold">真题依据 · {selected.questions.length} 道</summary>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1050,6 +1224,7 @@ export function ReviewPriorityPage() {
               <Link className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline" to={kgKpPath(selected.kpId, { subject, src: source, returnTo: location.pathname + location.search + location.hash })}>
                 查看图谱与全部练习 <ArrowRight className="h-3 w-3" />
               </Link>
+              </>)}
             </div>
           </div>
         </div>

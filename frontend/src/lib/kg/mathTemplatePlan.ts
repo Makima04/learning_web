@@ -5,6 +5,7 @@
 // 至少一道主考该考点、三天后复测），不新增本地完成标志或服务端表，跨设备同步沿用 accountSync。
 import { dayKey, dayKeyStartMs, shiftDayKey } from "@/lib/day";
 import { templatesForKp, type MathTemplate } from "@/data/kg/mathTemplates";
+import { cs408TemplatesForKp } from "@/data/kg/cs408Templates";
 import type { ReviewTopic } from "./math1Analysis";
 import type { UserItemMark } from "./types";
 import type { WangdaoItem } from "./wangdao408";
@@ -57,9 +58,11 @@ function poolItemOrder(a: WangdaoItem, b: WangdaoItem): number {
   return sa - sb || (a.ord ?? a.qno) - (b.ord ?? b.qno) || a.id.localeCompare(b.id);
 }
 
-/** 检验题池只收教辅；真题条目即便混入目录也一律排除。 */
-function inPool(q: WangdaoItem): boolean {
-  return q.source === "lilin880" || q.source === "zhangyu1000";
+/** 检验题池只收教辅；真题条目即便混入目录也一律排除。数学合 880+1000，408 收王道。 */
+function inPool(q: WangdaoItem, subject: "math" | "cs408"): boolean {
+  return subject === "math"
+    ? q.source === "lilin880" || q.source === "zhangyu1000"
+    : !q.source || q.source === "wangdao";
 }
 
 export function buildTemplatePlan(
@@ -71,10 +74,12 @@ export function buildTemplatePlan(
   now = Date.now(),
 ): TemplatePlan {
   const empty: TemplatePlan = { groups: [], other: [], recommendations: [], tested: 0, preliminary: 0, stable: 0, weak: 0 };
-  if (topic.subject !== "math") return empty;
-  const pool = [...new Map(catalog.filter((q) => q.kind === topic.kind && inPool(q)
-    && q.kp_ids.includes(topic.kpId)).map((q) => [q.id, q])).values()];
-  const templates = templatesForKp(topic.kpId);
+  // 408 只收主考题（与诊断同口径）：算法题的结构辅助标签不会漏进应用题轨。
+  const inTopic = (q: WangdaoItem) => topic.subject === "math" ? q.kp_ids.includes(topic.kpId) : q.kp_ids[0] === topic.kpId;
+  const pool = [...new Map(catalog.filter((q) => q.kind === topic.kind && inPool(q, topic.subject)
+    && inTopic(q)).map((q) => [q.id, q])).values()];
+  const templates: MathTemplate[] = topic.subject === "math"
+    ? templatesForKp(topic.kpId) : cs408TemplatesForKp(topic.kpId, pool);
   if (!templates.length) return { ...empty, other: pool.sort(poolItemOrder) };
 
   const byId = new Map(marks.map((m) => [m.itemId, m]));
