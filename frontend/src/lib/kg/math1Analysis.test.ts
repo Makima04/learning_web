@@ -164,6 +164,15 @@ describe("教辅推荐保持匹配边界与错题间隔", () => {
     expect(result.find((q) => q.item.id === "zy")?.match).toBe("topic");
   });
 
+  it("真题只作依据：即使目录混入真题条目，检验推荐仍只用教辅", () => {
+    const zhenti: WangdaoItem = {
+      id: "math1-2023-q17", book: "calc", source: "zhenti", kind: "big",
+      section: "2023", qno: 17, year: 2023, kp_ids: [topic.kpId], facets: ["ext_free"],
+    };
+    const result = matchMath1Training(topic, [question("ll", { facets: ["ext_free"] }), zhenti], [], {});
+    expect(result.map((r) => r.item.id)).toEqual(["ll"]);
+  });
+
   it("避开已会和未到期错题，到期可重练；补基础题必须关联先修", () => {
     const pool = [question("pass"), question("wait"), question("due"),
       question("base", { kp_ids: ["calc.m.partial"] }),

@@ -211,6 +211,7 @@ export function matchReviewTraining(
   }));
   const candidates: Math1TrainingMatch[] = [];
   for (const item of catalog) {
+    // 数学检验只推荐李林880 / 张宇1000；真题只作依据与性价比参考，不进检验队列。
     if (topic.subject === "math" ? item.source !== "lilin880" && item.source !== "zhangyu1000"
       : Boolean(item.source && item.source !== "wangdao")) continue;
     // 包括补基础也保持当前题型，不在选择/填空页静默推荐大题。

@@ -28,6 +28,7 @@ export function loadMathPractice(): Promise<WangdaoItem[]> {
     loadCatalogIndex("zhangyu1000"),
   ])
     .then(([a, b]) => {
+      // 检验题池只合李林880 + 张宇1000；真题只作依据与性价比参考，不进检验队列。
       cache.value = [...a, ...b];
       return cache.value;
     })
@@ -417,6 +418,26 @@ export const MATH_FACETS: { id: string; name: string }[] = [
   { id: "unbiased", name: "无偏性" },
   { id: "interval", name: "区间估计" },
   { id: "hyp_test", name: "假设检验" },
+  // 教辅目录里已有、但此前未补中文名的考法：补齐显示名，ID 不变，方法匹配与模板归类照常复用。
+  { id: "trig", name: "三角函数" },
+  { id: "fn_eq", name: "函数方程" },
+  { id: "amgm", name: "均值不等式" },
+  { id: "arith_seq", name: "等差数列" },
+  { id: "inverse_fn", name: "反函数" },
+  { id: "osc", name: "振荡无极限" },
+  { id: "lim_exist", name: "极限存在性" },
+  { id: "nth_root", name: "n 次根式" },
+  { id: "unbounded", name: "无界量" },
+  { id: "nec_cond", name: "收敛必要条件" },
+  { id: "maclaurin", name: "麦克劳林展开" },
+  { id: "elim_const", name: "消去任意常数" },
+  { id: "lin2_struct", name: "二阶线性解结构" },
+  { id: "tangent_line", name: "切线方程" },
+  { id: "normal_pl", name: "法平面方程" },
+  { id: "phys_grav", name: "引力" },
+  { id: "phys_path", name: "路程积分" },
+  { id: "curl_div", name: "旋度与散度" },
+  { id: "dbl_est", name: "二重积分估值" },
   // 真题逐题复核新增的细考法；已有教辅考法保持原有 ID，保证方法匹配可复用。
   ...Object.entries(math1ReviewFacets).map(([id, name]) => ({ id, name })),
 ];

@@ -6,7 +6,7 @@ export function math1QuestionImage(question: Pick<ReviewQuestion, "year" | "n">,
   return `/math/exams/math1/questions/${question.year}/q${question.n}${answer ? "-answer" : ""}.webp`;
 }
 
-export function math1PracticePath(question: ReviewQuestion, answer = false, returnTo?: string): string {
+export function math1PracticePath(question: Pick<ReviewQuestion, "year" | "n">, answer = false, returnTo?: string): string {
   const params = new URLSearchParams();
   if (answer) params.set("answer", "1");
   const safe = practiceReturnPath(returnTo);
