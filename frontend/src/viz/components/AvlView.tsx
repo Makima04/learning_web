@@ -177,7 +177,7 @@ export function allBalanced(n: ANode | null): boolean {
   return Math.abs(bf(n)) <= 1 && n.h === 1 + Math.max(H(n.l), H(n.r)) && allBalanced(n.l) && allBalanced(n.r);
 }
 
-function layout(root: ANode) {
+export function avlLayout(root: ANode, showBf: boolean) {
   const nodes: { key: number; x: number; y: number; node: ANode }[] = [];
   const edges: { x1: number; y1: number; x2: number; y2: number }[] = [];
   let ix = 0;
@@ -192,18 +192,22 @@ function layout(root: ANode) {
     walk(n.r, d + 1, x, y);
   };
   walk(root, 0);
-  return { nodes, edges, width: 80 + ix * 58 };
+  // 高度逐帧动态算：最低结点 + 圆圈半径 20 + bf 标签（y+34、字号 11）+ 底部留白。
+  // 写死 260 会把深度 3 的结点（失衡帧恰好都有）和 bf 标签裁掉。
+  const maxY = nodes.reduce((m, n) => Math.max(m, n.y), 0);
+  const height = maxY + 20 + (showBf ? 45 : 0) + 10;
+  return { nodes, edges, width: 80 + ix * 58, height };
 }
 
 export function AvlView() {
   const frames = useMemo(() => buildAvlFrames(AVL_SEQ), []);
   const p = usePlayer(frames.length);
   const fr = frames[p.idx];
-  const { nodes, edges, width } = layout(fr.root);
+  const { nodes, edges, width, height } = avlLayout(fr.root, fr.showBf);
 
   return (
     <div className="space-y-4">
-      <svg viewBox={`0 0 ${width} 260`} className="w-full">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
         {edges.map((e, i) => (
           <line key={i} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={C.line} strokeWidth={1.6} />
         ))}

@@ -250,7 +250,8 @@ export function KmpView() {
 
   return (
     <div className="space-y-4">
-      <svg viewBox={`0 0 ${TXT.length * CELL + 130} 132`} className="w-full">
+      {/* 模式串行平移到 y=102，j 指针标签在行内 y=42 → 绝对 144，高度 132 会整个裁掉 */}
+      <svg viewBox={`0 0 ${TXT.length * CELL + 130} 152`} className="w-full">
         {/* 主串行 */}
         <text x={0} y={16} fontSize={12} fill={C.text}>主串 S</text>
         <g transform="translate(0,24)">

@@ -141,11 +141,13 @@ export function HeapSortView() {
   const p = usePlayer(frames.length);
   const fr = frames[p.idx];
   const pos = useMemo(() => treeLayout(HS_ARR.length), []);
+  // 最深结点圆底 = y+20，写死 250 会削掉结点 8 的底部圆弧
+  const treeH = Math.max(...Object.values(pos).map(([, y]) => y)) + 30;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 lg:flex-row">
-        <svg viewBox="0 0 480 250" className="w-full lg:w-[58%]">
+        <svg viewBox={`0 0 480 ${treeH}`} className="w-full lg:w-[58%]">
           {HS_ARR.map((_, k) => {
             const i = k + 1;
             const par = Math.floor(i / 2);

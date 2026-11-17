@@ -9,7 +9,7 @@ import { buildHuffman } from "@/viz/components/HuffmanView";
 import { traversalOrders } from "@/viz/components/TreeTravView";
 import { bfsOrder, dfsOrder } from "@/viz/components/GraphScanView";
 import { dijkstraDist } from "@/viz/components/DijkstraView";
-import { allBalanced, avlFinalRoot, buildAvlFrames, inorderOf, AVL_SEQ } from "@/viz/components/AvlView";
+import { allBalanced, avlFinalRoot, avlLayout, buildAvlFrames, inorderOf, AVL_SEQ } from "@/viz/components/AvlView";
 import { buildQuickSortFrames, quickSorted, QS_ARR } from "@/viz/components/QuickSortView";
 import { buildHeapSortFrames, heapSorted, HS_ARR } from "@/viz/components/HeapSortView";
 import { buildCircularQueueFrames } from "@/viz/components/CircularQueueView";
@@ -137,6 +137,17 @@ describe("AVL", () => {
       const seq = inorderOf(f.root);
       const sorted = [...seq].sort((a, b) => a - b);
       expect(seq).toEqual(sorted);
+    }
+  });
+
+  it("每帧布局都在 viewBox 内：深层结点与 bf 标签不被裁切", () => {
+    for (const f of buildAvlFrames(AVL_SEQ)) {
+      const { nodes, height } = avlLayout(f.root, f.showBf);
+      expect(nodes.length).toBeGreaterThan(0);
+      for (const n of nodes) {
+        expect(n.y + 20, `${f.phase} 结点 ${n.key} 圆圈`).toBeLessThanOrEqual(height);
+        if (f.showBf) expect(n.y + 34 + 11, `${f.phase} 结点 ${n.key} bf 标签`).toBeLessThanOrEqual(height);
+      }
     }
   });
 });

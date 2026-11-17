@@ -126,7 +126,8 @@ export function CircularQueueView() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 md:flex-row">
-        <svg viewBox="0 0 320 270" className="w-full md:w-[46%]">
+        {/* 正下方槽位 [4] 的下标标签基线在 270，留 8px 防降部裁切 */}
+        <svg viewBox="0 0 320 278" className="w-full md:w-[46%]">
           {Array.from({ length: M }, (_, i) => {
             const { x, y } = slotPos(i);
             const st = fr.states[i];

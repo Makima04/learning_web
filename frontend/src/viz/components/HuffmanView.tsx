@@ -171,10 +171,13 @@ export function HuffmanView() {
   const p = usePlayer(frames.length);
   const fr = frames[p.idx];
   const { codes, wpl } = useMemo(() => buildHuffman([7, 5, 2, 4]), []);
+  // 布局取最终树位置：最深叶子 y=270、半径 19，写死 240 会把权 2/4 两个叶子整圆裁掉
+  const maxY = Array.from(fr.nodes.values()).reduce((m, n) => Math.max(m, n.y), 0);
+  const maxX = Array.from(fr.nodes.values()).reduce((m, n) => Math.max(m, n.x), 0);
 
   return (
     <div className="space-y-4">
-      <svg viewBox="0 0 520 240" className="w-full">
+      <svg viewBox={`0 0 ${Math.max(520, maxX + 40)} ${maxY + 31}`} className="w-full">
         {fr.edges.map((e, i) => {
           const f = fr.nodes.get(e.from)!;
           const t = fr.nodes.get(e.to)!;
