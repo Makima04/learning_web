@@ -76,11 +76,11 @@ def to_big_weight(as_big_primary: int, count: int) -> float:
 
 
 # 每次改题库结构都要 +1，前端用它给 /cs408/*.json 加查询串避免浏览器缓存旧数据
-DATA_VER = "20261106b"
+DATA_VER = "20261117b"
 
 EARLY_YEARS = {2009, 2010, 2011}          # 早期合订本，考点为规则草稿标注
 SCANNED_YEARS = {2019, 2021, 2024, 2025}  # 答案 PDF 为纯扫描件，解析走 OCR
-RECALL_YEARS = {2026}                      # 考后回忆整理版，无官方卷
+RECALL_YEARS: set[int] = set()             # 2026 已换 pgcode.cn 校订版，按社区重构卷处理（2026-11-17）
 
 EDITION_LABEL = {
     "recall": "考后回忆整理版",
@@ -138,7 +138,7 @@ def paper_meta(year: int, data: dict, items: list[dict]) -> dict:
 def slim_item(it: dict) -> dict:
     ans = it.get("answer")
     exp = it.get("explanation")
-    # 2026 回忆版把大题参考答案塞在 answer 里，统一挪到解析区展示
+    # 个别来源把大题参考答案塞在 answer 里，统一挪到解析区展示
     if isinstance(ans, str) and len(ans) > 24:
         exp = exp or ans
         ans = None
@@ -150,6 +150,8 @@ def slim_item(it: dict) -> dict:
         "book_name": it.get("book_name"),
         "points": it.get("points"),
         "stem": it.get("stem") or "",
+        # 题干附图（2026 起）：仅在源文件提供时输出，其余年份产物保持字节不变
+        **({"stem_images": it["stem_images"]} if it.get("stem_images") else {}),
         "options": it.get("options"),
         "kps": it.get("kps") or [],
         "answer": ans,
@@ -241,8 +243,8 @@ def main() -> None:
 
         for it in data.get("items") or []:
             kind_count[it.get("kind") or "?"] += 1
-            # 考频校准只采信 2012-2025 重构卷的 LLM 多标签：
-            # 2009-2011 为关键词规则草稿、2026 为考后回忆版，计入都会稀释
+            # 考频校准只采信 2012-2026 重构/校订卷的 LLM 多标签：
+            # 2009-2011 为关键词规则草稿，计入会稀释
             # freq / bigWeight（题目本身仍完整进入前端，可练可看解析）。
             if (it.get("kps_meta") or {}).get("method") != "llm":
                 continue
@@ -270,7 +272,7 @@ def main() -> None:
         "notes": (
             "由 scripts/gen_cs408_frontend.py 从 papers/cs408 生成；"
             "meta 记录每套卷的版本（回忆版/早期合订本/重构版）、质量、答案与解析覆盖；"
-            "考频校准只采信 2012-2025 的 LLM 多标签，2009-2011 规则草稿与 2026 回忆版不参与"
+            "考频校准只采信 2012-2026 的 LLM 多标签，2009-2011 规则草稿不参与"
         ),
     }
     (PUBLIC / "index.json").write_text(
@@ -282,7 +284,7 @@ def main() -> None:
         "version": DATA_VER, "years": review_years, "availableYears": years,
         "recentStart": max(review_years) - 4, "items": review_items,
         "excludedYears": review_excluded,
-        "classificationNote": "统计采用 2012—2025 中分值合计正常的 LLM 多标签主考点。2009—2011 规则草稿、2026 回忆版及 2015/2021 分值合计异常卷暂不参与排行，仍可在真题入口练习。",
+        "classificationNote": "统计采用 2012—2026 的 LLM 多标签主考点。2009—2011 规则草稿暂不参与排行，仍可在真题入口练习。",
         "costNote": "补齐成本为人工相对初估，未单独设定的考点按中档处理，不是实测时长或提分预测。",
         "sources": review_sources,
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -306,8 +308,8 @@ def main() -> None:
 
     lines = [
         "// 由 scripts/gen_cs408_frontend.py 自动生成，勿手改。",
-        "// 数据源：papers/cs408/*.json；考频只统计 2012-2025 重构卷的 LLM 多标签标注。",
-        "// 2009-2011 规则草稿、2026 考后回忆版题目可练可看解析，但不参与 freq / bigWeight 校准。",
+        "// 数据源：papers/cs408/*.json；考频只统计 2012-2026 重构/校订卷的 LLM 多标签标注。",
+        "// 2009-2011 规则草稿题目可练可看解析，但不参与 freq / bigWeight 校准。",
         "export interface Cs408KpExamStat {",
         "  count: number;",
         "  yearSpan: number;",

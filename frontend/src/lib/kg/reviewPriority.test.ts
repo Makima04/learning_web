@@ -11,9 +11,9 @@ describe("统一复习性价比的数据范围", () => {
   it("数学保留三类题，408 只用合格统计卷且题型、分科、图谱均匹配", () => {
     expect(REVIEW_DATASETS.math.items).toHaveLength(408);
     const data = REVIEW_DATASETS.cs408;
-    expect(data.items).toHaveLength(564);
-    expect(data.years).toHaveLength(12);
-    expect(data.excludedYears.map((r) => r.year)).toEqual([2009, 2010, 2011, 2015, 2021, 2026]);
+    expect(data.items).toHaveLength(705);
+    expect(data.years).toHaveLength(15);
+    expect(data.excludedYears.map((r) => r.year)).toEqual([2009, 2010, 2011]);
     for (const subject of ["math", "cs408"] as const) {
       for (const q of REVIEW_DATASETS[subject].items) {
         const found = findKp(q.kpId);

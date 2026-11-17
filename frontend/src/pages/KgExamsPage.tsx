@@ -1024,6 +1024,19 @@ function PaperView({ year }: { year: number }) {
 
                   {/* ④ 题干 */}
                   <pre className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">{it.stem}</pre>
+                  {it.stem_images && it.stem_images.length > 0 && (
+                    <div className="space-y-2">
+                      {it.stem_images.map((src, i) => (
+                        <img
+                          key={src}
+                          src={src}
+                          alt={`第 ${it.n} 题附图 ${i + 1}/${it.stem_images!.length}`}
+                          loading="lazy"
+                          className="w-full rounded border bg-white"
+                        />
+                      ))}
+                    </div>
+                  )}
                   {/* ⑤ 选项 */}
                   {it.options && (
                     <ul className="space-y-1 text-sm">

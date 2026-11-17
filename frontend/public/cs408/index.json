@@ -368,30 +368,31 @@
       "total": 47,
       "mcq": 40,
       "big": 7,
-      "edition": "recall",
-      "edition_label": "考后回忆整理版（无官方卷）",
+      "edition": "rebuild",
+      "edition_label": "社区校订版（pgcode.cn，无官方卷）",
       "quality": "ok",
       "confidence": "medium",
       "annotation": "llm",
-      "excluded_from_stats": true,
-      "source_url": "https://csgraduates.com/study_methods/408quiz/2026/",
-      "source_note": "csgraduates.com 考后整理版；教育部未公开 408 正式卷，题干/选项措辞可能与原卷有出入；答案键已与来源页逐题核对，考点为 LLM 多标签标注",
-      "warning": "教育部未公开 408 正式卷，本卷为考后回忆整理版，题干/选项措辞可能与原卷有出入；选择题答案键已与来源页逐题核对，但不作为考频校准依据",
+      "excluded_from_stats": false,
+      "source_url": "https://pgcode.cn/exams/408/years/2026/preview",
+      "source_note": "pgcode.cn 社区校订版（2026-11-17 抓取 SSR 预览页）；替换原 csgraduates.com 考后回忆整理版；教育部未公开 408 正式卷，题干/选项仍可能与原卷措辞有出入",
+      "warning": "",
       "verification": {
-        "source_url": "https://csgraduates.com/study_methods/408quiz/2026/",
-        "checked_at": "2026-11-06",
-        "status": "verified_against_source",
+        "source_url": "https://pgcode.cn/exams/408/years/2026/preview",
+        "checked_at": "2026-11-17",
+        "status": "imported_from_pgcode",
         "answer_key_match": "40/40",
         "official_pdf": false,
-        "scope": "仅核对选择题答案键；大题参考答案与解析同源于该网页",
-        "residual_risk": "题干/选项为考后整理，可能与原卷措辞、数值、图不一致；不作为统计校准依据",
-        "promote_when": "取得权威正式卷或更完整校订版后：替换题干/选项 → 重跑本脚本 → 把 edition 改为 verified 并更新 SOURCES.md"
+        "scope": "题干/选项/答案/解析整体替换为 pgcode 校订版；考点标注沿用同题 LLM 多标签",
+        "residual_risk": "仍为社区整理，非官方卷；站点自述第42题题干 n=9 与候选序列8项不一致（校对注已指出）；第44题题干写满分15分、小问标记合计9分，按站点标注与2020–2025组成原理大题合计23分的结构取13分",
+        "promote_when": "取得权威正式卷后：替换题干/选项 → 重跑生成脚本 → edition 改 verified 并更新 SOURCES.md",
+        "points_reconciliation": "2026-11-17 对照 pgcode.cn/exams/408/years/2026/preview：41–43、45–47 分值两来源一致；第44题题干回忆为15分、站点标注13分、小问标记合计9分，按13分收录（全卷150），存疑待权威卷核定。"
       },
       "answer_keys": 40,
       "explanations": 47,
       "page_images": 0
     }
   ],
-  "data_ver": "20261106b",
-  "notes": "由 scripts/gen_cs408_frontend.py 从 papers/cs408 生成；meta 记录每套卷的版本（回忆版/早期合订本/重构版）、质量、答案与解析覆盖；考频校准只采信 2012-2025 的 LLM 多标签，2009-2011 规则草稿与 2026 回忆版不参与"
+  "data_ver": "20261117b",
+  "notes": "由 scripts/gen_cs408_frontend.py 从 papers/cs408 生成；meta 记录每套卷的版本（回忆版/早期合订本/重构版）、质量、答案与解析覆盖；考频校准只采信 2012-2026 的 LLM 多标签，2009-2011 规则草稿不参与"
 }

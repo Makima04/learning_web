@@ -35,6 +35,14 @@ MCQ_EXP_HEAD = re.compile(r"(?m)^\s*(\d{1,2})\s*[．.、]\s*(?:考查|【|解答
 BIG_HEAD = re.compile(r"(?m)^\s*(4[1-7])\s*[．.、]\s*解答\s*[:：]?")
 SOL_HEAD = re.compile(r"\n?\s*解答\s*[:：]\s*")
 
+# 早期年份大题逐题真实分值（2026-11-17 对照 pgcode.cn 408 真题预览逐题核对）。
+# 旧版三年共用一套模板 {41:13,42:10,43:10,44:13,45:8,46:7,47:9}，与原卷不符。
+BIG_POINTS_BY_YEAR = {
+    2009: {41: 10, 42: 15, 43: 8, 44: 13, 45: 7, 46: 8, 47: 9},
+    2010: {41: 10, 42: 13, 43: 11, 44: 12, 45: 7, 46: 8, 47: 9},
+    2011: {41: 8, 42: 15, 43: 11, 44: 12, 45: 8, 46: 7, 47: 9},
+}
+
 
 def cut_by_heads(seg: str, pattern: re.Pattern, lo: int, hi: int) -> dict[int, str]:
     """按行首题号锚点切分，返回题号 → 正文（已去掉题号前缀）。"""
@@ -54,10 +62,10 @@ def cut_by_heads(seg: str, pattern: re.Pattern, lo: int, hi: int) -> dict[int, s
     return out
 
 
-def build_item(n: int, stem: str, options: dict | None, answer, explanation, source: str) -> dict:
+def build_item(n: int, stem: str, options: dict | None, answer, explanation, source: str, year: int) -> dict:
     book = Q_BOOK.get(n, "ds")
     kind = "big" if n >= 41 else "mcq"
-    points = 2 if kind == "mcq" else {41: 13, 42: 10, 43: 10, 44: 13, 45: 8, 46: 7, 47: 9}.get(n, 10)
+    points = 2 if kind == "mcq" else BIG_POINTS_BY_YEAR[year][n]
     kps = annotate_kps(stem + " " + " ".join((options or {}).values()), book, n) if stem else []
     return {
         "n": n,
@@ -108,6 +116,7 @@ def parse_three_part(year: int, text: str, pdf_name: str) -> dict:
                 keys.get(n),
                 mcq_exp.get(n) if n <= 40 else big.get(n),
                 pdf_name,
+                year,
             )
         )
     return items, len(keys), sum(1 for n in range(1, 41) if n in mcq_exp), len(big)
@@ -142,7 +151,7 @@ def parse_inline_2011(text: str, pdf_name: str) -> dict:
             n_exp += 1
             if n >= 41:
                 n_big += 1
-        items.append(build_item(n, stem, options, answer, explanation, pdf_name))
+        items.append(build_item(n, stem, options, answer, explanation, pdf_name, 2011))
     return items, n_key, n_exp - n_big, n_big
 
 

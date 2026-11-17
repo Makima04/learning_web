@@ -472,6 +472,20 @@ export function Cs408PracticePage() {
 
           <pre className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">{item.stem}</pre>
 
+          {item.stem_images && item.stem_images.length > 0 && (
+            <div className="space-y-2">
+              {item.stem_images.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt={`第 ${item.n} 题附图 ${i + 1}/${item.stem_images!.length}`}
+                  loading="lazy"
+                  className="w-full rounded border bg-white"
+                />
+              ))}
+            </div>
+          )}
+
           {item.options && (
             <div role="group" aria-label="选项" className="grid gap-2">
               {Object.entries(item.options).map(([k, v]) => {

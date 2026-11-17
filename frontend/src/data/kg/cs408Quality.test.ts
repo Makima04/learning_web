@@ -38,19 +38,33 @@ describe("408 题库版本与数据质量", () => {
     }
   });
 
-  it("2026 回忆版已核对答案键、显式标记且不参与校准", () => {
+  it("2026 校订版（pgcode.cn）已核对答案键、按重构卷纳入校准", () => {
     const p = index.papers.find((x) => x.year === 2026);
-    expect(p?.edition).toBe("recall");
-    expect(p?.excluded_from_stats).toBe(true);
-    expect(p?.verification?.status).toBe("verified_against_source");
+    expect(p?.edition).toBe("rebuild");
+    expect(p?.excluded_from_stats).toBe(false);
+    expect(p?.verification?.status).toBe("imported_from_pgcode");
     expect(p?.verification?.answer_key_match).toBe("40/40");
     expect(p?.verification?.checked_at).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it("校准口径：2009–2011 与 2026 排除，2012–2025 纳入", () => {
+  it("校准口径：2009–2011 排除，2012–2026 纳入", () => {
     for (const p of index.papers) {
-      const shouldExclude = p.year <= 2011 || p.year === 2026;
+      const shouldExclude = p.year <= 2011;
       expect(p.excluded_from_stats, `${p.year} 校准口径不符`).toBe(shouldExclude);
+    }
+  });
+
+  it("2026 题干附图已入库且路径可解析", () => {
+    const paper = JSON.parse(readFileSync(`${pub}2026.json`, "utf-8")) as {
+      items: Array<{ n: number; stem_images?: string[] }>;
+    };
+    const withImg = paper.items.filter((i) => i.stem_images?.length);
+    expect(withImg.map((i) => i.n)).toEqual([26, 36, 37, 43, 44, 46, 47]);
+    for (const it of withImg) {
+      for (const src of it.stem_images ?? []) {
+        expect(src.startsWith("/cs408/pic/2026/"), src).toBe(true);
+        expect(existsSync(`${pub}${src.slice("/cs408/".length)}`), src).toBe(true);
+      }
     }
   });
 
