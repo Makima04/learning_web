@@ -13,11 +13,13 @@ Layout (confirmed across 328 pages, identical structure):
   - Multi-token / wrapped english (according to, air-conditioning) merge by nearest left-序号.
 
 Output:
-  words.json  -- [{index, english, senses:[{pos,cn}, ...]}, ...]  (6550 entries, index-sorted)
+  words.json  -- [{index, english, senses:[{pos,cn}, ...]}, ...]
+                 (PDF 6550 词 + scripts/oov_extra_words.json 追加的真题 OOV 扩展词)
   words.csv   -- flat: index,english,pos,cn  (one row per sense)
   report.txt  -- validation: totals, missing fields, sample spot-checks, anomalies
 """
 import pdfplumber, re, json, csv, sys
+from pathlib import Path
 from collections import defaultdict
 
 PDF = "2027考研英语红宝书（乱序版）A4默写版.pdf"
@@ -157,6 +159,30 @@ def extract_page(page, pno, anomalies):
     return page_words
 
 
+def append_extra_words(all_words):
+    """PDF 抽完后追加真题 OOV 扩展词；索引接在 6550 之后，原索引不变。"""
+    path = Path(__file__).with_name("oov_extra_words.json")
+    if not path.exists():
+        return 0
+    extras = json.loads(path.read_text(encoding="utf-8"))
+    next_index = max(w["index"] for w in all_words) + 1
+    existing = {w["english"].lower() for w in all_words}
+    added = 0
+    for item in extras:
+        english = item["english"].strip()
+        if not english or english.lower() in existing:
+            continue
+        all_words.append({
+            "index": next_index,
+            "english": english,
+            "senses": item.get("senses") or [],
+        })
+        existing.add(english.lower())
+        next_index += 1
+        added += 1
+    return added
+
+
 def main():
     all_words = []
     anomalies = []
@@ -172,6 +198,7 @@ def main():
     for w in all_words:
         seen.setdefault(w["index"], w)
     all_words = sorted(seen.values(), key=lambda w: w["index"])
+    extra_count = append_extra_words(all_words)
 
     # ---- write json ----
     with open("words.json", "w", encoding="utf-8") as f:
@@ -189,7 +216,7 @@ def main():
 
     # ---- report ----
     lines = []
-    lines.append(f"TOTAL WORDS: {len(all_words)}")
+    lines.append(f"TOTAL WORDS: {len(all_words)}  (PDF {len(all_words) - extra_count} + OOV extra {extra_count})")
     idxs = [w["index"] for w in all_words]
     lines.append(f"index range: {min(idxs)}..{max(idxs)}")
     # gaps
@@ -229,7 +256,7 @@ def main():
     with open("report.txt", "w", encoding="utf-8") as f:
         f.write(rep)
     print(rep)
-    print("\n=> wrote words.json, words.csv, report.txt")
+    print(f"\n=> wrote words.json, words.csv, report.txt (extra words: {extra_count})")
 
 
 if __name__ == "__main__":

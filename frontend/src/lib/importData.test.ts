@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { WORD_COUNT } from "@/lib/wordCount";
 import { parseImportData } from "./importData";
 
 describe("parseImportData", () => {
@@ -100,9 +101,10 @@ describe("parseImportData", () => {
     ).toThrow("卡片 1 的状态无效");
   });
 
-  it("rejects card indexes outside the 6550-word corpus", () => {
-    expect(() => parseImportData(JSON.stringify({ cards: { 6551: {} } }))).toThrow(
-      "卡片索引 6551 无效"
+  it("rejects card indexes outside the word corpus", () => {
+    const outside = WORD_COUNT + 1;
+    expect(() => parseImportData(JSON.stringify({ cards: { [outside]: {} } }))).toThrow(
+      `卡片索引 ${outside} 无效`
     );
   });
 });

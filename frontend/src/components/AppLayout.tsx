@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
+import { WORD_COUNT } from "@/lib/wordCount";
 import {
   Bookmark,
   BookOpen,
@@ -185,7 +186,7 @@ export function AppLayout() {
             {!navCollapsed && (
               <span className="min-w-0">
                 <span className="block text-base font-extrabold leading-tight">红宝书</span>
-                <span className="block text-xs font-semibold text-muted-foreground">考研词汇 6550</span>
+                <span className="block text-xs font-semibold text-muted-foreground">考研词汇 {WORD_COUNT}</span>
               </span>
             )}
           </NavLink>

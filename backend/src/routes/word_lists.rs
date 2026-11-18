@@ -14,7 +14,7 @@ use crate::error::{AppError, AppResult};
 use crate::routes::cards::user_reset_at_ms;
 use crate::state::AppState;
 
-const MAX_WORD_IDX: i32 = 6550;
+const MAX_WORD_IDX: i32 = crate::word_count::WORD_COUNT;
 const MAX_BULK: usize = 2000;
 
 #[derive(Debug, Clone, Deserialize)]

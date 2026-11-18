@@ -36,7 +36,7 @@ fn validate(command: &Completion) -> AppResult<CardState> {
             .operation_id
             .bytes()
             .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-        || !(1..=6550).contains(&command.word_idx)
+        || !(1..=crate::word_count::WORD_COUNT).contains(&command.word_idx)
         || !matches!(command.event_type.as_str(), "new" | "review")
         || command.client_at <= 0
         || date.as_deref() != Some(command.day_key.as_str())

@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概览
 
-考研英语背词应用「红宝书 · 乱序 · 6550 词」。三层结构，自底向上：
+考研英语背词应用「红宝书 · 乱序 · 6578 词」（原书 6550 + 真题 OOV 扩展 28）。三层结构，自底向上：
 
 1. **数据管线脚本** `scripts/` —— 从 PDF 抽取词库与真题；`ew_pipeline`（Rust）生成 `web/papers.js`。
 2. **后端** `backend/` —— Rust Axum + PostgreSQL，同源挂 `frontend/dist`，提供 `/api/*`。
@@ -108,7 +108,8 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- translate "The
 
 ## 常量与约定
 
-- 词库总量 6550，`window.WORDS` 条目 `[index, english, [[pos,cn],...]]`。
+- 词库总量 6578（原书 6550 + 扩展 28），`window.WORDS` 条目 `[index, english, [[pos,cn],...]]`。
+- 词库总量以 `words.json` 为准；`scripts/gen_data.py` 自动同步 `backend/src/word_count.rs` 与 `frontend/src/lib/wordCount.ts`。真题 OOV 扩展词写在 `scripts/oov_extra_words.json`，重跑 `extract_all.py` 会自动追加到原 6550 词之后。
 - 卡片主键 `(user_id, word_idx)`，`word_idx` 即 WORDS index。
 - 每日边界固定按**北京时间（UTC+8）0 点** `YYYY-MM-DD`，与设备时区无关（`lib/day.ts` 唯一口径；后端 `src/day.rs` 兜底一致）。日期平移/起点都走 `shiftDayKey` / `dayKeyStartMs`，别再写 `new Date(y, m-1, d)`。
 - 文件/注释大量中文，保持中文注释风格。

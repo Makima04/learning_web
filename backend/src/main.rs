@@ -9,6 +9,7 @@ mod rate_limit;
 mod routes;
 mod services;
 mod state;
+mod word_count;
 
 use std::net::SocketAddr;
 

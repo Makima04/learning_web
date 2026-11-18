@@ -1,5 +1,5 @@
 // words.ts —— window.WORDS / window.PAPERS 的类型化访问 + 反向索引 + PAPER_ORDER。
-// 模块级 memo：6550 词 + 8MB papers 只构建一次。
+// 模块级 memo：6578 词 + 8MB papers 只构建一次。
 import type { Paper, Passage, PaperSection, Sense, WordEntry } from "@/types/words";
 
 export function getWords(): WordEntry[] {

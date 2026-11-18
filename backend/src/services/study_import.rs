@@ -54,18 +54,18 @@ pub async fn import(pool: &PgPool, user_id: i64, snapshot: &Snapshot) -> AppResu
             .operation_id
             .bytes()
             .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-        || snapshot.cards.len() > 6550
+        || snapshot.cards.len() > crate::word_count::WORD_COUNT as usize
         || snapshot.events.len() > 200
         || snapshot.cards.iter().any(|(idx, card)| {
             idx.parse::<i32>()
-                .map_or(true, |n| !(1..=6550).contains(&n))
+                .map_or(true, |n| !(1..=crate::word_count::WORD_COUNT).contains(&n))
                 || card
                     .state
                     .as_deref()
                     .is_some_and(|state| !matches!(state, "new" | "learn" | "review"))
         })
         || snapshot.events.iter().any(|event| {
-            !(1..=6550).contains(&event.word_idx)
+            !(1..=crate::word_count::WORD_COUNT).contains(&event.word_idx)
                 || !valid_day(&event.day_key)
                 || !matches!(event.event_type.as_str(), "new" | "review" | "learn")
         })

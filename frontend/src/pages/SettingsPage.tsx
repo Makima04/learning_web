@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { WORD_COUNT } from "@/lib/wordCount";
 import * as api from "@/lib/api";
 import { useAuth } from "@/stores/auth";
 import { AdminUpdatePanel } from "@/features/system-update/AdminUpdatePanel";
@@ -1019,7 +1020,7 @@ export function SettingsPage() {
         </div>
       </div>
       <p className="pt-6 text-center text-xs text-muted-foreground">
-        红宝书 · 乱序 · 6550 词 · 版本：
+        红宝书 · 乱序 · {WORD_COUNT} 词 · 版本：
         {typeof window !== "undefined" && window.EW_VERSION ? window.EW_VERSION : "dev"}
       </p>
     </div>

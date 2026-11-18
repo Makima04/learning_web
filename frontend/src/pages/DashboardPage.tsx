@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { WORD_COUNT } from "@/lib/wordCount";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowUpRight,
@@ -314,7 +315,7 @@ export function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold">词库掌握</p>
-                <p className="mt-1 text-sm text-muted-foreground">6550 词长期积累</p>
+                <p className="mt-1 text-sm text-muted-foreground">{WORD_COUNT} 词长期积累</p>
               </div>
               <span className="text-2xl font-semibold tnum">{Math.round(knownPercent)}%</span>
             </div>

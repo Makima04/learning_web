@@ -12,6 +12,21 @@ const WEAK_STEMS: Set<string> = new Set(
   )
 );
 
+/** 常见人名/姓氏：大写出现时不走词形还原，避免 James→jam、Jobs→job。 */
+const PROPER_NAMES: Set<string> = new Set(
+  `james john peter michael david robert william mary linda george thomas charles joseph paul bill steve jack tom sam ben chris daniel matthew andrew joshua ryan kevin brian jason eric adam scott frank henry jobs brooks smith jones miller davis wilson taylor`.split(
+    /\s+/
+  )
+);
+
+function isCapitalizedSurface(surface: string): boolean {
+  return /^[A-Z]/.test(String(surface ?? "").trim());
+}
+
+function isProperNameSurface(surface: string, normalized: string): boolean {
+  return isCapitalizedSurface(surface) && PROPER_NAMES.has(normalized);
+}
+
 function isConsonant(ch: string | undefined): boolean {
   return !!ch && CONSONANT.test(ch);
 }
@@ -30,12 +45,6 @@ export function normalizeSurface(surface: string): string {
   return s;
 }
 
-function pushStem(out: string[], seen: Set<string>, stem: string) {
-  if (!stem || seen.has(stem)) return;
-  seen.add(stem);
-  out.push(stem);
-}
-
 /** 去辅音双写：running → run、hopped → hop */
 function undoubleFinal(stem: string): string | null {
   if (stem.length < 2) return null;
@@ -45,44 +54,301 @@ function undoubleFinal(stem: string): string | null {
   return null;
 }
 
-export function inflectionStems(low: string): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  pushStem(out, seen, low);
+// 与 backend/src/bin/ew_pipeline.rs 的 build_lookup / lemma 规则保持同一口径。
+const SPELLING_PAIRS: ReadonlyArray<readonly [string, string]> = [
+  ["behavior", "behaviour"],
+  ["labor", "labour"],
+  ["favor", "favour"],
+  ["color", "colour"],
+  ["honor", "honour"],
+  ["humor", "humour"],
+  ["neighbor", "neighbour"],
+  ["rumor", "rumour"],
+  ["vapor", "vapour"],
+  ["flavor", "flavour"],
+  ["center", "centre"],
+  ["theater", "theatre"],
+  ["defense", "defence"],
+  ["offense", "offence"],
+  ["license", "licence"],
+  ["program", "programme"],
+  ["catalog", "catalogue"],
+  ["dialog", "dialogue"],
+  ["analog", "analogue"],
+  ["traveler", "traveller"],
+  ["traveling", "travelling"],
+  ["traveled", "travelled"],
+  ["modeling", "modelling"],
+  ["modeled", "modelled"],
+  ["canceled", "cancelled"],
+  ["canceling", "cancelling"],
+  ["labeled", "labelled"],
+  ["labeling", "labelling"],
+  ["signaled", "signalled"],
+  ["signaling", "signalling"],
+  ["fulfill", "fulfil"],
+  ["enroll", "enrol"],
+  ["skillful", "skilful"],
+  ["willful", "wilful"],
+  ["aging", "ageing"],
+  ["judgment", "judgement"],
+  ["acknowledgment", "acknowledgement"],
+  ["email", "e-mail"],
+  ["online", "on-line"],
+  ["wellbeing", "well-being"],
+  ["toward", "towards"],
+  ["afterward", "afterwards"],
+  ["upward", "upwards"],
+  ["downward", "downwards"],
+  ["forward", "forwards"],
+  ["backward", "backwards"],
+  ["homeward", "homewards"],
+  ["outward", "outwards"],
+  ["inward", "inwards"],
+  ["westward", "westwards"],
+  ["eastward", "eastwards"],
+  ["northward", "northwards"],
+  ["southward", "southwards"],
+  ["among", "amongst"],
+  ["amid", "amidst"],
+  ["while", "whilst"],
+  ["anemia", "anaemia"],
+  ["estrogen", "oestrogen"],
+  ["pediatric", "paediatric"],
+  ["encyclopedia", "encyclopaedia"],
+  ["medieval", "mediaeval"],
+];
 
-  pushStem(out, seen, low.replace(/ies$/, "y"));
-  pushStem(out, seen, low.replace(/es$/, ""));
-  pushStem(out, seen, low.replace(/s$/, ""));
+const SPELLING_SUFFIXES: ReadonlyArray<readonly [string, string]> = [
+  ["isation", "ization"],
+  ["ization", "isation"],
+  ["ising", "izing"],
+  ["izing", "ising"],
+  ["ised", "ized"],
+  ["ized", "ised"],
+  ["ises", "izes"],
+  ["izes", "ises"],
+  ["ise", "ize"],
+  ["ize", "ise"],
+  ["ysing", "yzing"],
+  ["yzing", "ysing"],
+  ["ysed", "yzed"],
+  ["yzed", "ysed"],
+  ["yse", "yze"],
+  ["yze", "yse"],
+  ["ously", "ous"],
+  ["iously", "ious"],
+  ["fully", "ful"],
+  ["lessly", "less"],
+  ["ially", "ial"],
+  ["cial", "ce"],
+  ["tial", "ce"],
+  ["ogue", "og"],
+  ["og", "ogue"],
+  ["ence", "ense"],
+  ["ense", "ence"],
+  ["our", "or"],
+  ["or", "our"],
+  ["re", "er"],
+  ["er", "re"],
+  ["ll", "l"],
+  ["l", "ll"],
+  ["ae", "e"],
+  ["oe", "e"],
+];
+
+const DERIV_SUFFIXES: ReadonlyArray<readonly [string, readonly string[]]> = [
+  ["istically", ["istic", "ism"]],
+  ["istical", ["istics"]],
+  ["ically", ["ic", "y"]],
+  ["ational", ["ate", ""]],
+  ["ability", ["able"]],
+  ["ibility", ["ible"]],
+  ["ivity", ["ive"]],
+  ["iatrist", ["iatry"]],
+  ["lysis", ["lyse", "lyze"]],
+  ["izing", ["ize", "eous"]],
+  ["ising", ["ise", "eous"]],
+  ["ulsive", ["el"]],
+  ["atist", ["a"]],
+  ["thy", ["th"]],
+  ["uly", ["ue"]],
+  ["ry", ["", "e"]],
+  ["ization", ["ize", "eous"]],
+  ["isation", ["ise", "eous"]],
+  ["ification", ["ify"]],
+  ["ation", ["", "e", "ate"]],
+  ["ition", ["", "e", "ite"]],
+  ["ution", ["", "e", "ute"]],
+  ["ceptive", ["ceive"]],
+  ["ception", ["ceive"]],
+  ["vention", ["vene"]],
+  ["ential", ["ence", "ent"]],
+  ["ative", ["ate", "e"]],
+  ["itive", ["ition"]],
+  ["sive", ["de"]],
+  ["atic", ["acy"]],
+  ["ction", ["ct"]],
+  ["ssion", ["ss"]],
+  ["sion", ["d", "de", "se"]],
+  ["iness", ["y"]],
+  ["ency", ["ent"]],
+  ["ancy", ["ant"]],
+  ["ent", ["", "e"]],
+  ["ant", ["", "e"]],
+  ["ment", ["", "e"]],
+  ["ness", ["", "e"]],
+  ["ity", ["", "e", "y", "ous", "al"]],
+  ["ance", ["", "e", "ant", "y"]],
+  ["ence", ["", "e", "ent"]],
+  ["able", ["", "e", "y"]],
+  ["ible", ["", "e", "y"]],
+  ["ial", ["", "e"]],
+  ["ally", [""]],
+  ["ily", ["y"]],
+  ["ably", ["able"]],
+  ["ibly", ["ible"]],
+  ["ly", ["", "e", "le", "y"]],
+  ["ory", ["", "e", "ate"]],
+  ["ary", ["", "e"]],
+  ["ate", ["", "e"]],
+  ["ive", ["", "e"]],
+  ["ous", ["", "e"]],
+  ["ual", ["", "e"]],
+  ["ful", [""]],
+  ["less", [""]],
+  ["ical", ["ic", "y"]],
+  ["al", ["", "e"]],
+  ["ic", ["", "e"]],
+  ["ish", [""]],
+  ["ize", ["", "e", "y"]],
+  ["ise", ["", "e", "y"]],
+  ["ify", ["", "e"]],
+  ["en", ["", "e"]],
+  ["er", ["", "e", "y"]],
+  ["itor", ["e", "it"]],
+  ["ator", ["ate", "at"]],
+  ["utor", ["ute", "ut"]],
+  ["or", ["", "e"]],
+  ["ery", ["", "e"]],
+  ["ist", ["y", "ive", ""]],
+  ["icism", ["ical"]],
+  ["ism", ["istic", "ist", "ical", ""]],
+  ["age", ["", "e", "ager"]],
+  ["ship", [""]],
+  ["hood", [""]],
+  ["ion", ["", "e", "t"]],
+  ["acy", ["ate", ""]],
+  ["y", ["", "e"]],
+];
+
+const PREFIXES: readonly string[] = [
+  "counter", "inter", "trans", "under", "super", "multi", "semi", "anti", "over",
+  "fore", "with", "micro", "macro", "hyper", "ultra", "auto", "extra", "intra",
+  "meta", "para", "peri", "poly", "mono", "non", "mis", "pre", "post", "pro",
+  "sub", "bio", "co", "de", "dis", "en", "em", "in", "im", "re", "un", "up",
+  "down", "out", "well", "self", "bi", "tri", "uni", "ir", "il",
+];
+
+function spellingCandidates(low: string): string[] {
+  const out = new Set<string>();
+  for (const [a, b] of SPELLING_PAIRS) {
+    for (const [from, to] of [[a, b], [b, a]] as Array<[string, string]>) {
+      if (low.startsWith(from)) out.add(`${to}${low.slice(from.length)}`);
+    }
+  }
+  for (const [from, to] of SPELLING_SUFFIXES) {
+    if (low.endsWith(from) && low.length > from.length) {
+      out.add(`${low.slice(0, -from.length)}${to}`);
+    }
+  }
+  out.delete(low);
+  return [...out];
+}
+
+function collectStems(
+  low: string,
+  out: Set<string>,
+  seen: Set<string>,
+  depth: number
+): void {
+  if (!low || depth > 4 || seen.has(low)) return;
+  seen.add(low);
+  out.add(low);
+
+  for (const variant of spellingCandidates(low)) {
+    collectStems(variant, out, seen, depth + 1);
+  }
+
+  const stems = new Set<string>();
+  if (low.endsWith("ies")) stems.add(`${low.slice(0, -3)}y`);
+  if (low.endsWith("es")) stems.add(low.slice(0, -2));
+  if (low.endsWith("s") && !low.endsWith("ss")) stems.add(low.slice(0, -1));
 
   if (low.endsWith("ing") && low.length > 4) {
     const base = low.slice(0, -3);
-    pushStem(out, seen, base);
-    pushStem(out, seen, `${base}e`); // hoping → hope, using → use
+    stems.add(base);
+    stems.add(`${base}e`); // hoping → hope, using → use
     const undoubled = undoubleFinal(base);
-    if (undoubled) pushStem(out, seen, undoubled);
+    if (undoubled) stems.add(undoubled);
   }
-
   if (low.endsWith("ied") && low.length > 3) {
-    pushStem(out, seen, low.replace(/ied$/, "y"));
+    stems.add(`${low.slice(0, -3)}y`);
   } else if (low.endsWith("ed") && low.length > 3) {
     const base = low.slice(0, -2);
-    pushStem(out, seen, base);
-    pushStem(out, seen, `${base}e`); // hoped → hope, noted → note
+    stems.add(base);
+    stems.add(`${base}e`); // hoped → hope, noted → note
     const undoubled = undoubleFinal(base);
-    if (undoubled) pushStem(out, seen, undoubled);
+    if (undoubled) stems.add(undoubled);
+  }
+  if (low.endsWith("est") && low.length > 5) {
+    const base = low.slice(0, -3);
+    stems.add(base);
+    stems.add(`${base}e`);
+    const undoubled = undoubleFinal(base);
+    if (undoubled) stems.add(undoubled);
+  }
+  if (low.endsWith("er") && low.length > 4) {
+    const base = low.slice(0, -2);
+    stems.add(base);
+    stems.add(`${base}e`);
+    const undoubled = undoubleFinal(base);
+    if (undoubled) stems.add(undoubled);
   }
 
-  pushStem(out, seen, low.replace(/ily$/, "y"));
-  pushStem(out, seen, low.replace(/ely$/, "e"));
-  pushStem(out, seen, low.replace(/ly$/, ""));
-  pushStem(out, seen, low.replace(/ness$/, ""));
-  pushStem(out, seen, low.replace(/ment$/, ""));
-  pushStem(out, seen, low.replace(/tion$/, "te"));
-  pushStem(out, seen, low.replace(/sion$/, "d"));
-  pushStem(out, seen, low.replace(/ity$/, ""));
-  pushStem(out, seen, low.replace(/ful$/, ""));
-  pushStem(out, seen, low.replace(/less$/, ""));
-  return out;
+  for (const [suffix, reps] of DERIV_SUFFIXES) {
+    if (!low.endsWith(suffix) || low.length <= suffix.length + 2) continue;
+    const stem = low.slice(0, -suffix.length);
+    for (const rep of reps) stems.add(`${stem}${rep}`);
+    if (stem.endsWith("i")) stems.add(`${stem.slice(0, -1)}y`);
+  }
+  for (const prefix of PREFIXES) {
+    if (low.startsWith(prefix) && low.length > prefix.length + 3) {
+      stems.add(low.slice(prefix.length));
+    }
+  }
+
+  if (low.includes("-")) {
+    for (const part of low.split("-")) {
+      if (part.length >= 2) stems.add(part);
+    }
+  } else if (low.length >= 6) {
+    for (let i = 3; i <= low.length - 3; i += 1) {
+      stems.add(low.slice(0, i));
+      stems.add(low.slice(i));
+    }
+  }
+
+  for (const stem of stems) {
+    if (stem && stem !== low) collectStems(stem, out, seen, depth + 1);
+  }
+}
+
+/** 词形候选：exact 开头，随后是拼写变体、屈折、派生、前缀、复合词（递归）。 */
+export function inflectionStems(low: string): string[] {
+  const out = new Set<string>();
+  collectStems(low, out, new Set(), 0);
+  return [low, ...[...out].filter((stem) => stem !== low)];
 }
 
 /** 词库命中：exact 优先；否则实词优先、同档取最长 */
@@ -115,13 +381,16 @@ function pickLemma(normalized: string, map: Map<string, WordEntry>): string | nu
 export function restoreInflection(surface: string): string {
   const normalized = normalizeSurface(surface);
   if (!normalized) return String(surface ?? "").toLowerCase();
-  return pickLemma(normalized, getWordByEn()) ?? normalized;
+  const map = getWordByEn();
+  if (!map.has(normalized) && isProperNameSurface(surface, normalized)) return normalized;
+  return pickLemma(normalized, map) ?? normalized;
 }
 
 export function lookupWord(surface: string): WordEntry | null {
   const normalized = normalizeSurface(surface);
   if (!normalized) return null;
   const map = getWordByEn();
+  if (!map.has(normalized) && isProperNameSurface(surface, normalized)) return null;
   const lemma = pickLemma(normalized, map);
   return lemma ? (map.get(lemma) ?? null) : null;
 }

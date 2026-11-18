@@ -1,6 +1,6 @@
 # english_web · 考研英语背词应用
 
-红宝书 · 乱序 · 6550 词。三层结构：数据管线脚本 → **Rust + PostgreSQL** 后端 → React 前端（同源挂载）。
+红宝书 · 乱序 · 6578 词（原书 6550 + 真题 OOV 扩展 28）。三层结构：数据管线脚本 → **Rust + PostgreSQL** 后端 → React 前端（同源挂载）。
 
 **前端**：`frontend/`（Vite + React 18 + TS + Tailwind + Zustand）。`web/` 仅存放生成的 `data.js` / `papers.js`。
 

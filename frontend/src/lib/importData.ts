@@ -1,4 +1,5 @@
 import type { Card, CardState } from "@/lib/srs";
+import { WORD_COUNT } from "@/lib/wordCount";
 import type {
   JournalCategory,
   JournalEntry,
@@ -113,11 +114,11 @@ function card(value: unknown, index: number): Card {
 function cards(value: unknown): Record<number, Card> {
   const source = record(value, "卡片数据");
   const entries = Object.entries(source);
-  if (entries.length > 6550) throw new Error("卡片数量超过词库上限");
+  if (entries.length > WORD_COUNT) throw new Error("卡片数量超过词库上限");
   const result: Record<number, Card> = {};
   for (const [key, value] of entries) {
     const index = Number(key);
-    if (!Number.isSafeInteger(index) || index < 1 || index > 6550) {
+    if (!Number.isSafeInteger(index) || index < 1 || index > WORD_COUNT) {
       throw new Error(`卡片索引 ${key} 无效`);
     }
     result[index] = card(value, index);

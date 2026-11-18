@@ -36,6 +36,35 @@ for (const [en, idx] of [
   add(en, idx);
 }
 
+// 派生 / 拼写变体 / 复合词测试词条
+for (const [en, idx] of [
+  ["research", 20],
+  ["develop", 21],
+  ["emotion", 22],
+  ["probable", 23],
+  ["happy", 24],
+  ["history", 25],
+  ["weak", 26],
+  ["easy", 27],
+  ["necessary", 28],
+  ["agree", 29],
+  ["equal", 30],
+  ["health", 31],
+  ["policy", 32],
+  ["make", 33],
+  ["short", 34],
+  ["term", 35],
+  ["behaviour", 36],
+  ["towards", 37],
+  ["e-mail", 38],
+  ["labour", 39],
+  ["centre", 40],
+  ["programme", 41],
+  ["jam", 42],
+] as const) {
+  add(en, idx);
+}
+
 function lemmaOf(surface: string): string | null {
   const hit = lookupWord(surface);
   return hit ? hit[1] : null;
@@ -115,5 +144,44 @@ describe("restoreInflection / lookupWord", () => {
     for (const s of surfaces) {
       expect(restoreInflection(s)).toBe(lemmaOf(s));
     }
+  });
+});
+
+describe("派生 / 拼写变体 / 复合词还原", () => {
+  it("派生词回退到词库原形", () => {
+    expect(lemmaOf("researchers")).toBe("research");
+    expect(lemmaOf("development")).toBe("develop");
+    expect(lemmaOf("emotional")).toBe("emotion");
+    expect(lemmaOf("probably")).toBe("probable");
+    expect(lemmaOf("happiness")).toBe("happy");
+    expect(lemmaOf("historically")).toBe("history");
+    expect(lemmaOf("weakness")).toBe("weak");
+    expect(lemmaOf("easily")).toBe("easy");
+    expect(lemmaOf("unnecessary")).toBe("necessary");
+    expect(lemmaOf("disagree")).toBe("agree");
+    expect(lemmaOf("inequality")).toBe("equal");
+  });
+
+  it("英美拼写与连字符写法", () => {
+    expect(lemmaOf("behavior")).toBe("behaviour");
+    expect(lemmaOf("behaviors")).toBe("behaviour");
+    expect(lemmaOf("toward")).toBe("towards");
+    expect(lemmaOf("email")).toBe("e-mail");
+    expect(lemmaOf("labor")).toBe("labour");
+    expect(lemmaOf("center")).toBe("centre");
+    expect(lemmaOf("centers")).toBe("centre");
+    expect(lemmaOf("program")).toBe("programme");
+  });
+
+  it("连字符 / 拼接复合词拆分", () => {
+    expect(lemmaOf("healthcare")).toBe("health");
+    expect(lemmaOf("policymakers")).toBe("policy");
+    expect(lemmaOf("short-term")).toBe("short");
+  });
+
+  it("大写人名不还原成同形普通词", () => {
+    expect(lemmaOf("James")).toBeNull();
+    expect(restoreInflection("James")).toBe("james");
+    expect(lemmaOf("james")).toBe("jam");
   });
 });
