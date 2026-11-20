@@ -25,6 +25,7 @@ import type { Math1TrainingMatch } from "@/lib/kg/math1Analysis";
 import { hydratePracticeItems } from "@/lib/kg/catalogLoad";
 import { applyWangdaoPractice, isCollected, toggleWangdaoCollect } from "@/lib/kg/wangdaoPractice";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
+import { loadMathHandouts, type MathHandout } from "@/lib/mathHandouts";
 import { useAuth } from "@/stores/auth";
 import { useKgProgress } from "@/stores/kgProgress";
 import { useJournal } from "@/stores/journal";
@@ -327,6 +328,27 @@ export function ReviewPriorityPage() {
   const marks = useKgProgress((s) => s.itemMarks);
   const attempts = useKgProgress((s) => s.attempts);
   const load = useKgProgress((s) => s.load);
+  const retireItem = useKgProgress((s) => s.retireItem);
+  const unretireItem = useKgProgress((s) => s.unretireItem);
+  const [mathHandouts, setMathHandouts] = useState<MathHandout[]>([]);
+  useEffect(() => {
+    if (subject !== "math") return;
+    let alive = true;
+    loadMathHandouts().then((list) => { if (alive) setMathHandouts(list); }).catch(() => {});
+    return () => { alive = false; };
+  }, [subject]);
+  const handoutByKp = useMemo(() => {
+    const map = new Map<string, MathHandout>();
+    for (const h of mathHandouts) {
+      if (!map.has(h.primaryKpId)) map.set(h.primaryKpId, h);
+    }
+    for (const h of mathHandouts) {
+      for (const sec of h.secondaryKpIds ?? []) {
+        if (!map.has(sec)) map.set(sec, h);
+      }
+    }
+    return map;
+  }, [mathHandouts]);
   const loggedIn = useAuth((s) => s.loggedIn);
   const userId = useAuth((s) => s.user?.id);
   const entries = useJournal((s) => s.entries);
@@ -413,11 +435,13 @@ export function ReviewPriorityPage() {
     [dataset, states, marks, items, kind, attempts, trainingNow, extraKpIds]
   );
   const pointsPerPaper = useMemo(() => kindPointsPerPaper(dataset.items, kind), [dataset, kind]);
-  const roi = useMemo(() => computeRoi(topics, pointsPerPaper), [topics, pointsPerPaper]);
+  const bookTopics = useMemo(() => topics.filter((t) => t.book === book), [topics, book]);
+  // 按当前分科（高数/线代/概率）独立归一化，避免线代、概率的性价比分被高数最大值压扁。
+  const roi = useMemo(() => computeRoi(bookTopics, pointsPerPaper), [bookTopics, pointsPerPaper]);
   const ranked = useMemo(() => {
-    const sorted = sortReviewTopics(topics.filter((t) => t.book === book), order);
+    const sorted = sortReviewTopics(bookTopics, order);
     return trackApplicable ? filterCs408TrackTopics(sorted, track) : sorted;
-  }, [topics, book, order, trackApplicable, track]);
+  }, [bookTopics, order, trackApplicable, track]);
   const selected = ranked.find((t) => t.kpId === params.get("kp")) ?? ranked[0];
   const top3 = ranked.slice(0, 3);
 
@@ -590,19 +614,46 @@ export function ReviewPriorityPage() {
     setNotice(`已完成 ${done} 道，图谱与复习顺序已更新。`);
   }
 
+  function retireActive() {
+    if (!active) return;
+    const rec = marks.find((m) => m.itemId === active.id);
+    if (rec?.retired) {
+      unretireItem(active.id);
+      setNotice("已将该题移回复习队列。");
+      return;
+    }
+    const primaryKpId = active.kp_ids[0] ?? selected?.kpId;
+    if (!primaryKpId) return;
+    retireItem({ itemId: active.id, primaryKpId, secondaryKpIds: active.kp_ids.slice(1) });
+    const nextIndex = queueIndex + 1;
+    if (nextIndex < queue.length) {
+      setQueueIndex(nextIndex);
+      setActive(queue[nextIndex]);
+      setNotice(`已斩掉该题，自动进入第 ${nextIndex + 1} / ${queue.length} 题`);
+      return;
+    }
+    setActive(null);
+    setQueue([]);
+    setQueueIndex(0);
+    setNotice("已斩掉该题，后续不再重复推荐。");
+  }
+
   const visibleRows = expanded ? ranked : ranked.slice(0, 8);
   const queueList = showAllTraining ? allTraining : training;
   const queueMinutes = queueList.reduce((sum, t) => sum + practiceMinutes(t.item.kind ?? kind), 0);
   const drawerRoi = selected ? roi.get(selected.kpId) : undefined;
+  const activeMarkRec = active ? marks.find((m) => m.itemId === active.id) : undefined;
   // 作答卡的共享属性：宽屏给左侧作答台，窄屏留在抽屉里，两处只有一份在挂载。
   const practiceProps = active ? {
     item: active,
     nextItem: queue[queueIndex + 1],
     index: queueIndex,
     total: queue.length || 1,
-    mark: marks.find((m) => m.itemId === active.id)?.mark,
+    mark: activeMarkRec?.mark,
     collected: isCollected(active.id),
+    retired: Boolean(activeMarkRec?.retired),
     onCollect: () => toggleWangdaoCollect(active, !isCollected(active.id)),
+    onRetire: retireActive,
     onMark: markActive,
     onExit: () => { setActive(null); setQueue([]); setQueueIndex(0); setExpand(false); },
   } : null;
@@ -697,9 +748,9 @@ export function ReviewPriorityPage() {
       </div>
 
       <div className="mx-auto max-w-6xl space-y-5 p-4 pb-16 md:p-6">
-        <Link to={`/review-priority/knowledge?${new URLSearchParams({ subject, kind, order })}`} className="flex items-center gap-3 rounded-xl border border-primary/30 bg-accent/40 px-4 py-3 text-primary hover:bg-accent/70">
+        <Link to={subject === "math" ? "/math-handouts" : `/review-priority/knowledge?${new URLSearchParams({ subject, kind, order })}`} className="flex items-center gap-3 rounded-xl border border-primary/30 bg-accent/40 px-4 py-3 text-primary hover:bg-accent/70">
           <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
-          <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{subject === "math" ? `数学知识复习 · ${KNOWLEDGE_KP_COUNT.math} 个考点` : `408知识复习 · ${KNOWLEDGE_KP_COUNT.cs408} 个考点`}</span><span className="mt-1 block text-xs text-muted-foreground">{subject === "math" ? "高数、线代、概率统计 · 公式与完整演算" : "数据结构、计组、操作系统、计网 · 原理与过程推演"}</span></span>
+          <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{subject === "math" ? `考研数学一手稿 · ${mathHandouts.length || 46} 份讲义（覆盖全部 23 章）` : `408知识复习 · ${KNOWLEDGE_KP_COUNT.cs408} 个考点`}</span><span className="mt-1 block text-xs text-muted-foreground">{subject === "math" ? "高数、线代、概率统计 · 判别口诀、真题与 880 逐题精讲" : "数据结构、计组、操作系统、计网 · 原理与过程推演"}</span></span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
         </Link>
         {algoTrackActive ? (
@@ -770,7 +821,13 @@ export function ReviewPriorityPage() {
                       <Play className="h-3 w-3" />{subject === "cs408" ? "开始检验" : starter ? "直接练题" : "暂无题"}
                     </Button>
                   </div>
-                  {KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
+                  {subject === "math" && handoutByKp.get(topic.kpId) ? (
+                    <Link to={`/math-handouts/${handoutByKp.get(topic.kpId)!.slug}`} className="mt-3 inline-flex items-center gap-1.5 border-t border-border/60 pt-2.5 text-xs font-bold text-primary hover:underline">
+                      <BookOpen className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">手稿精讲 · {handoutByKp.get(topic.kpId)!.title}</span>
+                      <ArrowRight className="ml-auto h-3 w-3 shrink-0" aria-hidden="true" />
+                    </Link>
+                  ) : KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
                     <Link to={knowledgeReviewPath(topic.kpId, params.toString())} className="mt-3 inline-flex items-center gap-1.5 border-t border-border/60 pt-2.5 text-xs font-bold text-primary hover:underline">
                       <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />知识模板 · 先学知识与解题路线<ArrowRight className="ml-auto h-3 w-3" aria-hidden="true" />
                     </Link>
@@ -828,7 +885,16 @@ export function ReviewPriorityPage() {
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-sm font-bold">{topic.name}</span>
                         <Status topic={topic} plan={templatePlans.get(topic.kpId)} />
-                        {KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
+                        {subject === "math" && handoutByKp.get(topic.kpId) ? (
+                          <Link
+                            to={`/math-handouts/${handoutByKp.get(topic.kpId)!.slug}`}
+                            onClick={(event) => event.stopPropagation()}
+                            onKeyDown={(event) => event.stopPropagation()}
+                            className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-bold text-primary hover:bg-primary/20"
+                          >
+                            <BookOpen className="h-3 w-3" aria-hidden="true" />手稿精讲
+                          </Link>
+                        ) : KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
                           <Link
                             to={knowledgeReviewPath(topic.kpId, params.toString())}
                             onClick={(event) => event.stopPropagation()}
@@ -988,7 +1054,13 @@ export function ReviewPriorityPage() {
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
               {algoTrackActive && algoGroup && <AlgoGroupDetail group={algoGroup} onPractice={(list, at) => void openPractice(list, at)} />}
               {!algoTrackActive && (<>
-              {KNOWLEDGE_REVIEW_TOPICS[selected.kpId] && (
+              {subject === "math" && handoutByKp.get(selected.kpId) ? (
+                <Link to={`/math-handouts/${handoutByKp.get(selected.kpId)!.slug}`} className="flex items-start gap-3 rounded-xl border-2 border-primary/30 bg-accent/50 p-3 transition-colors hover:border-primary/60">
+                  <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  <span className="min-w-0 flex-1"><span className="block text-sm font-bold">先精读数学手稿：{handoutByKp.get(selected.kpId)!.title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">含判别口诀、解题路线、真题与李林 880 逐题精讲（支持斩题同步）</span></span>
+                  <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                </Link>
+              ) : KNOWLEDGE_REVIEW_TOPICS[selected.kpId] && (
                 <Link to={knowledgeReviewPath(selected.kpId, params.toString())} className="flex items-start gap-3 rounded-xl border-2 border-primary/30 bg-accent/50 p-3 transition-colors hover:border-primary/60">
                   <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   <span className="min-w-0 flex-1"><span className="block text-sm font-bold">先复习知识与解题路线</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{KNOWLEDGE_REVIEW_TOPICS[selected.kpId].summary}</span></span>

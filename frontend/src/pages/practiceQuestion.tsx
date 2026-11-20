@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Check, Clock3 } from "lucide-react";
+import { BookOpen, Check, Clock3, Scissors } from "lucide-react";
 import { prefetchQuestionMedia } from "@/lib/kg/catalogLoad";
 import { canRevealAnswer } from "@/lib/kg/explain";
 import type { MarkLevel } from "@/lib/kg/types";
@@ -107,8 +107,10 @@ export function PracticeQuestionCard({
   total,
   mark,
   collected,
+  retired = false,
   onMark,
   onCollect,
+  onRetire,
   onExit,
   size = "compact",
 }: {
@@ -118,8 +120,10 @@ export function PracticeQuestionCard({
   total: number;
   mark?: MarkLevel;
   collected: boolean;
+  retired?: boolean;
   onMark: (m: MarkLevel) => void;
   onCollect: () => void;
+  onRetire?: () => void;
   onExit: () => void;
   /** large：大屏作答台，题面放大、留白加宽 */
   size?: "compact" | "large";
@@ -214,20 +218,39 @@ export function PracticeQuestionCard({
               {m.label}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={onCollect}
-            className={cn(
-              "ml-auto inline-flex items-center gap-1 rounded-md border text-sm",
-              large ? "px-4 py-2" : "px-3 py-1.5",
-              collected
-                ? "border-destructive/40 bg-destructive/10 text-ink-danger"
-                : "text-muted-foreground hover:bg-muted"
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {onRetire && (
+              <button
+                type="button"
+                onClick={onRetire}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md border text-sm",
+                  large ? "px-3.5 py-2" : "px-3 py-1.5",
+                  retired
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+                title={retired ? "点击移回复习队列" : "永久过关并移出后续复习推荐"}
+              >
+                <Scissors className="h-4 w-4" />
+                {retired ? "已斩（移回）" : "斩掉"}
+              </button>
             )}
-          >
-            {collected ? <Check className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-            {collected ? "设为永久学会" : "加入复习计划"}
-          </button>
+            <button
+              type="button"
+              onClick={onCollect}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md border text-sm",
+                large ? "px-4 py-2" : "px-3 py-1.5",
+                collected
+                  ? "border-destructive/40 bg-destructive/10 text-ink-danger"
+                  : "text-muted-foreground hover:bg-muted"
+              )}
+            >
+              {collected ? <Check className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+              {collected ? "设为永久学会" : "加入复习计划"}
+            </button>
+          </div>
         </div>
       </CardContent>
     </Card>

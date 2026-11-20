@@ -198,7 +198,11 @@ export function MathHandoutsPage() {
             mod.name.toLowerCase().includes(q) ||
             mod.kps.some((k) => k.name.toLowerCase().includes(q));
 
-          const coveredKpIds = new Set(rawRows.map((r) => r.handout.primaryKpId));
+          const coveredKpIds = new Set<string>();
+          for (const r of rawRows) {
+            coveredKpIds.add(r.handout.primaryKpId);
+            for (const sec of r.handout.secondaryKpIds ?? []) coveredKpIds.add(sec);
+          }
           const missingKps = mod.kps.filter((k) => !coveredKpIds.has(k.id));
 
           return {

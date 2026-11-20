@@ -130,14 +130,14 @@ export function buildReviewTopics(
     const recentMarks = kindMarks.slice(0, 10);
     const sampleWeight = recentMarks.reduce((sum, _, i) => sum + 1 / (i + 1), 0);
     const practiceConfidence = sampleWeight ? recentMarks.reduce((sum, m, i) => sum
-      + (m.mark === "pass" ? .9 : m.mark === "fuzzy" ? .4 : .1) / (i + 1), 0) / sampleWeight : null;
+      + ((m.retired || m.mark === "pass") ? .9 : m.mark === "fuzzy" ? .4 : .1) / (i + 1), 0) / sampleWeight : null;
     // 有当前题型记录时优先使用它；图谱只作共同基础参考，不把大题表现冒充选择/填空表现。
     let confidence = practiceConfidence === null ? graphConfidence
       : graphConfidence === null ? practiceConfidence : .7 * practiceConfidence + .3 * graphConfidence;
     const confidenceSource: Math1Topic["confidenceSource"] = practiceConfidence !== null ? "kind"
       : graphConfidence !== null ? "graph" : "unknown";
     let status: Math1Topic["status"] = confidence === null ? "unknown"
-      : (kindMarks[0]?.mark === "fail" || (confidenceSource === "graph" && st?.status === "weak") || confidence < .35) ? "weak"
+      : ((kindMarks[0]?.mark === "fail" && !kindMarks[0]?.retired) || (confidenceSource === "graph" && st?.status === "weak") || confidence < .35) ? "weak"
       : confidence < .8 ? "learning" : "stable";
     const diagnostic = found.book.subject === "cs408"
       ? buildCs408Diagnostic({ kpId, kind, questions }, catalog, marks, attempts, now) : undefined;
@@ -206,6 +206,7 @@ export function matchReviewTraining(
   waitingIds: ReadonlySet<string> = new Set(),
   expand = false,
 ): Math1TrainingMatch[] {
+  const markRecordMap = new Map(marks.map((m) => [m.itemId, m]));
   const markMap = new Map(marks.map((m) => [m.itemId, m.mark]));
   const needsFoundation = new Set(topic.prerequisites.filter((kpId) => {
     const state = states[kpId];
@@ -219,6 +220,7 @@ export function matchReviewTraining(
     // 包括补基础也保持当前题型，不在选择/填空页静默推荐大题。
     if (item.kind !== topic.kind) continue;
     if (!expand && item.diagnostic_eligible === false) continue;
+    if (markRecordMap.get(item.id)?.retired) continue;
     if (waitingIds.has(item.id) && !dueIds.has(item.id)) continue;
     if (markMap.get(item.id) === "pass" && !dueIds.has(item.id)) continue;
     const sameTopic = item.kp_ids.includes(topic.kpId);
