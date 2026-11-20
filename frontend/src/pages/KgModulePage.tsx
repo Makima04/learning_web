@@ -1,7 +1,10 @@
 // 模块学习：考点列表。408 刷王道；数学按 880 章，李林880 与 张宇1000 分开刷。
 import { useEffect, useMemo } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
+import { Route } from "lucide-react";
 import { getBook, getModule, findKp } from "@/data/kg";
+import { routeChapterById } from "@/data/kg/mathRouteGuides";
+import { routeChapterPath } from "@/lib/kg/mathRoute";
 import { moduleProgress } from "@/lib/kg/progress";
 import { countKpDrill, countPoolDrill } from "@/lib/kg/wangdao408";
 import { itemsForSource, MATH_BOOK_SOURCES, useDrillCatalog } from "@/lib/kg/mathPractice";
@@ -48,6 +51,7 @@ export function KgModulePage() {
   const mod = getModule(bookId as BookId, moduleId);
   const hasDrill = book?.subject === "cs408" || book?.subject === "math";
   const isMath = book?.subject === "math";
+  const routeGuide = isMath && mod ? routeChapterById(mod.id) : undefined;
   const prog = useMemo(
     () => moduleProgress(bookId as BookId, moduleId, states),
     [bookId, moduleId, states]
@@ -99,6 +103,11 @@ export function KgModulePage() {
                 : "点进考点：新学是还没做过的题，复习是错题集里今天到期的。不会/模糊或收藏会进错题集，按 1/3/7/14 天提醒。"
               : `标记已学后，本章会作为一张大卡片进入「学习日志」（明天起提醒，每天最多 ${kgChapterLimit} 章）；点进去复盘各知识点，会回写掌握度`}
           </p>
+          {routeGuide && (
+            <Link to={routeChapterPath(routeGuide.moduleId)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+              <Route className="h-3.5 w-3.5" aria-hidden="true" />本章解题路线：{routeGuide.rows.length} 种起手式
+            </Link>
+          )}
         </div>
         <div className="flex gap-2">
           <Button

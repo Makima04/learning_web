@@ -123,6 +123,14 @@ interface KgStore extends KgDoc {
     secondaryKpIds?: string[];
     weakKpIds?: string[];
   }) => void;
+  /** 斩掉（一次性永久过关，记为已会并移出后续复习推荐与错题队列） */
+  retireItem: (args: {
+    itemId: string;
+    primaryKpId: string;
+    secondaryKpIds?: string[];
+  }) => void;
+  /** 移回复习（取消斩掉状态；若传入 restorePrev 则按撤销精准还原） */
+  unretireItem: (itemId: string, restorePrev?: UserItemMark | null) => void;
   /** 思路备注：不改变掌握度，空文本则删除 */
   saveItemNote: (itemId: string, note: string) => void;
   /** 闭卷基础自检单独记证据，不增加图谱整考点掌握度；复用 /api/kg 队列。 */
@@ -236,6 +244,51 @@ export const useKgProgress = create<KgStore>((set, get) => ({
       nextPracticeMark(get().itemMarks.find((m) => m.itemId === itemId), itemId, mark, now, weakKpIds),
     ].slice(-20000);
     const doc: KgDoc = { ...get(), states, itemMarks, updatedAt: now };
+    persist(doc);
+    set(doc);
+  },
+
+  retireItem: ({ itemId, primaryKpId, secondaryKpIds = [] }) => {
+    const now = Date.now();
+    const prev = get().itemMarks.find((m) => m.itemId === itemId);
+    const states = prev?.mark === "pass"
+      ? get().states
+      : applyItemMark(get().states, primaryKpId, secondaryKpIds, "pass", [], now);
+    const nextMark: UserItemMark = {
+      ...nextPracticeMark(prev, itemId, "pass", now, []),
+      retired: true,
+      retiredAt: now,
+    };
+    const itemMarks = [
+      ...get().itemMarks.filter((m) => m.itemId !== itemId),
+      nextMark,
+    ].slice(-20000);
+    const doc: KgDoc = { ...get(), states, itemMarks, updatedAt: now };
+    persist(doc);
+    set(doc);
+    // 同步归档学习日志/错题复习队列里的该题，避免再推送复习
+    void import("@/stores/journal").then(({ useJournal }) => {
+      useJournal.getState().uncollectWrongItem(itemId);
+    });
+  },
+
+  unretireItem: (itemId, restorePrev) => {
+    const now = Date.now();
+    const cur = get().itemMarks.find((m) => m.itemId === itemId);
+    if (!cur && !restorePrev) return;
+    let itemMarks: UserItemMark[];
+    if (restorePrev !== undefined) {
+      // 精确撤销：恢复斩掉前的原记录（若原本未做过则直接移除）
+      itemMarks = get().itemMarks.filter((m) => m.itemId !== itemId);
+      if (restorePrev) itemMarks.push(restorePrev);
+    } else {
+      const { retired: _r, retiredAt: _rt, ...rest } = cur!;
+      itemMarks = [
+        ...get().itemMarks.filter((m) => m.itemId !== itemId),
+        { ...rest, ts: now },
+      ];
+    }
+    const doc: KgDoc = { ...get(), itemMarks: itemMarks.slice(-20000), updatedAt: now };
     persist(doc);
     set(doc);
   },

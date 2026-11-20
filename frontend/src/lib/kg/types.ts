@@ -81,6 +81,10 @@ export interface UserItemMark {
   lastWeakAt?: number;
   /** 按北京时间每天保留最近一次通过，供同技巧其他题暴露薄弱后的重新检验使用。 */
   passTimes?: number[];
+  /** 斩掉（一次性永久过关，不再纳入后续复习推荐与错题复习队列）。随 /api/kg 同步。 */
+  retired?: boolean;
+  /** 斩掉时间戳 ms，用于已斩列表按最新倒序展示 */
+  retiredAt?: number;
 }
 
 /** 预测/练习卷中的一题槽位（算法填结构，LLM/题库填内容） */

@@ -1020,7 +1020,7 @@ export function SettingsPage() {
         </div>
       </div>
       <p className="pt-6 text-center text-xs text-muted-foreground">
-        红宝书 · 乱序 · {WORD_COUNT} 词 · 版本：
+        小祥学习 · 考研全科 · 版本：
         {typeof window !== "undefined" && window.EW_VERSION ? window.EW_VERSION : "dev"}
       </p>
     </div>

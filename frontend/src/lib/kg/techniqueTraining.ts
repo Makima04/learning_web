@@ -49,6 +49,7 @@ export function nextPracticeMark(
     lastWeakAt: mark === "fail" || mark === "fuzzy" ? now : prev?.lastWeakAt,
     // 保留最初日期和最近 31 个通过日，避免无限增长；当天连点也不会制造额外证据。
     passTimes: mark === "pass" ? (passes.length > 32 ? [passes[0], ...passes.slice(-31)] : passes) : undefined,
+    ...(mark === "pass" && prev?.retired ? { retired: true, retiredAt: prev.retiredAt } : {}),
   };
 }
 
@@ -111,13 +112,13 @@ export function buildTechniquePlan(
     const reason: TrainingReason = status === "due" ? "verify" : status === "weak" ? "supplement" : "representative";
     const add = (q: WangdaoItem) => recommendations.push({ item: q, techniqueIds: [id], reason });
     if (status === "due") {
-      // 优先用新主考题检验迁移；无新题时重做已会题，同样可验证遗忘。
-      const candidates = items.filter((q) => isPrimary(q) && usable(q));
+      // 优先用新主考题检验迁移；无新题时重做已会题，但跳过已斩掉的题。
+      const candidates = items.filter((q) => isPrimary(q) && usable(q) && !byId.get(q.id)?.retired);
       candidates.sort((a, b) => Number(Boolean(byId.get(a.id))) - Number(Boolean(byId.get(b.id))) || order(a, b));
       if (candidates[0]) add(candidates[0]);
     } else if (!complete) {
       const goodIds = new Set(passed.map((q) => q.id));
-      const candidates = items.filter((q) => usable(q) && !goodIds.has(q.id));
+      const candidates = items.filter((q) => usable(q) && !goodIds.has(q.id) && !byId.get(q.id)?.retired);
       // 补练优先选没做过的同技巧题，避免立即反复重做刚看过答案的错题。
       const fresh = (q: WangdaoItem) => !byId.has(q.id) || byId.get(q.id)?.mark === "skip";
       const need = Math.min(2, Math.max(1, 2 - passed.length));

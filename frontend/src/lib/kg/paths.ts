@@ -30,6 +30,7 @@ export function practiceReturnPath(raw: string | null | undefined): string | nul
   const url = new URL(raw, "https://english-web.local");
   if (url.origin !== "https://english-web.local") return null;
   if (url.pathname !== REVIEW_ROOT && !url.pathname.startsWith(`${REVIEW_ROOT}/knowledge/`)
+    && !url.pathname.startsWith(`${REVIEW_ROOT}/routes`)
     && url.pathname !== "/kg" && !/^\/kg\/(math|cs408)(\/|$)/.test(url.pathname)) return null;
   return url.pathname + url.search + url.hash;
 }
@@ -37,6 +38,7 @@ export function practiceReturnPath(raw: string | null | undefined): string | nul
 export function practiceReturnLabel(path: string): string {
   const pathname = path.split(/[?#]/)[0];
   if (pathname.startsWith(`${REVIEW_ROOT}/knowledge/`)) return "返回知识复习";
+  if (pathname.startsWith(`${REVIEW_ROOT}/routes`)) return "返回解题路线";
   if (pathname === REVIEW_ROOT) return "返回复习性价比";
   if (pathname.includes("/kp/") || pathname.endsWith("/book")) return "返回题集";
   if (pathname.includes("/module/")) return "返回章节";

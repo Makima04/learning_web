@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { WORD_COUNT } from "@/lib/wordCount";
 import {
+  BookMarked,
   Bookmark,
   BookOpen,
   ChevronDown,
@@ -49,6 +50,7 @@ const NAV: NavItem[] = [
   { to: "/lists", label: "生熟词表", icon: Bookmark, tile: "bg-app-pink text-white" },
   { to: "/kg", label: "知识图谱", icon: Network, tile: "bg-app-purple text-white" },
   { to: "/review-priority", label: "复习性价比", icon: Target, tile: "bg-app-orange text-white" },
+  { to: "/math-handouts", label: "数学手稿", icon: BookMarked, tile: "bg-app-teal text-white" },
   { to: "/kg/exams", label: "408 真题", icon: BookOpen, tile: "bg-primary text-primary-foreground" },
   { to: "/viz", label: "图解 408", icon: Clapperboard, tile: "bg-app-blue text-white", mobile: false },
   { to: "/journal", label: "学习日志", icon: NotebookPen, tile: "bg-app-green text-white" },
@@ -185,8 +187,8 @@ export function AppLayout() {
             <BrandMark size="md" />
             {!navCollapsed && (
               <span className="min-w-0">
-                <span className="block text-base font-extrabold leading-tight">红宝书</span>
-                <span className="block text-xs font-semibold text-muted-foreground">考研词汇 {WORD_COUNT}</span>
+                <span className="block text-base font-extrabold leading-tight">小祥学习</span>
+                <span className="block text-xs font-semibold text-muted-foreground">全科备考 · {WORD_COUNT} 词</span>
               </span>
             )}
           </NavLink>
@@ -253,7 +255,7 @@ export function AppLayout() {
         <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b-2 border-border/60 bg-background/90 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-2.5 md:hidden">
             <BrandMark size="sm" />
-            <span className="text-base font-extrabold">红宝书</span>
+            <span className="text-base font-extrabold">小祥学习</span>
           </div>
           <div className="hidden items-center gap-2 text-sm font-bold md:flex">
             {activeItem ? (
@@ -262,7 +264,7 @@ export function AppLayout() {
                 {activeItem.label}
               </>
             ) : (
-              <span className="text-muted-foreground">红宝书</span>
+              <span className="text-muted-foreground">小祥学习</span>
             )}
           </div>
           <div className="ml-auto flex items-center gap-1.5">
@@ -288,7 +290,7 @@ export function AppLayout() {
 
         {/* 底栏让位由父容器的 --nav-reserve 负责（116px ≥ 实测底栏 114px），
             这里只补一点呼吸间距，别再叠一层底栏高度 */}
-        <main className="min-h-0 flex-1 overflow-auto pb-4 md:pb-0">
+        <main className="min-h-0 flex-1 overflow-x-clip pb-4 md:pb-0">
           <Outlet />
         </main>
       </div>

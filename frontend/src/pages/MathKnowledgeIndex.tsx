@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Route, Search } from "lucide-react";
 import { CS408_BOOKS } from "@/data/kg/cs408";
 import { MATH_BOOKS } from "@/data/kg/math";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,14 @@ export function MathKnowledgeIndex() {
         ? `${count} 个考点 · ${Object.keys(CS408_QUESTION_CASES).length} 个结合真题或王道逐题讲解 · ${Object.keys(CS408_QUESTION_GAPS).length} 个待补原题。`
         : `${count} 个考点 · 教材体系 · 概念公式、过程推演与易错检查。`}</p>
     </header>
+    {subject === "math" && <Link to="/review-priority/routes" className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 transition hover:border-primary/60">
+      <Route className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-extrabold">解题路线 · 先写哪一步</p>
+        <p className="mt-1 text-xs leading-6 text-muted-foreground">线性代数与概率论按章串成一条主线：看到的式子对号入座，直接给出落笔的第一句。</p>
+      </div>
+      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+    </Link>}
     <div role="group" aria-label="选择学科" className="flex gap-2">{(["math", "cs408"] as const).map(value => <Button key={value} asChild size="sm" variant={subject === value ? "default" : "outline"}><Link onClick={() => { setBookId("all"); setQuery(""); }} to={`?${new URLSearchParams({ subject: value, kind: value === "cs408" && params.get("kind") === "fill" ? "big" : params.get("kind") ?? "big", order: params.get("order") ?? "personal" })}`}>{value === "math" ? "数学" : "408"}</Link></Button>)}</div>
     <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
       <div role="group" aria-label="按分科筛选" className="flex flex-wrap gap-2">

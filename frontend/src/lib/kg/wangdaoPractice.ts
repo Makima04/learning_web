@@ -78,6 +78,14 @@ export function isCollected(itemId: string): boolean {
 
 /** 只切换复习安排，不把手动调整伪记为一次「会」或复盘。 */
 export function setWangdaoReviewStatus(item: WangdaoItem, status: EntryStatus): void {
+  // 若该题此前在数学手稿中被「斩掉」，重新加入复习计划时同步解除已斩标记
+  if (status === "active") {
+    const kg = useKgProgress.getState();
+    if (kg.itemMarks.some((m) => m.itemId === item.id && m.retired)) {
+      kg.unretireItem(item.id);
+    }
+  }
+
   const journal = useJournal.getState();
   const existing = journal.entries.find((e) => e.sourceItemId === item.id);
   if (existing) {

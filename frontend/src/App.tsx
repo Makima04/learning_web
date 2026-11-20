@@ -58,6 +58,9 @@ const KnowledgeReviewPage = lazy(() =>
 );
 const MathExplanationPage = lazy(() => import("@/pages/MathExplanationPage").then((m) => ({ default: m.MathExplanationPage })));
 const Math1PracticePage = lazy(() => import("@/pages/Math1PracticePage").then((m) => ({ default: m.Math1PracticePage })));
+const MathRoutePage = lazy(() => import("@/pages/MathRoutePage").then((m) => ({ default: m.MathRoutePage })));
+const MathHandoutsPage = lazy(() => import("@/pages/MathHandoutsPage").then((m) => ({ default: m.MathHandoutsPage })));
+const MathHandoutDetailPage = lazy(() => import("@/pages/MathHandoutDetailPage").then((m) => ({ default: m.MathHandoutDetailPage })));
 const LegacyMathReviewRedirect = lazy(() =>
   import("@/pages/ReviewPriorityPage").then((m) => ({ default: m.LegacyMathReviewRedirect }))
 );
@@ -140,8 +143,12 @@ export default function App() {
             <Route path="review-priority" element={<ReviewPriorityPage />} />
             <Route path="review-priority/exams/math1/:year/:n" element={<Math1PracticePage />} />
             <Route path="review-priority/knowledge" element={<KnowledgeReviewPage />} />
+            <Route path="review-priority/routes" element={<MathRoutePage />} />
+            <Route path="review-priority/routes/:moduleId" element={<MathRoutePage />} />
             <Route path="review-priority/explain/:itemId" element={<MathExplanationPage />} />
             <Route path="review-priority/knowledge/:kpId" element={<KnowledgeReviewPage />} />
+            <Route path="math-handouts" element={<MathHandoutsPage />} />
+            <Route path="math-handouts/:slug" element={<MathHandoutDetailPage />} />
             <Route path="kg/math/review-priority" element={<LegacyMathReviewRedirect />} />
             <Route path="kg/exams" element={<KgExamsPage />} />
             <Route path="kg/exams/mistakes" element={<Cs408MistakesPage />} />

@@ -121,13 +121,13 @@ export function buildTemplatePlan(
 
     const recommendations: WangdaoItem[] = [];
     if (status === "due") {
-      // 复测优先没做过的主考题；没有新题时重做已会题也能验证遗忘。
-      const candidates = items.filter((q) => primary(q) && usable(q));
+      // 复测优先没做过的主考题；没有新题时重做已会题也能验证遗忘，但跳过已斩掉的题。
+      const candidates = items.filter((q) => primary(q) && usable(q) && !byId.get(q.id)?.retired);
       candidates.sort((a, b) => Number(Boolean(byId.get(a.id))) - Number(Boolean(byId.get(b.id))) || poolItemOrder(a, b));
       if (candidates[0]) recommendations.push(candidates[0]);
     } else if (!complete) {
       const goodIds = new Set(passed.map((q) => q.id));
-      const candidates = items.filter((q) => usable(q) && !goodIds.has(q.id));
+      const candidates = items.filter((q) => usable(q) && !goodIds.has(q.id) && !byId.get(q.id)?.retired);
       const fresh = (q: WangdaoItem) => !byId.has(q.id) || byId.get(q.id)?.mark === "skip";
       const need = Math.min(2, Math.max(1, 2 - passed.length));
       for (let i = 0; i < need && candidates.length; i++) {
