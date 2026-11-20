@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   abandonTransReq,
+  anchorScrollDelta,
   invalidateTransReq,
   isCurrentTransReq,
   readerTransAction,
@@ -78,6 +79,34 @@ describe("译句请求世代", () => {
     }
     expect(transMap[2]).toBe("句2");
     expect(loading).toBe(false);
+  });
+});
+
+describe("阅读锚点滚动", () => {
+  // 左栏视口 200..1000，65% 线 = 720，默认锚点 30% = 440
+  const top = 200;
+  const bottom = 1000;
+
+  it("旧句在视野中部：新句落到旧句高度", () => {
+    expect(anchorScrollDelta(top, bottom, 500, 620)).toBe(120);
+    // 同一行：不滚
+    expect(anchorScrollDelta(top, bottom, 500, 500.4)).toBe(0);
+  });
+
+  it("旧句贴底：锚点钳到 65%，留出下方视野", () => {
+    expect(anchorScrollDelta(top, bottom, 880, 1000)).toBe(280);
+  });
+
+  it("旧句已滚过视野：把新句拉回上沿", () => {
+    expect(anchorScrollDelta(top, bottom, 100, 150)).toBe(-66);
+  });
+
+  it("旧句在视野下方：把新句拉回下沿", () => {
+    expect(anchorScrollDelta(top, bottom, 1100, 1200)).toBe(216);
+  });
+
+  it("找不到旧句时退回 30% 舒适位", () => {
+    expect(anchorScrollDelta(top, bottom, null, 500)).toBe(60);
   });
 });
 

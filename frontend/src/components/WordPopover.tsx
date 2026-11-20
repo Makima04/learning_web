@@ -122,6 +122,13 @@ export function WordPopover({
 
   if (entry) {
     const phonetic = getPhonetic(entry);
+    // 主标题用点击的原词（变形/复合词），词库词条降为「原形」注脚：
+    // 读者查的是文中这个 changing，不是背词表里的 change。
+    const lemma = entry[1];
+    const clicked = String(surface ?? "").trim() || lemma;
+    const inflected = clicked.toLowerCase() !== lemma.toLowerCase();
+    // 同形（含大小写差异）用词库写法，变形才显示点击到的原词
+    const shown = inflected ? clicked : lemma;
     return (
       <div
         className="fixed z-50 w-72 rounded-lg border-2 bg-popover text-popover-foreground shadow-edge p-3"
@@ -129,20 +136,22 @@ export function WordPopover({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-2 mb-2">
-          <div>
-            <div className="font-semibold text-lg">{entry[1]}</div>
-            {surface.toLowerCase() !== entry[1].toLowerCase() && (
-              <div className="text-xs text-muted-foreground">← {surface}</div>
-            )}
-            {phonetic ? (
-              <div className="text-xs text-muted-foreground mt-0.5">{phonetic}</div>
+          <div className="min-w-0">
+            <div className="font-semibold text-lg break-words">{shown}</div>
+            {inflected ? (
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                原形 {lemma}
+                {phonetic ? ` ${phonetic}` : ""}
+              </div>
+            ) : phonetic ? (
+              <div className="mt-0.5 text-xs text-muted-foreground">{phonetic}</div>
             ) : null}
           </div>
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => speakEnglish(entry[1], rate)}
+            onClick={() => speakEnglish(shown, rate)}
           >
             🔊
           </Button>
@@ -162,6 +171,9 @@ export function WordPopover({
     );
   }
 
+  const llmLemma = llm?.lemma || "";
+  const llmInflected = !!llm && llmLemma.toLowerCase() !== surface.toLowerCase();
+
   return (
     <div
       className="fixed z-50 w-72 rounded-lg border-2 bg-popover text-popover-foreground shadow-edge p-3"
@@ -169,15 +181,17 @@ export function WordPopover({
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <div>
-          <div className="font-semibold text-lg">
-            {loading ? surface : llm?.lemma || surface}
+        <div className="min-w-0">
+          <div className="font-semibold text-lg break-words">
+            {llmInflected ? surface : llmLemma || surface}
           </div>
-          {!loading && llm && llm.lemma.toLowerCase() !== surface.toLowerCase() && (
-            <div className="text-xs text-muted-foreground">← {surface}</div>
-          )}
-          {llm?.phonetic ? (
-            <div className="text-xs text-muted-foreground mt-0.5">{llm.phonetic}</div>
+          {llmInflected ? (
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              原形 {llmLemma}
+              {llm?.phonetic ? ` ${llm.phonetic}` : ""}
+            </div>
+          ) : llm?.phonetic ? (
+            <div className="mt-0.5 text-xs text-muted-foreground">{llm.phonetic}</div>
           ) : null}
           <div className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
             词库外 · LLM
@@ -187,7 +201,7 @@ export function WordPopover({
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          onClick={() => speakEnglish(llm?.lemma || surface, rate)}
+          onClick={() => speakEnglish(surface, rate)}
         >
           🔊
         </Button>

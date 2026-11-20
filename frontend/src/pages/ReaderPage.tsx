@@ -195,6 +195,34 @@ function omitIdx(
   return next;
 }
 
+/**
+ * 阅读锚点滚动量：返回左栏还需要滚动的距离（正 = 向下滚）。
+ * 锚点默认取旧句首行当前高度；旧句贴底时钳到 65% 留出下方视野；
+ * 旧句已滚出视野则只把新句拉回边缘（上方 16px / 下方 16px）。
+ * 返回 0 表示无需滚动（句距不足 1px 时也不抖）。
+ */
+export function anchorScrollDelta(
+  paneTop: number,
+  paneBottom: number,
+  prevTop: number | null,
+  nextTop: number
+): number {
+  const height = paneBottom - paneTop;
+  const bottomLine = paneTop + height * 0.65;
+  let anchor = paneTop + height * 0.3;
+  if (prevTop != null) {
+    if (prevTop >= paneTop && prevTop <= paneBottom) {
+      anchor = Math.min(prevTop, bottomLine);
+    } else if (prevTop < paneTop) {
+      anchor = paneTop + 16;
+    } else {
+      anchor = paneBottom - 16;
+    }
+  }
+  const delta = nextTop - anchor;
+  return Math.abs(delta) < 1 ? 0 : delta;
+}
+
 type RightTab = "trans" | "explain";
 
 export function ReaderPage() {
@@ -224,6 +252,8 @@ export function ReaderPage() {
   const transMapRef = useRef(transMap);
   transMapRef.current = transMap;
   const transReqGateRef = useRef<TransReqGate>({ latest: 0 });
+  /** 左栏滚动容器：逐句推进只滚它，不碰外层页面 */
+  const bodyPaneRef = useRef<HTMLDivElement>(null);
 
   const routeKey = useMemo(
     () => parsePassageReaderParams(params),
@@ -356,6 +386,43 @@ export function ReaderPage() {
     };
   }, [active, sentences]);
 
+  /**
+   * 键盘推进后的滚动：把新句滚到「旧句此刻所在的高度」（阅读锚点），只滚左栏、瞬时执行。
+   * 旧句贴底时锚点钳到 65%，留出下方视野；旧句已被滚出视野则只把新句拉回边缘。
+   * 文末 scrollTop 撞底后自然停住。点击句子不走这里（目标本来就在视野内，再滚会怼一下）。
+   */
+  const advanceTo = useCallback((fromIdx: number, toIdx: number) => {
+    requestAnimationFrame(() => {
+      const pane = bodyPaneRef.current;
+      if (!pane) return;
+      const next = pane.querySelector<HTMLElement>(`.r-sent[data-i="${toIdx}"]`);
+      if (!next) return;
+      const paneRect = pane.getBoundingClientRect();
+      const nextTop = next.getBoundingClientRect().top;
+      const prev = pane.querySelector<HTMLElement>(`.r-sent[data-i="${fromIdx}"]`);
+      const delta = anchorScrollDelta(
+        paneRect.top,
+        paneRect.bottom,
+        prev?.getBoundingClientRect().top ?? null,
+        nextTop
+      );
+      if (delta !== 0) {
+        pane.scrollTo({ top: pane.scrollTop + delta, behavior: "instant" });
+      }
+    });
+  }, []);
+
+  /** 键盘逐句移动：切高亮 + 保持阅读锚点 */
+  const moveActive = useCallback(
+    (from: number, to: number) => {
+      const target = Math.min(Math.max(to, 0), Math.max(0, sentences.length - 1));
+      if (target === from) return;
+      setActive(target);
+      advanceTo(from, target);
+    },
+    [advanceTo, sentences.length]
+  );
+
   const showCurrentTrans = useCallback(async () => {
     if (!sentences[active] || translatingRef.current) return;
     const en = sentences[active];
@@ -384,14 +451,9 @@ export function ReaderPage() {
       return;
     }
     if (active < sentences.length - 1) {
-      setActive((a) => a + 1);
-      requestAnimationFrame(() => {
-        document
-          .querySelector(`.r-sent[data-i="${active + 1}"]`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
+      moveActive(active, active + 1);
     }
-  }, [active, sentences, transMap]);
+  }, [active, sentences, transMap, moveActive]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -406,16 +468,16 @@ export function ReaderPage() {
       }
       if (e.key === "ArrowDown" || e.key === "j") {
         e.preventDefault();
-        setActive((a) => Math.min(a + 1, Math.max(0, sentences.length - 1)));
+        moveActive(active, active + 1);
       }
       if (e.key === "ArrowUp" || e.key === "k") {
         e.preventDefault();
-        setActive((a) => Math.max(a - 1, 0));
+        moveActive(active, active - 1);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showCurrentTrans, sentences.length]);
+  }, [active, moveActive, showCurrentTrans, sentences.length]);
 
   function onWordClick(e: React.MouseEvent) {
     const t = e.target as HTMLElement;
@@ -490,7 +552,10 @@ export function ReaderPage() {
       {/* 左右分栏：小屏上下叠 */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
         {/* 左：原文 + 选择题 */}
-        <div className="flex-1 min-h-0 overflow-auto border-b-2 border-border/60 bg-card lg:border-b-0 lg:border-r-2">
+        <div
+          ref={bodyPaneRef}
+          className="flex-1 min-h-0 overflow-auto border-b-2 border-border/60 bg-card lg:border-b-0 lg:border-r-2"
+        >
           <div className="p-4 md:p-8 max-w-3xl mx-auto w-full">
             <div
               className="reader-body text-[1.08rem] leading-[1.95] tracking-[0.01em]"
