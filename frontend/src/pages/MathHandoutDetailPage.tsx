@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Check,
@@ -27,6 +27,7 @@ import { useJournal } from "@/stores/journal";
 import { findKp } from "@/data/kg";
 import { wangdaoJournalId } from "@/lib/kg/wangdao408";
 import type { MarkLevel, UserItemMark } from "@/lib/kg/types";
+import { dayKey } from "@/lib/day";
 import "@/styles/mathHandout.css";
 
 function isLilinExample(ex: HandoutExample): boolean {
@@ -46,6 +47,9 @@ function syncIdsOf(ex: HandoutExample): string[] {
 
 interface UndoPayload {
   title: string;
+  anchorId: string;
+  /** 斩掉前是否处于手动展开状态，撤销时原样恢复 */
+  wasForcedOpen: boolean;
   entries: {
     itemId: string;
     prevMark: UserItemMark | null;
@@ -53,18 +57,39 @@ interface UndoPayload {
   }[];
 }
 
+/**
+ * 「今日已练」判定：今天（北京时间）标过会/模糊/不会且未斩掉 → 当天折叠，
+ * 跨天（下次复习）自动展开。ts 随 /api/kg 同步，多端一致。
+ */
+export function doneMarkForToday(
+  rec: UserItemMark | undefined,
+  todayKey: string
+): Exclude<MarkLevel, "skip"> | undefined {
+  if (!rec || rec.retired || rec.mark === "skip") return undefined;
+  return dayKey(rec.ts) === todayKey ? rec.mark : undefined;
+}
+
+/** 「今日已练」折叠条的展示元信息：与会/模糊/不会标记按钮同色，区别于已斩灰条 */
+const DONE_MARK_META: Record<Exclude<MarkLevel, "skip">, { label: string; icon: ReactNode }> = {
+  pass: { label: "已会", icon: <Check className="h-3 w-3" /> },
+  fuzzy: { label: "模糊", icon: <HelpCircle className="h-3 w-3" /> },
+  fail: { label: "不会", icon: <X className="h-3 w-3" /> },
+};
+
 function MarkStrip({
   ex,
   currentMark,
   primaryKpId,
   secondaryKpIds,
   onRetire,
+  onMarked,
 }: {
   ex: HandoutExample;
   currentMark?: MarkLevel;
   primaryKpId: string;
   secondaryKpIds: string[];
   onRetire: () => void;
+  onMarked: () => void;
 }) {
   const markItem = useKgProgress((s) => s.markItem);
 
@@ -93,6 +118,8 @@ function MarkStrip({
         journal.reviewEntry(existing.id, "pass");
       }
     }
+    // 标记后当天收起本题（清掉手动展开状态，下次复习日自动恢复展开）
+    onMarked();
   };
 
   return (
@@ -133,11 +160,12 @@ function MarkStrip({
   );
 }
 
-function ExampleCard({
+export function ExampleCard({
   ex,
   isActive,
   isRetired,
-  isPeeking,
+  isForcedOpen,
+  doneMark,
   hintOpen,
   stepsOpen,
   currentMark,
@@ -148,12 +176,16 @@ function ExampleCard({
   onToggleSteps,
   onRetire,
   onUnretire,
-  onTogglePeek,
+  onToggleForceOpen,
+  onMarked,
 }: {
   ex: HandoutExample;
   isActive: boolean;
   isRetired: boolean;
-  isPeeking: boolean;
+  /** 会话级手动展开（已斩临时查看 / 今日已练手动展开共用） */
+  isForcedOpen: boolean;
+  /** 非空表示「今日已练」（会/模糊/不会），当天默认折叠，下次复习日自动展开 */
+  doneMark?: Exclude<MarkLevel, "skip">;
   hintOpen: boolean;
   stepsOpen: boolean;
   currentMark?: MarkLevel;
@@ -164,7 +196,8 @@ function ExampleCard({
   onToggleSteps: () => void;
   onRetire: () => void;
   onUnretire: () => void;
-  onTogglePeek: () => void;
+  onToggleForceOpen: () => void;
+  onMarked: () => void;
 }) {
   const questionRef = useRef<HTMLDivElement>(null);
   const [mcqFeedback, setMcqFeedback] = useState<{ ok: boolean; text: string } | null>(null);
@@ -172,7 +205,7 @@ function ExampleCard({
   const is880 = isLilinExample(ex);
 
   // 已斩掉且未临时展开预览时：折叠成一行灰色紧凑条
-  if (isRetired && !isPeeking) {
+  if (isRetired && !isForcedOpen) {
     return (
       <div id={ex.anchorId} className="mh-retired-row">
         <span className="mh-retired-badge">
@@ -187,7 +220,7 @@ function ExampleCard({
             className="mh-retired-btn"
             onClick={(e) => {
               e.stopPropagation();
-              onTogglePeek();
+              onToggleForceOpen();
             }}
             title="临时展开查看原题（不取消已斩状态）"
           >
@@ -205,6 +238,37 @@ function ExampleCard({
           >
             <RotateCcw className="h-3 w-3" />
             移回复习
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 今日已练（会/模糊/不会）且未手动展开：折叠成一行彩色紧凑条（区别于已斩灰条），
+  // 下次复习日（北京时间跨天）自动恢复展开；ts 随 /api/kg 同步，多端一致。
+  if (doneMark && !isForcedOpen) {
+    const meta = DONE_MARK_META[doneMark];
+    return (
+      <div id={ex.anchorId} className={`mh-done-row is-${doneMark}`}>
+        <span className={`mh-done-badge is-${doneMark}`}>
+          {meta.icon}
+          {meta.label}
+        </span>
+        <span className="mh-done-title">{ex.title}</span>
+        <span className="mh-retired-source">{ex.source}</span>
+        <span className="mh-done-note">今日已练 · 下次复习自动展开</span>
+        <div className="mh-retired-actions">
+          <button
+            type="button"
+            className="mh-retired-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleForceOpen();
+            }}
+            title="手动展开本题（不改变标记与复习队列）"
+          >
+            <ChevronDown className="h-3 w-3" />
+            展开
           </button>
         </div>
       </div>
@@ -246,7 +310,7 @@ function ExampleCard({
       className={`mh-example${isActive ? " is-active" : ""}`}
       onClick={onActivate}
     >
-      {isRetired && isPeeking && (
+      {isRetired && isForcedOpen && (
         <div className="mh-retired-row mb-3 mt-0">
           <span className="mh-retired-badge">
             <Check className="h-3 w-3" />
@@ -258,7 +322,7 @@ function ExampleCard({
               className="mh-retired-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                onTogglePeek();
+                onToggleForceOpen();
               }}
             >
               <EyeOff className="h-3 w-3" />
@@ -274,6 +338,29 @@ function ExampleCard({
             >
               <RotateCcw className="h-3 w-3" />
               移回复习
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 今日已练但手动展开：顶部彩条提示，可重新折叠；重新标记会再次收起 */}
+      {doneMark && !isRetired && isForcedOpen && (
+        <div className={`mh-done-row is-${doneMark} mb-3 mt-0`}>
+          <span className={`mh-done-badge is-${doneMark}`}>
+            {DONE_MARK_META[doneMark].icon}
+            {DONE_MARK_META[doneMark].label}（今日已练 · 手动展开）
+          </span>
+          <div className="mh-retired-actions">
+            <button
+              type="button"
+              className="mh-retired-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleForceOpen();
+              }}
+            >
+              <ChevronUp className="h-3 w-3" />
+              重新折叠
             </button>
           </div>
         </div>
@@ -362,6 +449,7 @@ function ExampleCard({
           primaryKpId={primaryKpId}
           secondaryKpIds={secondaryKpIds}
           onRetire={onRetire}
+          onMarked={onMarked}
         />
       </div>
 
@@ -388,7 +476,7 @@ export function MathHandoutDetailPage() {
   const [globalStepsOpen, setGlobalStepsOpen] = useState(false);
   const [stepsOverride, setStepsOverride] = useState<Record<string, boolean>>({});
   const [hintOpenMap, setHintOpenMap] = useState<Record<string, boolean>>({});
-  const [peekRetiredMap, setPeekRetiredMap] = useState<Record<string, boolean>>({});
+  const [forceExpandMap, setForceExpandMap] = useState<Record<string, boolean>>({});
   const [hideRetired, setHideRetired] = useState(false);
   const [undoToast, setUndoToast] = useState<UndoPayload | null>(null);
   const undoTimerRef = useRef<number | null>(null);
@@ -409,7 +497,7 @@ export function MathHandoutDetailPage() {
         setHandout(hs.find((x) => x.slug === slug) ?? null);
         setStepsOverride({});
         setHintOpenMap({});
-        setPeekRetiredMap({});
+        setForceExpandMap({});
         setActiveAnchorId(null);
         setLoading(false);
       })
@@ -433,15 +521,42 @@ export function MathHandoutDetailPage() {
     return m;
   }, [itemMarks]);
 
-  const getExampleMark = useCallback(
-    (ex: HandoutExample): MarkLevel | undefined => {
+  const getExampleMarkRecord = useCallback(
+    (ex: HandoutExample): UserItemMark | undefined => {
       return (
-        markRecordMap.get(ex.id)?.mark ??
-        (ex.lilin880Id ? markRecordMap.get(ex.lilin880Id)?.mark : undefined)
+        markRecordMap.get(ex.id) ??
+        (ex.lilin880Id ? markRecordMap.get(ex.lilin880Id) : undefined)
       );
     },
     [markRecordMap]
   );
+
+  const getExampleMark = useCallback(
+    (ex: HandoutExample): MarkLevel | undefined => getExampleMarkRecord(ex)?.mark,
+    [getExampleMarkRecord]
+  );
+
+  const todayKey = dayKey();
+  const getExampleDoneMark = useCallback(
+    (ex: HandoutExample): Exclude<MarkLevel, "skip"> | undefined =>
+      doneMarkForToday(getExampleMarkRecord(ex), todayKey),
+    [getExampleMarkRecord, todayKey]
+  );
+
+  /** 手动展开/收起某题（会话级视图状态；标记本身随 /api/kg 同步） */
+  const setForceOpen = useCallback((anchorId: string, open: boolean) => {
+    setForceExpandMap((prev) => {
+      if (Boolean(prev[anchorId]) === open) return prev;
+      const next = { ...prev };
+      if (open) next[anchorId] = true;
+      else delete next[anchorId];
+      return next;
+    });
+  }, []);
+
+  const toggleForceOpen = useCallback((anchorId: string) => {
+    setForceExpandMap((prev) => ({ ...prev, [anchorId]: !prev[anchorId] }));
+  }, []);
 
   const isExampleRetired = useCallback(
     (ex: HandoutExample): boolean => {
@@ -466,6 +581,7 @@ export function MathHandoutDetailPage() {
         ),
       }));
 
+      const wasForcedOpen = Boolean(forceExpandMap[ex.anchorId]);
       for (const itemId of ids) {
         retireItem({
           itemId,
@@ -473,21 +589,16 @@ export function MathHandoutDetailPage() {
           secondaryKpIds: handout.secondaryKpIds,
         });
       }
-      setPeekRetiredMap((prev) => {
-        if (!prev[ex.anchorId]) return prev;
-        const next = { ...prev };
-        delete next[ex.anchorId];
-        return next;
-      });
+      setForceOpen(ex.anchorId, false);
 
       if (undoTimerRef.current != null) window.clearTimeout(undoTimerRef.current);
-      setUndoToast({ title: ex.title, entries });
+      setUndoToast({ title: ex.title, anchorId: ex.anchorId, wasForcedOpen, entries });
       undoTimerRef.current = window.setTimeout(() => {
         setUndoToast(null);
         undoTimerRef.current = null;
       }, 5500);
     },
-    [handout, markRecordMap, retireItem]
+    [handout, markRecordMap, retireItem, forceExpandMap, setForceOpen]
   );
 
   const handleUnretireExample = useCallback(
@@ -495,14 +606,10 @@ export function MathHandoutDetailPage() {
       for (const itemId of syncIdsOf(ex)) {
         unretireItem(itemId);
       }
-      setPeekRetiredMap((prev) => {
-        if (!prev[ex.anchorId]) return prev;
-        const next = { ...prev };
-        delete next[ex.anchorId];
-        return next;
-      });
+      // 移回复习要立即看到完整题面（恢复的 pass 记录 ts 为今天，否则会被「今日已练」折叠）
+      setForceOpen(ex.anchorId, true);
     },
-    [unretireItem]
+    [unretireItem, setForceOpen]
   );
 
   const handleUndoRetire = useCallback(() => {
@@ -521,8 +628,9 @@ export function MathHandoutDetailPage() {
         }
       }
     }
+    setForceOpen(undoToast.anchorId, undoToast.wasForcedOpen);
     setUndoToast(null);
-  }, [undoToast, unretireItem]);
+  }, [undoToast, unretireItem, setForceOpen]);
 
   const isStepsOpen = useCallback(
     (anchorId: string) => stepsOverride[anchorId] ?? globalStepsOpen,
@@ -713,7 +821,7 @@ export function MathHandoutDetailPage() {
               </button>
             )}
             <p className="m-0 text-[12px] leading-snug text-[var(--mh-muted)]">
-              点选题目后按 <kbd className="mh-kbd">Space</kbd> 显隐答题步骤；点「斩掉」折叠成灰条并移出复习。
+              点选题目后按 <kbd className="mh-kbd">Space</kbd> 显隐答题步骤；标记会/模糊/不会当天折叠、下次复习自动展开（也可手动展开）；「斩掉」折叠成灰条并移出复习。
             </p>
           </div>
 
@@ -938,7 +1046,8 @@ export function MathHandoutDetailPage() {
                           ex={ex}
                           isActive={activeAnchorId === ex.anchorId}
                           isRetired={isExampleRetired(ex)}
-                          isPeeking={Boolean(peekRetiredMap[ex.anchorId])}
+                          isForcedOpen={Boolean(forceExpandMap[ex.anchorId])}
+                          doneMark={getExampleDoneMark(ex)}
                           hintOpen={Boolean(hintOpenMap[ex.anchorId])}
                           stepsOpen={isStepsOpen(ex.anchorId)}
                           currentMark={getExampleMark(ex)}
@@ -951,9 +1060,8 @@ export function MathHandoutDetailPage() {
                           onToggleSteps={() => toggleStepsFor(ex.anchorId)}
                           onRetire={() => handleRetireExample(ex)}
                           onUnretire={() => handleUnretireExample(ex)}
-                          onTogglePeek={() =>
-                            setPeekRetiredMap((m) => ({ ...m, [ex.anchorId]: !m[ex.anchorId] }))
-                          }
+                          onToggleForceOpen={() => toggleForceOpen(ex.anchorId)}
+                          onMarked={() => setForceOpen(ex.anchorId, false)}
                         />
                       ))
                     )}
@@ -968,7 +1076,8 @@ export function MathHandoutDetailPage() {
                               ex={ex}
                               isActive={activeAnchorId === ex.anchorId}
                               isRetired={isExampleRetired(ex)}
-                              isPeeking={Boolean(peekRetiredMap[ex.anchorId])}
+                              isForcedOpen={Boolean(forceExpandMap[ex.anchorId])}
+                              doneMark={getExampleDoneMark(ex)}
                               hintOpen={Boolean(hintOpenMap[ex.anchorId])}
                               stepsOpen={isStepsOpen(ex.anchorId)}
                               currentMark={getExampleMark(ex)}
@@ -981,9 +1090,8 @@ export function MathHandoutDetailPage() {
                               onToggleSteps={() => toggleStepsFor(ex.anchorId)}
                               onRetire={() => handleRetireExample(ex)}
                               onUnretire={() => handleUnretireExample(ex)}
-                              onTogglePeek={() =>
-                                setPeekRetiredMap((m) => ({ ...m, [ex.anchorId]: !m[ex.anchorId] }))
-                              }
+                              onToggleForceOpen={() => toggleForceOpen(ex.anchorId)}
+                              onMarked={() => setForceOpen(ex.anchorId, false)}
                             />
                           ))}
                         </div>

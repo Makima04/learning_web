@@ -1042,6 +1042,64 @@
   background: var(--mh-accent-soft);
 }
 
+/* 「今日已练」折叠条：当天标过会/模糊/不会的题，下次复习日自动展开。
+   彩色底 + 彩色徽章、标题不划线，与已斩灰条（mh-retired-row）明显区分；
+   来源/操作区复用 mh-retired-source / mh-retired-actions / mh-retired-btn 中性样式。 */
+.mh-done-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  margin: 0.55rem 0;
+  padding: 0.48rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--mh-line);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+.mh-done-row.is-pass {
+  background: var(--mh-ok-bg);
+  border-color: color-mix(in srgb, var(--mh-ok) 30%, var(--mh-line));
+}
+.mh-done-row.is-fuzzy {
+  background: var(--mh-accent-2-bg);
+  border-color: color-mix(in srgb, var(--mh-accent-2) 30%, var(--mh-line));
+}
+.mh-done-row.is-fail {
+  background: var(--mh-err-bg);
+  border-color: color-mix(in srgb, var(--mh-err) 30%, var(--mh-line));
+}
+.mh-done-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.04rem 0.45rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.mh-done-badge.is-pass {
+  background: color-mix(in srgb, var(--mh-ok) 16%, transparent);
+  color: var(--mh-ok);
+}
+.mh-done-badge.is-fuzzy {
+  background: color-mix(in srgb, var(--mh-accent-2) 16%, transparent);
+  color: var(--mh-accent-2);
+}
+.mh-done-badge.is-fail {
+  background: color-mix(in srgb, var(--mh-err) 16%, transparent);
+  color: var(--mh-err);
+}
+.mh-done-title {
+  font-weight: 600;
+  color: var(--mh-ink);
+}
+.mh-done-note {
+  font-size: 0.76rem;
+  color: var(--mh-muted);
+}
+
 .mh-undo-toast {
   position: fixed;
   left: 50%;
