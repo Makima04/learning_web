@@ -36,6 +36,9 @@ frontend/dist/
 *.tsbuildinfo
 releases/
 
+# 临时调试/预览/备份产物（截图、审计、OCR 缓存等，脚本会按需重建）
+tmp/
+
 # Claude Code / Codegraph / ZCode 工作目录
 .claude/
 .codegraph/
