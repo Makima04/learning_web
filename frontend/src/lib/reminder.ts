@@ -82,7 +82,7 @@ export function startReminderLoop(opts: ReminderLoopOptions = {}): () => void {
       const n = new Notification("该背单词啦", {
         body: reminderBody(),
         // 图标在生产 dist 根下；取不到也无碍
-        icon: "/icons/icon-192.png",
+        icon: "/icons/sakiko-192.png",
         tag: "ew-reminder", // 同 tag 覆盖，避免堆积
       });
       n.onclick = () => {
