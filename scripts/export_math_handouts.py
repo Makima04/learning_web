@@ -803,6 +803,49 @@ def parse_methods(topic_html):
     return methods
 
 
+def clean_short_title(title):
+    s = re.sub(r"^[一二三四五六七八九十\d]+[、.．]\s*", "", title.strip())
+    s = re.sub(r"[（(]\s*\d+\s*题\s*[）)]\s*$", "", s).strip()
+    return s or title.strip()
+
+
+def parse_scenario_guide(gbody):
+    m = re.search(r'<div class="scenario-guide"([^>]*)>(.*?)</div>\s*(?=<article|$)', gbody, re.S)
+    if not m:
+        return None
+    attrs, inner = m.group(1), m.group(2)
+    st_m = re.search(r'data-short-title="([^"]+)"', attrs)
+    short_title = unescape(st_m.group(1)).strip() if st_m else ""
+
+    def grab_block(cls):
+        bm = re.search(rf'<div class="{cls}"[^>]*>(.*?)</div>', inner, re.S)
+        return bm.group(1).strip() if bm else ""
+
+    clue_html = grab_block("sg-clues")
+    core_html = grab_block("sg-core")
+    pitfall_html = grab_block("sg-pitfall")
+    roadmap_html = grab_block("sg-roadmap")
+    featured_ids = list(dict.fromkeys(re.findall(r'href="#([^"]+)"', roadmap_html)))
+    return {
+        "shortTitle": short_title,
+        "clueHtml": clue_html,
+        "coreHtml": core_html,
+        "pitfallHtml": pitfall_html,
+        "roadmapHtml": roadmap_html,
+        "featuredAnchorIds": featured_ids,
+        "structured": True,
+    }
+
+
+def split_verdict_html(verdict_html):
+    if not verdict_html:
+        return "", ""
+    tables = re.findall(r'<table class="verdict"[^>]*>.*?</table>', verdict_html, re.S)
+    table_html = "\n".join(tables).strip()
+    lead_html = re.sub(r'<table class="verdict"[^>]*>.*?</table>', "", verdict_html, flags=re.S).strip()
+    return lead_html, table_html
+
+
 def parse_lecture(meta, math1_by_yn, lilin_lookup):
     full_path = os.path.join(HANDOUT_DIR, meta["rel"])
     html = open(full_path, encoding="utf-8").read()
@@ -815,6 +858,7 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
 
     verdict_heading, verdict_html = extract_section(html, "verdict", ["topic-index", "worked-examples", "practice"])
     verdict_html = re.sub(r'<div class="viz-slot"[^>]*>.*?</div>', "", verdict_html, flags=re.S)
+    verdict_lead_html, verdict_table_html = split_verdict_html(verdict_html)
 
     topic_heading, topic_html = extract_section(html, "topic-index", ["worked-examples", "practice"])
     # 提取 topic-index 开头说明段落
@@ -824,6 +868,7 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
 
     worked_heading, worked_html = extract_section(html, "worked-examples", ["practice", "coverage"])
     worked_html = re.sub(r'<div class="viz-slot"[^>]*>.*?</div>', "", worked_html, flags=re.S)
+    worked_anchors = set(re.findall(r'href="#([^"]+)"', worked_html))
 
     practice_heading, practice_html = extract_section(html, "practice", ["coverage"])
     practice_intro_m = re.match(r'\s*(<p[^>]*>.*?</p>)', practice_html, re.S)
@@ -835,6 +880,7 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
         gid = gm.group(1)
         gtitle = strip_tags(gm.group(2))
         gbody = gm.group(3)
+        explicit_guide = parse_scenario_guide(gbody)
         examples = []
         for am in re.finditer(r'<article([^>]*)>(.*?)</article>', gbody, re.S):
             a_attrs, ab = am.group(1), am.group(2)
@@ -889,11 +935,36 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
         groups.append({
             "id": gid,
             "title": gtitle,
+            "guide": explicit_guide,
             "examples": examples,
         })
 
     if not methods:
         methods = [{"id": f"pattern-{g['id']}", "titleHtml": g["title"], "title": g["title"], "descHtml": ""} for g in groups]
+
+    # 为尚未写入 <div class="scenario-guide"> 的旧手稿自动合成兜底场景指南
+    for idx, g in enumerate(groups):
+        if g["guide"]:
+            if not g["guide"]["shortTitle"]:
+                g["guide"]["shortTitle"] = clean_short_title(g["title"])
+            continue
+        short_title = clean_short_title(g["title"])
+        core_html = ""
+        if idx < len(methods) and methods[idx].get("descHtml"):
+            core_html = re.sub(r'<a\s+href="#[^"]*"[^>]*>.*?</a>', "", methods[idx]["descHtml"], flags=re.S).strip()
+        group_anchor_set = {e["anchorId"] for e in g["examples"]}
+        featured = [a for a in worked_anchors if a in group_anchor_set]
+        g["guide"] = {
+            "shortTitle": short_title,
+            "clueHtml": "",
+            "coreHtml": core_html,
+            "pitfallHtml": "",
+            "roadmapHtml": "",
+            "featuredAnchorIds": featured,
+            "structured": False,
+        }
+
+    has_structured_scenarios = bool(groups) and all(g["guide"]["structured"] for g in groups)
 
     exam_count = sum(1 for g in groups for e in g["examples"] if e["sourceType"] in ("exam", "lilin_mock"))
     lilin880_count = sum(1 for g in groups for e in g["examples"] if e["sourceType"] == "lilin880" or e["lilin880Id"])
@@ -910,6 +981,9 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
         "title": title,
         "verdictHeading": verdict_heading or "怎么判",
         "verdictHtml": verdict_html,
+        "verdictLeadHtml": verdict_lead_html,
+        "verdictTableHtml": verdict_table_html,
+        "hasStructuredScenarios": has_structured_scenarios,
         "topicHeading": topic_heading or "看式子找第一步",
         "topicIntroHtml": topic_intro_html,
         "methods": methods,

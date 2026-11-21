@@ -163,6 +163,7 @@ function MarkStrip({
 export function ExampleCard({
   ex,
   isActive,
+  isFeatured,
   isRetired,
   isForcedOpen,
   doneMark,
@@ -181,6 +182,7 @@ export function ExampleCard({
 }: {
   ex: HandoutExample;
   isActive: boolean;
+  isFeatured?: boolean;
   isRetired: boolean;
   /** 会话级手动展开（已斩临时查看 / 今日已练手动展开共用） */
   isForcedOpen: boolean;
@@ -380,6 +382,7 @@ export function ExampleCard({
             ? "真题 · 880 同题"
             : "历年真题"}
         </span>
+        {isFeatured && <span className="mh-src-tag is-featured">示范母题</span>}
         <span>{ex.source}</span>
         {ex.matchedMath1 && ex.year && ex.n && (
           <Link
@@ -477,6 +480,8 @@ export function MathHandoutDetailPage() {
   const [stepsOverride, setStepsOverride] = useState<Record<string, boolean>>({});
   const [hintOpenMap, setHintOpenMap] = useState<Record<string, boolean>>({});
   const [forceExpandMap, setForceExpandMap] = useState<Record<string, boolean>>({});
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [hideRetired, setHideRetired] = useState(false);
   const [undoToast, setUndoToast] = useState<UndoPayload | null>(null);
   const undoTimerRef = useRef<number | null>(null);
@@ -494,11 +499,19 @@ export function MathHandoutDetailPage() {
     loadMathHandouts()
       .then((hs) => {
         if (!alive) return;
-        setHandout(hs.find((x) => x.slug === slug) ?? null);
+        const found = hs.find((x) => x.slug === slug) ?? null;
+        setHandout(found);
         setStepsOverride({});
         setHintOpenMap({});
         setForceExpandMap({});
         setActiveAnchorId(null);
+        if (found && found.groups.length > 0) {
+          setOpenGroups({ [found.groups[0].id]: true });
+          setActiveGroupId(found.groups[0].id);
+        } else {
+          setOpenGroups({});
+          setActiveGroupId(null);
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -513,6 +526,53 @@ export function MathHandoutDetailPage() {
     return () => {
       if (undoTimerRef.current != null) window.clearTimeout(undoTimerRef.current);
     };
+  }, []);
+
+  // 滚动联动左侧判别场景高亮（ScrollSpy）
+  useEffect(() => {
+    if (!handout || handout.groups.length === 0) return;
+    let rafId = 0;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        const container = readerRef.current;
+        if (!container) return;
+        const sections = Array.from(container.querySelectorAll<HTMLElement>("[data-mh-group]"));
+        if (sections.length === 0) return;
+        const threshold = 130;
+        let current = sections[0].dataset.mhGroup ?? null;
+        for (const sec of sections) {
+          if (sec.getBoundingClientRect().top <= threshold) {
+            current = sec.dataset.mhGroup ?? current;
+          } else {
+            break;
+          }
+        }
+        if (current) setActiveGroupId(current);
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
+  }, [handout]);
+
+  const jumpToScenario = useCallback((groupId: string) => {
+    setActiveGroupId(groupId);
+    setOpenGroups((prev) => (prev[groupId] ? prev : { ...prev, [groupId]: true }));
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const el = document.getElementById(groupId);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }, []);
+
+  const toggleGroup = useCallback((groupId: string) => {
+    setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+    setActiveGroupId(groupId);
   }, []);
 
   const markRecordMap = useMemo(() => {
@@ -710,32 +770,46 @@ export function MathHandoutDetailPage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeAnchorId, toggleStepsFor]);
 
-  // 拦截讲义内部的 #anchor 跳转：自动展开目标所在的 <details> 分组并平滑滚动
-  const handleReaderClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const a = (e.target as HTMLElement).closest('a[href^="#"]') as HTMLAnchorElement | null;
-    if (!a) return;
-    const rawHash = a.getAttribute("href");
-    if (!rawHash || rawHash === "#") return;
-    const targetId = decodeURIComponent(rawHash.slice(1));
-    const el = document.getElementById(targetId);
-    if (!el) return;
-    e.preventDefault();
+  // 拦截讲义内部的 #anchor 跳转：自动展开目标所在场景组、次要对照折叠区，再平滑滚动
+  const handleReaderClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const a = (e.target as HTMLElement).closest('a[href^="#"]') as HTMLAnchorElement | null;
+      if (!a) return;
+      const rawHash = a.getAttribute("href");
+      if (!rawHash || rawHash === "#") return;
+      const targetId = decodeURIComponent(rawHash.slice(1));
+      e.preventDefault();
 
-    // 展开所有祖先 <details>
-    let cur: HTMLElement | null = el;
-    while (cur) {
-      if (cur.tagName === "DETAILS") {
-        (cur as HTMLDetailsElement).open = true;
+      if (handout) {
+        const ownerGroup = handout.groups.find(
+          (g) => g.id === targetId || g.examples.some((ex) => ex.anchorId === targetId)
+        );
+        if (ownerGroup) {
+          setActiveGroupId(ownerGroup.id);
+          setOpenGroups((prev) => (prev[ownerGroup.id] ? prev : { ...prev, [ownerGroup.id]: true }));
+        }
       }
-      cur = cur.parentElement;
-    }
-    if (el.dataset.mhExample) {
-      setActiveAnchorId(el.dataset.mhExample);
-    }
-    requestAnimationFrame(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }, []);
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const el = document.getElementById(targetId);
+          if (!el) return;
+          let cur: HTMLElement | null = el;
+          while (cur) {
+            if (cur.tagName === "DETAILS") {
+              (cur as HTMLDetailsElement).open = true;
+            }
+            cur = cur.parentElement;
+          }
+          if (el.dataset.mhExample) {
+            setActiveAnchorId(el.dataset.mhExample);
+          }
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    },
+    [handout]
+  );
 
   if (loading) {
     return (
@@ -763,24 +837,42 @@ export function MathHandoutDetailPage() {
   const allExamples = handout.groups.flatMap((g) => g.examples);
   const passedCount = allExamples.filter((e) => getExampleMark(e) === "pass").length;
   const retiredCount = allExamples.filter((e) => isExampleRetired(e)).length;
-  const progressPct = allExamples.length > 0 ? Math.round((passedCount / allExamples.length) * 100) : 0;
   const hasAny880 = handout.stats.lilin880 > 0;
+  const leadHtml = handout.verdictLeadHtml ?? handout.verdictHtml;
+  const showLegacyBottomRef =
+    !handout.hasStructuredScenarios && Boolean(handout.verdictTableHtml || handout.workedHtml);
 
   return (
     <div ref={readerRef} className="mh-reader" onClick={handleReaderClick}>
       <div className="mh-layout">
-        {/* 左侧悬浮讲义目录与控制面板（还原手稿 Web 左侧栏） */}
+        {/* 左侧极简控制面板：判别场景导航 + 真题/880 切换 + 答题步骤展开 */}
         <aside className="mh-toc">
           <p className="mh-toc-title">{handout.title}</p>
-          <nav className="mh-toc-list" aria-label="讲义目录">
-            {handout.verdictHtml && <a href="#verdict">{handout.verdictHeading}</a>}
-            {handout.methods.length > 0 && <a href="#topic-index">{handout.topicHeading}</a>}
-            {handout.workedHtml && <a href="#worked-examples">{handout.workedHeading || "例题串讲"}</a>}
-            <a href="#practice">{handout.practiceHeading}</a>
+
+          <div className="mh-toc-label">判别场景</div>
+          <nav className="mh-scene-nav" aria-label="判别场景导航">
+            {handout.groups.map((g) => {
+              const gPassed = g.examples.filter((e) => getExampleMark(e) === "pass").length;
+              const gTotal = g.examples.length;
+              const gDone = gTotal > 0 && gPassed === gTotal;
+              const shortLabel = g.guide?.shortTitle || g.title;
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  className={`mh-scene-item${activeGroupId === g.id ? " is-active" : ""}`}
+                  onClick={() => jumpToScenario(g.id)}
+                >
+                  <span>{shortLabel}</span>
+                  <span className={`mh-scene-prog${gDone ? " is-done" : ""}`}>
+                    {gDone ? <Check className="h-3.5 w-3.5" /> : `${gPassed}/${gTotal}`}
+                  </span>
+                </button>
+              );
+            })}
           </nav>
 
           <div className="mh-toc-group">
-            <div className="mh-toc-label">例题讲解优先源</div>
             <div className="mh-seg">
               <button
                 type="button"
@@ -800,7 +892,6 @@ export function MathHandoutDetailPage() {
           </div>
 
           <div className="mh-toc-group space-y-2">
-            <div className="mh-toc-label">答题步骤与已斩题</div>
             <button
               type="button"
               className="mh-btn w-full justify-center"
@@ -808,6 +899,7 @@ export function MathHandoutDetailPage() {
               onClick={toggleAllSteps}
             >
               {globalStepsOpen ? "全部收起步骤" : "全部展开步骤"}
+              <kbd className="mh-kbd">Space</kbd>
             </button>
             {retiredCount > 0 && (
               <button
@@ -817,32 +909,9 @@ export function MathHandoutDetailPage() {
                 onClick={() => setHideRetired((v) => !v)}
               >
                 {hideRetired ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                {hideRetired ? `显示已斩灰条 (${retiredCount})` : `隐藏已斩灰条 (${retiredCount})`}
+                {hideRetired ? `显示已斩 (${retiredCount})` : `隐藏已斩 (${retiredCount})`}
               </button>
             )}
-            <p className="m-0 text-[12px] leading-snug text-[var(--mh-muted)]">
-              点选题目后按 <kbd className="mh-kbd">Space</kbd> 显隐答题步骤；标记会/模糊/不会当天折叠、下次复习自动展开（也可手动展开）；「斩掉」折叠成灰条并移出复习。
-            </p>
-          </div>
-
-          <div className="mh-toc-group">
-            <div className="mh-toc-label">
-              本讲进度（{passedCount} / {allExamples.length} 已会
-              {retiredCount > 0 ? ` · ${retiredCount} 已斩` : ""}）
-            </div>
-            <div className="mh-prog-bar">
-              <div className="mh-prog-fill" style={{ width: `${progressPct}%` }} />
-            </div>
-            <div className="mt-2 flex flex-col gap-1.5 text-[12px]">
-              <Link to={`/kg/math/kp/${handout.primaryKpId}`} className="inline-flex items-center gap-1">
-                <Network className="h-3.5 w-3.5" />
-                图谱：{kpInfo?.kp.name ?? handout.primaryKpId}（{confidence}%）
-              </Link>
-              <Link to={`/review-priority/knowledge/${handout.primaryKpId}`} className="inline-flex items-center gap-1">
-                <Target className="h-3.5 w-3.5" />
-                查看复习性价比排序
-              </Link>
-            </div>
           </div>
         </aside>
 
@@ -869,12 +938,13 @@ export function MathHandoutDetailPage() {
                 复习性价比同步
               </Link>
               <span className="text-[var(--mh-muted)]">
-                真题 {handout.stats.exam} 题 · 李林 880 精讲 {handout.stats.lilin880} 题
-                {retiredCount > 0 ? ` · 已斩 ${retiredCount} 题` : ""}
+                真题 {handout.stats.exam} 题 · 李林 880 精讲 {handout.stats.lilin880} 题 · 已会{" "}
+                {passedCount}/{allExamples.length}
+                {retiredCount > 0 ? ` · 已斩 ${retiredCount}` : ""}
               </span>
             </div>
 
-            {/* 窄屏顶部控制条 */}
+            {/* 窄屏顶部控制条 + 场景快捷跳转 */}
             <div className="mh-mobile-bar">
               <div className="mh-seg">
                 <button
@@ -911,78 +981,35 @@ export function MathHandoutDetailPage() {
                   {hideRetired ? `显示已斩 (${retiredCount})` : `隐藏已斩 (${retiredCount})`}
                 </button>
               )}
+              <div className="mh-mobile-scenes w-full">
+                {handout.groups.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    className={activeGroupId === g.id ? "is-active" : ""}
+                    onClick={() => jumpToScenario(g.id)}
+                  >
+                    {g.guide?.shortTitle || g.title}
+                  </button>
+                ))}
+              </div>
             </div>
           </header>
 
-          {/* 1. 怎么判 */}
-          {handout.verdictHtml && (
-            <section>
-              <h2 id="verdict" className="mh-topic">
-                {handout.verdictHeading}
-              </h2>
-              <div dangerouslySetInnerHTML={{ __html: handout.verdictHtml }} />
-            </section>
+          {/* 全局一句话起手（精简导览，不再堆大表格） */}
+          {leadHtml && (
+            <section id="verdict" dangerouslySetInnerHTML={{ __html: leadHtml }} />
           )}
 
-          {/* 2. 看式子找第一步 */}
-          {handout.methods.length > 0 && (
-            <section>
-              <h2 id="topic-index" className="mh-topic">
-                {handout.topicHeading}
-              </h2>
-              {handout.topicIntroHtml && (
-                <div dangerouslySetInnerHTML={{ __html: handout.topicIntroHtml }} />
-              )}
-              <div className="mh-methods">
-                {handout.methods.map((m, idx) => (
-                  <div key={m.id} id={m.id} className="mh-method-card">
-                    <div className="mh-method-head">
-                      <span className="mh-method-num">{idx + 1}</span>
-                      <span dangerouslySetInnerHTML={{ __html: m.titleHtml }} />
-                    </div>
-                    {m.descHtml && (
-                      <div
-                        className="mh-method-desc"
-                        dangerouslySetInnerHTML={{ __html: m.descHtml }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
+          {priority === "lilin880" && !hasAny880 && (
+            <div className="note">
+              <strong>提示：</strong>本讲的李林 880 HTML 精讲题尚未补齐（不以扫描图凑数），当前先展示本讲历年真题与方法讲解。
+            </div>
           )}
 
-          {/* 3. 例题串讲 */}
-          {handout.workedHtml && (
-            <section className="mh-worked">
-              <h2 id="worked-examples" className="mh-topic">
-                {handout.workedHeading || "例题串讲"}
-              </h2>
-              <div dangerouslySetInnerHTML={{ __html: handout.workedHtml }} />
-            </section>
-          )}
-
-          {/* 4. 按方法练习（按「真题优先 / 李林 880 优先」切换主次例题，全 HTML 渲染） */}
-          <section>
-            <h2 id="practice" className="mh-topic">
-              {handout.practiceHeading}
-              <span className="ml-auto text-xs font-semibold text-[var(--mh-muted)]">
-                当前：{priority === "lilin880" ? "李林 880 优先" : "真题优先"} · 按{" "}
-                <kbd className="mh-kbd">Space</kbd> 显隐答题步骤
-              </span>
-            </h2>
-
-            {handout.practiceIntroHtml && (
-              <div dangerouslySetInnerHTML={{ __html: handout.practiceIntroHtml }} />
-            )}
-
-            {priority === "lilin880" && !hasAny880 && (
-              <div className="note">
-                <strong>提示：</strong>本讲的李林 880 HTML 精讲题尚未补齐（不以扫描图凑数），当前先展示本讲历年真题与方法讲解；「连续性与间断点」已完成 20 道李林 880 全 HTML 精讲作为样板。
-              </div>
-            )}
-
-            {handout.groups.map((g, gIdx) => {
+          {/* 按判别场景闭环：每个场景顶部展开核心关键与刷题路线图，紧接对应例题 */}
+          <div className="mt-4">
+            {handout.groups.map((g) => {
               const examList = g.examples.filter(isExamExample);
               const lilinList = g.examples.filter(isLilinExample);
 
@@ -1009,16 +1036,34 @@ export function MathHandoutDetailPage() {
 
               const passedInGroup = g.examples.filter((e) => getExampleMark(e) === "pass").length;
               const retiredInGroup = g.examples.filter((e) => isExampleRetired(e)).length;
+              const isOpen = Boolean(openGroups[g.id]);
+              const featuredSet = new Set(g.guide?.featuredAnchorIds ?? []);
+              const guide = g.guide;
+              const hasGuideBody = Boolean(
+                guide && (guide.clueHtml || guide.coreHtml || guide.pitfallHtml || guide.roadmapHtml)
+              );
 
               return (
-                <details
+                <section
                   key={g.id}
                   id={g.id}
-                  open={gIdx === 0 || (priority === "lilin880" && primaryList.length > 0)}
-                  className="mh-group"
+                  data-mh-group={g.id}
+                  className={`mh-group${isOpen ? " is-open" : ""}`}
                 >
-                  <summary>
-                    <span>{g.title}</span>
+                  <button
+                    type="button"
+                    className="mh-group-head"
+                    aria-expanded={isOpen}
+                    onClick={() => toggleGroup(g.id)}
+                  >
+                    <span className="mh-group-head-left">
+                      {isOpen ? (
+                        <ChevronDown className="h-4 w-4 shrink-0" />
+                      ) : (
+                        <ChevronUp className="h-4 w-4 shrink-0 rotate-90" />
+                      )}
+                      <span>{g.title}</span>
+                    </span>
                     <span className="mh-group-meta">
                       <span className="mh-group-count">
                         {priority === "lilin880" && hasAny880
@@ -1030,78 +1075,131 @@ export function MathHandoutDetailPage() {
                         {retiredInGroup > 0 ? ` · 已斩 ${retiredInGroup}` : ""}
                       </span>
                     </span>
-                  </summary>
+                  </button>
 
-                  <div className="mh-group-body">
-                    {visiblePrimary.length === 0 ? (
-                      <p className="py-2 text-sm text-[var(--mh-muted)]">
-                        {primaryList.length > 0 && hideRetired
-                          ? "本组主源例题已全部斩掉并隐藏，可在左侧重新显示已斩灰条。"
-                          : "本方法分组下暂无对应主源例题，可展开下方对照题练习。"}
-                      </p>
-                    ) : (
-                      visiblePrimary.map((ex) => (
-                        <ExampleCard
-                          key={ex.anchorId}
-                          ex={ex}
-                          isActive={activeAnchorId === ex.anchorId}
-                          isRetired={isExampleRetired(ex)}
-                          isForcedOpen={Boolean(forceExpandMap[ex.anchorId])}
-                          doneMark={getExampleDoneMark(ex)}
-                          hintOpen={Boolean(hintOpenMap[ex.anchorId])}
-                          stepsOpen={isStepsOpen(ex.anchorId)}
-                          currentMark={getExampleMark(ex)}
-                          primaryKpId={handout.primaryKpId}
-                          secondaryKpIds={handout.secondaryKpIds}
-                          onActivate={() => setActiveAnchorId(ex.anchorId)}
-                          onToggleHint={() =>
-                            setHintOpenMap((m) => ({ ...m, [ex.anchorId]: !m[ex.anchorId] }))
-                          }
-                          onToggleSteps={() => toggleStepsFor(ex.anchorId)}
-                          onRetire={() => handleRetireExample(ex)}
-                          onUnretire={() => handleUnretireExample(ex)}
-                          onToggleForceOpen={() => toggleForceOpen(ex.anchorId)}
-                          onMarked={() => setForceOpen(ex.anchorId, false)}
-                        />
-                      ))
-                    )}
-
-                    {visibleSecondary.length > 0 && (
-                      <details className="mh-secondary-fold">
-                        <summary>{secondaryLabel}</summary>
-                        <div>
-                          {visibleSecondary.map((ex) => (
-                            <ExampleCard
-                              key={ex.anchorId}
-                              ex={ex}
-                              isActive={activeAnchorId === ex.anchorId}
-                              isRetired={isExampleRetired(ex)}
-                              isForcedOpen={Boolean(forceExpandMap[ex.anchorId])}
-                              doneMark={getExampleDoneMark(ex)}
-                              hintOpen={Boolean(hintOpenMap[ex.anchorId])}
-                              stepsOpen={isStepsOpen(ex.anchorId)}
-                              currentMark={getExampleMark(ex)}
-                              primaryKpId={handout.primaryKpId}
-                              secondaryKpIds={handout.secondaryKpIds}
-                              onActivate={() => setActiveAnchorId(ex.anchorId)}
-                              onToggleHint={() =>
-                                setHintOpenMap((m) => ({ ...m, [ex.anchorId]: !m[ex.anchorId] }))
-                              }
-                              onToggleSteps={() => toggleStepsFor(ex.anchorId)}
-                              onRetire={() => handleRetireExample(ex)}
-                              onUnretire={() => handleUnretireExample(ex)}
-                              onToggleForceOpen={() => toggleForceOpen(ex.anchorId)}
-                              onMarked={() => setForceOpen(ex.anchorId, false)}
-                            />
-                          ))}
+                  {isOpen && (
+                    <div className="mh-group-body">
+                      {/* 场景内展开的「核心关键」与示范母题路线图 */}
+                      {hasGuideBody && guide && (
+                        <div className="mh-scene-guide">
+                          <div className="mh-sg-grid">
+                            {guide.clueHtml && (
+                              <div className="mh-sg-row">
+                                <span className="mh-sg-badge is-clue">看式子认题眼</span>
+                                <span dangerouslySetInnerHTML={{ __html: guide.clueHtml }} />
+                              </div>
+                            )}
+                            {guide.coreHtml && (
+                              <div className="mh-sg-row">
+                                <span className="mh-sg-badge">核心关键与起手</span>
+                                <span dangerouslySetInnerHTML={{ __html: guide.coreHtml }} />
+                              </div>
+                            )}
+                            {guide.pitfallHtml && (
+                              <div className="mh-sg-row is-pitfall">
+                                <span className="mh-sg-badge is-pitfall">高频坑点</span>
+                                <span dangerouslySetInnerHTML={{ __html: guide.pitfallHtml }} />
+                              </div>
+                            )}
+                            {guide.roadmapHtml && (
+                              <div className="mh-sg-row is-roadmap">
+                                <span className="mh-sg-badge is-roadmap">本组刷题路线</span>
+                                <span dangerouslySetInnerHTML={{ __html: guide.roadmapHtml }} />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </details>
-                    )}
-                  </div>
-                </details>
+                      )}
+
+                      {visiblePrimary.length === 0 ? (
+                        <p className="py-2 text-sm text-[var(--mh-muted)]">
+                          {primaryList.length > 0 && hideRetired
+                            ? "本组主源例题已全部斩掉并隐藏，可在左侧重新显示已斩灰条。"
+                            : "本场景下暂无对应主源例题，可展开下方对照题练习。"}
+                        </p>
+                      ) : (
+                        visiblePrimary.map((ex) => (
+                          <ExampleCard
+                            key={ex.anchorId}
+                            ex={ex}
+                            isActive={activeAnchorId === ex.anchorId}
+                            isFeatured={featuredSet.has(ex.anchorId)}
+                            isRetired={isExampleRetired(ex)}
+                            isForcedOpen={Boolean(forceExpandMap[ex.anchorId])}
+                            doneMark={getExampleDoneMark(ex)}
+                            hintOpen={Boolean(hintOpenMap[ex.anchorId])}
+                            stepsOpen={isStepsOpen(ex.anchorId)}
+                            currentMark={getExampleMark(ex)}
+                            primaryKpId={handout.primaryKpId}
+                            secondaryKpIds={handout.secondaryKpIds}
+                            onActivate={() => setActiveAnchorId(ex.anchorId)}
+                            onToggleHint={() =>
+                              setHintOpenMap((m) => ({ ...m, [ex.anchorId]: !m[ex.anchorId] }))
+                            }
+                            onToggleSteps={() => toggleStepsFor(ex.anchorId)}
+                            onRetire={() => handleRetireExample(ex)}
+                            onUnretire={() => handleUnretireExample(ex)}
+                            onToggleForceOpen={() => toggleForceOpen(ex.anchorId)}
+                            onMarked={() => setForceOpen(ex.anchorId, false)}
+                          />
+                        ))
+                      )}
+
+                      {visibleSecondary.length > 0 && (
+                        <details className="mh-secondary-fold">
+                          <summary>{secondaryLabel}</summary>
+                          <div>
+                            {visibleSecondary.map((ex) => (
+                              <ExampleCard
+                                key={ex.anchorId}
+                                ex={ex}
+                                isActive={activeAnchorId === ex.anchorId}
+                                isFeatured={featuredSet.has(ex.anchorId)}
+                                isRetired={isExampleRetired(ex)}
+                                isForcedOpen={Boolean(forceExpandMap[ex.anchorId])}
+                                doneMark={getExampleDoneMark(ex)}
+                                hintOpen={Boolean(hintOpenMap[ex.anchorId])}
+                                stepsOpen={isStepsOpen(ex.anchorId)}
+                                currentMark={getExampleMark(ex)}
+                                primaryKpId={handout.primaryKpId}
+                                secondaryKpIds={handout.secondaryKpIds}
+                                onActivate={() => setActiveAnchorId(ex.anchorId)}
+                                onToggleHint={() =>
+                                  setHintOpenMap((m) => ({ ...m, [ex.anchorId]: !m[ex.anchorId] }))
+                                }
+                                onToggleSteps={() => toggleStepsFor(ex.anchorId)}
+                                onRetire={() => handleRetireExample(ex)}
+                                onUnretire={() => handleUnretireExample(ex)}
+                                onToggleForceOpen={() => toggleForceOpen(ex.anchorId)}
+                                onMarked={() => setForceOpen(ex.anchorId, false)}
+                              />
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                    </div>
+                  )}
+                </section>
               );
             })}
-          </section>
+          </div>
+
+          {/* 尚未升级结构化场景指南的旧手稿：在底部折叠保留速查表与综合串讲，确保信息零丢失 */}
+          {showLegacyBottomRef && (
+            <details className="mh-group mt-6">
+              <summary>
+                <span>本讲速查表与综合串讲（点击展开复盘）</span>
+              </summary>
+              <div className="mh-group-body">
+                {handout.verdictTableHtml && (
+                  <div dangerouslySetInnerHTML={{ __html: handout.verdictTableHtml }} />
+                )}
+                {handout.workedHtml && (
+                  <div className="mh-worked" dangerouslySetInnerHTML={{ __html: handout.workedHtml }} />
+                )}
+              </div>
+            </details>
+          )}
         </main>
       </div>
 

@@ -1131,3 +1131,191 @@
 .mh-undo-toast button:hover {
   background: color-mix(in srgb, var(--mh-paper) 26%, transparent);
 }
+
+/* === 左侧判别场景导航 + 场景内展开核心关键卡 + 示范母题路线图 === */
+.mh-scene-nav {
+  display: grid;
+  gap: 0.24rem;
+  margin-bottom: 0.9rem;
+}
+.mh-scene-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.36rem 0.5rem 0.36rem 0.62rem;
+  margin-left: -0.62rem;
+  border: 0;
+  border-left: 2.5px solid transparent;
+  border-radius: 0 7px 7px 0;
+  background: transparent;
+  color: var(--mh-muted);
+  font: inherit;
+  font-size: 0.84rem;
+  line-height: 1.42;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.mh-scene-item:hover {
+  color: var(--mh-accent);
+  background: color-mix(in srgb, var(--mh-accent-soft) 55%, transparent);
+}
+.mh-scene-item.is-active {
+  color: var(--mh-accent);
+  border-left-color: var(--mh-accent);
+  background: var(--mh-accent-soft);
+  font-weight: 680;
+}
+.mh-scene-prog {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--mh-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding-top: 0.08rem;
+}
+.mh-scene-item.is-active .mh-scene-prog {
+  color: var(--mh-accent);
+}
+.mh-scene-prog.is-done {
+  color: var(--mh-ok);
+}
+
+/* 受控折叠场景块头部 */
+.mh-group-head {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0.76rem 1rem;
+  color: var(--mh-accent);
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  text-align: left;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.mh-group-head:hover {
+  background: var(--mh-surface);
+}
+.mh-group.is-open > .mh-group-head {
+  border-bottom: 1px solid var(--mh-line);
+  background: var(--mh-surface);
+  border-radius: 10px 10px 0 0;
+}
+.mh-group-head-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+/* 场景内展开的「核心关键」卡片 */
+.mh-scene-guide {
+  margin: 0.85rem 0 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--mh-accent) 28%, var(--mh-line-strong));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--mh-accent-soft) 36%, var(--mh-paper));
+  overflow: hidden;
+}
+.mh-sg-grid {
+  display: grid;
+  gap: 0;
+}
+.mh-sg-row {
+  padding: 0.72rem 1rem;
+  border-bottom: 1px solid var(--mh-line);
+  font-size: 0.93rem;
+  line-height: 1.85;
+}
+.mh-sg-row:last-child {
+  border-bottom: 0;
+}
+.mh-sg-row.is-pitfall {
+  background: color-mix(in srgb, var(--mh-accent-2-bg) 42%, var(--mh-paper));
+}
+.mh-sg-row.is-roadmap {
+  background: var(--mh-surface);
+  font-size: 0.88rem;
+}
+.mh-sg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.55rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 99px;
+  background: var(--mh-accent);
+  color: var(--mh-paper);
+  font-size: 0.73rem;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+.mh-sg-badge.is-clue {
+  background: var(--mh-surface-2);
+  color: var(--mh-ink);
+  border: 1px solid var(--mh-line-strong);
+}
+.mh-sg-badge.is-pitfall {
+  background: var(--mh-accent-2);
+  color: #fff;
+}
+.mh-sg-badge.is-roadmap {
+  background: var(--mh-paper);
+  color: var(--mh-accent);
+  border: 1px solid color-mix(in srgb, var(--mh-accent) 45%, transparent);
+}
+.mh-sg-row.is-roadmap a {
+  display: inline-block;
+  margin: 0.1rem 0.22rem;
+  padding: 0.05rem 0.48rem;
+  border-radius: 6px;
+  background: var(--mh-paper);
+  border: 1px solid var(--mh-line-strong);
+  font-size: 0.81rem;
+  font-weight: 650;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.mh-sg-row.is-roadmap a:hover {
+  border-color: var(--mh-accent);
+  background: var(--mh-accent-soft);
+  text-decoration: none;
+}
+
+/* 示范母题小标签 */
+.mh-src-tag.is-featured {
+  background: color-mix(in srgb, var(--mh-accent) 14%, transparent);
+  color: var(--mh-accent);
+  border: 1px solid color-mix(in srgb, var(--mh-accent) 35%, transparent);
+}
+
+/* 移动端判别场景快捷横条 */
+.mh-mobile-scenes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0.85rem;
+}
+.mh-mobile-scenes button {
+  border: 1px solid var(--mh-line-strong);
+  background: var(--mh-paper);
+  color: var(--mh-muted);
+  border-radius: 99px;
+  padding: 0.22rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mh-mobile-scenes button.is-active {
+  background: var(--mh-accent);
+  border-color: var(--mh-accent);
+  color: var(--mh-paper);
+}

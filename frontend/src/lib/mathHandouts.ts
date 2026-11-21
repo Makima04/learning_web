@@ -25,9 +25,20 @@ export interface HandoutExample {
   stepsHtml: string;
 }
 
+export interface HandoutGroupGuide {
+  shortTitle: string;
+  clueHtml: string;
+  coreHtml: string;
+  pitfallHtml: string;
+  roadmapHtml: string;
+  featuredAnchorIds: string[];
+  structured: boolean;
+}
+
 export interface HandoutGroup {
   id: string;
   title: string;
+  guide?: HandoutGroupGuide;
   examples: HandoutExample[];
 }
 
@@ -43,6 +54,9 @@ export interface MathHandout {
   title: string;
   verdictHeading: string;
   verdictHtml: string;
+  verdictLeadHtml?: string;
+  verdictTableHtml?: string;
+  hasStructuredScenarios?: boolean;
   topicHeading: string;
   topicIntroHtml: string;
   methods: HandoutMethod[];
@@ -114,7 +128,7 @@ export function useHandoutPriority(): [HandoutPriority, (p: HandoutPriority) => 
   return [priority, setPriority];
 }
 
-const HANDOUTS_DATA_VERSION = "20261120v8";
+const HANDOUTS_DATA_VERSION = "20261121v2";
 
 let handoutsCache: Promise<MathHandout[]> | null = null;
 export function loadMathHandouts(): Promise<MathHandout[]> {
