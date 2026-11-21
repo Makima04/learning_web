@@ -749,7 +749,7 @@ def format_derivation_explanation(body_html):
 def enhance_steps_html(steps_html, item_id):
     if item_id in CUSTOM_STEPS_OVERRIDES:
         return CUSTOM_STEPS_OVERRIDES[item_id]
-    if not steps_html:
+    if not steps_html or 'class="mh-steps"' in steps_html:
         return steps_html
 
     def repl_exp(m):
@@ -846,6 +846,37 @@ def split_verdict_html(verdict_html):
     return lead_html, table_html
 
 
+def iter_practice_groups(practice_html):
+    """按嵌套深度匹配 <details class="practice-group" ...>...</details>，避免内部折叠块截断分组。"""
+    open_re = re.compile(
+        r'<details\s+class="practice-group"[^>]*id="([^"]+)"[^>]*>\s*<summary[^>]*>(.*?)</summary>',
+        re.S,
+    )
+    tag_re = re.compile(r'<details\b|</details>', re.S)
+    pos = 0
+    while True:
+        m = open_re.search(practice_html, pos)
+        if not m:
+            break
+        gid = m.group(1)
+        gtitle = strip_tags(m.group(2))
+        body_start = m.end()
+        depth = 1
+        end_pos = len(practice_html)
+        for tm in tag_re.finditer(practice_html, body_start):
+            if tm.group(0).startswith("</"):
+                depth -= 1
+                if depth == 0:
+                    end_pos = tm.start()
+                    pos = tm.end()
+                    break
+            else:
+                depth += 1
+        else:
+            pos = len(practice_html)
+        yield gid, gtitle, practice_html[body_start:end_pos]
+
+
 def parse_lecture(meta, math1_by_yn, lilin_lookup):
     full_path = os.path.join(HANDOUT_DIR, meta["rel"])
     html = open(full_path, encoding="utf-8").read()
@@ -876,10 +907,7 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
 
     groups = []
     ex_counter = 0
-    for gm in re.finditer(r'<details class="practice-group"[^>]*id="([^"]+)"[^>]*>\s*<summary[^>]*>(.*?)</summary>(.*?)</details>', practice_html, re.S):
-        gid = gm.group(1)
-        gtitle = strip_tags(gm.group(2))
-        gbody = gm.group(3)
+    for gid, gtitle, gbody in iter_practice_groups(practice_html):
         explicit_guide = parse_scenario_guide(gbody)
         examples = []
         for am in re.finditer(r'<article([^>]*)>(.*?)</article>', gbody, re.S):

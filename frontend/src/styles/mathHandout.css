@@ -73,13 +73,71 @@
   overflow-y: auto;
 }
 
+.mh-toc-back {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--mh-muted);
+  text-decoration: none;
+}
+.mh-toc-back:hover {
+  color: var(--mh-accent);
+  text-decoration: none;
+}
+
 .mh-toc-title {
-  margin: 0 0 0.7rem;
+  margin: 0 0 0.28rem;
   font-size: 0.93rem;
   font-weight: 700;
   color: var(--mh-ink);
-  line-height: 1.45;
+  line-height: 1.42;
   text-wrap: balance;
+}
+
+.mh-toc-meta {
+  margin: 0 0 0.85rem;
+  font-size: 0.75rem;
+  color: var(--mh-muted);
+  line-height: 1.4;
+}
+
+.mh-toc-links {
+  display: grid;
+  gap: 0.35rem;
+}
+.mh-toc-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.78rem;
+  color: var(--mh-muted);
+  text-decoration: none;
+  line-height: 1.4;
+  min-width: 0;
+}
+.mh-toc-links a:hover {
+  color: var(--mh-accent);
+  text-decoration: none;
+}
+
+.mh-mobile-head {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.mh-mobile-head .mh-toc-back {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.mh-mobile-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--mh-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mh-toc-list {
@@ -213,7 +271,7 @@
 /* 主文区 */
 .mh-main {
   min-width: 0;
-  padding: 2rem 0 5rem;
+  padding: 1.65rem 0 4.5rem;
 }
 
 .mh-back {
@@ -1318,4 +1376,223 @@
   background: var(--mh-accent);
   border-color: var(--mh-accent);
   color: var(--mh-paper);
+}
+
+/* 原题与官方解析高清切图排版（深色模式自动适配纸张底色） */
+.mh-q-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.2rem 0 0.45rem;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--mh-line);
+}
+.mh-ans-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.45rem 0;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--mh-line);
+}
+.dark .mh-q-img,
+.dark .mh-ans-img {
+  filter: invert(0.92) hue-rotate(180deg);
+  border-color: var(--mh-line-strong);
+}
+
+/* === 单页专注舞台：讲解页与题目页平级翻页，零套娃边框 === */
+.mh-stage {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.mh-stage-header {
+  margin-bottom: 1rem;
+}
+.mh-stage-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 0.9rem;
+  margin-bottom: 0.65rem;
+}
+.mh-stage-title {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 740;
+  color: var(--mh-ink);
+}
+.mh-stage-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--mh-muted);
+}
+.mh-stage-body {
+  min-height: 14rem;
+}
+.mh-example.is-single {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.mh-stage-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--mh-line);
+}
+.mh-stage-kbd-hint {
+  font-size: 0.78rem;
+  color: var(--mh-muted);
+}
+.mh-step-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 7px;
+  border: 1px solid var(--mh-line-strong);
+  background: var(--mh-paper);
+  color: var(--mh-ink);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.mh-step-nav-btn:hover:not(:disabled) {
+  border-color: var(--mh-accent);
+  background: var(--mh-accent-soft);
+  color: var(--mh-accent);
+}
+.mh-step-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mh-step-nav-btn.is-primary {
+  background: var(--mh-accent);
+  border-color: var(--mh-accent);
+  color: var(--mh-paper);
+}
+.mh-step-nav-btn.is-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  background: var(--mh-accent);
+  color: var(--mh-paper);
+}
+
+/* 紧凑页码快跳条（讲解 + 1..N 题） */
+.mh-q-dots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.32rem;
+}
+.mh-q-dot {
+  min-width: 1.85rem;
+  height: 1.75rem;
+  padding: 0 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--mh-line-strong);
+  background: var(--mh-paper);
+  color: var(--mh-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  transition: all 0.14s;
+}
+.mh-q-dot.is-guide-dot {
+  font-family: inherit;
+  padding: 0 0.62rem;
+}
+.mh-q-dot:hover {
+  border-color: var(--mh-accent);
+  color: var(--mh-accent);
+}
+.mh-q-dot.is-pass {
+  background: var(--mh-ok-bg);
+  border-color: color-mix(in srgb, var(--mh-ok) 45%, transparent);
+  color: var(--mh-ok);
+}
+.mh-q-dot.is-fuzzy {
+  background: var(--mh-accent-2-bg);
+  border-color: color-mix(in srgb, var(--mh-accent-2) 45%, transparent);
+  color: var(--mh-accent-2);
+}
+.mh-q-dot.is-fail {
+  background: var(--mh-err-bg);
+  border-color: color-mix(in srgb, var(--mh-err) 45%, transparent);
+  color: var(--mh-err);
+}
+.mh-q-dot.is-retired {
+  background: var(--mh-surface-2);
+  color: var(--mh-muted);
+  text-decoration: line-through;
+  opacity: 0.72;
+}
+.mh-q-dot.is-current {
+  background: var(--mh-accent);
+  border-color: var(--mh-accent);
+  color: var(--mh-paper);
+  opacity: 1;
+  text-decoration: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mh-accent) 24%, transparent);
+}
+.mh-q-dot.is-exam-badge::after {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 99px;
+  background: currentColor;
+  margin-left: 2px;
+  opacity: 0.65;
+}
+
+/* 默认折叠的「对照李林 880 原书解析图」入口 */
+.mh-orig-ans {
+  margin-top: 0.75rem;
+}
+.mh-orig-ans > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.24rem 0.65rem;
+  border-radius: 6px;
+  border: 1px dashed var(--mh-line-strong);
+  background: var(--mh-surface);
+  color: var(--mh-muted);
+  font-size: 0.79rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.mh-orig-ans > summary::-webkit-details-marker {
+  display: none;
+}
+.mh-orig-ans > summary:hover {
+  border-color: var(--mh-accent);
+  color: var(--mh-accent);
+}
+.mh-orig-ans[open] > summary {
+  border-style: solid;
+  border-color: var(--mh-accent);
+  color: var(--mh-accent);
+  margin-bottom: 0.45rem;
 }
