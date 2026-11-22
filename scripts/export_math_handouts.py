@@ -655,14 +655,29 @@ def format_derivation_explanation(body_html):
     s = body_html.strip()
     if not s:
         return s
-    # 如果本身已经包含 ul/ol/div.formula/mh-compare-grid/table，保留原结构，只把末尾独立的「答案 X」段落高亮
-    if any(tok in s for tok in ("<ul", "<ol", 'class="formula"', 'class="mh-compare-grid"', "<table")):
+    # 先完整抽离 <details class="mh-orig-ans"...>...</details>，避免内部 <p><img ...></p> 被按纯文本过滤掉
+    orig_ans_blocks = []
+    def _save_orig_ans(m):
+        blk = m.group(0).strip()
+        img_m = re.search(r'<img[^>]+src="([^"]+)"', blk)
+        if img_m:
+            disk = os.path.join(PROJECT_DIR, "frontend/public", img_m.group(1).lstrip("/"))
+            if not os.path.exists(disk):
+                return ""
+        orig_ans_blocks.append(blk)
+        return ""
+    s = re.sub(r'<details\s+class="mh-orig-ans"[^>]*>.*?</details>', _save_orig_ans, s, flags=re.S).strip()
+    orig_tail = ("\n" + "\n".join(orig_ans_blocks)) if orig_ans_blocks else ""
+    if not s:
+        return "\n".join(orig_ans_blocks)
+    # 如果本身已经包含 ul/ol/div.formula/mh-compare-grid/table/mh-verdict-bar，保留原结构，只把末尾独立的「答案 X」段落高亮
+    if any(tok in s for tok in ("<ul", "<ol", 'class="formula"', 'class="mh-compare-grid"', 'class="mh-verdict-bar"', "<table")):
         def highlight_ans_p(m):
             inner = m.group(1).strip()
             if "答案" in inner:
                 return f'<div class="mh-verdict-bar"><span class="mh-verdict-tag">结论</span>{inner}</div>'
             return m.group(0)
-        return re.sub(r"<p>(.*?)</p>\s*$", highlight_ans_p, s, flags=re.S)
+        return re.sub(r"<p>(.*?)</p>\s*$", highlight_ans_p, s, flags=re.S) + orig_tail
 
     # 先按 <p>...</p> 提取全部段落，彻底剥离 <p>/</p>，避免残留标签破坏 <li> 排版
     para_matches = re.findall(r"<p[^>]*>(.*?)</p>", s, flags=re.S)
@@ -702,18 +717,18 @@ def format_derivation_explanation(body_html):
             full_seg = restore(seg) + (punct if punct else "。")
             plain = strip_tags(full_seg)
             # 过滤纯空白或纯标点的无效碎片，杜绝「4 。」空步骤
-            if not plain or re.fullmatch(r"[\s。！？；，、.!?：:]+", plain):
+            if "<img" not in full_seg and (not plain or re.fullmatch(r"[\s。！？；，、.!?：:]+", plain)):
                 continue
             sents.append(full_seg)
 
     if not sents:
-        return ""
+        return orig_tail.strip()
 
     if len(sents) == 1:
         restored = promote_heavy_math_in_sentence(sents[0])
         if "答案" in strip_tags(restored):
-            return f'<div class="mh-verdict-bar"><span class="mh-verdict-tag">结论</span>{restored}</div>'
-        return f"<p>{restored}</p>"
+            return f'<div class="mh-verdict-bar"><span class="mh-verdict-tag">结论</span>{restored}</div>' + orig_tail
+        return f"<p>{restored}</p>" + orig_tail
 
     # 末尾句如含「答案」或明显为总结句，则抽为底部结论高亮条
     verdict_html = ""
@@ -736,20 +751,36 @@ def format_derivation_explanation(body_html):
         verdict_html = f'<div class="mh-verdict-bar"><span class="mh-verdict-tag">结论</span>{promote_heavy_math_in_sentence(verdict_sent)}</div>'
 
     if not sents:
-        return verdict_html
+        return verdict_html + orig_tail
 
     step_items = []
     for st in sents:
         formatted_st = promote_heavy_math_in_sentence(st)
         step_items.append(f"<li>{formatted_st}</li>")
 
-    return f'<ol class="mh-steps">{"".join(step_items)}</ol>{verdict_html}'
+    return f'<ol class="mh-steps">{"".join(step_items)}</ol>{verdict_html}{orig_tail}'
+
+
+def strip_missing_orig_ans(html):
+    """移除指向不存在磁盘图片的 <details class="mh-orig-ans">，避免前端点击解析图出现空图/破图。"""
+    def _filter(m):
+        blk = m.group(0)
+        img_m = re.search(r'<img[^>]+src="([^"]+)"', blk)
+        if img_m:
+            disk = os.path.join(PROJECT_DIR, "frontend/public", img_m.group(1).lstrip("/"))
+            if not os.path.exists(disk):
+                return ""
+        return blk
+    return re.sub(r'\s*<details\s+class="mh-orig-ans"[^>]*>.*?</details>', _filter, html, flags=re.S)
 
 
 def enhance_steps_html(steps_html, item_id):
     if item_id in CUSTOM_STEPS_OVERRIDES:
         return CUSTOM_STEPS_OVERRIDES[item_id]
-    if not steps_html or 'class="mh-steps"' in steps_html:
+    if not steps_html:
+        return steps_html
+    steps_html = strip_missing_orig_ans(steps_html)
+    if 'class="mh-steps"' in steps_html:
         return steps_html
 
     def repl_exp(m):
