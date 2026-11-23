@@ -233,6 +233,95 @@ export function getExampleReviewState(
   return { isDue: false, reviewedToday };
 }
 
+export function useMathHandouts(enabled = true): MathHandout[] {
+  const [list, setList] = useState<MathHandout[]>([]);
+  useEffect(() => {
+    if (!enabled) {
+      setList([]);
+      return;
+    }
+    let alive = true;
+    loadMathHandouts()
+      .then((hs) => {
+        if (alive) setList(hs);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [enabled]);
+  return list;
+}
+
+export interface HandoutExampleRef {
+  handout: MathHandout;
+  example: HandoutExample;
+}
+
+export interface HandoutLookup {
+  byKp: Map<string, MathHandout>;
+  byModule: Map<string, MathHandout[]>;
+  byItemId: Map<string, HandoutExampleRef>;
+  byExam: Map<string, HandoutExampleRef>;
+}
+
+export function buildHandoutLookup(handouts: MathHandout[]): HandoutLookup {
+  const byKp = new Map<string, MathHandout>();
+  const byModule = new Map<string, MathHandout[]>();
+  const byItemId = new Map<string, HandoutExampleRef>();
+  const byExam = new Map<string, HandoutExampleRef>();
+
+  for (const h of handouts) {
+    if (!byKp.has(h.primaryKpId)) byKp.set(h.primaryKpId, h);
+    const modList = byModule.get(h.moduleId) ?? [];
+    modList.push(h);
+    byModule.set(h.moduleId, modList);
+
+    for (const g of h.groups) {
+      for (const ex of g.examples) {
+        const ref: HandoutExampleRef = { handout: h, example: ex };
+        if (!byItemId.has(ex.id)) byItemId.set(ex.id, ref);
+        if (ex.lilin880Id && !byItemId.has(ex.lilin880Id)) {
+          byItemId.set(ex.lilin880Id, ref);
+        }
+        if (ex.year && ex.n) {
+          const key = `${ex.year}-${ex.n}`;
+          if (!byExam.has(key)) byExam.set(key, ref);
+        }
+      }
+    }
+  }
+  for (const h of handouts) {
+    for (const sec of h.secondaryKpIds ?? []) {
+      if (!byKp.has(sec)) byKp.set(sec, h);
+    }
+  }
+  return { byKp, byModule, byItemId, byExam };
+}
+
+export function countHandoutDue(
+  handout: MathHandout,
+  journalByItemId: Map<string, JournalEntry>,
+  markRecordMap: Map<string, UserItemMark>,
+  today: string = dayKey()
+): { dueCount: number; reviewedTodayCount: number } {
+  let dueCount = 0;
+  let reviewedTodayCount = 0;
+  for (const g of handout.groups) {
+    for (const ex of g.examples) {
+      const st = getExampleReviewState(ex, journalByItemId, markRecordMap, today);
+      if (st.isDue) dueCount += 1;
+      else if (st.reviewedToday) reviewedTodayCount += 1;
+    }
+  }
+  return { dueCount, reviewedTodayCount };
+}
+
+export function handoutHref(slug: string, opts?: { dueOnly?: boolean; anchorId?: string }): string {
+  if (opts?.anchorId) return `/math-handouts/${slug}#${opts.anchorId}`;
+  return opts?.dueOnly ? `/math-handouts/${slug}?review=due` : `/math-handouts/${slug}`;
+}
+
 export function matchLilin880ForHandout(
   handout: MathHandout,
   allLilin: Lilin880Item[]

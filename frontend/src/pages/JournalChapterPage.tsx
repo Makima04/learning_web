@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Bookmark, Check } from "lucide-react";
+import { ArrowRight, Bookmark, BookOpen, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { findModule } from "@/data/kg";
@@ -11,6 +11,7 @@ import { isExamItemId, parseExamItemId } from "@/lib/kg/examJournal";
 import { useHydratedItems } from "@/lib/kg/catalogLoad";
 import { itemById } from "@/lib/kg/wangdao408";
 import { practiceKindLabel, practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
+import { buildHandoutLookup, handoutHref, useMathHandouts } from "@/lib/mathHandouts";
 import { applyWangdaoPractice, toggleWangdaoCollect } from "@/lib/kg/wangdaoPractice";
 import type { MarkLevel } from "@/lib/kg/types";
 import { useJournal } from "@/stores/journal";
@@ -38,9 +39,12 @@ export function JournalChapterPage() {
   const cats = useMemo(() => categoryMap(categories), [categories]);
   const today = dayKey();
   const loc = findModule(moduleId);
+  const isMath = loc?.book.subject === "math";
   const which =
-    loc?.book.subject === "math" ? "math" : loc?.book.subject === "cs408" ? "wangdao" : "all";
+    isMath ? "math" : loc?.book.subject === "cs408" ? "wangdao" : "all";
   const { items: catalog } = useDrillCatalog(which);
+  const mathHandouts = useMathHandouts(isMath);
+  const handoutLookup = useMemo(() => buildHandoutLookup(mathHandouts), [mathHandouts]);
 
   const dueInChapter = useMemo(() => {
     const kgDue = sortDueEntries(entries.filter(isKgChapterReviewEntry), today);
@@ -58,6 +62,22 @@ export function JournalChapterPage() {
   const isWrong = dueInChapter.some((e) => e.sourceItemId);
   const title = loc?.module.name || dueInChapter[0]?.title || "章节";
   const bookName = loc?.book.name || "知识图谱";
+  const chapterHandoutHref = useMemo(() => {
+    if (!isMath) return undefined;
+    for (const e of dueInChapter) {
+      if (e.sourceItemId) {
+        const ref = handoutLookup.byItemId.get(e.sourceItemId);
+        if (ref) return handoutHref(ref.handout.slug, { dueOnly: true });
+      }
+      if (e.kpId) {
+        const h = handoutLookup.byKp.get(e.kpId);
+        if (h) return handoutHref(h.slug, { dueOnly: true });
+      }
+    }
+    const modList = handoutLookup.byModule.get(moduleId);
+    if (modList && modList.length > 0) return handoutHref(modList[0].slug, { dueOnly: true });
+    return "/math-handouts";
+  }, [isMath, dueInChapter, handoutLookup, moduleId]);
 
   function confirmDelete(id: string, titleText: string) {
     if (window.confirm(`确定删除「${titleText}」？此操作不可撤销。`)) {
@@ -67,14 +87,25 @@ export function JournalChapterPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 md:px-8">
-      <div>
-        <Link to="/journal" className="text-xs text-muted-foreground hover:underline">
-          ← 今日复盘
-        </Link>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {bookName} · {dueInChapter.length} {isWrong ? "道错题待复习" : "个知识点待复盘"}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <Link to="/journal" className="text-xs text-muted-foreground hover:underline">
+            ← 今日复盘
+          </Link>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {bookName} · {dueInChapter.length} {isWrong ? "道错题待复习" : "个知识点待复盘"}
+          </p>
+        </div>
+        {chapterHandoutHref && (
+          <Button asChild size="sm" className="gap-1.5 bg-app-orange text-white hover:bg-app-orange/90">
+            <Link to={chapterHandoutHref}>
+              <BookOpen className="h-4 w-4" />
+              去数学手稿复习本章
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        )}
       </div>
 
       {dueInChapter.length === 0 ? (
@@ -102,17 +133,29 @@ export function JournalChapterPage() {
                 ? itemById(hydrated, entry.sourceItemId)
                 : undefined;
             if (q) {
+              const mathRef = isMath ? handoutLookup.byItemId.get(q.id) : undefined;
               return (
                 <Card key={entry.id}>
                   <CardContent className="space-y-3 p-5">
-                    <p className="text-xs text-muted-foreground">
-                      {q.source === "lilin880" || q.source === "zhangyu1000"
-                        ? `${practiceSourceLabel(q)} · ${practiceKindLabel(q.kind)} · §${q.section} #${q.qno}`
-                        : practiceQuestionLocation(q)}
-                      {q.pdf_page ? ` · 做题本 p.${q.pdf_page}` : ""}
-                      {q.book_ans_page != null ? ` · 原书【P${q.book_ans_page}】` : ""}
-                      {entry.nextReviewOn < today ? " · 逾期" : ""}
-                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {q.source === "lilin880" || q.source === "zhangyu1000"
+                          ? `${practiceSourceLabel(q)} · ${practiceKindLabel(q.kind)} · §${q.section} #${q.qno}`
+                          : practiceQuestionLocation(q)}
+                        {q.pdf_page ? ` · 做题本 p.${q.pdf_page}` : ""}
+                        {q.book_ans_page != null ? ` · 原书【P${q.book_ans_page}】` : ""}
+                        {entry.nextReviewOn < today ? " · 逾期" : ""}
+                      </p>
+                      {mathRef && (
+                        <Link
+                          to={handoutHref(mathRef.handout.slug, { anchorId: mathRef.example.anchorId })}
+                          className="inline-flex items-center gap-1 rounded-full bg-app-orange/15 px-2.5 py-1 text-xs font-bold text-app-orange hover:bg-app-orange hover:text-white"
+                        >
+                          <BookOpen className="h-3.5 w-3.5" />
+                          在数学手稿中精讲复习 →
+                        </Link>
+                      )}
+                    </div>
                     <QuestionKpLine item={q} />
                     <WangdaoStem item={q} />
                     <WangdaoAnalysis item={q} />

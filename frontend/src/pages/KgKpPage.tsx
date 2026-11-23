@@ -1,9 +1,11 @@
 // 考点刷题：像背单词一样先看新学/复习数量，再按队列过题。
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
+import { BookOpen } from "lucide-react";
 import { findKp } from "@/data/kg";
 import { kgKpPath, kgMapPath, kgModulePath, kgSubjectSlug, knowledgeReviewPath, parseKgSubject, practiceReturnLabel, practiceReturnPath } from "@/lib/kg/paths";
 import { KNOWLEDGE_REVIEW_TOPICS } from "@/lib/kg/knowledgeReview";
+import { buildHandoutLookup, handoutHref, useMathHandouts } from "@/lib/mathHandouts";
 import { vizFor } from "@/viz/registry";
 import { wdSetPath } from "@/data/kg/wdTaxonomy";
 import {
@@ -44,6 +46,11 @@ export function KgKpPage() {
   const found = findKp(kpId);
   const isMath = found?.book.subject === "math";
   const { items, error } = useDrillCatalog(isMath ? "math" : "wangdao");
+  const mathHandouts = useMathHandouts(isMath);
+  const kpHandout = useMemo(
+    () => (isMath && kpId ? buildHandoutLookup(mathHandouts).byKp.get(kpId) : undefined),
+    [isMath, kpId, mathHandouts]
+  );
   const load = useKgProgress((s) => s.load);
   const itemMarks = useKgProgress((s) => s.itemMarks);
   const entries = useJournal((s) => s.entries);
@@ -198,7 +205,27 @@ export function KgKpPage() {
         </p>
       </div>
 
-      {mode === "idle" && KNOWLEDGE_REVIEW_TOPICS[kp.id] && (
+      {mode === "idle" && isMath && kpHandout && (
+        <Card className="border-primary/40 bg-accent/35">
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
+            <div className="min-w-0 flex-1">
+              <h2 className="flex items-center gap-1.5 text-sm font-bold text-primary">
+                <BookOpen className="h-4 w-4" />
+                数学手稿精讲：{kpHandout.title}
+              </h2>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                含判别口诀、解题路线、历年真题与李林 880 逐题精讲（进度与待复习全站同步）
+              </p>
+            </div>
+            <Button asChild size="sm" className={cn(counts.review > 0 && "bg-app-orange text-white hover:bg-app-orange/90")}>
+              <Link to={handoutHref(kpHandout.slug, { dueOnly: counts.review > 0 })}>
+                {counts.review > 0 ? `去手稿复习 ${counts.review} 题 →` : "进入数学手稿 →"}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      {mode === "idle" && !kpHandout && KNOWLEDGE_REVIEW_TOPICS[kp.id] && (
         <Card>
           <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
             <div className="min-w-0 flex-1">

@@ -22,6 +22,7 @@ import {
   type JournalKind,
 } from "@/lib/journal";
 import { DEFAULT_KG_CHAPTER_DAILY_REVIEW, planKgChapterDue } from "@/lib/kg/journalBridge";
+import { buildHandoutLookup, useMathHandouts } from "@/lib/mathHandouts";
 import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/stores/auth";
@@ -67,6 +68,8 @@ export function JournalPage() {
   const due = duePlan.due;
   const deferredCount = duePlan.deferred.length;
   const kgDue = kgPlan.due;
+  const mathHandouts = useMathHandouts(kgDue.length > 0);
+  const handoutLookup = useMemo(() => buildHandoutLookup(mathHandouts), [mathHandouts]);
   const kgDeferredCount = kgPlan.deferred.length;
   const kgChapterLimit = journalKgChapterDailyLimit ?? DEFAULT_KG_CHAPTER_DAILY_REVIEW;
   const hasTodayWork = due.length > 0 || kgDue.length > 0;
@@ -276,6 +279,7 @@ export function JournalPage() {
                       <ChapterReviewCard
                         key={chapter.moduleId}
                         chapter={chapter}
+                        handoutLookup={handoutLookup}
                         onOpen={() =>
                           navigate(`/journal/chapter/${encodeURIComponent(chapter.moduleId)}`)
                         }

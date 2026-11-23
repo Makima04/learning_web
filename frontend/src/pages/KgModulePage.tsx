@@ -1,7 +1,7 @@
 // 模块学习：考点列表。408 刷王道；数学按 880 章，李林880 与 张宇1000 分开刷。
 import { useEffect, useMemo } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { Route } from "lucide-react";
+import { BookOpen, Route } from "lucide-react";
 import { getBook, getModule, findKp } from "@/data/kg";
 import { routeChapterById } from "@/data/kg/mathRouteGuides";
 import { routeChapterPath } from "@/lib/kg/mathRoute";
@@ -10,6 +10,7 @@ import { countKpDrill, countPoolDrill } from "@/lib/kg/wangdao408";
 import { itemsForSource, MATH_BOOK_SOURCES, useDrillCatalog } from "@/lib/kg/mathPractice";
 import { bookDrillGroups, itemsForBookDrill } from "@/lib/kg/mathBookToc";
 import { kgBookDrillPath, kgKpPath, kgMapPath, kgModulePath, kgSubjectSlug, parseKgSubject } from "@/lib/kg/paths";
+import { buildHandoutLookup, handoutHref, useMathHandouts } from "@/lib/mathHandouts";
 import { osMemSetPath } from "@/data/kg/osMemTopics";
 import { wdCounts, wdSetPath } from "@/data/kg/wdTaxonomy";
 import { itemsForKp } from "@/lib/kg/wangdao408";
@@ -51,6 +52,12 @@ export function KgModulePage() {
   const mod = getModule(bookId as BookId, moduleId);
   const hasDrill = book?.subject === "cs408" || book?.subject === "math";
   const isMath = book?.subject === "math";
+  const mathHandouts = useMathHandouts(isMath);
+  const handoutLookup = useMemo(() => buildHandoutLookup(mathHandouts), [mathHandouts]);
+  const moduleHandouts = useMemo(
+    () => (isMath && mod ? (handoutLookup.byModule.get(mod.id) ?? []) : []),
+    [isMath, mod, handoutLookup]
+  );
   const routeGuide = isMath && mod ? routeChapterById(mod.id) : undefined;
   const prog = useMemo(
     () => moduleProgress(bookId as BookId, moduleId, states),
@@ -162,6 +169,24 @@ export function KgModulePage() {
         </Card>
       )}
 
+      {isMath && moduleHandouts.length > 0 && (
+        <Card className="border-primary/40 bg-accent/30">
+          <CardContent className="space-y-2.5 p-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-primary">
+              <BookOpen className="h-4 w-4" />
+              本章数学手稿（推荐入口 · 含真题与 880 逐题精讲）
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {moduleHandouts.map((h) => (
+                <Button key={h.slug} asChild size="sm" variant="secondary">
+                  <Link to={handoutHref(h.slug)}>{h.title}</Link>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {hasDrill && !catalog && (
         <p className="text-sm text-muted-foreground">正在加载题量…</p>
       )}
@@ -226,13 +251,18 @@ export function KgModulePage() {
                   ),
                 }))
               : null;
+          const kpHandout = isMath ? handoutLookup.byKp.get(kp.id) : undefined;
+          const kpHasDue = Boolean(drill && drill.review > 0);
+          const kpTargetHref = kpHandout
+            ? handoutHref(kpHandout.slug, { dueOnly: kpHasDue })
+            : kgKpPath(kp.id, { subject: book.subject });
           return (
             <Card key={kp.id}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
                   {hasDrill ? (
                     <Link
-                      to={kgKpPath(kp.id, { subject: book.subject })}
+                      to={kpTargetHref}
                       className="min-w-0 hover:underline"
                     >
                       <CardTitle className="text-sm font-medium leading-snug">
@@ -353,9 +383,17 @@ export function KgModulePage() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {kpHandout && (
+                    <Button asChild size="sm" className={cn(kpHasDue && "bg-app-orange text-white hover:bg-app-orange/90")}>
+                      <Link to={kpTargetHref}>
+                        <BookOpen className="mr-1 h-3.5 w-3.5" />
+                        {kpHasDue ? `去手稿复习 (${drill?.review})` : "进入数学手稿"}
+                      </Link>
+                    </Button>
+                  )}
                   {hasDrill && isMath && mathDrills
                     ? mathDrills.map((s) => (
-                        <Button key={s.id} asChild size="sm" variant="secondary">
+                        <Button key={s.id} asChild size="sm" variant="outline">
                           <Link to={kgKpPath(kp.id, { subject: book.subject, src: s.id })}>
                             {s.label}
                             {s.drill.review > 0

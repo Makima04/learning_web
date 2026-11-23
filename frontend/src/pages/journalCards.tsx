@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Archive, Check, ChevronDown, ChevronRight, HelpCircle, Trash2, X } from "lucide-react";
+import { Archive, BookOpen, Check, ChevronDown, ChevronRight, HelpCircle, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { findModule } from "@/data/kg";
 import { dayKey } from "@/lib/day";
 import { isExamItemId, parseExamItemId } from "@/lib/kg/examJournal";
+import { handoutHref, type HandoutLookup } from "@/lib/mathHandouts";
 import type { JournalEntry, JournalKind, ReviewResult } from "@/lib/journal";
 import type { KgChapterCard } from "@/lib/kg/journalBridge";
 import { useJournal } from "@/stores/journal";
@@ -172,12 +174,14 @@ export function EntryCard({
   );
 }
 
-/** 章节大卡展开后的一条到期条目：真题给重做/解析深链，其它走章节页逐题复盘 */
+/** 章节大卡展开后的一条到期条目：数学条目直达数学手稿，408 真题给重做/解析深链，其它走章节页逐题复盘 */
 function ChapterEntryRow({
   entry,
+  mathHref,
   onOpenChapter,
 }: {
   entry: JournalEntry;
+  mathHref?: string;
   onOpenChapter: () => void;
 }) {
   const today = dayKey();
@@ -195,7 +199,7 @@ function ChapterEntryRow({
           {entry.title}
         </p>
         <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
-          {pos ? "真题" : "知识图谱"} · 间隔 {entry.step} 天 ·{" "}
+          {mathHref ? "数学手稿" : pos ? "真题" : "知识图谱"} · 间隔 {entry.step} 天 ·{" "}
           {overdue ? (
             <span className="font-medium text-ink-danger">逾期 · 应复 {entry.nextReviewOn}</span>
           ) : (
@@ -204,7 +208,11 @@ function ChapterEntryRow({
           {entry.lapses > 0 && ` · 遗忘 ${entry.lapses} 次`}
         </p>
       </div>
-      {pos ? (
+      {mathHref ? (
+        <Link to={mathHref} className={cn(actionCls, "border-app-orange/50 text-app-orange hover:bg-app-orange hover:text-white")}>
+          去手稿复习
+        </Link>
+      ) : pos ? (
         <div className="flex shrink-0 gap-1">
           <Link to={`/kg/exams/practice/${pos.year}?q=${pos.n}&mode=practice`} className={actionCls}>
             重做
@@ -224,14 +232,47 @@ function ChapterEntryRow({
 
 export function ChapterReviewCard({
   chapter,
+  handoutLookup,
   onOpen,
 }: {
   chapter: KgChapterCard;
+  handoutLookup?: HandoutLookup;
   onOpen: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const examCount = chapter.entries.filter((e) => isExamItemId(e.sourceItemId)).length;
   const listId = `chapter-due-${chapter.moduleId.replace(/[^\w-]/g, "-")}`;
+  const isMathChapter = findModule(chapter.moduleId)?.book.subject === "math";
+  const entryMathHref = (entry: JournalEntry): string | undefined => {
+    if (!isMathChapter || !handoutLookup) return undefined;
+    if (entry.sourceItemId) {
+      const ref = handoutLookup.byItemId.get(entry.sourceItemId);
+      if (ref) return handoutHref(ref.handout.slug, { anchorId: ref.example.anchorId });
+    }
+    if (entry.kpId) {
+      const h = handoutLookup.byKp.get(entry.kpId);
+      if (h) return handoutHref(h.slug, { dueOnly: true });
+    }
+    return undefined;
+  };
+  const chapterHandoutHref = (() => {
+    if (!isMathChapter || !handoutLookup) return undefined;
+    for (const e of chapter.entries) {
+      if (e.sourceItemId) {
+        const ref = handoutLookup.byItemId.get(e.sourceItemId);
+        if (ref) return handoutHref(ref.handout.slug, { dueOnly: true });
+      }
+      if (e.kpId) {
+        const h = handoutLookup.byKp.get(e.kpId);
+        if (h) return handoutHref(h.slug, { dueOnly: true });
+      }
+    }
+    const modHandouts = handoutLookup.byModule.get(chapter.moduleId);
+    if (modHandouts && modHandouts.length > 0) {
+      return handoutHref(modHandouts[0].slug, { dueOnly: true });
+    }
+    return "/math-handouts";
+  })();
 
   return (
     <Card>
@@ -286,13 +327,29 @@ export function ChapterReviewCard({
         <CardContent id={listId} className="space-y-3 pt-0">
           <ul className="space-y-1.5">
             {chapter.entries.map((entry) => (
-              <ChapterEntryRow key={entry.id} entry={entry} onOpenChapter={onOpen} />
+              <ChapterEntryRow
+                key={entry.id}
+                entry={entry}
+                mathHref={entryMathHref(entry)}
+                onOpenChapter={onOpen}
+              />
             ))}
           </ul>
-          <Button size="sm" variant="outline" onClick={onOpen} className="gap-1">
-            进入章节逐题复盘
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {chapterHandoutHref ? (
+              <Button asChild size="sm" className="gap-1 bg-app-orange text-white hover:bg-app-orange/90">
+                <Link to={chapterHandoutHref}>
+                  <BookOpen className="h-4 w-4" />
+                  去数学手稿复习本章
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            ) : null}
+            <Button size="sm" variant="outline" onClick={onOpen} className="gap-1">
+              进入章节逐题复盘
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </CardContent>
       )}
     </Card>

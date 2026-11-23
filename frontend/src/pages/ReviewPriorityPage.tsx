@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
-import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, Info, Maximize2, Minimize2, Play, Target, Timer, X } from "lucide-react";
+import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, Clock, Info, Maximize2, Minimize2, Play, Target, Timer, X } from "lucide-react";
 import { findKp } from "@/data/kg";
 import { syncAccountData } from "@/lib/accountSync";
+import { dayKey } from "@/lib/day";
 import { isDueOnOrBefore } from "@/lib/journal";
 import { kgKpPath, kgMapPath, knowledgeReviewPath, knowledgeCheckPath, legacyMathReviewPath } from "@/lib/kg/paths";
 import { KNOWLEDGE_REVIEW_TOPICS } from "@/lib/kg/knowledgeReview";
@@ -25,7 +26,13 @@ import type { Math1TrainingMatch } from "@/lib/kg/math1Analysis";
 import { hydratePracticeItems } from "@/lib/kg/catalogLoad";
 import { applyWangdaoPractice, isCollected, toggleWangdaoCollect } from "@/lib/kg/wangdaoPractice";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
-import { loadMathHandouts, type MathHandout } from "@/lib/mathHandouts";
+import {
+  buildHandoutLookup,
+  buildJournalEntryMap,
+  countHandoutDue,
+  handoutHref,
+  useMathHandouts,
+} from "@/lib/mathHandouts";
 import { useAuth } from "@/stores/auth";
 import { useKgProgress } from "@/stores/kgProgress";
 import { useJournal } from "@/stores/journal";
@@ -310,6 +317,7 @@ export function ReviewPriorityPage() {
   const [open, setOpen] = useState(() => params.has("kp"));
   const [infoOpen, setInfoOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showSecondaryOnly, setShowSecondaryOnly] = useState(false);
   const [allEvidence, setAllEvidence] = useState(false);
   const [showAllTraining, setShowAllTraining] = useState(false);
   const [queue, setQueue] = useState<WangdaoItem[]>([]);
@@ -330,28 +338,23 @@ export function ReviewPriorityPage() {
   const load = useKgProgress((s) => s.load);
   const retireItem = useKgProgress((s) => s.retireItem);
   const unretireItem = useKgProgress((s) => s.unretireItem);
-  const [mathHandouts, setMathHandouts] = useState<MathHandout[]>([]);
-  useEffect(() => {
-    if (subject !== "math") return;
-    let alive = true;
-    loadMathHandouts().then((list) => { if (alive) setMathHandouts(list); }).catch(() => {});
-    return () => { alive = false; };
-  }, [subject]);
-  const handoutByKp = useMemo(() => {
-    const map = new Map<string, MathHandout>();
-    for (const h of mathHandouts) {
-      if (!map.has(h.primaryKpId)) map.set(h.primaryKpId, h);
-    }
-    for (const h of mathHandouts) {
-      for (const sec of h.secondaryKpIds ?? []) {
-        if (!map.has(sec)) map.set(sec, h);
-      }
-    }
-    return map;
-  }, [mathHandouts]);
   const loggedIn = useAuth((s) => s.loggedIn);
   const userId = useAuth((s) => s.user?.id);
   const entries = useJournal((s) => s.entries);
+  const mathHandouts = useMathHandouts(subject === "math");
+  const handoutLookup = useMemo(() => buildHandoutLookup(mathHandouts), [mathHandouts]);
+  const handoutByKp = handoutLookup.byKp;
+  const todayKey = dayKey();
+  const handoutDueMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (subject !== "math" || mathHandouts.length === 0) return map;
+    const jMap = buildJournalEntryMap(entries, todayKey);
+    const mMap = new Map(marks.map((m) => [m.itemId, m]));
+    for (const h of mathHandouts) {
+      map.set(h.slug, countHandoutDue(h, jMap, mMap, todayKey).dueCount);
+    }
+    return map;
+  }, [subject, mathHandouts, entries, marks, todayKey]);
   const { items, error } = useDrillCatalog(subject === "math" ? "math" : "wangdao");
   // 来源仅限制本次训练候选；个人排序仍使用完整题库中的历史作答证据。
   const trainingItems = useMemo(() => items ? itemsForSource(items, source) : null, [items, source]);
@@ -442,8 +445,16 @@ export function ReviewPriorityPage() {
     const sorted = sortReviewTopics(bookTopics, order);
     return trackApplicable ? filterCs408TrackTopics(sorted, track) : sorted;
   }, [bookTopics, order, trackApplicable, track]);
-  const selected = ranked.find((t) => t.kpId === params.get("kp")) ?? ranked[0];
-  const top3 = ranked.slice(0, 3);
+  const primaryRanked = useMemo(
+    () => (subject === "math" ? ranked.filter((t) => t.primaryQuestions.length > 0) : ranked),
+    [subject, ranked]
+  );
+  const secondaryOnlyRanked = useMemo(
+    () => (subject === "math" ? ranked.filter((t) => t.primaryQuestions.length === 0) : []),
+    [subject, ranked]
+  );
+  const selected = ranked.find((t) => t.kpId === params.get("kp")) ?? primaryRanked[0] ?? ranked[0];
+  const top3 = (primaryRanked.length > 0 ? primaryRanked : ranked).slice(0, 3);
 
   const wrong = entries.filter((e) => e.status === "active" && e.sourceItemId);
   const dueIds = new Set(wrong.filter((e) => isDueOnOrBefore(e)).map((e) => e.sourceItemId!));
@@ -638,7 +649,8 @@ export function ReviewPriorityPage() {
     setNotice("已斩掉该题，后续不再重复推荐。");
   }
 
-  const visibleRows = expanded ? ranked : ranked.slice(0, 8);
+  const mainRanked = primaryRanked.length > 0 ? primaryRanked : ranked;
+  const visibleRows = expanded ? mainRanked : mainRanked.slice(0, 8);
   const queueList = showAllTraining ? allTraining : training;
   const queueMinutes = queueList.reduce((sum, t) => sum + practiceMinutes(t.item.kind ?? kind), 0);
   const drawerRoi = selected ? roi.get(selected.kpId) : undefined;
@@ -780,6 +792,8 @@ export function ReviewPriorityPage() {
             {top3.map((topic, index) => {
               const info = roi.get(topic.kpId);
               const starter = starters.get(topic.kpId);
+              const handout = subject === "math" ? handoutByKp.get(topic.kpId) : undefined;
+              const hDue = handout ? (handoutDueMap.get(handout.slug) ?? 0) : 0;
               if (!info) return null;
               return (
                 <div
@@ -812,19 +826,32 @@ export function ReviewPriorityPage() {
                   </button>
                   <div className="mt-2.5 flex items-center justify-between gap-2">
                     <span className="min-w-0 truncate text-[10px] text-muted-foreground">{topic.years.length}/{dataset.years.length} 年考过</span>
-                    <Button
-                      size="sm"
-                      className="h-8 gap-1 px-3 text-[11px]"
-                      disabled={subject === "math" && !starter}
-                      onClick={() => subject === "cs408" ? openTopic(topic.kpId) : starter && startTopic(topic.kpId, [starter])}
-                    >
-                      <Play className="h-3 w-3" />{subject === "cs408" ? "开始检验" : starter ? "直接练题" : "暂无题"}
-                    </Button>
+                    {handout ? (
+                      <Button
+                        asChild
+                        size="sm"
+                        className={cn("h-8 gap-1 px-3 text-[11px]", hDue > 0 && "bg-app-orange text-white hover:bg-app-orange/90")}
+                      >
+                        <Link to={handoutHref(handout.slug, { dueOnly: hDue > 0 })}>
+                          {hDue > 0 ? <Clock className="h-3 w-3" /> : <BookOpen className="h-3 w-3" />}
+                          {hDue > 0 ? `去手稿复习 ${hDue} 题` : "进手稿精讲"}
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="h-8 gap-1 px-3 text-[11px]"
+                        disabled={subject === "math" && !starter}
+                        onClick={() => subject === "cs408" ? openTopic(topic.kpId) : starter && startTopic(topic.kpId, [starter])}
+                      >
+                        <Play className="h-3 w-3" />{subject === "cs408" ? "开始检验" : starter ? "直接练题" : "暂无题"}
+                      </Button>
+                    )}
                   </div>
-                  {subject === "math" && handoutByKp.get(topic.kpId) ? (
-                    <Link to={`/math-handouts/${handoutByKp.get(topic.kpId)!.slug}`} className="mt-3 inline-flex items-center gap-1.5 border-t border-border/60 pt-2.5 text-xs font-bold text-primary hover:underline">
+                  {handout ? (
+                    <Link to={handoutHref(handout.slug)} className="mt-3 inline-flex items-center gap-1.5 border-t border-border/60 pt-2.5 text-xs font-bold text-primary hover:underline">
                       <BookOpen className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                      <span className="truncate">手稿精讲 · {handoutByKp.get(topic.kpId)!.title}</span>
+                      <span className="truncate">手稿：{handout.title}</span>
                       <ArrowRight className="ml-auto h-3 w-3 shrink-0" aria-hidden="true" />
                     </Link>
                   ) : KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
@@ -863,9 +890,12 @@ export function ReviewPriorityPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleRows.map((topic, index) => {
+              {(showSecondaryOnly ? [...visibleRows, ...secondaryOnlyRanked] : visibleRows).map((topic, index) => {
                 const info = roi.get(topic.kpId);
                 const starter = starters.get(topic.kpId) ?? matchReviewTraining(topic, items ?? [], marks, states, dueIds, waitingIds)[0]?.item;
+                const handout = subject === "math" ? handoutByKp.get(topic.kpId) : undefined;
+                const hDue = handout ? (handoutDueMap.get(handout.slug) ?? 0) : 0;
+                const isSecondaryOnly = subject === "math" && topic.primaryQuestions.length === 0;
                 return (
                   <tr
                     key={topic.kpId}
@@ -875,24 +905,31 @@ export function ReviewPriorityPage() {
                     aria-label={`查看 ${topic.name} 的依据`}
                     className={cn(
                       "cursor-pointer border-b border-border/40 transition-colors last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                      isSecondaryOnly && "opacity-80",
                       selected?.kpId === topic.kpId && open ? "bg-accent/50" : "hover:bg-secondary/50"
                     )}
                   >
                     <td className="py-2.5 pl-4 pr-1 align-middle">
-                      <span className={cn("grid h-6 w-6 place-items-center rounded-md text-[11px] font-extrabold", index < 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{index + 1}</span>
+                      <span className={cn("grid h-6 w-6 place-items-center rounded-md text-[11px] font-extrabold", !isSecondaryOnly && index < 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{isSecondaryOnly ? "辅" : index + 1}</span>
                     </td>
                     <td className="py-2.5 pr-2 align-middle">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-sm font-bold">{topic.name}</span>
                         <Status topic={topic} plan={templatePlans.get(topic.kpId)} />
-                        {subject === "math" && handoutByKp.get(topic.kpId) ? (
+                        {handout ? (
                           <Link
-                            to={`/math-handouts/${handoutByKp.get(topic.kpId)!.slug}`}
+                            to={handoutHref(handout.slug, { dueOnly: hDue > 0 })}
                             onClick={(event) => event.stopPropagation()}
                             onKeyDown={(event) => event.stopPropagation()}
-                            className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-bold text-primary hover:bg-primary/20"
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold",
+                              hDue > 0
+                                ? "bg-app-orange text-white hover:bg-app-orange/90"
+                                : "bg-primary/10 text-primary hover:bg-primary/20"
+                            )}
                           >
-                            <BookOpen className="h-3 w-3" aria-hidden="true" />手稿精讲
+                            {hDue > 0 ? <Clock className="h-3 w-3" aria-hidden="true" /> : <BookOpen className="h-3 w-3" aria-hidden="true" />}
+                            {hDue > 0 ? `手稿待复习 ${hDue}` : "手稿精讲"}
                           </Link>
                         ) : KNOWLEDGE_REVIEW_TOPICS[topic.kpId] && (
                           <Link
@@ -904,7 +941,7 @@ export function ReviewPriorityPage() {
                             <BookOpen className="h-3 w-3" aria-hidden="true" />知识复习
                           </Link>
                         )}
-                        {topic.due && <span className="text-[10px] font-semibold text-ink-danger">到期</span>}
+                        {topic.due && hDue === 0 && <span className="text-[10px] font-semibold text-ink-danger">到期</span>}
                       </div>
                       <p className="mt-0.5 text-[11px] text-muted-foreground md:hidden">
                         考查 {topic.recentYears.length}/{recentSamples} 年 · 主考归属每年约 {info?.perPaper.toFixed(1)} 分
@@ -921,26 +958,49 @@ export function ReviewPriorityPage() {
                     </td>
                     <td className="hidden py-2.5 pr-2 align-middle text-xs text-muted-foreground lg:table-cell">{COST[topic.cost]}</td>
                     <td className="py-2.5 pr-4 align-middle text-right">
-                      <button
-                        type="button"
-                        disabled={subject === "math" && !starter}
-                        aria-label={`${subject === "cs408" ? "开始检验" : "开始练"} ${topic.name}`}
-                        onClick={(e) => { e.stopPropagation(); if (subject === "cs408") openTopic(topic.kpId); else if (starter) startTopic(topic.kpId, [starter]); }}
-                        className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-30"
-                      >
-                        <Play className="h-3.5 w-3.5" />
-                      </button>
+                      {handout ? (
+                        <Link
+                          to={handoutHref(handout.slug, { dueOnly: hDue > 0 })}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`进入数学手稿 ${topic.name}`}
+                          className={cn(
+                            "inline-grid h-8 w-8 place-items-center rounded-full transition-colors",
+                            hDue > 0
+                              ? "bg-app-orange/15 text-app-orange hover:bg-app-orange hover:text-white"
+                              : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
+                          )}
+                        >
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={subject === "math" && !starter}
+                          aria-label={`${subject === "cs408" ? "开始检验" : "开始练"} ${topic.name}`}
+                          onClick={(e) => { e.stopPropagation(); if (subject === "cs408") openTopic(topic.kpId); else if (starter) startTopic(topic.kpId, [starter]); }}
+                          className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-30"
+                        >
+                          <Play className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-          {ranked.length > 8 && (
-            <button type="button" className="w-full px-4 py-2.5 text-xs font-semibold text-primary hover:bg-secondary/50" onClick={() => setExpanded((v) => !v)}>
-              {expanded ? "收起" : `查看全部 ${ranked.length} 类考点`}
-            </button>
-          )}
+          <div className="flex flex-wrap items-center justify-center divide-x divide-border/60 border-t border-border/40">
+            {mainRanked.length > 8 && (
+              <button type="button" className="flex-1 px-4 py-2.5 text-xs font-semibold text-primary hover:bg-secondary/50" onClick={() => setExpanded((v) => !v)}>
+                {expanded ? "收起主考榜" : `查看全部 ${mainRanked.length} 类主考考点`}
+              </button>
+            )}
+            {secondaryOnlyRanked.length > 0 && (
+              <button type="button" className="flex-1 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-secondary/50 hover:text-foreground" onClick={() => setShowSecondaryOnly((v) => !v)}>
+                {showSecondaryOnly ? `隐藏 ${secondaryOnlyRanked.length} 个辅助考查考点` : `查看 ${secondaryOnlyRanked.length} 个仅作辅助考查考点（主考 0 分）`}
+              </button>
+            )}
+          </div>
         </section>
         </>)}
 
@@ -1054,13 +1114,17 @@ export function ReviewPriorityPage() {
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
               {algoTrackActive && algoGroup && <AlgoGroupDetail group={algoGroup} onPractice={(list, at) => void openPractice(list, at)} />}
               {!algoTrackActive && (<>
-              {subject === "math" && handoutByKp.get(selected.kpId) ? (
-                <Link to={`/math-handouts/${handoutByKp.get(selected.kpId)!.slug}`} className="flex items-start gap-3 rounded-xl border-2 border-primary/30 bg-accent/50 p-3 transition-colors hover:border-primary/60">
-                  <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                  <span className="min-w-0 flex-1"><span className="block text-sm font-bold">先精读数学手稿：{handoutByKp.get(selected.kpId)!.title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">含判别口诀、解题路线、真题与李林 880 逐题精讲（支持斩题同步）</span></span>
-                  <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                </Link>
-              ) : KNOWLEDGE_REVIEW_TOPICS[selected.kpId] && (
+              {subject === "math" && handoutByKp.get(selected.kpId) ? (() => {
+                const h = handoutByKp.get(selected.kpId)!;
+                const hDue = handoutDueMap.get(h.slug) ?? 0;
+                return (
+                  <Link to={handoutHref(h.slug, { dueOnly: hDue > 0 })} className={cn("flex items-start gap-3 rounded-xl border-2 p-3 transition-colors", hDue > 0 ? "border-app-orange/60 bg-app-orange/10 hover:border-app-orange" : "border-primary/30 bg-accent/50 hover:border-primary/60")}>
+                    {hDue > 0 ? <Clock className="mt-0.5 h-4 w-4 shrink-0 text-app-orange" aria-hidden="true" /> : <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />}
+                    <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{hDue > 0 ? `去数学手稿复习 ${hDue} 题：${h.title}` : `进入数学手稿精讲：${h.title}`}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">含判别口诀、解题路线、真题与李林 880 逐题精讲（支持斩题与待复习同步）</span></span>
+                    <ArrowRight className={cn("mt-0.5 h-4 w-4 shrink-0", hDue > 0 ? "text-app-orange" : "text-primary")} aria-hidden="true" />
+                  </Link>
+                );
+              })() : KNOWLEDGE_REVIEW_TOPICS[selected.kpId] && (
                 <Link to={knowledgeReviewPath(selected.kpId, params.toString())} className="flex items-start gap-3 rounded-xl border-2 border-primary/30 bg-accent/50 p-3 transition-colors hover:border-primary/60">
                   <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   <span className="min-w-0 flex-1"><span className="block text-sm font-bold">先复习知识与解题路线</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{KNOWLEDGE_REVIEW_TOPICS[selected.kpId].summary}</span></span>
@@ -1203,20 +1267,13 @@ export function ReviewPriorityPage() {
                 <ul className="mt-2 space-y-1.5">
                   {queueList.map(({ item, match, review, templateIds, reason }, at) => {
                     const current = active?.id === item.id;
-                    return (
-                    <li key={item.id}>
-                      <button
-                        type="button"
-                        aria-pressed={current}
-                        onClick={() => void openPractice(queueList.map((t) => t.item), at)}
-                        className={cn(
-                          "flex w-full items-center gap-2 rounded-xl border p-2.5 text-left transition-colors",
-                          current ? "border-primary bg-accent/60 ring-1 ring-primary/40" : "border-border/60 bg-card hover:border-primary/50 hover:bg-accent/30"
-                        )}
-                      >
+                    const handoutRef = subject === "math" ? handoutLookup.byItemId.get(item.id) : undefined;
+                    const inner = (
+                      <>
                         <span className="min-w-0 flex-1">
                           <span className="flex flex-wrap items-center gap-1">
                             <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold">{SOURCE_NAMES[item.source || "wangdao"]}</span>
+                            {handoutRef && <span className="rounded bg-app-teal/15 px-1.5 py-0.5 text-[10px] font-semibold text-app-teal">手稿直达</span>}
                             <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", match === "foundation" ? "bg-warning/15 text-ink-warning" : "bg-primary/10 text-primary")}>
                               {reason ? TRAINING_REASON[reason] : match === "foundation" ? "补基础" : match === "method" ? "方法匹配" : "同考点"}
                             </span>
@@ -1231,8 +1288,31 @@ export function ReviewPriorityPage() {
                           {templateIds?.length ? <span className="mt-1 block truncate text-[10px] text-muted-foreground">{templateIds.map((id) => subject === "math" ? mathTemplateName(id) : cs408TemplateName(id)).join(" · ")}</span> : null}
                         </span>
                         <span className="shrink-0 text-[10px] text-muted-foreground">约 {practiceMinutes(item.kind ?? kind)} 分钟</span>
-                        <Play className="h-3.5 w-3.5 shrink-0 text-primary" />
-                      </button>
+                        {handoutRef ? <ArrowRight className="h-3.5 w-3.5 shrink-0 text-primary" /> : <Play className="h-3.5 w-3.5 shrink-0 text-primary" />}
+                      </>
+                    );
+                    return (
+                    <li key={item.id}>
+                      {handoutRef ? (
+                        <Link
+                          to={handoutHref(handoutRef.handout.slug, { anchorId: handoutRef.example.anchorId })}
+                          className="flex w-full items-center gap-2 rounded-xl border border-border/60 bg-card p-2.5 text-left transition-colors hover:border-primary/50 hover:bg-accent/30"
+                        >
+                          {inner}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          aria-pressed={current}
+                          onClick={() => void openPractice(queueList.map((t) => t.item), at)}
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-xl border p-2.5 text-left transition-colors",
+                            current ? "border-primary bg-accent/60 ring-1 ring-primary/40" : "border-border/60 bg-card hover:border-primary/50 hover:bg-accent/30"
+                          )}
+                        >
+                          {inner}
+                        </button>
+                      )}
                     </li>
                     );
                   })}
@@ -1258,23 +1338,31 @@ export function ReviewPriorityPage() {
               <details ref={evidenceRef} className="rounded-xl bg-secondary/40 p-3" open>
                 <summary className="cursor-pointer text-xs font-bold">真题依据 · {selected.questions.length} 道</summary>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {selected.questions.map((q) => (
-                    <Link
-                      key={q.id}
-                      to={reviewQuestionHref(subject, q, false, location.pathname + location.search)}
-                      title={`${q.year} 年 · 第 ${q.n} 题 · ${q.kpId === selected.kpId ? "主考点" : "辅助考点"} · 整题 ${q.points} 分`}
-                      className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[11px] font-semibold text-primary ring-1 ring-border hover:bg-accent"
-                    >
-                      {q.year}·{q.n}{q.kpId === selected.kpId ? "主" : "辅"}
-                    </Link>
-                  ))}
+                  {selected.questions.map((q) => {
+                    const examRef = subject === "math" ? handoutLookup.byExam.get(`${q.year}-${q.n}`) : undefined;
+                    const href = examRef
+                      ? handoutHref(examRef.handout.slug, { anchorId: examRef.example.anchorId })
+                      : reviewQuestionHref(subject, q, false, location.pathname + location.search);
+                    return (
+                      <Link
+                        key={q.id}
+                        to={href}
+                        title={`${q.year} 年 · 第 ${q.n} 题 · ${q.kpId === selected.kpId ? "主考点" : "辅助考点"} · 整题 ${q.points} 分${examRef ? "（直达数学手稿）" : ""}`}
+                        className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[11px] font-semibold text-primary ring-1 ring-border hover:bg-accent"
+                      >
+                        {q.year}·{q.n}{q.kpId === selected.kpId ? "主" : "辅"}
+                      </Link>
+                    );
+                  })}
                 </div>
                 <button type="button" onClick={() => setAllEvidence((v) => !v)} className="mt-2 text-[11px] font-semibold text-primary hover:underline">
                   {allEvidence ? "收起题目清单" : "展开题目清单"}
                 </button>
                 {allEvidence && (
                   <div className="mt-2 divide-y divide-border/50">
-                    {selected.questions.map((q) => (
+                    {selected.questions.map((q) => {
+                      const examRef = subject === "math" ? handoutLookup.byExam.get(`${q.year}-${q.n}`) : undefined;
+                      return (
                       <div key={q.id} className="py-2 text-[11px]">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-semibold">{q.year} 年 · {kindLabel} · 第 {q.n} 题 · {q.points} 分</span>
@@ -1284,11 +1372,18 @@ export function ReviewPriorityPage() {
                         {q.reviewReason && <p className="mt-1 leading-5">分类依据：{q.reviewReason}</p>}
                         {subject === "math" && <p className="mt-1 leading-5 text-muted-foreground">考法：{q.facets.map(mathFacetName).join(" · ")}</p>}
                         <div className="mt-1 flex gap-3">
-                          <Link className="font-semibold text-primary hover:underline" to={reviewQuestionHref(subject, q, false, location.pathname + location.search)}>打开原题</Link>
-                          <Link className="font-semibold text-primary hover:underline" to={reviewQuestionHref(subject, q, true, location.pathname + location.search)}>参考答案</Link>
+                          {examRef ? (
+                            <Link className="font-semibold text-primary hover:underline" to={handoutHref(examRef.handout.slug, { anchorId: examRef.example.anchorId })}>在数学手稿中查看</Link>
+                          ) : (
+                            <>
+                              <Link className="font-semibold text-primary hover:underline" to={reviewQuestionHref(subject, q, false, location.pathname + location.search)}>打开原题</Link>
+                              <Link className="font-semibold text-primary hover:underline" to={reviewQuestionHref(subject, q, true, location.pathname + location.search)}>参考答案</Link>
+                            </>
+                          )}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </details>

@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Clock,
   ExternalLink,
   Eye,
   EyeOff,
@@ -481,7 +480,7 @@ export function ExampleCard({
 
 export function MathHandoutDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const location = useLocation();
   const [handout, setHandout] = useState<MathHandout | null>(null);
   const [loading, setLoading] = useState(true);
@@ -494,7 +493,6 @@ export function MathHandoutDetailPage() {
   /** 每个判别场景各自记忆当前页码：有核心讲解时 0=核心讲解、1..N=第1..N题；无讲解时 0..N-1=第1..N题 */
   const [groupStepMap, setGroupStepMap] = useState<Record<string, number>>({});
   const [hideRetired, setHideRetired] = useState(false);
-  const [onlyDue, setOnlyDue] = useState(() => searchParams.get("review") === "due");
   const [undoToast, setUndoToast] = useState<UndoPayload | null>(null);
   const undoTimerRef = useRef<number | null>(null);
   const readerRef = useRef<HTMLDivElement>(null);
@@ -533,25 +531,10 @@ export function MathHandoutDetailPage() {
     [getExampleReview]
   );
 
-  const toggleOnlyDue = useCallback(
-    (nextVal?: boolean) => {
-      setOnlyDue((prev) => {
-        const next = typeof nextVal === "boolean" ? nextVal : !prev;
-        const nextParams = new URLSearchParams(searchParams);
-        if (next) nextParams.set("review", "due");
-        else nextParams.delete("review");
-        setSearchParams(nextParams, { replace: true });
-        return next;
-      });
-    },
-    [searchParams, setSearchParams]
-  );
-
   useEffect(() => {
     let alive = true;
     setLoading(true);
     const initialReviewDue = searchParams.get("review") === "due";
-    setOnlyDue(initialReviewDue);
     loadMathHandouts()
       .then((hs) => {
         if (!alive) return;
@@ -610,7 +593,19 @@ export function MathHandoutDetailPage() {
                     firstDueGroup.guide.pitfallHtml ||
                     firstDueGroup.guide.roadmapHtml)
               );
-              setGroupStepMap({ [firstDueGroup.id]: gHasGuide ? 1 : 0 });
+              const has880 = found.stats.lilin880 > 0;
+              const examList = firstDueGroup.examples.filter(isExamExample);
+              const lilinList = firstDueGroup.examples.filter(isLilinExample);
+              const qList =
+                priority === "lilin880" && has880
+                  ? [...lilinList, ...examList.filter((e) => !isLilinExample(e))]
+                  : [...examList, ...lilinList.filter((e) => !isExamExample(e))];
+              const dueIdx = qList.findIndex(
+                (ex) => getExampleReviewState(ex, latestJournal, latestMarks, todayStr).isDue
+              );
+              setGroupStepMap({
+                [firstDueGroup.id]: (dueIdx >= 0 ? dueIdx : 0) + (gHasGuide ? 1 : 0),
+              });
             } else {
               setActiveGroupId(found.groups[0].id);
             }
@@ -672,15 +667,13 @@ export function MathHandoutDetailPage() {
     (examples: HandoutExample[], hasAny880: boolean): HandoutExample[] => {
       const examList = examples.filter(isExamExample);
       const lilinList = examples.filter(isLilinExample);
-      let combined =
+      const combined =
         priority === "lilin880" && hasAny880
           ? [...lilinList, ...examList.filter((e) => !isLilinExample(e))]
           : [...examList, ...lilinList.filter((e) => !isExamExample(e))];
-      if (hideRetired) combined = combined.filter((e) => !isExampleRetired(e));
-      if (onlyDue) combined = combined.filter((e) => isExampleDue(e));
-      return combined;
+      return hideRetired ? combined.filter((e) => !isExampleRetired(e)) : combined;
     },
-    [priority, hideRetired, onlyDue, isExampleRetired, isExampleDue]
+    [priority, hideRetired, isExampleRetired]
   );
 
   const hasAny880 = Boolean(handout && handout.stats.lilin880 > 0);
@@ -950,10 +943,6 @@ export function MathHandoutDetailPage() {
     currentGroupIndex >= 0 && currentGroupIndex < handout.groups.length - 1
       ? handout.groups[currentGroupIndex + 1]
       : null;
-  const nextDueGroup =
-    handout.groups.find(
-      (g) => g.id !== currentGroup?.id && g.examples.some((e) => isExampleDue(e))
-    ) ?? null;
 
   const featuredSet = new Set(currentGroup?.guide?.featuredAnchorIds ?? []);
   const passedInCurrentGroup = currentGroup
@@ -1026,30 +1015,6 @@ export function MathHandoutDetailPage() {
           </div>
 
           <div className="mh-toc-group space-y-2">
-            {(dueTotalCount > 0 || onlyDue) && (
-              <button
-                type="button"
-                className={`mh-btn w-full justify-center${onlyDue ? " is-due-active" : ""}`}
-                style={
-                  onlyDue
-                    ? {
-                        background: "#ea580c",
-                        borderColor: "#ea580c",
-                        color: "#fff",
-                      }
-                    : {
-                        borderColor: "rgba(234, 88, 12, 0.55)",
-                        color: "#c2410c",
-                        background: "rgba(234, 88, 12, 0.08)",
-                      }
-                }
-                aria-pressed={onlyDue}
-                onClick={() => toggleOnlyDue()}
-              >
-                <Clock className="h-3.5 w-3.5" />
-                只看待复习 ({dueTotalCount})
-              </button>
-            )}
             <button
               type="button"
               className="mh-btn w-full justify-center"
@@ -1110,26 +1075,6 @@ export function MathHandoutDetailPage() {
                 880 优先
               </button>
             </div>
-            {(dueTotalCount > 0 || onlyDue) && (
-              <button
-                type="button"
-                className="mh-btn"
-                style={
-                  onlyDue
-                    ? { background: "#ea580c", borderColor: "#ea580c", color: "#fff" }
-                    : {
-                        borderColor: "rgba(234, 88, 12, 0.55)",
-                        color: "#c2410c",
-                        background: "rgba(234, 88, 12, 0.08)",
-                      }
-                }
-                aria-pressed={onlyDue}
-                onClick={() => toggleOnlyDue()}
-              >
-                <Clock className="h-3.5 w-3.5" />
-                只看待复习 ({dueTotalCount})
-              </button>
-            )}
             <button
               type="button"
               className="mh-btn"
@@ -1267,58 +1212,11 @@ export function MathHandoutDetailPage() {
                     </div>
                   </>
                 ) : !currentEx ? (
-                  onlyDue ? (
-                    <div className="space-y-3 py-10 text-center">
-                      <p className="text-sm font-bold text-[var(--mh-ink)]">
-                        {dueTotalCount > 0
-                          ? "本场景今日待复习题目已全部完成！"
-                          : "本讲义今日待复习题目已全部完成！"}
-                      </p>
-                      <div className="flex flex-wrap items-center justify-center gap-2">
-                        {nextDueGroup ? (
-                          <button
-                            type="button"
-                            className="mh-step-nav-btn is-primary"
-                            onClick={() => {
-                              const gHasGuide = Boolean(
-                                nextDueGroup.guide &&
-                                  (nextDueGroup.guide.clueHtml ||
-                                    nextDueGroup.guide.coreHtml ||
-                                    nextDueGroup.guide.pitfallHtml ||
-                                    nextDueGroup.guide.roadmapHtml)
-                              );
-                              setActiveGroupId(nextDueGroup.id);
-                              setGroupStepMap((prev) => ({
-                                ...prev,
-                                [nextDueGroup.id]: gHasGuide ? 1 : 0,
-                              }));
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }}
-                          >
-                            去下一待复习场景：{nextDueGroup.guide?.shortTitle || nextDueGroup.title}
-                            <ChevronRight className="h-4 w-4" />
-                          </button>
-                        ) : (
-                          <Link to="/math-handouts" className="mh-step-nav-btn is-primary">
-                            返回数学手稿目录
-                          </Link>
-                        )}
-                        <button
-                          type="button"
-                          className="mh-step-nav-btn"
-                          onClick={() => toggleOnlyDue(false)}
-                        >
-                          查看本讲全部题目
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="py-10 text-center text-sm text-[var(--mh-muted)]">
-                      {currentGroup.examples.length > 0 && hideRetired
-                        ? "本场景题目已全部斩掉并隐藏，可在左侧点击「显示已斩」查看。"
-                        : "本场景暂无题目。"}
-                    </p>
-                  )
+                  <p className="py-10 text-center text-sm text-[var(--mh-muted)]">
+                    {currentGroup.examples.length > 0 && hideRetired
+                      ? "本场景题目已全部斩掉并隐藏，可在左侧点击「显示已斩」查看。"
+                      : "本场景暂无题目。"}
+                  </p>
                 ) : (
                   <ExampleCard
                     key={currentEx.anchorId}

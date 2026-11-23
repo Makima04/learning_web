@@ -3,6 +3,7 @@ import { WORD_COUNT } from "@/lib/wordCount";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowUpRight,
+  BookMarked,
   Bookmark,
   BookOpen,
   CalendarDays,
@@ -18,11 +19,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DAY, dayKey, dayKeyStartMs } from "@/lib/day";
 import { planDueEntries } from "@/lib/journal";
 import { planKgChapterDue } from "@/lib/kg/journalBridge";
+import {
+  buildJournalEntryMap,
+  countHandoutDue,
+  useMathHandouts,
+} from "@/lib/mathHandouts";
 import { resolveTodayWords } from "@/lib/todayWords";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/stores/auth";
 import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
+import { useKgProgress } from "@/stores/kgProgress";
 import { useSettings } from "@/stores/settings";
 import { useStudy } from "@/stores/study";
 import { useTodayLog } from "@/stores/todayLog";
@@ -108,6 +115,8 @@ export function DashboardPage() {
   const rate = useSettings((s) => s.rate);
   const journalDailyReviewLimits = useSettings((s) => s.journalDailyReviewLimits);
   const journalKgChapterDailyLimit = useSettings((s) => s.journalKgChapterDailyLimit);
+  const itemMarks = useKgProgress((s) => s.itemMarks);
+  const mathHandouts = useMathHandouts();
   const listEntries = useWordLists((s) => s.entries);
   const todayItems = useTodayLog((s) => s.log.items);
   const todayDayKey = useTodayLog((s) => s.log.dayKey);
@@ -127,6 +136,23 @@ export function DashboardPage() {
     () => planKgChapterDue(journalEntries, journalKgChapterDailyLimit),
     [journalEntries, journalKgChapterDailyLimit]
   );
+  const mathDueStats = useMemo(() => {
+    const today = dayKey();
+    const jMap = buildJournalEntryMap(journalEntries, today);
+    const mMap = new Map(itemMarks.map((m) => [m.itemId, m]));
+    let doneKps = 0;
+    let totalKps = 0;
+    let dueQuestions = 0;
+    for (const h of mathHandouts) {
+      const { dueCount, reviewedTodayCount } = countHandoutDue(h, jMap, mMap, today);
+      if (dueCount > 0 || reviewedTodayCount > 0) {
+        totalKps += 1;
+        if (dueCount === 0) doneKps += 1;
+      }
+      dueQuestions += dueCount;
+    }
+    return { doneKps, totalKps, dueQuestions };
+  }, [mathHandouts, journalEntries, itemMarks]);
   const journalDueCount = journalPlan.due.length;
   const journalDeferredCount = journalPlan.deferred.length;
   const kgDueCount = kgPlan.due.length;
@@ -280,6 +306,22 @@ export function DashboardPage() {
                   primary={false}
                   iconClassName="bg-warning/10 text-ink-warning"
                   onClick={() => navigate("/lists")}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <StudyAction
+                  icon={BookMarked}
+                  title="数学手稿 · 今日复习"
+                  description={
+                    mathDueStats.dueQuestions > 0
+                      ? `复习 ${mathDueStats.doneKps}/${mathDueStats.totalKps} · 待复习 ${mathDueStats.dueQuestions} 题（点此直达手稿）`
+                      : mathDueStats.totalKps > 0
+                        ? `复习 ${mathDueStats.doneKps}/${mathDueStats.totalKps} · 今日数学手稿已全部复盘`
+                        : `${mathHandouts.length || 46} 份讲义 · 历年真题与 880 逐题精讲`
+                  }
+                  primary={false}
+                  iconClassName="bg-app-teal/15 text-app-teal"
+                  onClick={() => navigate("/math-handouts")}
                 />
               </div>
               <div className="md:col-span-2">

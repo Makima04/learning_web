@@ -11,6 +11,7 @@ import { wdCounts, wdSetPath } from "@/data/kg/wdTaxonomy";
 import { useWangdao408 } from "@/lib/kg/wangdao408";
 import { dueKpIds, subjectProgress } from "@/lib/kg/progress";
 import { kgKpPath, kgMapPath, kgModulePath, parseKgSubject, reviewPriorityPath } from "@/lib/kg/paths";
+import { buildHandoutLookup, handoutHref, useMathHandouts } from "@/lib/mathHandouts";
 import type { BookId, SubjectId } from "@/lib/kg/types";
 import { useKgProgress } from "@/stores/kgProgress";
 import { useSettings } from "@/stores/settings";
@@ -42,6 +43,8 @@ export function KgMapPage() {
   const fallback: SubjectId = settings.enableCs408 ? "cs408" : "math";
   const subject: SubjectId = parsed ?? fallback;
   const { items: wangdao } = useWangdao408({ enabled: subject === "cs408" });
+  const mathHandouts = useMathHandouts(subject === "math");
+  const handoutLookup = useMemo(() => buildHandoutLookup(mathHandouts), [mathHandouts]);
 
   useEffect(() => {
     load();
@@ -112,8 +115,13 @@ export function KgMapPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {(subject === "cs408" || mathTrack === "math1") && (
+          {subject === "math" && (
             <Button asChild size="sm">
+              <Link to="/math-handouts">数学手稿</Link>
+            </Button>
+          )}
+          {(subject === "cs408" || mathTrack === "math1") && (
+            <Button asChild size="sm" variant={subject === "math" ? "outline" : "default"}>
               <Link to={reviewPriorityPath(subject)}>复习性价比</Link>
             </Button>
           )}
@@ -127,9 +135,11 @@ export function KgMapPage() {
               <Link to={wdSetPath()}>王道按大类</Link>
             </Button>
           )}
-          <Button asChild size="sm" variant="outline">
-            <Link to="/kg/exams">真题入口</Link>
-          </Button>
+          {subject === "cs408" && (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/kg/exams">真题入口</Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -166,23 +176,23 @@ export function KgMapPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
-            title: "模块学习",
+            title: subject === "math" ? "数学手稿精讲" : "模块学习",
             desc: subject === "math"
-              ? "按 880 章进入考点，李林880 与 张宇1000 分开刷"
+              ? "46 份手稿覆盖全部 23 章，含真题 + 880 逐题精讲与今日待复习"
               : "按章过知识点，刷王道题或标记已学",
-            to: null as string | null,
+            to: subject === "math" ? "/math-handouts" : (null as string | null),
           },
           {
             title: "真题演练",
-            desc: subject === "cs408" ? "王道选择/大题分开，按图谱大类校对，含夹带真题" : "历年卷按题标 会/模糊/不会",
-            to: subject === "cs408" ? wdSetPath() : "/kg/exams",
+            desc: subject === "cs408" ? "王道选择/大题分开，按图谱大类校对，含夹带真题" : "在数学手稿中按考点精读历年数一真题",
+            to: subject === "cs408" ? wdSetPath() : "/math-handouts",
           },
           {
             title: "复习性价比",
             desc:
               subject === "cs408"
                 ? "按选择 / 大题与四个分科排行，匹配真题和王道训练"
-                : mathTrack === "math1" ? "大题 / 选择 / 填空分别分析，结合薄弱项推荐 880 / 1000 训练" : "数学二分析待整理",
+                : mathTrack === "math1" ? "大题 / 选择 / 填空分别分析，直达对应数学手稿精讲" : "数学二分析待整理",
             to: subject === "cs408" || mathTrack === "math1" ? reviewPriorityPath(subject) : null,
           },
           ...(settings.enableCs408
@@ -219,15 +229,21 @@ export function KgMapPage() {
             <CardTitle className="text-base">今日待复习考点</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {due.map((d) => (
-              <Link
-                key={d.kp.id}
-                to={kgKpPath(d.kp.id, { subject: d.book.subject })}
-                className="rounded-md border bg-card px-2 py-1 text-xs hover:bg-accent"
-              >
-                {d.kp.name}
-              </Link>
-            ))}
+            {due.map((d) => {
+              const h = d.book.subject === "math" ? handoutLookup.byKp.get(d.kp.id) : undefined;
+              const to = h
+                ? handoutHref(h.slug, { dueOnly: true })
+                : kgKpPath(d.kp.id, { subject: d.book.subject });
+              return (
+                <Link
+                  key={d.kp.id}
+                  to={to}
+                  className="rounded-md border bg-card px-2 py-1 text-xs hover:bg-accent"
+                >
+                  {d.kp.name}
+                </Link>
+              );
+            })}
           </CardContent>
         </Card>
       )}

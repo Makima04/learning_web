@@ -50,7 +50,7 @@ export const MATH_TEMPLATES: MathTemplate[] = [
   t("calc.limit.seq", "squeeze", "用夹逼、定义或 Stolz 求数列极限",
     "数列为和式、根式、振荡或含 n 项结构，要求直接求极限。",
     "和式找上下界夹逼；n 项根式用均值/放缩；分式型考虑 Stolz；振荡因子乘无穷小仍无穷小。",
-    ["squeeze", "two_imp", "equiv_inf", "oscillation", "unbounded", "inf_order", "stolz"]),
+    ["squeeze", "two_imp", "equiv_inf", "oscillation", "unbounded", "inf_order", "stolz", "eps_n", "suff_nec"]),
   t("calc.limit.seq", "convert", "把数列极限转化为函数极限或定积分定义",
     "数列含 1/n、和式 Σf(i/n) 或可连续化的表达式。",
     "和式凑黎曼和 ∫₀¹f；含 1/n 的式子换元 x=1/n 转函数极限后用洛必达/泰勒；必要时用拉格朗日中值转化差式。",
