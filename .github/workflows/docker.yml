@@ -121,11 +121,14 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 计算镜像名（小写仓库名）
+      - name: 计算镜像名与语义化版本号
         id: meta
         run: |
           REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          PKG_VER=$(python3 -c "import json; print(json.load(open('frontend/package.json'))['version'])")
+          APP_VERSION="v${PKG_VER#v}"
           echo "image=ghcr.io/${REPO_LC}" >> "$GITHUB_OUTPUT"
+          echo "version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -137,7 +140,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 只推 :<arch>-* 标签；multi-arch 的 :latest / :<sha> 由 manifest job 合成，
+      # 只推 :<arch>-* 标签；multi-arch 的 :latest / :<version> / :<sha> 由 manifest job 合成，
       # 避免两个 arch 互相覆盖。
       # provenance / sbom 关闭：per-arch 产物保持纯单平台 manifest，合成后干净。
       - name: 构建并推送 ${{ matrix.arch }} 镜像
@@ -151,7 +154,7 @@ jobs:
           provenance: false
           sbom: false
           build-args: |
-            EW_VERSION=${{ github.sha }}
+            EW_VERSION=${{ steps.meta.outputs.version }}
             EW_BUILD_JOBS=4
           tags: |
             ${{ steps.meta.outputs.image }}:${{ matrix.arch }}-latest
@@ -178,6 +181,9 @@ jobs:
       packages: write
 
     steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
       - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -188,15 +194,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 合成 multi-arch :latest / :<sha>
+      - name: 合成 multi-arch :latest / :<version> / :<sha>
         run: |
           REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           IMAGE="ghcr.io/${REPO_LC}"
           SHA="${{ github.sha }}"
+          PKG_VER=$(python3 -c "import json; print(json.load(open('frontend/package.json'))['version'])")
+          APP_VERSION="v${PKG_VER#v}"
           docker buildx imagetools create \
             --tag "${IMAGE}:latest" \
+            --tag "${IMAGE}:${APP_VERSION}" \
             --tag "${IMAGE}:${SHA}" \
             "${IMAGE}:amd64-${SHA}" \
             "${IMAGE}:arm64-${SHA}"
-          echo "### multi-arch \`:latest\` / \`:${SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### multi-arch \`:latest\` / \`:${APP_VERSION}\` / \`:${SHA}\`" >> "$GITHUB_STEP_SUMMARY"
           docker buildx imagetools inspect "${IMAGE}:latest" >> "$GITHUB_STEP_SUMMARY"

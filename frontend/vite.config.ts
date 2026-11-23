@@ -8,13 +8,21 @@ function resolveVersion(): string {
   const configured = process.env.EW_VERSION?.trim();
   if (configured) return configured;
   try {
+    const pkg = JSON.parse(
+      readFileSync(path.resolve(__dirname, "package.json"), "utf8")
+    ) as { version?: string };
+    if (pkg.version?.trim()) return `v${pkg.version.trim().replace(/^v/, "")}`;
+  } catch {
+    /* fallback below */
+  }
+  try {
     return execFileSync("git", ["describe", "--tags", "--always", "--dirty"], {
       cwd: path.resolve(__dirname, ".."),
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
   } catch {
-    return process.env.npm_package_version || "1.0.0";
+    return process.env.npm_package_version ? `v${process.env.npm_package_version}` : "v0.1.1";
   }
 }
 
