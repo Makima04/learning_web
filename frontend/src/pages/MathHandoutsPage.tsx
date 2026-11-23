@@ -4,6 +4,7 @@ import {
   BookMarked,
   CheckCircle2,
   ChevronRight,
+  Clock,
   FolderOpen,
   Network,
   RotateCcw,
@@ -13,12 +14,16 @@ import {
   Target,
 } from "lucide-react";
 import {
+  buildJournalEntryMap,
+  getExampleReviewState,
   loadMathHandouts,
   useHandoutPriority,
   type HandoutExample,
   type MathHandout,
 } from "@/lib/mathHandouts";
 import { useKgProgress } from "@/stores/kgProgress";
+import { useJournal } from "@/stores/journal";
+import { dayKey } from "@/lib/day";
 import { findKp, MATH_BOOKS } from "@/data/kg";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -60,6 +65,8 @@ interface EnrichedHandout {
   lilinPassed: number;
   lilinTotal: number;
   retiredCount: number;
+  dueCount: number;
+  reviewedTodayCount: number;
 }
 
 export function MathHandoutsPage() {
@@ -67,6 +74,7 @@ export function MathHandoutsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bookFilter, setBookFilter] = useState<"all" | "calc" | "linear" | "prob">("all");
+  const [onlyDue, setOnlyDue] = useState(false);
   const [query, setQuery] = useState("");
   const [showRetiredPanel, setShowRetiredPanel] = useState(false);
   const [showPendingModules, setShowPendingModules] = useState(true);
@@ -75,6 +83,8 @@ export function MathHandoutsPage() {
   const states = useKgProgress((s) => s.states);
   const itemMarks = useKgProgress((s) => s.itemMarks);
   const unretireItem = useKgProgress((s) => s.unretireItem);
+  const journalEntries = useJournal((s) => s.entries);
+  const today = dayKey();
 
   useEffect(() => {
     let alive = true;
@@ -100,6 +110,11 @@ export function MathHandoutsPage() {
     return m;
   }, [itemMarks]);
 
+  const journalByItemId = useMemo(
+    () => buildJournalEntryMap(journalEntries, today),
+    [journalEntries, today]
+  );
+
   const enriched = useMemo<EnrichedHandout[]>(() => {
     return handouts.map((h) => {
       const kpState = states[h.primaryKpId];
@@ -123,6 +138,13 @@ export function MathHandoutsPage() {
       const examPassed = examExamples.filter((e) => getMark(e) === "pass").length;
       const lilinPassed = lilinExamples.filter((e) => getMark(e) === "pass").length;
       const retiredCount = allExamples.filter(isRetired).length;
+      let dueCount = 0;
+      let reviewedTodayCount = 0;
+      for (const e of allExamples) {
+        const st = getExampleReviewState(e, journalByItemId, markRecordMap, today);
+        if (st.isDue) dueCount += 1;
+        else if (st.reviewedToday) reviewedTodayCount += 1;
+      }
 
       return {
         handout: h,
@@ -135,9 +157,11 @@ export function MathHandoutsPage() {
         lilinPassed,
         lilinTotal: lilinExamples.length,
         retiredCount,
+        dueCount,
+        reviewedTodayCount,
       };
     });
-  }, [handouts, states, markRecordMap]);
+  }, [handouts, states, markRecordMap, journalByItemId, today]);
 
   // 全部已斩题列表（按斩题时间倒序，最新误点的永远排第一）
   const retiredList = useMemo(() => {
@@ -184,7 +208,7 @@ export function MathHandoutsPage() {
           const rawRows = (byModule.get(mod.id) ?? []).sort(
             (a, b) => a.handout.order - b.handout.order
           );
-          const matchedRows = !q
+          const queryRows = !q
             ? rawRows
             : rawRows.filter(
                 (r) =>
@@ -193,6 +217,8 @@ export function MathHandoutsPage() {
                   mod.name.toLowerCase().includes(q) ||
                   r.handout.methods.some((m) => m.title.toLowerCase().includes(q))
               );
+          const matchedRows = onlyDue ? queryRows.filter((r) => r.dueCount > 0) : queryRows;
+          const chapterDueCount = matchedRows.reduce((s, r) => s + r.dueCount, 0);
           const modMatchedQuery =
             !q ||
             mod.name.toLowerCase().includes(q) ||
@@ -208,6 +234,7 @@ export function MathHandoutsPage() {
           return {
             module: mod,
             rows: matchedRows,
+            chapterDueCount,
             totalInModule: rawRows.length,
             missingKps,
             modMatchedQuery,
@@ -215,9 +242,9 @@ export function MathHandoutsPage() {
         });
 
         const activeChapters = chapters.filter((c) => c.rows.length > 0);
-        const pendingChapters = chapters.filter(
-          (c) => c.totalInModule === 0 && c.modMatchedQuery
-        );
+        const pendingChapters = onlyDue
+          ? []
+          : chapters.filter((c) => c.totalInModule === 0 && c.modMatchedQuery);
         const totalHandoutsInBook = chapters.reduce((s, c) => s + c.totalInModule, 0);
         const coveredChaptersCount = chapters.filter((c) => c.totalInModule > 0).length;
 
@@ -231,8 +258,12 @@ export function MathHandoutsPage() {
         };
       }
     );
-  }, [enriched, bookFilter, query]);
+  }, [enriched, bookFilter, query, onlyDue]);
 
+  const totalDueKps = enriched.filter((r) => r.dueCount > 0 || r.reviewedTodayCount > 0).length;
+  const doneDueKps = enriched.filter((r) => r.dueCount === 0 && r.reviewedTodayCount > 0).length;
+  const pendingDueKps = enriched.filter((r) => r.dueCount > 0).length;
+  const totalDueQuestions = enriched.reduce((s, r) => s + r.dueCount, 0);
   const totalExamItems = enriched.reduce((s, r) => s + r.examTotal, 0);
   const totalExamPassed = enriched.reduce((s, r) => s + r.examPassed, 0);
   const totalLilinItems = enriched.reduce((s, r) => s + r.lilinTotal, 0);
@@ -302,7 +333,59 @@ export function MathHandoutsPage() {
         </div>
 
         {/* 同步统计条 */}
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <button
+            type="button"
+            onClick={() => setOnlyDue((v) => !v)}
+            className={cn(
+              "col-span-2 flex flex-col justify-between rounded-2xl border px-3.5 py-2.5 text-left transition-colors sm:col-span-1",
+              onlyDue
+                ? "border-app-orange bg-app-orange/15 ring-1 ring-app-orange/40"
+                : totalDueQuestions > 0
+                ? "border-app-orange/45 bg-app-orange/10 hover:bg-app-orange/15"
+                : totalDueKps > 0
+                ? "border-app-green/40 bg-app-green/10 hover:bg-app-green/15"
+                : "border-transparent bg-secondary/50 hover:bg-secondary"
+            )}
+            title="点击筛选今日待复习的知识点"
+          >
+            <div
+              className={cn(
+                "inline-flex items-center gap-1 text-xs font-bold",
+                totalDueQuestions > 0
+                  ? "text-app-orange"
+                  : totalDueKps > 0
+                  ? "text-app-green"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Clock className="h-3.5 w-3.5" />
+              今日复习
+            </div>
+            <div className="mt-0.5 flex items-baseline justify-between gap-1">
+              <span
+                className={cn(
+                  "text-lg font-extrabold",
+                  totalDueQuestions > 0
+                    ? "text-app-orange"
+                    : totalDueKps > 0
+                    ? "text-app-green"
+                    : "text-foreground"
+                )}
+              >
+                复习 {doneDueKps}/{totalDueKps}
+              </span>
+            </div>
+            <div className="mt-0.5 text-[11px] font-semibold text-muted-foreground">
+              {totalDueQuestions > 0
+                ? onlyDue
+                  ? `已筛选 · 剩 ${totalDueQuestions} 题`
+                  : `待复习 ${totalDueQuestions} 题 · 点击筛选`
+                : totalDueKps > 0
+                ? "今日已全部复盘"
+                : "今日暂无待复习"}
+            </div>
+          </button>
           <div className="rounded-2xl bg-secondary/50 px-3.5 py-2.5">
             <div className="text-xs font-semibold text-muted-foreground">章节与手稿</div>
             <div className="mt-0.5 text-lg font-extrabold">
@@ -421,6 +504,21 @@ export function MathHandoutsPage() {
           ))}
           <button
             type="button"
+            onClick={() => setOnlyDue((v) => !v)}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
+              onlyDue
+                ? "border-app-orange bg-app-orange text-white"
+                : pendingDueKps > 0
+                ? "border-app-orange/50 bg-app-orange/10 text-app-orange hover:bg-app-orange/20"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Clock className="h-3.5 w-3.5" />
+            待复习 ({pendingDueKps})
+          </button>
+          <button
+            type="button"
             onClick={() => setShowPendingModules((v) => !v)}
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
@@ -457,6 +555,27 @@ export function MathHandoutsPage() {
       {/* 学科 → 章节 → 讲义 分层视图 */}
       {!loading && !error && (
         <div className="space-y-8">
+          {onlyDue && groupedBooks.every((b) => b.activeChapters.length === 0) && (
+            <div className="rounded-3xl border border-border/80 bg-card px-6 py-10 text-center">
+              <p className="text-sm font-bold text-foreground">
+                {totalDueKps > 0
+                  ? "今日待复习的数学手稿已全部完成！"
+                  : "当前筛选下暂无今日待复习的数学手稿"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                在讲义中将题目记为「模糊」或「不会」后，到复习日会自动出现在这里。
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-4 rounded-full"
+                onClick={() => setOnlyDue(false)}
+              >
+                查看全部手稿
+              </Button>
+            </div>
+          )}
           {groupedBooks.map(
             ({
               book,
@@ -492,7 +611,7 @@ export function MathHandoutsPage() {
 
                   {/* 已有讲义的章节列表 */}
                   <div className="space-y-5">
-                    {activeChapters.map(({ module: mod, rows, missingKps }) => (
+                    {activeChapters.map(({ module: mod, rows, chapterDueCount, missingKps }) => (
                       <div
                         key={mod.id}
                         className="rounded-3xl border border-border/80 bg-secondary/25 p-4 md:p-5"
@@ -507,6 +626,12 @@ export function MathHandoutsPage() {
                             <span className="text-xs font-semibold text-muted-foreground">
                               已收 {rows.length} 份讲义（共 {mod.kps.length} 个核心考点）
                             </span>
+                            {chapterDueCount > 0 && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-app-orange/15 px-2.5 py-0.5 text-[11px] font-bold text-app-orange">
+                                <Clock className="h-3 w-3" />
+                                待复习 {chapterDueCount} 题
+                              </span>
+                            )}
                           </div>
                           {missingKps.length > 0 && (
                             <span className="text-[11px] text-muted-foreground">
@@ -524,15 +649,34 @@ export function MathHandoutsPage() {
                             const activeTotal = show880Bar ? row.lilinTotal : row.examTotal;
                             const activePct =
                               activeTotal > 0 ? Math.round((activePassed / activeTotal) * 100) : 0;
+                            const hasDue = row.dueCount > 0;
+                            const reviewedDoneToday = !hasDue && row.reviewedTodayCount > 0;
 
                             return (
                               <div
                                 key={h.slug}
-                                className="group flex flex-col justify-between rounded-2xl border-2 border-border/80 bg-card p-4 shadow-edge-sm transition-all hover:border-primary/60"
+                                className={cn(
+                                  "group flex flex-col justify-between rounded-2xl border-2 bg-card p-4 shadow-edge-sm transition-all",
+                                  hasDue
+                                    ? "border-app-orange/70 bg-app-orange/[0.04] hover:border-app-orange"
+                                    : "border-border/80 hover:border-primary/60"
+                                )}
                               >
                                 <div>
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex flex-wrap items-center gap-1.5">
+                                      {hasDue && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-app-orange px-2.5 py-0.5 text-[11px] font-bold text-white shadow-sm">
+                                          <Clock className="h-3 w-3" />
+                                          待复习 · {row.dueCount} 题
+                                        </span>
+                                      )}
+                                      {reviewedDoneToday && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-app-green/15 px-2.5 py-0.5 text-[11px] font-bold text-app-green">
+                                          <CheckCircle2 className="h-3 w-3" />
+                                          今日已复盘
+                                        </span>
+                                      )}
                                       {row.lilinTotal > 0 && (
                                         <span className="rounded-full bg-app-orange/15 px-2.5 py-0.5 text-[11px] font-bold text-app-orange">
                                           含 {row.lilinTotal} 题 880 精讲
@@ -543,7 +687,7 @@ export function MathHandoutsPage() {
                                           已斩 {row.retiredCount}
                                         </span>
                                       )}
-                                      {row.lilinTotal === 0 && row.retiredCount === 0 && (
+                                      {row.lilinTotal === 0 && row.retiredCount === 0 && !hasDue && (
                                         <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold text-muted-foreground">
                                           真题 {row.examTotal} 题
                                         </span>
@@ -620,14 +764,30 @@ export function MathHandoutsPage() {
                                     asChild
                                     size="sm"
                                     variant="default"
-                                    className="h-8 rounded-full px-3.5 text-xs font-bold"
+                                    className={cn(
+                                      "h-8 rounded-full px-3.5 text-xs font-bold",
+                                      hasDue && "bg-app-orange text-white hover:bg-app-orange/90"
+                                    )}
                                   >
                                     <Link
-                                      to={`/math-handouts/${h.slug}`}
+                                      to={
+                                        hasDue
+                                          ? `/math-handouts/${h.slug}?review=due`
+                                          : `/math-handouts/${h.slug}`
+                                      }
                                       className="inline-flex items-center gap-1"
                                     >
-                                      {row.covered && <CheckCircle2 className="h-3.5 w-3.5" />}
-                                      开始精读
+                                      {hasDue ? (
+                                        <>
+                                          <Clock className="h-3.5 w-3.5" />
+                                          去复习 {row.dueCount} 题
+                                        </>
+                                      ) : (
+                                        <>
+                                          {row.covered && <CheckCircle2 className="h-3.5 w-3.5" />}
+                                          开始精读
+                                        </>
+                                      )}
                                       <ChevronRight className="h-3.5 w-3.5" />
                                     </Link>
                                   </Button>

@@ -1500,6 +1500,7 @@
   gap: 0.32rem;
 }
 .mh-q-dot {
+  position: relative;
   min-width: 1.85rem;
   height: 1.75rem;
   padding: 0 0.45rem;
@@ -1540,6 +1541,23 @@
   border-color: color-mix(in srgb, var(--mh-err) 45%, transparent);
   color: var(--mh-err);
 }
+.mh-q-dot.is-due {
+  background: color-mix(in srgb, var(--mh-accent-2-bg) 88%, var(--mh-paper));
+  border: 1.5px solid var(--mh-accent-2);
+  color: var(--mh-accent-2);
+  font-weight: 780;
+}
+.mh-q-dot.is-due::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: #e11d48;
+  border: 1.5px solid var(--mh-paper);
+}
 .mh-q-dot.is-retired {
   background: var(--mh-surface-2);
   color: var(--mh-muted);
@@ -1554,6 +1572,12 @@
   text-decoration: none;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--mh-accent) 24%, transparent);
 }
+.mh-q-dot.is-current.is-due {
+  background: var(--mh-accent-2);
+  border-color: var(--mh-accent-2);
+  color: #fff;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mh-accent-2) 28%, transparent);
+}
 .mh-q-dot.is-exam-badge::after {
   content: "";
   width: 4px;
@@ -1562,6 +1586,32 @@
   background: currentColor;
   margin-left: 2px;
   opacity: 0.65;
+}
+
+/* 左侧场景与题卡中的「待复习 / 今日已复盘」专属标记 */
+.mh-scene-due-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.02rem 0.42rem;
+  border-radius: 99px;
+  background: var(--mh-accent-2-bg);
+  border: 1px solid color-mix(in srgb, var(--mh-accent-2) 45%, transparent);
+  color: var(--mh-accent-2);
+  font-size: 0.68rem;
+  font-weight: 750;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.mh-src-tag.is-due {
+  background: color-mix(in srgb, var(--mh-accent-2-bg) 90%, #fff);
+  color: var(--mh-accent-2);
+  border: 1px solid color-mix(in srgb, var(--mh-accent-2) 55%, transparent);
+  font-weight: 750;
+}
+.mh-src-tag.is-reviewed-today {
+  background: var(--mh-ok-bg);
+  color: var(--mh-ok);
+  border: 1px solid color-mix(in srgb, var(--mh-ok) 35%, transparent);
 }
 
 /* 默认折叠的「对照李林 880 原书解析图」入口 */

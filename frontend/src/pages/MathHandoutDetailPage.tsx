@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import {
   BookOpen,
   Check,
@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Clock,
   ExternalLink,
   Eye,
   EyeOff,
@@ -19,6 +20,8 @@ import {
   X,
 } from "lucide-react";
 import {
+  buildJournalEntryMap,
+  getExampleReviewState,
   loadMathHandouts,
   useHandoutPriority,
   type HandoutExample,
@@ -164,6 +167,8 @@ export function ExampleCard({
   ex,
   isActive,
   isFeatured,
+  isDue = false,
+  reviewedToday = false,
   isRetired,
   isForcedOpen,
   singleMode = false,
@@ -184,6 +189,8 @@ export function ExampleCard({
   ex: HandoutExample;
   isActive: boolean;
   isFeatured?: boolean;
+  isDue?: boolean;
+  reviewedToday?: boolean;
   isRetired: boolean;
   /** 会话级手动展开（已斩临时查看 / 今日已练手动展开共用） */
   isForcedOpen: boolean;
@@ -383,6 +390,8 @@ export function ExampleCard({
             ? "真题 · 880 同题"
             : "历年真题"}
         </span>
+        {isDue && <span className="mh-src-tag is-due">待复习</span>}
+        {!isDue && reviewedToday && <span className="mh-src-tag is-reviewed-today">今日已复盘</span>}
         {isFeatured && <span className="mh-src-tag is-featured">示范母题</span>}
         <span>{ex.source}</span>
         {ex.matchedMath1 && ex.year && ex.n && (
@@ -472,6 +481,8 @@ export function ExampleCard({
 
 export function MathHandoutDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [handout, setHandout] = useState<MathHandout | null>(null);
   const [loading, setLoading] = useState(true);
   const [priority, setPriority] = useHandoutPriority();
@@ -483,6 +494,7 @@ export function MathHandoutDetailPage() {
   /** 每个判别场景各自记忆当前页码：有核心讲解时 0=核心讲解、1..N=第1..N题；无讲解时 0..N-1=第1..N题 */
   const [groupStepMap, setGroupStepMap] = useState<Record<string, number>>({});
   const [hideRetired, setHideRetired] = useState(false);
+  const [onlyDue, setOnlyDue] = useState(() => searchParams.get("review") === "due");
   const [undoToast, setUndoToast] = useState<UndoPayload | null>(null);
   const undoTimerRef = useRef<number | null>(null);
   const readerRef = useRef<HTMLDivElement>(null);
@@ -492,10 +504,54 @@ export function MathHandoutDetailPage() {
   const itemMarks = useKgProgress((s) => s.itemMarks);
   const retireItem = useKgProgress((s) => s.retireItem);
   const unretireItem = useKgProgress((s) => s.unretireItem);
+  const journalEntries = useJournal((s) => s.entries);
+
+  const todayKey = dayKey();
+  const markRecordMap = useMemo(() => {
+    const m = new Map<string, UserItemMark>();
+    for (const it of itemMarks) m.set(it.itemId, it);
+    return m;
+  }, [itemMarks]);
+
+  const journalByItemId = useMemo(
+    () => buildJournalEntryMap(journalEntries, todayKey),
+    [journalEntries, todayKey]
+  );
+
+  const getExampleReview = useCallback(
+    (ex: HandoutExample) => getExampleReviewState(ex, journalByItemId, markRecordMap, todayKey),
+    [journalByItemId, markRecordMap, todayKey]
+  );
+
+  const isExampleDue = useCallback(
+    (ex: HandoutExample): boolean => getExampleReview(ex).isDue,
+    [getExampleReview]
+  );
+
+  const isExampleReviewedToday = useCallback(
+    (ex: HandoutExample): boolean => getExampleReview(ex).reviewedToday,
+    [getExampleReview]
+  );
+
+  const toggleOnlyDue = useCallback(
+    (nextVal?: boolean) => {
+      setOnlyDue((prev) => {
+        const next = typeof nextVal === "boolean" ? nextVal : !prev;
+        const nextParams = new URLSearchParams(searchParams);
+        if (next) nextParams.set("review", "due");
+        else nextParams.delete("review");
+        setSearchParams(nextParams, { replace: true });
+        return next;
+      });
+    },
+    [searchParams, setSearchParams]
+  );
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    const initialReviewDue = searchParams.get("review") === "due";
+    setOnlyDue(initialReviewDue);
     loadMathHandouts()
       .then((hs) => {
         if (!alive) return;
@@ -504,7 +560,66 @@ export function MathHandoutDetailPage() {
         setStepsOverride({});
         setHintOpenMap({});
         setGroupStepMap({});
-        setActiveGroupId(found && found.groups.length > 0 ? found.groups[0].id : null);
+
+        if (found && found.groups.length > 0) {
+          const hashId = location.hash ? decodeURIComponent(location.hash.slice(1)) : "";
+          const hashGroup = hashId
+            ? found.groups.find(
+                (g) => g.id === hashId || g.examples.some((ex) => ex.anchorId === hashId)
+              )
+            : undefined;
+
+          if (hashGroup) {
+            setActiveGroupId(hashGroup.id);
+            const gHasGuide = Boolean(
+              hashGroup.guide &&
+                (hashGroup.guide.clueHtml ||
+                  hashGroup.guide.coreHtml ||
+                  hashGroup.guide.pitfallHtml ||
+                  hashGroup.guide.roadmapHtml)
+            );
+            if (hashGroup.id !== hashId) {
+              const has880 = found.stats.lilin880 > 0;
+              const examList = hashGroup.examples.filter(isExamExample);
+              const lilinList = hashGroup.examples.filter(isLilinExample);
+              const qList =
+                priority === "lilin880" && has880
+                  ? [...lilinList, ...examList.filter((e) => !isLilinExample(e))]
+                  : [...examList, ...lilinList.filter((e) => !isExamExample(e))];
+              const idx = qList.findIndex((ex) => ex.anchorId === hashId);
+              if (idx >= 0) {
+                setGroupStepMap({ [hashGroup.id]: idx + (gHasGuide ? 1 : 0) });
+              }
+            }
+          } else if (initialReviewDue) {
+            const latestJournal = buildJournalEntryMap(useJournal.getState().entries, dayKey());
+            const latestMarks = new Map<string, UserItemMark>();
+            for (const it of useKgProgress.getState().itemMarks) latestMarks.set(it.itemId, it);
+            const todayStr = dayKey();
+            const firstDueGroup = found.groups.find((g) =>
+              g.examples.some(
+                (ex) => getExampleReviewState(ex, latestJournal, latestMarks, todayStr).isDue
+              )
+            );
+            if (firstDueGroup) {
+              setActiveGroupId(firstDueGroup.id);
+              const gHasGuide = Boolean(
+                firstDueGroup.guide &&
+                  (firstDueGroup.guide.clueHtml ||
+                    firstDueGroup.guide.coreHtml ||
+                    firstDueGroup.guide.pitfallHtml ||
+                    firstDueGroup.guide.roadmapHtml)
+              );
+              setGroupStepMap({ [firstDueGroup.id]: gHasGuide ? 1 : 0 });
+            } else {
+              setActiveGroupId(found.groups[0].id);
+            }
+          } else {
+            setActiveGroupId(found.groups[0].id);
+          }
+        } else {
+          setActiveGroupId(null);
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -513,6 +628,7 @@ export function MathHandoutDetailPage() {
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   useEffect(() => {
@@ -520,12 +636,6 @@ export function MathHandoutDetailPage() {
       if (undoTimerRef.current != null) window.clearTimeout(undoTimerRef.current);
     };
   }, []);
-
-  const markRecordMap = useMemo(() => {
-    const m = new Map<string, UserItemMark>();
-    for (const it of itemMarks) m.set(it.itemId, it);
-    return m;
-  }, [itemMarks]);
 
   const getExampleMarkRecord = useCallback(
     (ex: HandoutExample): UserItemMark | undefined => {
@@ -542,7 +652,6 @@ export function MathHandoutDetailPage() {
     [getExampleMarkRecord]
   );
 
-  const todayKey = dayKey();
   const getExampleDoneMark = useCallback(
     (ex: HandoutExample): Exclude<MarkLevel, "skip"> | undefined =>
       doneMarkForToday(getExampleMarkRecord(ex), todayKey),
@@ -563,13 +672,15 @@ export function MathHandoutDetailPage() {
     (examples: HandoutExample[], hasAny880: boolean): HandoutExample[] => {
       const examList = examples.filter(isExamExample);
       const lilinList = examples.filter(isLilinExample);
-      const combined =
+      let combined =
         priority === "lilin880" && hasAny880
           ? [...lilinList, ...examList.filter((e) => !isLilinExample(e))]
           : [...examList, ...lilinList.filter((e) => !isExamExample(e))];
-      return hideRetired ? combined.filter((e) => !isExampleRetired(e)) : combined;
+      if (hideRetired) combined = combined.filter((e) => !isExampleRetired(e));
+      if (onlyDue) combined = combined.filter((e) => isExampleDue(e));
+      return combined;
     },
-    [priority, hideRetired, isExampleRetired]
+    [priority, hideRetired, onlyDue, isExampleRetired, isExampleDue]
   );
 
   const hasAny880 = Boolean(handout && handout.stats.lilin880 > 0);
@@ -833,11 +944,16 @@ export function MathHandoutDetailPage() {
   const allExamples = handout.groups.flatMap((g) => g.examples);
   const passedCount = allExamples.filter((e) => getExampleMark(e) === "pass").length;
   const retiredCount = allExamples.filter((e) => isExampleRetired(e)).length;
+  const dueTotalCount = allExamples.filter((e) => isExampleDue(e)).length;
   const leadHtml = handout.verdictLeadHtml ?? handout.verdictHtml;
   const nextGroup =
     currentGroupIndex >= 0 && currentGroupIndex < handout.groups.length - 1
       ? handout.groups[currentGroupIndex + 1]
       : null;
+  const nextDueGroup =
+    handout.groups.find(
+      (g) => g.id !== currentGroup?.id && g.examples.some((e) => isExampleDue(e))
+    ) ?? null;
 
   const featuredSet = new Set(currentGroup?.guide?.featuredAnchorIds ?? []);
   const passedInCurrentGroup = currentGroup
@@ -858,6 +974,7 @@ export function MathHandoutDetailPage() {
           <p className="mh-toc-title">{handout.title}</p>
           <p className="mh-toc-meta">
             掌握 {confidence}% · 已会 {passedCount}/{allExamples.length}
+            {dueTotalCount > 0 ? ` · 待复习 ${dueTotalCount}` : ""}
             {retiredCount > 0 ? ` · 斩 ${retiredCount}` : ""}
           </p>
 
@@ -865,6 +982,7 @@ export function MathHandoutDetailPage() {
           <nav className="mh-scene-nav" aria-label="判别场景导航">
             {handout.groups.map((g) => {
               const gPassed = g.examples.filter((e) => getExampleMark(e) === "pass").length;
+              const gDue = g.examples.filter((e) => isExampleDue(e)).length;
               const gTotal = g.examples.length;
               const gDone = gTotal > 0 && gPassed === gTotal;
               const shortLabel = g.guide?.shortTitle || g.title;
@@ -877,8 +995,11 @@ export function MathHandoutDetailPage() {
                   onClick={() => switchGroup(g.id)}
                 >
                   <span>{shortLabel}</span>
-                  <span className={`mh-scene-prog${gDone ? " is-done" : ""}`}>
-                    {gDone ? <Check className="h-3.5 w-3.5" /> : `${gPassed}/${gTotal}`}
+                  <span className="inline-flex items-center gap-1.5">
+                    {gDue > 0 && <span className="mh-scene-due-badge">待复习 {gDue}</span>}
+                    <span className={`mh-scene-prog${gDone ? " is-done" : ""}`}>
+                      {gDone ? <Check className="h-3.5 w-3.5" /> : `${gPassed}/${gTotal}`}
+                    </span>
                   </span>
                 </button>
               );
@@ -905,6 +1026,30 @@ export function MathHandoutDetailPage() {
           </div>
 
           <div className="mh-toc-group space-y-2">
+            {(dueTotalCount > 0 || onlyDue) && (
+              <button
+                type="button"
+                className={`mh-btn w-full justify-center${onlyDue ? " is-due-active" : ""}`}
+                style={
+                  onlyDue
+                    ? {
+                        background: "#ea580c",
+                        borderColor: "#ea580c",
+                        color: "#fff",
+                      }
+                    : {
+                        borderColor: "rgba(234, 88, 12, 0.55)",
+                        color: "#c2410c",
+                        background: "rgba(234, 88, 12, 0.08)",
+                      }
+                }
+                aria-pressed={onlyDue}
+                onClick={() => toggleOnlyDue()}
+              >
+                <Clock className="h-3.5 w-3.5" />
+                只看待复习 ({dueTotalCount})
+              </button>
+            )}
             <button
               type="button"
               className="mh-btn w-full justify-center"
@@ -965,6 +1110,26 @@ export function MathHandoutDetailPage() {
                 880 优先
               </button>
             </div>
+            {(dueTotalCount > 0 || onlyDue) && (
+              <button
+                type="button"
+                className="mh-btn"
+                style={
+                  onlyDue
+                    ? { background: "#ea580c", borderColor: "#ea580c", color: "#fff" }
+                    : {
+                        borderColor: "rgba(234, 88, 12, 0.55)",
+                        color: "#c2410c",
+                        background: "rgba(234, 88, 12, 0.08)",
+                      }
+                }
+                aria-pressed={onlyDue}
+                onClick={() => toggleOnlyDue()}
+              >
+                <Clock className="h-3.5 w-3.5" />
+                只看待复习 ({dueTotalCount})
+              </button>
+            )}
             <button
               type="button"
               className="mh-btn"
@@ -985,16 +1150,20 @@ export function MathHandoutDetailPage() {
               </button>
             )}
             <div className="mh-mobile-scenes w-full">
-              {handout.groups.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  className={currentGroup?.id === g.id ? "is-active" : ""}
-                  onClick={() => switchGroup(g.id)}
-                >
-                  {g.guide?.shortTitle || g.title}
-                </button>
-              ))}
+              {handout.groups.map((g) => {
+                const gDue = g.examples.filter((e) => isExampleDue(e)).length;
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    className={currentGroup?.id === g.id ? "is-active" : ""}
+                    onClick={() => switchGroup(g.id)}
+                  >
+                    {g.guide?.shortTitle || g.title}
+                    {gDue > 0 ? ` · 待复习 ${gDue}` : ""}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1032,14 +1201,16 @@ export function MathHandoutDetailPage() {
                     const stepIdx = idx + (hasGuidePage ? 1 : 0);
                     const mk = getExampleMark(item);
                     const retired = isExampleRetired(item);
+                    const due = isExampleDue(item);
                     const isCur = stepIdx === currentStep;
                     const cls = [
                       "mh-q-dot",
                       isCur ? "is-current" : "",
-                      !isCur && retired ? "is-retired" : "",
-                      !isCur && !retired && mk === "pass" ? "is-pass" : "",
-                      !isCur && !retired && mk === "fuzzy" ? "is-fuzzy" : "",
-                      !isCur && !retired && mk === "fail" ? "is-fail" : "",
+                      due ? "is-due" : "",
+                      !isCur && !due && retired ? "is-retired" : "",
+                      !isCur && !due && !retired && mk === "pass" ? "is-pass" : "",
+                      !isCur && !due && !retired && mk === "fuzzy" ? "is-fuzzy" : "",
+                      !isCur && !due && !retired && mk === "fail" ? "is-fail" : "",
                       isExamExample(item) ? "is-exam-badge" : "",
                     ]
                       .filter(Boolean)
@@ -1050,7 +1221,7 @@ export function MathHandoutDetailPage() {
                         type="button"
                         className={cls}
                         onClick={() => goToStep(stepIdx)}
-                        title={`第 ${idx + 1} 题 · ${item.source}`}
+                        title={`第 ${idx + 1} 题 · ${item.source}${due ? " · 今日待复习" : ""}`}
                       >
                         {idx + 1}
                       </button>
@@ -1096,11 +1267,58 @@ export function MathHandoutDetailPage() {
                     </div>
                   </>
                 ) : !currentEx ? (
-                  <p className="py-10 text-center text-sm text-[var(--mh-muted)]">
-                    {currentGroup.examples.length > 0 && hideRetired
-                      ? "本场景题目已全部斩掉并隐藏，可在左侧点击「显示已斩」查看。"
-                      : "本场景暂无题目。"}
-                  </p>
+                  onlyDue ? (
+                    <div className="space-y-3 py-10 text-center">
+                      <p className="text-sm font-bold text-[var(--mh-ink)]">
+                        {dueTotalCount > 0
+                          ? "本场景今日待复习题目已全部完成！"
+                          : "本讲义今日待复习题目已全部完成！"}
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        {nextDueGroup ? (
+                          <button
+                            type="button"
+                            className="mh-step-nav-btn is-primary"
+                            onClick={() => {
+                              const gHasGuide = Boolean(
+                                nextDueGroup.guide &&
+                                  (nextDueGroup.guide.clueHtml ||
+                                    nextDueGroup.guide.coreHtml ||
+                                    nextDueGroup.guide.pitfallHtml ||
+                                    nextDueGroup.guide.roadmapHtml)
+                              );
+                              setActiveGroupId(nextDueGroup.id);
+                              setGroupStepMap((prev) => ({
+                                ...prev,
+                                [nextDueGroup.id]: gHasGuide ? 1 : 0,
+                              }));
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                          >
+                            去下一待复习场景：{nextDueGroup.guide?.shortTitle || nextDueGroup.title}
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <Link to="/math-handouts" className="mh-step-nav-btn is-primary">
+                            返回数学手稿目录
+                          </Link>
+                        )}
+                        <button
+                          type="button"
+                          className="mh-step-nav-btn"
+                          onClick={() => toggleOnlyDue(false)}
+                        >
+                          查看本讲全部题目
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="py-10 text-center text-sm text-[var(--mh-muted)]">
+                      {currentGroup.examples.length > 0 && hideRetired
+                        ? "本场景题目已全部斩掉并隐藏，可在左侧点击「显示已斩」查看。"
+                        : "本场景暂无题目。"}
+                    </p>
+                  )
                 ) : (
                   <ExampleCard
                     key={currentEx.anchorId}
@@ -1108,6 +1326,8 @@ export function MathHandoutDetailPage() {
                     isActive
                     singleMode
                     isFeatured={featuredSet.has(currentEx.anchorId)}
+                    isDue={isExampleDue(currentEx)}
+                    reviewedToday={isExampleReviewedToday(currentEx)}
                     isRetired={isExampleRetired(currentEx)}
                     isForcedOpen={true}
                     doneMark={getExampleDoneMark(currentEx)}

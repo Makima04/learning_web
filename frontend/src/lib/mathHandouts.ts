@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { dayKey } from "@/lib/day";
+import { compareDay, isDueOnOrBefore, type JournalEntry } from "@/lib/journal";
+import type { UserItemMark } from "@/lib/kg/types";
 
 export type HandoutPriority = "exam" | "lilin880";
 
@@ -165,6 +168,69 @@ export function loadLilin880(): Promise<Lilin880Item[]> {
       });
   }
   return lilinCache;
+}
+
+export interface ExampleReviewState {
+  isDue: boolean;
+  reviewedToday: boolean;
+}
+
+/** 按 sourceItemId 索引学习日志条目（若同题多条，优先保留当前到期且 active 的条目）。 */
+export function buildJournalEntryMap(
+  entries: JournalEntry[],
+  today: string = dayKey()
+): Map<string, JournalEntry> {
+  const map = new Map<string, JournalEntry>();
+  for (const e of entries) {
+    if (!e.sourceItemId) continue;
+    const prev = map.get(e.sourceItemId);
+    if (!prev) {
+      map.set(e.sourceItemId, e);
+      continue;
+    }
+    const curDue = isDueOnOrBefore(e, today);
+    const prevDue = isDueOnOrBefore(prev, today);
+    if (curDue && !prevDue) {
+      map.set(e.sourceItemId, e);
+    } else if (curDue === prevDue && e.updatedAt > prev.updatedAt) {
+      map.set(e.sourceItemId, e);
+    }
+  }
+  return map;
+}
+
+/** 判断手稿单题今日是否「待复习」或「今日已复盘」（同时兼容真题·880同题双ID）。 */
+export function getExampleReviewState(
+  ex: HandoutExample,
+  journalByItemId: Map<string, JournalEntry>,
+  markRecordMap: Map<string, UserItemMark>,
+  today: string = dayKey()
+): ExampleReviewState {
+  const ids = ex.lilin880Id && ex.lilin880Id !== ex.id ? [ex.id, ex.lilin880Id] : [ex.id];
+  const retired = ids.some((id) => Boolean(markRecordMap.get(id)?.retired));
+  const matchedEntries = ids
+    .map((id) => journalByItemId.get(id))
+    .filter((e): e is JournalEntry => Boolean(e));
+
+  if (retired) {
+    const retiredToday = ids.some((id) => {
+      const rec = markRecordMap.get(id);
+      return Boolean(rec?.retired && rec.retiredAt && dayKey(rec.retiredAt) === today);
+    });
+    const hadPriorEntry = matchedEntries.some((e) => compareDay(e.createdOn, today) < 0);
+    const reviewedEntryToday = matchedEntries.some((e) => e.lastReviewedOn === today);
+    return {
+      isDue: false,
+      reviewedToday: reviewedEntryToday || (retiredToday && hadPriorEntry),
+    };
+  }
+
+  const isDue = matchedEntries.some((e) => isDueOnOrBefore(e, today));
+  if (isDue) {
+    return { isDue: true, reviewedToday: false };
+  }
+  const reviewedToday = matchedEntries.some((e) => e.lastReviewedOn === today);
+  return { isDue: false, reviewedToday };
 }
 
 export function matchLilin880ForHandout(
