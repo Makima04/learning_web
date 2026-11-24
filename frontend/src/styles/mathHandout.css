@@ -57,9 +57,9 @@
 /* 两栏讲义版心（左目录 + 右正文） */
 .mh-layout {
   display: grid;
-  grid-template-columns: 12.75rem minmax(0, 1fr);
+  grid-template-columns: 14.5rem minmax(0, 1fr);
   gap: 2.2rem;
-  max-width: 74rem;
+  max-width: 76rem;
   margin: 0 auto;
   padding: 0 1.75rem;
 }
@@ -1285,10 +1285,11 @@
 .mh-scene-item {
   width: 100%;
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.4rem;
-  padding: 0.36rem 0.5rem 0.36rem 0.62rem;
+  gap: 0.22rem 0.45rem;
+  padding: 0.38rem 0.5rem 0.38rem 0.62rem;
   margin-left: -0.62rem;
   border: 0;
   border-left: 2.5px solid transparent;
@@ -1301,6 +1302,17 @@
   text-align: left;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.mh-scene-title {
+  min-width: 6.5rem;
+  flex: 1 1 auto;
+}
+.mh-scene-meta {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
 }
 .mh-scene-item:hover {
   color: var(--mh-accent);

@@ -557,8 +557,8 @@ function HandoutReader({ chapter, questions, progress, kind, knowledgeSection }:
         const button = practice ? (
           <button type="button" aria-current={active ? "true" : undefined}
             className={cn("mh-scene-item", active && "is-active", knowledge && "cfk-scene-practice")} onClick={() => openPage({ scene: kp.id })}>
-            <span>{kp.name}</span>
-            <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="mh-scene-title">{kp.name}</span>
+            <span className="mh-scene-meta">
               {due > 0 && <span className="mh-scene-due-badge">待复习 {due}</span>}
               <span className={cn("mh-scene-prog", items.length > 0 && passed === items.length && "is-done")}>
                 {items.length > 0 && passed === items.length ? <Check className="h-4 w-4" aria-label="全部已会" /> : `${passed}/${items.length}`}
@@ -568,10 +568,12 @@ function HandoutReader({ chapter, questions, progress, kind, knowledgeSection }:
         ) : <span className="cfk-scene-name">{kp.name}</span>;
 
         return knowledge ? (
-          <div key={kp.id} className="cfk-scene-row">
+          <div key={kp.id} className={cn("cfk-scene-row", active && "is-active")}>
             {button}
-            <Link to={knowledgeHref(kp.id)} state={{ openedFileKnowledge: true }} className="cfk-entry"
-              aria-label={`${kp.name} · 知识点`}>知识点</Link>
+            <div className="cfk-scene-foot">
+              <Link to={knowledgeHref(kp.id)} state={{ openedFileKnowledge: true }} className="cfk-entry"
+                aria-label={`${kp.name} · 知识点`}>知识点</Link>
+            </div>
           </div>
         ) : <div key={kp.id}>{button}</div>;
       })}
