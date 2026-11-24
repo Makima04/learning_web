@@ -11,18 +11,18 @@ from pathlib import Path
 import fitz
 from ocrmac import ocrmac
 
-ROOT = Path("/Users/makima/program/web/english_web")
-DOWNLOADS = Path("/Users/makima/Downloads/27王道选择题【答案速查】")
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_DIR = ROOT / "materials/cs408/wangdao/27王道选择题【答案速查】"
 OUT_DIR = ROOT / "papers" / "cs408" / "wangdao2027"
 QUESTIONS_JSON = OUT_DIR / "questions.json"
 PUBLIC_CATALOG = ROOT / "frontend" / "public" / "cs408" / "wangdao2027.json"
-CACHE = Path("/tmp/wd408_ans_ocr")
+CACHE = ROOT / "tmp/ocr/wd408_ans"
 
 SOURCES = [
-    ("ds", DOWNLOADS / "27王道《数据结构》选择题【答案速查】.pdf"),
-    ("os", DOWNLOADS / "27王道《操作系统》选择题【答案速查】.pdf"),
-    ("co", DOWNLOADS / "27王道《计组》选择题【答案速查】.pdf"),
-    ("cn", DOWNLOADS / "27王道《计网》选择题【答案速查】.pdf"),
+    ("ds", SOURCE_DIR / "27王道《数据结构》选择题【答案速查】.pdf"),
+    ("os", SOURCE_DIR / "27王道《操作系统》选择题【答案速查】.pdf"),
+    ("co", SOURCE_DIR / "27王道《计组》选择题【答案速查】.pdf"),
+    ("cn", SOURCE_DIR / "27王道《计网》选择题【答案速查】.pdf"),
 ]
 
 WATERMARK_RE = re.compile(

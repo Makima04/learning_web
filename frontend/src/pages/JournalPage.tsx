@@ -264,7 +264,7 @@ export function JournalPage() {
               {(kgDue.length > 0 || kgDeferredCount > 0) && (
                 <section className="space-y-3">
                   <div className="flex flex-wrap items-end justify-between gap-2">
-                    <h2 className="text-sm font-medium">知识图谱</h2>
+                    <h2 className="text-sm font-medium">手稿 / 章节复盘</h2>
                     <p className="text-xs text-muted-foreground">
                       今日 {kgDue.length}/{kgChapterLimit} 章
                       {kgDeferredCount > 0 ? ` · 另有 ${kgDeferredCount} 章顺延` : ""}
@@ -447,7 +447,7 @@ export function JournalPage() {
             >
               <option value="all">全部来源</option>
               <option value="manual">我记的</option>
-              <option value="kg">知识图谱</option>
+              <option value="kg">手稿 / 错题</option>
             </select>
             <select
               value={historyStatus}

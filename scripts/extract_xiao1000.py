@@ -16,12 +16,12 @@ import fitz
 from ocrmac import ocrmac
 from PIL import Image
 
-ROOT = Path("/Users/makima/program/web/english_web")
-Q_PDF = Path("/Users/makima/Downloads/27版肖1000试题分册.pdf")
-A_PDF = Path("/Users/makima/Downloads/27版肖1000答案解析册.pdf")
+ROOT = Path(__file__).resolve().parents[1]
+Q_PDF = ROOT / "materials/politics/xiao1000/27版肖1000试题分册.pdf"
+A_PDF = ROOT / "materials/politics/xiao1000/27版肖1000答案解析册.pdf"
 OUT_DIR = ROOT / "papers" / "politics" / "xiao1000"
 PUBLIC = ROOT / "frontend" / "public" / "politics" / "xiao1000.json"
-OCR_CACHE = Path("/tmp/xiao1000_ocr")
+OCR_CACHE = ROOT / "tmp/ocr/xiao1000"
 OCR_WIDTH = 1600
 
 # 1-indexed PDF page ranges in 试题分册（含分析题页，解析时丢掉无选项的题）

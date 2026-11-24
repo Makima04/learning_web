@@ -1,7 +1,14 @@
-# 本地数据库与配置（运行时由卷/环境变量提供，不入仓库）
+# 本地数据库、备份与配置
+/.local/
 english_web.db
 english_web.db-*
 ew_llm.json
+.env
+.env.*
+!.env.example
+
+# 学习资料原件
+/materials/
 
 # Rust
 backend/target/
@@ -15,7 +22,7 @@ backend/target/
 node_modules/
 frontend/node_modules/
 
-# 原始 PDF 与中间生成产物（太大；web/data.js 与 web/papers.js 是已生成的前端数据，保留）
+# 原始 PDF、中间数据和构建副本。发布数据在 web/ 和 frontend/public/ 中跟踪。
 2027考研英语红宝书（乱序版）A4默写版.pdf
 words.csv
 words.json
@@ -44,8 +51,9 @@ tmp/
 .codegraph/
 .zcode/
 
-# Python test cache
+# Python 检查缓存
 .pytest_cache/
+.ruff_cache/
 
 # WorkBuddy 工作目录（本地记忆/缓存）
 .workbuddy/

@@ -6,7 +6,6 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
-  Clapperboard,
   FileText,
   Languages,
   LayoutDashboard,
@@ -15,7 +14,6 @@ import {
   LibraryBig,
   Monitor,
   Moon,
-  Network,
   NotebookPen,
   PanelLeftClose,
   PanelLeftOpen,
@@ -28,7 +26,6 @@ import {
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { useTheme } from "@/stores/theme";
 import { useAuth } from "@/stores/auth";
-import { useSettings } from "@/stores/settings";
 import { hrefForNavRoot, isNavSectionActive, rememberNavPath } from "@/lib/navMemory";
 import { useHideOnScrollDown } from "@/hooks/useHideOnScrollDown";
 import { cn } from "@/lib/utils";
@@ -48,11 +45,9 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/", label: "学习概览", icon: LayoutDashboard, tile: "bg-app-teal text-white", end: true },
   { to: "/lists", label: "生熟词表", icon: Bookmark, tile: "bg-app-pink text-white" },
-  { to: "/kg", label: "知识图谱", icon: Network, tile: "bg-app-purple text-white" },
   { to: "/review-priority", label: "复习性价比", icon: Target, tile: "bg-app-orange text-white" },
   { to: "/math-handouts", label: "数学手稿", icon: BookMarked, tile: "bg-app-teal text-white" },
-  { to: "/kg/exams", label: "408 真题", icon: BookOpen, tile: "bg-primary text-primary-foreground" },
-  { to: "/viz", label: "图解 408", icon: Clapperboard, tile: "bg-app-blue text-white", mobile: false },
+  { to: "/cs408-handouts", label: "408手稿", icon: BookMarked, tile: "bg-app-blue text-white" },
   { to: "/journal", label: "学习日志", icon: NotebookPen, tile: "bg-app-green text-white" },
   { to: "/papers", label: "真题阅读", icon: FileText, tile: "bg-app-orange text-white" },
   { to: "/papers-recite", label: "真题记词", icon: LibraryBig, tile: "bg-app-yellow text-[#725d42]" },
@@ -114,7 +109,6 @@ export function AppLayout() {
   const mode = useTheme((s) => s.mode);
   const cycle = useTheme((s) => s.cycle);
   const user = useAuth((s) => s.user);
-  const enableCs408 = useSettings((s) => s.enableCs408);
   const navigate = useNavigate();
   const location = useLocation();
   // 电脑侧栏收起状态记在本机（界面偏好，不跨设备同步）
@@ -168,7 +162,7 @@ export function AppLayout() {
 
   // memTick：确保记忆更新后重新计算 href
   void memTick;
-  const navItems = NAV.filter((item) => item.to !== "/viz" || enableCs408);
+  const navItems = NAV;
   // 手机底栏保留两排：超过十项时改六列，不增加底栏高度或遮挡正文。
   const mobileNavItems = navItems.filter((item) => item.mobile !== false);
   const activeItem = navItems.find((item) => isNavSectionActive(item.to, location.pathname));

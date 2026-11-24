@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-ROOT = Path("/Users/makima/program/web/english_web")
+ROOT = Path(__file__).resolve().parents[1]
 IMG_ROOT = ROOT / "frontend" / "public" / "math" / "img"
 INK = 160         # 灰度低于此值算墨
 MERGE = 4         # 行内空隙：小于此值不切行

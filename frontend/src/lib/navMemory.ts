@@ -6,6 +6,8 @@ export interface NavSection {
   id: string;
   /** 分区根路径（无记忆时的默认 to） */
   root: string;
+  /** 子分区共享侧栏入口，但各自记住浏览位置 */
+  navRoot?: string;
   match: (pathname: string) => boolean;
 }
 
@@ -22,12 +24,6 @@ export const NAV_SECTIONS: NavSection[] = [
     match: (p) => p === "/lists" || p.startsWith("/lists/"),
   },
   {
-    id: "/kg",
-    root: "/kg",
-    // /kg/exams 已升为独立一级入口，不能再抢它的高亮与「上次路径」记忆
-    match: (p) => p === "/kg" || (p.startsWith("/kg/") && !p.startsWith("/kg/exams") && p !== "/kg/math/review-priority"),
-  },
-  {
     id: "/review-priority",
     root: "/review-priority",
     match: (p) => p === "/review-priority" || p.startsWith("/review-priority/") || p === "/kg/math/review-priority",
@@ -38,14 +34,15 @@ export const NAV_SECTIONS: NavSection[] = [
     match: (p) => p === "/math-handouts" || p.startsWith("/math-handouts/"),
   },
   {
-    id: "/kg/exams",
-    root: "/kg/exams",
-    match: (p) => p === "/kg/exams" || p.startsWith("/kg/exams/"),
+    id: "/cs408-handouts",
+    root: "/cs408-handouts",
+    match: (p) => p === "/cs408-handouts" || p.startsWith("/cs408-handouts/"),
   },
   {
-    id: "/viz",
-    root: "/viz",
-    match: (p) => p === "/viz" || p.startsWith("/viz/"),
+    id: "/kg/exams",
+    root: "/kg/exams",
+    navRoot: "/cs408-handouts",
+    match: (p) => p === "/kg/exams" || p.startsWith("/kg/exams/") || p === "/kg/wd" || p.startsWith("/kg/wd/"),
   },
   {
     id: "/journal",
@@ -153,7 +150,6 @@ export function hrefForNavRoot(root: string): string {
 
 /** 当前路径是否属于该导航分区（用于高亮，而非仅匹配 to） */
 export function isNavSectionActive(root: string, pathname: string): boolean {
-  const section = NAV_SECTIONS.find((s) => s.id === root || s.root === root);
-  if (!section) return pathname === root;
-  return section.match(pathname);
+  const section = sectionForPath(pathname);
+  return section ? section.root === root || section.navRoot === root : pathname === root;
 }

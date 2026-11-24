@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-ROOT = Path("/Users/makima/program/web/english_web")
+ROOT = Path(__file__).resolve().parents[1]
 IMG_DIR = ROOT / "frontend" / "public" / "math" / "img" / "zy"
 INDEX = ROOT / "frontend" / "public" / "math" / "zhangyu1000" / "index.json"
 

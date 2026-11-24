@@ -24,8 +24,7 @@ This file provides guidance to coding agents when working with code in this repo
 Python 管线用 `.venv/bin/python3`（数学手稿导出直接 `python3`）。后端默认 Rust。
 
 ```bash
-# 运行应用（同源前后端，Rust + PG）
-export EW_DATABASE_URL=postgres://makima@localhost/english_web
+# 运行应用（有项目内 PostgreSQL 时自动启动，外部库用 EW_DATABASE_URL 指定）
 ./start.sh
 
 # 数学手稿导出与前端构建（每次改完手稿必跑）
@@ -42,7 +41,7 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- validate
 ## 数学手稿体系与全量补齐规范（硬约定）
 
 1. **源头与导出链**：
-   - 手稿源文件位于 `/Users/makima/Downloads/考研数学一手稿/`（23 章 46 讲独立 HTML+MathML）。
+   - 手稿源文件位于项目内 `materials/math/handouts/`（23 章 46 讲独立 HTML+MathML）。
    - 统一由 `scripts/export_math_handouts.py` 导出为 `frontend/public/math/handouts.json`；**禁止手改 `handouts.json`**。
    - 每次修改手稿或导出逻辑后，必须：
      1. 运行 `python3 scripts/export_math_handouts.py`；
@@ -68,9 +67,9 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- validate
 5. **文档与仓库清洁约定**：
    - 不保留旧版排版样页、各章静态 `目录.md`、一次性评审 HTML/Demo 目录或过时报告；文档与代码/数据必须时刻同步。
 
-### 数学手稿全量补齐与分类重构进度表（`HANDOUTS_DATA_VERSION = "20261124v1"`）
+### 数学手稿全量补齐与分类重构进度表（`HANDOUTS_DATA_VERSION = "20261124v6"`）
 
-> 全站 **46/46 份手稿（155 个判别场景、1,678 道例题、0 空组、0 坏图、0 `$` 残留）** 已全部完成场景化 UI 升级、**1,120/1,120（100%）李林 880** 与 **408/408（100%）历年数一真题** 全量覆盖，并对照《李林 880 数一题库》完成了全部 23 章的原生 MathML 题干/真实选项升级与高清原书解析图（1,120/1,120 齐备，`<details class="mh-orig-ans">`）挂载：
+> 全站 **46/46 份手稿（161 个判别场景、1,678 道例题、0 空组、0 坏图、0 失效路线图锚点、0 `$` 残留）** 已全部完成场景化 UI 升级、**1,120/1,120（100%）李林 880** 与 **408/408（100%）历年数一真题** 全量覆盖，并对照《李林 880 数一题库》完成了全部 23 章的原生 MathML 题干/真实选项升级与高清原书解析图（1,120/1,120 齐备，`<details class="mh-orig-ans">`）挂载：
 
 | 批次 | 科目与章节 | 覆盖与重构结果 | 状态 |
 | --- | --- | --- | --- |
@@ -89,7 +88,8 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- validate
 ### 前端（frontend/）与后端（backend/）
 
 - 前端：Vite + React 18 + TS + Tailwind + Zustand，生产构建产物在 `frontend/dist`。
-- 后端：Rust Axum + PostgreSQL（`EW_DATABASE_URL`，默认 `postgres://makima@localhost/english_web`），鉴权 PBKDF2-HMAC-SHA256 + Bearer session；LLM key 收归服务端 `ew_llm.json` / `EW_LLM_*`。
+- 后端：Rust Axum + PostgreSQL，优先使用数据库连接环境变量，其次使用项目内 `.local/database-url`，兼容原来的本机连接。鉴权 PBKDF2-HMAC-SHA256 + Bearer session。LLM 配置使用项目根的 `ew_llm.json` 或 `EW_LLM_*`。
+- 本地目录：`materials/` 放原始资料，`papers/` 放处理中的试卷与题库数据，`tmp/` 放 OCR 与中间文件，`.local/` 放开发数据库和备份。目录分工见 `README.md`。
 
 ### Docker / CI / 部署（multi-arch 全部在 CI 构建）
 

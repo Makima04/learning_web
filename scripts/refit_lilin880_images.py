@@ -33,11 +33,11 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from math_img import render_clips
 
-ROOT = Path("/Users/makima/program/web/english_web")
-DL = Path("/Users/makima/Downloads")
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_DIR = ROOT / "materials/math/lilin880"
 PDFS = {
-    "calc": DL / "【A4紧凑版】880数一高数篇做题本.pdf",
-    "lin": DL / "【A4紧凑版】880数一线概篇做题本.pdf",
+    "calc": SOURCE_DIR / "【A4紧凑版】880数一高数篇做题本.pdf",
+    "lin": SOURCE_DIR / "【A4紧凑版】880数一线概篇做题本.pdf",
 }
 PDF_KEY = {"calc": "calc", "linear": "lin", "prob": "lin"}
 IMG_DIR = ROOT / "frontend" / "public" / "math" / "img" / "ll"

@@ -18,13 +18,13 @@ from extract_lilin880 import cn_chapter, slim_row
 from extract_zhangyu1000 import clips_to_pdf, render_page, vision_top_frac
 from math_img import render_clips
 
-ROOT = Path("/Users/makima/program/web/english_web")
-PDF = Path("/Users/makima/Downloads/880数一解析分册.pdf")
+ROOT = Path(__file__).resolve().parents[1]
+PDF = ROOT / "materials/math/lilin880/880数一解析分册.pdf"
 OUT_DIR = ROOT / "papers" / "math" / "lilin880"
 QUESTIONS_JSON = OUT_DIR / "questions.json"
 PUBLIC_CATALOG = ROOT / "frontend" / "public" / "math" / "lilin880.json"
 IMG_DIR = ROOT / "frontend" / "public" / "math" / "img" / "ll-ans"
-CACHE = Path("/tmp/ll880_jiexi_ocr")
+CACHE = ROOT / "tmp/ocr/ll880_jiexi"
 
 # 页脚印刷页码 + 6 = PDF 页码（封面/CIP 2 页 + 目录 3 页 + 空白 1 页）
 PDF_OFFSET = 6

@@ -10,5 +10,5 @@ from export_wangdao_images import export
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--pdf", type=Path, default=Path.home() / "Downloads/数据结构大题.pdf")
+    parser.add_argument("--pdf", type=Path, default=Path(__file__).resolve().parents[1] / "materials/cs408/wangdao/数据结构大题.pdf")
     export(parser.parse_args().pdf)

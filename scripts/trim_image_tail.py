@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-ROOT = Path("/Users/makima/program/web/english_web")
+ROOT = Path(__file__).resolve().parents[1]
 IMG_DIRS = [ROOT / "frontend" / "public" / "math" / "img" / b for b in ("ll", "zy")]
 BACKUP = ROOT / "tmp" / "tail-trim-orig"
 INK = 160

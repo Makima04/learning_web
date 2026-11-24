@@ -17,13 +17,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from extract_zhangyu1000 import clips_to_pdf, render_page, slim_row, vision_top_frac
 from math_img import render_clips
 
-ROOT = Path("/Users/makima/program/web/english_web")
-PDF = Path("/Users/makima/Downloads/27张宇1000题数一-解析册.pdf")
+ROOT = Path(__file__).resolve().parents[1]
+PDF = ROOT / "materials/math/zhangyu1000/27张宇1000题数一-解析册.pdf"
 OUT_DIR = ROOT / "papers" / "math" / "zhangyu1000"
 QUESTIONS_JSON = OUT_DIR / "questions.json"
 PUBLIC_CATALOG = ROOT / "frontend" / "public" / "math" / "zhangyu1000.json"
 IMG_DIR = ROOT / "frontend" / "public" / "math" / "img" / "zy-ans"
-CACHE = Path("/tmp/zy1000_jiexi_ocr")
+CACHE = ROOT / "tmp/ocr/zy1000_jiexi"
 
 # 页脚印刷页码 + 6 = PDF 页码（封面 2 页 + 目录 3 页 + 空白 1 页）
 PDF_OFFSET = 6

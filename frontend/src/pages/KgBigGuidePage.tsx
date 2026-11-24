@@ -1,58 +1,11 @@
 // 408 大题分类与答题模板：按解题范式归档 2009–2026 全部 126 道综合应用题。
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { kgKpPath } from "@/lib/kg/paths";
-import { CS408_DATA_VER } from "@/lib/kg/exams408";
+import { cs408HandoutPath } from "@/lib/kg/paths";
+import { loadCs408BigGuide, type BigGuide, type GuideQuestion } from "@/lib/kg/cs408BigGuide";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
-interface GuideQuestion {
-  year: number;
-  n: number;
-  book: string;
-  bookName: string;
-  topic: string;
-  note: string;
-  kps: string[];
-  hasAnswer: boolean;
-  hasExplanation: boolean;
-  stemBrief: string;
-}
-
-interface GuideType {
-  id: string;
-  family: string;
-  familyName: string;
-  name: string;
-  subtitle: string;
-  paradigm: string;
-  template: string[];
-  ideas: string[];
-  pitfalls: string[];
-  kpIds: string[];
-  kpNames: { id: string; name: string }[];
-  count: number;
-  years: number[];
-  questions: GuideQuestion[];
-}
-
-interface BigGuide {
-  version: string;
-  scope: string;
-  note: string;
-  total: number;
-  type_count: number;
-  years: number[];
-  families: { id: string; name: string }[];
-  types: GuideType[];
-  stats: {
-    by_family: Record<string, number>;
-    by_year: Record<string, number>;
-    with_answer: number;
-    with_explanation: number;
-  };
-}
 
 const FAMILY_CLS: Record<string, string> = {
   ds: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -94,11 +47,7 @@ export function KgBigGuidePage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/cs408/big-guide.json?v=${CS408_DATA_VER}`, { cache: "no-cache" })
-      .then((r) => {
-        if (!r.ok) throw new Error(`加载失败 (${r.status})`);
-        return r.json() as Promise<BigGuide>;
-      })
+    loadCs408BigGuide()
       .then((d) => {
         if (cancelled) return;
         setGuide(d);
@@ -330,12 +279,12 @@ export function KgBigGuidePage() {
                     </ul>
                   </Section>
 
-                  <Section title="知识点关联" hint="点开可回知识图谱">
+                  <Section title="知识点关联" hint="点开前往408手稿">
                     <div className="flex flex-wrap gap-1.5">
                       {active.t.kpNames.map((k) => (
                         <Link
                           key={k.id}
-                          to={kgKpPath(k.id, { subject: "cs408", src: "big-guide" })}
+                          to={cs408HandoutPath({ kpId: k.id })}
                           className="rounded-md border bg-card px-2 py-1 text-[11px] hover:border-primary/50 hover:bg-accent/40"
                         >
                           {k.name}

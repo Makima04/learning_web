@@ -35,21 +35,6 @@ const TodayPage = lazy(() =>
 const WordListsPage = lazy(() =>
   import("@/pages/WordListsPage").then((m) => ({ default: m.WordListsPage }))
 );
-const KgMapPage = lazy(() =>
-  import("@/pages/KgMapPage").then((m) => ({ default: m.KgMapPage }))
-);
-const KgModulePage = lazy(() =>
-  import("@/pages/KgModulePage").then((m) => ({ default: m.KgModulePage }))
-);
-const KgKpPage = lazy(() =>
-  import("@/pages/KgKpPage").then((m) => ({ default: m.KgKpPage }))
-);
-const KgBookDrillPage = lazy(() =>
-  import("@/pages/KgBookDrillPage").then((m) => ({ default: m.KgBookDrillPage }))
-);
-const KgPredictPage = lazy(() =>
-  import("@/pages/KgPredictPage").then((m) => ({ default: m.KgPredictPage }))
-);
 const ReviewPriorityPage = lazy(() =>
   import("@/pages/ReviewPriorityPage").then((m) => ({ default: m.ReviewPriorityPage }))
 );
@@ -61,6 +46,7 @@ const Math1PracticePage = lazy(() => import("@/pages/Math1PracticePage").then((m
 const MathRoutePage = lazy(() => import("@/pages/MathRoutePage").then((m) => ({ default: m.MathRoutePage })));
 const MathHandoutsPage = lazy(() => import("@/pages/MathHandoutsPage").then((m) => ({ default: m.MathHandoutsPage })));
 const MathHandoutDetailPage = lazy(() => import("@/pages/MathHandoutDetailPage").then((m) => ({ default: m.MathHandoutDetailPage })));
+const Cs408HandoutsPage = lazy(() => import("@/pages/Cs408HandoutsPage").then((m) => ({ default: m.Cs408HandoutsPage })));
 const LegacyMathReviewRedirect = lazy(() =>
   import("@/pages/ReviewPriorityPage").then((m) => ({ default: m.LegacyMathReviewRedirect }))
 );
@@ -90,21 +76,6 @@ const Cs408OverviewPage = lazy(() =>
 );
 const WdSetPage = lazy(() =>
   import("@/pages/WdSetPage").then((m) => ({ default: m.WdSetPage }))
-);
-const KgIndexRedirect = lazy(() =>
-  import("@/pages/kgRedirects").then((m) => ({ default: m.KgIndexRedirect }))
-);
-const KgLegacyKpRedirect = lazy(() =>
-  import("@/pages/kgRedirects").then((m) => ({ default: m.KgLegacyKpRedirect }))
-);
-const KgLegacyModuleRedirect = lazy(() =>
-  import("@/pages/kgRedirects").then((m) => ({ default: m.KgLegacyModuleRedirect }))
-);
-const VizHomePage = lazy(() =>
-  import("@/pages/VizHomePage").then((m) => ({ default: m.VizHomePage }))
-);
-const VizKpPage = lazy(() =>
-  import("@/pages/VizKpPage").then((m) => ({ default: m.VizKpPage }))
 );
 const PoliticsPage = lazy(() =>
   import("@/pages/PoliticsPage").then((m) => ({ default: m.PoliticsPage }))
@@ -138,8 +109,10 @@ export default function App() {
             <Route path="journal" element={<JournalPage />} />
             <Route path="journal/chapter/:moduleId" element={<JournalChapterPage />} />
             <Route path="journal/:tab" element={<JournalPage />} />
-            <Route path="kg" element={<KgIndexRedirect />} />
-            <Route path="kg/predict" element={<KgPredictPage />} />
+            <Route path="kg" element={<Navigate to="/cs408-handouts" replace />} />
+            <Route path="kg/math/*" element={<Navigate to="/math-handouts" replace />} />
+            <Route path="kg/cs408/*" element={<Navigate to="/cs408-handouts" replace />} />
+            <Route path="kg/predict" element={<Navigate to="/cs408-handouts" replace />} />
             <Route path="review-priority" element={<ReviewPriorityPage />} />
             <Route path="review-priority/exams/math1/:year/:n" element={<Math1PracticePage />} />
             <Route path="review-priority/knowledge" element={<KnowledgeReviewPage />} />
@@ -149,6 +122,8 @@ export default function App() {
             <Route path="review-priority/knowledge/:kpId" element={<KnowledgeReviewPage />} />
             <Route path="math-handouts" element={<MathHandoutsPage />} />
             <Route path="math-handouts/:slug" element={<MathHandoutDetailPage />} />
+            <Route path="cs408-handouts" element={<Cs408HandoutsPage />} />
+            <Route path="cs408-handouts/:chapterId" element={<Cs408HandoutsPage />} />
             <Route path="kg/math/review-priority" element={<LegacyMathReviewRedirect />} />
             <Route path="kg/exams" element={<KgExamsPage />} />
             <Route path="kg/exams/mistakes" element={<Cs408MistakesPage />} />
@@ -163,17 +138,8 @@ export default function App() {
             <Route path="kg/exams/os-mem" element={<OsMemExamSetPage />} />
             <Route path="kg/exams/os-mem/:group" element={<OsMemExamSetPage />} />
             <Route path="kg/exams/:year" element={<KgExamsPage />} />
-            <Route path="kg/module/:bookId/:moduleId" element={<KgLegacyModuleRedirect />} />
-            <Route path="kg/kp/:kpId" element={<KgLegacyKpRedirect />} />
-            <Route path="kg/:subject" element={<KgMapPage />} />
-            <Route path="kg/:subject/module/:bookId/:moduleId" element={<KgModulePage />} />
-            <Route
-              path="kg/:subject/module/:bookId/:moduleId/book"
-              element={<KgBookDrillPage />}
-            />
-            <Route path="kg/:subject/kp/:kpId" element={<KgKpPage />} />
-            <Route path="viz" element={<VizHomePage />} />
-            <Route path="viz/:kpId" element={<VizKpPage />} />
+            <Route path="kg/*" element={<Navigate to="/cs408-handouts" replace />} />
+            <Route path="viz/*" element={<Navigate to="/cs408-handouts" replace />} />
             <Route path="politics" element={<PoliticsPage />} />
             <Route path="politics/xiao" element={<PoliticsXiaoPage />} />
             <Route path="politics/xiao/:subject" element={<PoliticsXiaoPage />} />

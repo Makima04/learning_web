@@ -16,7 +16,7 @@ import {
   type WdClass,
 } from "@/data/kg/wdTaxonomy";
 import { osMemSetPath } from "@/data/kg/osMemTopics";
-import { kgKpPath } from "@/lib/kg/paths";
+import { cs408HandoutPath } from "@/lib/kg/paths";
 import { useHydratedItems } from "@/lib/kg/catalogLoad";
 import {
   useWangdao408,
@@ -32,7 +32,6 @@ import { cn } from "@/lib/utils";
 import { ItemNoteField } from "@/pages/itemNoteField";
 import { WdTags } from "@/pages/wdTags";
 import { WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
-import { vizFor } from "@/viz/registry";
 import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
@@ -84,8 +83,8 @@ function Hub() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-6">
       <div>
-        <Link to="/kg/cs408" className="text-xs text-muted-foreground hover:underline">
-          ← 知识图谱
+        <Link to="/cs408-handouts" className="text-xs text-muted-foreground hover:underline">
+          ← 408手稿
         </Link>
         <h1 className="mt-1 text-xl font-semibold">王道 408 题集</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -478,7 +477,6 @@ function QRow({
 }) {
   const preview = (item.stem || "").replace(/\s+/g, " ").slice(0, 72);
   const pk = classified.topic.kpId;
-  const viz = pk && vizFor(pk);
 
   return (
     <Card id={`q-${item.id}`} className={cn("scroll-mt-20", open && "ring-1 ring-primary/40")}>
@@ -509,14 +507,6 @@ function QRow({
           <p className="text-xs text-muted-foreground">
             小类「{classified.topic.name}」· 大类 {classified.group.name}
             {item.pdf_page ? ` · 做题本 p.${item.pdf_page}` : ""}
-            {viz ? (
-              <>
-                {" · "}
-                <Link to={`/viz/${pk}`} className="text-primary hover:underline">
-                  图解
-                </Link>
-              </>
-            ) : null}
           </p>
           <WangdaoStem item={item} />
           <WangdaoAnalysis item={item} revealAnswer={proof && item.kind === "mcq"} />
@@ -538,7 +528,7 @@ function QRow({
             ))}
             {pk && findKp(pk) && (
               <Button asChild size="sm" variant="ghost">
-                <Link to={kgKpPath(pk, { subject: "cs408" })}>考点刷题</Link>
+                <Link to={cs408HandoutPath({ kpId: pk })}>408手稿</Link>
               </Button>
             )}
           </div>

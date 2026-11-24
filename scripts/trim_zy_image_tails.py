@@ -23,7 +23,7 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path("/Users/makima/program/web/english_web")
+ROOT = Path(__file__).resolve().parents[1]
 IMG_DIR = ROOT / "frontend" / "public" / "math" / "img" / "zy"
 BACKUP_DIR = ROOT / "tmp" / "zy-orig"
 INK = 160          # 灰度阈值：低于此值算字迹

@@ -115,6 +115,7 @@ export function Cs408MistakesPage() {
   const entries = useJournal((s) => s.entries);
   const archiveEntry = useJournal((s) => s.archiveEntry);
   const attempts = useKgProgress((s) => s.attempts);
+  const itemMarks = useKgProgress((s) => s.itemMarks);
   const favorites = useKgProgress((s) => s.favorites);
   const toggleFavorite = useKgProgress((s) => s.toggleFavorite);
 
@@ -136,8 +137,9 @@ export function Cs408MistakesPage() {
   useEffect(() => {
     if (migrated.current || attempts.length === 0) return;
     migrated.current = true;
-    void migrateExamWrongsToJournal(attempts);
-  }, [attempts]);
+    const retired = new Set(itemMarks.filter(mark => mark.retired).map(mark => mark.itemId));
+    void migrateExamWrongsToJournal(attempts.filter(attempt => !retired.has(attempt.itemId)));
+  }, [attempts, itemMarks]);
 
   const examEntries = useMemo(
     () => entries.filter((e) => e.status === "active" && isExamItemId(e.sourceItemId)),

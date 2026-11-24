@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把 /tmp/prob_overlay/*.tsv 并入 math_item_overlay.json，并回写两本目录。"""
+"""把 tmp/overlays/prob/*.tsv 并入 math_item_overlay.json，并回写两本目录。"""
 from __future__ import annotations
 
 import json
@@ -7,11 +7,11 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path("/Users/makima/program/web/english_web")
+ROOT = Path(__file__).resolve().parents[1]
 OVERLAY_PATH = ROOT / "scripts" / "math_item_overlay.json"
 PUB = ROOT / "frontend" / "public" / "math"
-TSV_DIR = Path("/tmp/prob_overlay")
-BATCH_DIR = Path("/tmp/prob_batches")
+TSV_DIR = ROOT / "tmp/overlays/prob"
+BATCH_DIR = ROOT / "tmp/overlays/prob_batches"
 
 EXPECTED = {
     "base": 36,

@@ -13,7 +13,7 @@ import { isDueOnOrBefore } from "@/lib/journal";
 import { isExamItemId } from "@/lib/kg/examJournal";
 import { useJournal } from "@/stores/journal";
 import { findKp } from "@/data/kg";
-import { kgMapPath, kgModulePath } from "@/lib/kg/paths";
+import { cs408HandoutPath } from "@/lib/kg/paths";
 import {
   examItemId,
   loadCs408ExamIndex,
@@ -470,8 +470,8 @@ function YearList({ index }: { index: ExamIndex }) {
   return (
     <div className="space-y-5">
       <div>
-        <Link to={kgMapPath("cs408")} className={cn("rounded text-xs text-muted-foreground hover:underline", FOCUS)}>
-          ← 知识图谱
+        <Link to={cs408HandoutPath()} className={cn("rounded text-xs text-muted-foreground hover:underline", FOCUS)}>
+          ← 408手稿
         </Link>
         <h1 className="mt-1 text-2xl font-bold">408 真题</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -549,9 +549,9 @@ function YearList({ index }: { index: ExamIndex }) {
         />
         <TaskCard
           badge="按考点"
-          title="专项补漏"
-          description="按四科考点定位真题与题集"
-          to={kgMapPath("cs408")}
+          title="408手稿精讲"
+          description="按四科章节与考点阅读讲解、刷真题与王道"
+          to={cs408HandoutPath()}
           tone="bg-app-purple text-white"
         />
         <TaskCard
@@ -677,9 +677,6 @@ function YearList({ index }: { index: ExamIndex }) {
             <Link to={osMemSetPath()}>OS 内存细分</Link>
           </Button>
           <Button asChild size="sm" variant="outline" className={cn(TAP, FOCUS)}>
-            <Link to="/kg/predict">大题预测 / 诊断卷</Link>
-          </Button>
-          <Button asChild size="sm" variant="outline" className={cn(TAP, FOCUS)}>
             <Link to={wdSetPath()}>王道按大类</Link>
           </Button>
           <Button asChild size="sm" variant="outline" className={cn(TAP, FOCUS)}>
@@ -689,7 +686,7 @@ function YearList({ index }: { index: ExamIndex }) {
             <Link to={wdSetPath({ group: "all", kind: "big", mode: "proof" })}>王道大题</Link>
           </Button>
           <Button asChild size="sm" variant="outline" className={cn(TAP, FOCUS)}>
-            <Link to={kgMapPath("cs408")}>按模块学习</Link>
+            <Link to={cs408HandoutPath()}>408手稿</Link>
           </Button>
         </div>
       </details>
@@ -1001,8 +998,8 @@ function PaperView({ year }: { year: number }) {
                           <Link
                             to={
                               foundKp
-                                ? kgModulePath(foundKp.book.id, foundKp.module.id, foundKp.book.subject)
-                                : kgMapPath("cs408")
+                                ? cs408HandoutPath({ chapterId: foundKp.module.id, scene: foundKp.kp.id })
+                                : cs408HandoutPath()
                             }
                             className={cn("rounded hover:underline", FOCUS)}
                           >

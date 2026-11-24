@@ -17,12 +17,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from math_img import pdf_y_from_norm_top, render_clips
 from math_kp_map import apply_overlay, classify_zhangyu
 
-ROOT = Path("/Users/makima/program/web/english_web")
-PDF = Path("/Users/makima/Downloads/27张宇1000题数一-试题册.pdf")
+ROOT = Path(__file__).resolve().parents[1]
+PDF = ROOT / "materials/math/zhangyu1000/27张宇1000题数一-试题册.pdf"
 OUT_DIR = ROOT / "papers" / "math" / "zhangyu1000"
 PUBLIC_CATALOG = ROOT / "frontend" / "public" / "math" / "zhangyu1000.json"
 IMG_DIR = ROOT / "frontend" / "public" / "math" / "img" / "zy"
-CACHE = Path("/tmp/zy1000_ocr")
+CACHE = ROOT / "tmp/ocr/zy1000"
 OCR_WIDTH = 1400
 LEFT_FRAC = 0.24
 

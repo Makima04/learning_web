@@ -14,8 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from math_img import render_clips
 from math_kp_map import LILIN_CHAPTER_NAME, apply_overlay, classify_lilin
 
-ROOT = Path("/Users/makima/program/web/english_web")
-DOWNLOADS = Path("/Users/makima/Downloads")
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_DIR = ROOT / "materials/math/lilin880"
 OUT_DIR = ROOT / "papers" / "math" / "lilin880"
 PUBLIC_CATALOG = ROOT / "frontend" / "public" / "math" / "lilin880.json"
 IMG_DIR = ROOT / "frontend" / "public" / "math" / "img" / "ll"
@@ -28,12 +28,12 @@ SOURCES = [
     {
         "part": "base",
         "label": "基础篇",
-        "pdf": DOWNLOADS / "【基础强化】880数一基础篇做题本.pdf",
+        "pdf": SOURCE_DIR / "【基础强化】880数一基础篇做题本.pdf",
     },
     {
         "part": "hard",
         "label": "强化篇",
-        "pdf": DOWNLOADS / "【基础强化】880数一强化篇做题本.pdf",
+        "pdf": SOURCE_DIR / "【基础强化】880数一强化篇做题本.pdf",
     },
 ]
 

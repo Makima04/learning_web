@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 import { dayKey } from "@/lib/day";
 import { compareDay, isDueOnOrBefore, type JournalEntry } from "@/lib/journal";
 import type { UserItemMark } from "@/lib/kg/types";
+import { templatesForKp } from "@/data/kg/mathTemplates";
 
 export type HandoutPriority = "exam" | "lilin880";
+export type HandoutKindFilter = "all" | "big" | "fill" | "mcq";
+export type HandoutGroupMode = "scene" | "template";
 
 export interface HandoutMethod {
   id: string;
@@ -86,6 +91,7 @@ export interface Lilin880Item {
   pdf_page?: number;
   stem: string;
   kp_ids?: string[];
+  facets?: string[];
   part?: string;
   band?: string;
   options?: Record<string, string>;
@@ -131,7 +137,7 @@ export function useHandoutPriority(): [HandoutPriority, (p: HandoutPriority) => 
   return [priority, setPriority];
 }
 
-const HANDOUTS_DATA_VERSION = "20261124v1";
+const HANDOUTS_DATA_VERSION = "20261124v6";
 
 let handoutsCache: Promise<MathHandout[]> | null = null;
 export function loadMathHandouts(): Promise<MathHandout[]> {
@@ -338,4 +344,326 @@ export function matchLilin880ForHandout(
     }
   }
   return { primary, secondary };
+}
+
+export interface ExamMetaLite {
+  kind: "mcq" | "fill" | "big";
+  facets?: string[];
+}
+
+/** 推断手稿例题的题型（选择 / 填空 / 大题），优先取 880 / 真题元数据，其次按题号与来源兜底。 */
+export function inferHandoutExampleKind(
+  ex: HandoutExample,
+  lilinMap: ReadonlyMap<string, Lilin880Item>,
+  examMetaMap: ReadonlyMap<string, ExamMetaLite>
+): "mcq" | "fill" | "big" {
+  if (ex.lilin880Id) {
+    const it = lilinMap.get(ex.lilin880Id);
+    if (it?.kind) return it.kind;
+  }
+  if (ex.year && ex.n) {
+    const em = examMetaMap.get(`${ex.year}-${ex.n}`);
+    if (em?.kind) return em.kind;
+  }
+  if (ex.answerLetter || ex.id.includes("-mcq-") || /选择/.test(ex.source)) return "mcq";
+  if (ex.id.includes("-fill-") || /填空/.test(ex.source)) return "fill";
+  return "big";
+}
+
+/** 获取手稿例题对应的考法细类 facets（合并 880 与真题元数据）。 */
+export function facetsOfHandoutExample(
+  ex: HandoutExample,
+  lilinMap: ReadonlyMap<string, Lilin880Item>,
+  examMetaMap: ReadonlyMap<string, ExamMetaLite>
+): string[] {
+  const out = new Set<string>();
+  if (ex.lilin880Id) {
+    for (const f of lilinMap.get(ex.lilin880Id)?.facets ?? []) out.add(f);
+  }
+  if (ex.year && ex.n) {
+    for (const f of examMetaMap.get(`${ex.year}-${ex.n}`)?.facets ?? []) out.add(f);
+  }
+  return [...out];
+}
+
+/** 判断讲义是否关联了复习性价比的「题型模板」。 */
+export function handoutHasTemplates(handout: MathHandout): boolean {
+  if (templatesForKp(handout.primaryKpId).length > 0) return true;
+  return (handout.secondaryKpIds ?? []).some((kp) => templatesForKp(kp).length > 0);
+}
+
+/** 在「判别场景」模式下按题型筛选各场景内例题。 */
+export function filterHandoutGroupsByKind(
+  groups: HandoutGroup[],
+  lilinMap: ReadonlyMap<string, Lilin880Item>,
+  examMetaMap: ReadonlyMap<string, ExamMetaLite>,
+  kindFilter: HandoutKindFilter
+): HandoutGroup[] {
+  if (kindFilter === "all") return groups;
+  return groups.map((g) => ({
+    ...g,
+    examples: g.examples.filter(
+      (ex) => inferHandoutExampleKind(ex, lilinMap, examMetaMap) === kindFilter
+    ),
+  }));
+}
+
+const SUP_MAP: Record<string, string> = {
+  "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4",
+  "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9",
+  "⁻": "-", "⁺": "+", "ⁿ": "n", "ᵏ": "k",
+};
+const SUB_MAP: Record<string, string> = {
+  "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4",
+  "₅": "5", "₆": "6", "₇": "7", "₈": "8", "₉": "9",
+};
+const GREEK_MAP: Record<string, string> = {
+  α: "\\alpha ", β: "\\beta ", γ: "\\gamma ", δ: "\\delta ", ε: "\\varepsilon ",
+  ζ: "\\zeta ", η: "\\eta ", θ: "\\theta ", κ: "\\kappa ", λ: "\\lambda ",
+  μ: "\\mu ", ξ: "\\xi ", π: "\\pi ", ρ: "\\rho ", σ: "\\sigma ",
+  τ: "\\tau ", φ: "\\varphi ", χ: "\\chi ", ψ: "\\psi ", ω: "\\omega ",
+  Δ: "\\Delta ", Λ: "\\Lambda ", Φ: "\\Phi ", Ω: "\\Omega ",
+};
+
+/** 将模板中的紧凑数学片段转为标准 LaTeX 并由 KaTeX 渲染，避免 HTML 拼接错乱与斜杠歧义。 */
+function templateMathToTex(raw: string): string {
+  let s = raw
+    .replace(/θ̂/g, "\\hat{\\theta}")
+    .replace(/x̄/g, "\\bar{x}")
+    .replace(/X̄/g, "\\bar{X}")
+    .replace(/ᵀ/g, "^{\\mathsf{T}}")
+    .replace(/′/g, "'")
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺ⁿᵏ]+/g, (m) => `^{${[...m].map((c) => SUP_MAP[c] ?? c).join("")}}`)
+    .replace(/[₀₁₂₃₄₅₆₇₈₉]+/g, (m) => `_{${[...m].map((c) => SUB_MAP[c] ?? c).join("")}}`)
+    .replace(/∫∫∫/g, "\\iiint ")
+    .replace(/∫∫/g, "\\iint ")
+    .replace(/∫/g, "\\int ")
+    .replace(/∬/g, "\\iint ")
+    .replace(/∭/g, "\\iiint ")
+    .replace(/∮/g, "\\oint ")
+    .replace(/Σ/g, "\\sum ")
+    .replace(/∏/g, "\\prod ")
+    .replace(/∞/g, "\\infty ")
+    .replace(/∇/g, "\\nabla ")
+    .replace(/∂/g, "\\partial ")
+    .replace(/∃/g, "\\exists ")
+    .replace(/∀/g, "\\forall ")
+    .replace(/∈/g, "\\in ")
+    .replace(/∉/g, "\\notin ")
+    .replace(/⊂/g, "\\subset ")
+    .replace(/⊆/g, "\\subseteq ")
+    .replace(/∪/g, "\\cup ")
+    .replace(/∩/g, "\\cap ")
+    .replace(/·/g, "\\cdot ")
+    .replace(/×/g, "\\times ")
+    .replace(/÷/g, "\\div ")
+    .replace(/±/g, "\\pm ")
+    .replace(/−/g, "-")
+    .replace(/≠/g, "\\neq ")
+    .replace(/≤/g, "\\le ")
+    .replace(/≥/g, "\\ge ")
+    .replace(/≈/g, "\\approx ")
+    .replace(/≡/g, "\\equiv ")
+    .replace(/⇔/g, "\\Leftrightarrow ")
+    .replace(/⇒/g, "\\Rightarrow ")
+    .replace(/→/g, "\\to ")
+    .replace(/~/g, "\\sim ")
+    .replace(/√\(([^)]+)\)/g, "\\sqrt{$1}")
+    .replace(/√([A-Za-z0-9])/g, "\\sqrt{$1}")
+    .replace(/[αβγδεζηθκλμξπρστφχψωΔΛΦΩ]/g, (c) => GREEK_MAP[c] ?? c)
+    .replace(/([A-Za-z])_(min|max)\b/g, "$1_{\\mathrm{$2}}")
+    .replace(/([A-Za-z])_([A-Za-z0-9]{2,})/g, "$1_{$2}")
+    .replace(/\b(max|min|sin|cos|tan|ln|log|lim|exp)\b/g, "\\$1 ")
+    .replace(/\b(tr|Cov|Var|div|curl)\b/g, "\\operatorname{$1}");
+
+  // 仅当片段内只有一个斜杠时才将其排成直观看得懂的分式（避免把 Z/t/χ² 这类枚举斜杠误排成嵌套分式）
+  const slashCount = (s.match(/\//g) ?? []).length;
+  if (slashCount === 1) {
+    s = s.replace(
+      /((?:\([^()]+\)|\|[^|]+\||[A-Za-z0-9\\_{}^'()]+))\s*\/\s*((?:\([^()]+\)|\|[^|]+\||[A-Za-z0-9\\_{}^'()]+))/,
+      (_m, num: string, den: string) => {
+        const cleanNum = num.startsWith("(") && num.endsWith(")") ? num.slice(1, -1) : num;
+        const cleanDen = den.startsWith("(") && den.endsWith(")") ? den.slice(1, -1) : den;
+        return `\\frac{${cleanNum}}{${cleanDen}}`;
+      }
+    );
+  }
+  return s.trim();
+}
+
+function escapeHtmlText(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** 将模板纯文本里的数学公式用 KaTeX 渲染为标准数学排版，并可选按分号拆分为清晰的分条步骤。 */
+function formatTemplateInlineMath(text: string): string {
+  const mathRe =
+    /[A-Za-z0-9\u0391-\u03C9∫∬∭∮Σ∏√∇∂∞∃∀∈∉⊂⊆∪∩·×÷±−≠≤≥≈≡⇔⇒→~|()[\]{}_^/.,′'+\-⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺ⁿᵏ₀₁₂₃₄₅₆₇₈₉ᵀ]+(?:̂|̄)?/g;
+
+  let out = "";
+  let lastIdx = 0;
+  for (const m of text.matchAll(mathRe)) {
+    const start = m.index ?? 0;
+    const raw = m[0];
+    out += escapeHtmlText(text.slice(lastIdx, start));
+    lastIdx = start + raw.length;
+
+    // 保留纯数字、纯标点以及中文之间的单独斜杠（如 串联/并联）
+    if (/^[0-9.,/+\-()[\]{}]+$/.test(raw)) {
+      out += escapeHtmlText(raw);
+      continue;
+    }
+
+    // 去掉末尾误吞的标点（如句末句号或逗号）
+    let core = raw;
+    let tail = "";
+    const tailMatch = core.match(/[.,]+$/);
+    if (tailMatch) {
+      tail = tailMatch[0];
+      core = core.slice(0, -tail.length);
+    }
+
+    try {
+      const tex = templateMathToTex(core);
+      const rendered = katex.renderToString(tex, {
+        throwOnError: false,
+        strict: "ignore",
+      });
+      out += `<span class="mh-tpl-katex">${rendered}</span>${escapeHtmlText(tail)}`;
+    } catch {
+      out += `<span class="mh-tpl-math">${escapeHtmlText(core)}</span>${escapeHtmlText(tail)}`;
+    }
+  }
+  out += escapeHtmlText(text.slice(lastIdx));
+  return out;
+}
+
+function formatTemplateTextToHtml(text: string, splitClauses = false): string {
+  const trimmed = text.trim();
+  if (!splitClauses) return formatTemplateInlineMath(trimmed);
+  const clauses = trimmed
+    .replace(/[。；;]+$/, "")
+    .split(/[；;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (clauses.length <= 1) return formatTemplateInlineMath(trimmed);
+  const items = clauses
+    .map((c) => `<li>${formatTemplateInlineMath(c)}</li>`)
+    .join("");
+  return `<ol class="mh-tpl-list">${items}</ol>`;
+}
+
+/** 将手稿内全部例题按「复习性价比」同源的题型模板重新分组（每题按主考法区分度唯一归属，避免多模板重复出现）。 */
+export function buildHandoutTemplateGroups(
+  handout: MathHandout,
+  lilinMap: ReadonlyMap<string, Lilin880Item>,
+  examMetaMap: ReadonlyMap<string, ExamMetaLite>,
+  kindFilter: HandoutKindFilter
+): HandoutGroup[] {
+  const uniqueExamples: HandoutExample[] = [];
+  const seen = new Set<string>();
+  for (const g of handout.groups) {
+    for (const ex of g.examples) {
+      if (seen.has(ex.anchorId)) continue;
+      seen.add(ex.anchorId);
+      if (
+        kindFilter !== "all" &&
+        inferHandoutExampleKind(ex, lilinMap, examMetaMap) !== kindFilter
+      ) {
+        continue;
+      }
+      uniqueExamples.push(ex);
+    }
+  }
+
+  const primaryTemplates = templatesForKp(handout.primaryKpId);
+  const templates =
+    primaryTemplates.length > 0
+      ? primaryTemplates
+      : (handout.secondaryKpIds ?? []).flatMap((kp) => templatesForKp(kp));
+
+  // 统计每个 facet 在当前考点各模板中的出现频次：只在单一模板出现的专属考法（如 maxmin / sum_conv）权重最高，
+  // 而跨模板共享的背景标签（如 indep_rv / uniform / exp）权重压低，避免一题被误吸进多个模板。
+  const facetDf = new Map<string, number>();
+  for (const tpl of templates) {
+    for (const f of new Set(tpl.facets)) {
+      facetDf.set(f, (facetDf.get(f) ?? 0) + 1);
+    }
+  }
+
+  const buckets = new Map<string, HandoutExample[]>();
+  for (const tpl of templates) buckets.set(tpl.id, []);
+  const unmatched: HandoutExample[] = [];
+
+  for (const ex of uniqueExamples) {
+    const exFacets = facetsOfHandoutExample(ex, lilinMap, examMetaMap);
+    let bestTplId: string | null = null;
+    let bestScore = 0;
+
+    for (const tpl of templates) {
+      let score = 0;
+      for (let eIdx = 0; eIdx < exFacets.length; eIdx++) {
+        const f = exFacets[eIdx];
+        const tIdx = tpl.facets.indexOf(f);
+        if (tIdx < 0) continue;
+        const df = facetDf.get(f) ?? 1;
+        const specificity = df === 1 ? 4.0 : 1.0 / df;
+        const exWeight = 1.0 / (eIdx + 1);
+        const tplWeight = 1.0 / (0.5 * tIdx + 1);
+        score += specificity * exWeight * tplWeight;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestTplId = tpl.id;
+      }
+    }
+
+    if (bestTplId) {
+      buckets.get(bestTplId)!.push(ex);
+    } else {
+      unmatched.push(ex);
+    }
+  }
+
+  const groups: HandoutGroup[] = [];
+  for (const tpl of templates) {
+    const matched = buckets.get(tpl.id) ?? [];
+    if (matched.length === 0) continue;
+    groups.push({
+      id: `tpl-${tpl.id}`,
+      title: tpl.name,
+      guide: {
+        shortTitle: tpl.name,
+        clueHtml: formatTemplateTextToHtml(tpl.recognize, false),
+        coreHtml: formatTemplateTextToHtml(tpl.route, true),
+        pitfallHtml: "",
+        roadmapHtml: "",
+        featuredAnchorIds: [],
+        structured: true,
+      },
+      examples: matched,
+    });
+  }
+
+  if (unmatched.length > 0 || groups.length === 0) {
+    groups.push({
+      id: "tpl-other",
+      title: "综合 / 未归类",
+      guide: {
+        shortTitle: "综合 / 未归类",
+        clueHtml: "本组收录暂未命中单一模板的综合题。",
+        coreHtml: "先识别题干给出的分布或结构条件，再拆分对应模板路线逐问作答。",
+        pitfallHtml: "",
+        roadmapHtml: "",
+        featuredAnchorIds: [],
+        structured: true,
+      },
+      examples: unmatched,
+    });
+  }
+
+  return groups;
 }

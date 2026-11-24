@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """seed_sentences_pg.py — 从 web/papers.js 灌例句到 PostgreSQL（幂等）。
 
-  export EW_DATABASE_URL=postgres://makima@localhost/english_web
+  项目内数据库已启动时直接运行，或用 EW_DATABASE_URL 指定连接。
   .venv/bin/python3 scripts/seed_sentences_pg.py
 """
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
+
+from local_database import database_url
 
 ROOT = Path(__file__).resolve().parent.parent
 PAPERS_JS = ROOT / "web" / "papers.js"
@@ -59,11 +60,7 @@ def collect_sentences(papers):
 
 
 def main():
-    url = (
-        os.environ.get("EW_DATABASE_URL")
-        or os.environ.get("DATABASE_URL")
-        or "postgres://makima@localhost/english_web"
-    )
+    url = database_url()
     papers_js = PAPERS_JS if PAPERS_JS.exists() else PAPERS_JS_FALLBACK
     if not papers_js.exists():
         raise SystemExit(f"papers.js 不存在: {PAPERS_JS}")

@@ -16,7 +16,8 @@ import { REVIEW_SOURCE_LABELS, resolveReviewLesson, type KnowledgeReview, type R
 import { MATH1_ITEMS, parseMath1Kind } from "@/lib/kg/math1Analysis";
 import { mathKnowledgeReferences } from "@/lib/kg/mathKnowledgeReferences";
 import { useDrillCatalog } from "@/lib/kg/mathPractice";
-import { kgKpPath, reviewPriorityPath } from "@/lib/kg/paths";
+import { cs408HandoutPath, reviewPriorityPath } from "@/lib/kg/paths";
+import { buildHandoutLookup, handoutHref, useMathHandouts } from "@/lib/mathHandouts";
 import { REVIEW_DATASETS, reviewQuestionHref } from "@/lib/kg/reviewPriority";
 import { applyWangdaoPractice, toggleWangdaoCollect } from "@/lib/kg/wangdaoPractice";
 import type { WangdaoItem } from "@/lib/kg/wangdao408";
@@ -251,11 +252,12 @@ function LessonContent({ subject, lesson, items, catalogError, template }: { sub
 }
 
 function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
-  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const { route, lesson } = resolveReviewLesson(template, params.get("route"), params.get("example"));
   const found = findKp(template.kpId);
   const subject = found?.book.subject ?? "math";
+  const mathHandouts = useMathHandouts(subject === "math");
+  const mathHandout = subject === "math" ? buildHandoutLookup(mathHandouts).byKp.get(template.kpId) : undefined;
   const { items, error } = useDrillCatalog(subject === "math" ? "math" : "wangdao");
   const rawKind = parseMath1Kind(params.get("kind"));
   const kind = subject === "cs408" && rawKind === "fill" ? "big" : rawKind;
@@ -305,7 +307,7 @@ function KnowledgeReviewContent({ template }: { template: KnowledgeReview }) {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm" className="text-xs"><Link to={`/review-priority/knowledge?${indexParams}`}>全部知识点</Link></Button>
-            <Button asChild variant="outline" size="sm" className="gap-1 text-xs"><Link to={kgKpPath(template.kpId, { subject, returnTo: location.pathname + location.search + location.hash })}>考点与全部练习<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link></Button>
+            <Button asChild variant="outline" size="sm" className="gap-1 text-xs"><Link to={subject === "math" ? (mathHandout ? handoutHref(mathHandout.slug) : "/math-handouts") : cs408HandoutPath({ kpId: template.kpId })}>前往{subject === "math" ? "数学" : "408"}手稿<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link></Button>
           </div>
         </div>
       </header>
@@ -356,7 +358,7 @@ export function KnowledgeReviewPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
       <h1 className="text-xl font-extrabold">未找到这个考点</h1>
-      <p className="text-sm text-muted-foreground">请从知识图谱或复习性价比页面选择考点。</p>
+      <p className="text-sm text-muted-foreground">请从手稿或复习性价比页面选择考点。</p>
       <Button asChild variant="outline"><Link to={reviewPriorityPath("math")}>返回复习性价比</Link></Button>
     </div>
   );

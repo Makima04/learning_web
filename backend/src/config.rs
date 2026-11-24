@@ -64,6 +64,12 @@ impl Config {
 
         let database_url = env_nonempty("EW_DATABASE_URL")
             .or_else(|| env_nonempty("DATABASE_URL"))
+            .or_else(|| {
+                std::fs::read_to_string(project_root.join(".local/database-url"))
+                    .ok()
+                    .map(|url| url.trim().to_owned())
+                    .filter(|url| !url.is_empty())
+            })
             .unwrap_or_else(|| "postgres://makima@localhost/english_web".into());
 
         let session_ttl_days = std::env::var("EW_SESSION_TTL_DAYS")

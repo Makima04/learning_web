@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-ROOT = Path("/Users/makima/program/web/english_web")
+ROOT = Path(__file__).resolve().parents[1]
 BOOK = ROOT / "frontend" / "public" / "math"
 INDEX = BOOK / "zhangyu1000" / "index.json"
 IMG = BOOK / "img" / "zy"

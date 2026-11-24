@@ -707,7 +707,7 @@ export const MATH_TEMPLATES: MathTemplate[] = [
     ["binomial", "uniform", "geo", "exp", "normal", "func_1d", "cov", "jacobi_rv"]),
 
   t("prob.mv.func", "sum", "求和、差、积、商的分布",
-    "Z=X+Y/X−Y/XY/X/Y，求 Z 的密度/分布。",
+    "Z = X+Y、X−Y、XY、X/Y，求 Z 的密度或分布。",
     "和用卷积 f_Z=∫f_X(x)f_Y(z−x)dx；商/积用雅可比变换或分布函数法；正态线性组合仍正态；绝对值分段。",
     ["sum_conv", "product_dist", "difference_dist", "normal_linear", "absolute_transform", "func_1d", "pdf", "standardization", "mixture", "geometric", "quantile", "jacobi_rv"]),
   t("prob.mv.func", "maxmin", "求最大最小值分布",

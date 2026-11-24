@@ -573,7 +573,7 @@ export function SettingsPage() {
                   </p>
                 </div>
                 <div className="border-t pt-4 space-y-4">
-                  <p className="text-sm font-medium">考研科目（知识图谱）</p>
+                  <p className="text-sm font-medium">考研科目</p>
                   <Field label="数学轨">
                     <select
                       className="h-10 rounded-md border border-input bg-background px-3 text-sm"
@@ -589,7 +589,7 @@ export function SettingsPage() {
                     </select>
                   </Field>
                   <p className="text-xs text-muted-foreground -mt-2">
-                    选数二后，知识图谱数学区只显示数二考点（数一专有如曲面积分等会隐藏）。
+                    切换数一 / 数二科目配置。
                   </p>
                   <Field label="启用 408">
                     <Switch
@@ -1048,10 +1048,10 @@ function JournalDailyLimitsSection({
       <div>
         <p className="text-sm font-medium">学习日志 · 每日复盘上限</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          手写卡片和知识图谱分开排队，互不占用。图谱以章为大卡，每天最多这么多章，点进去复盘各知识点。
+          手写卡片和章节错题复盘分开排队，互不占用。章节以章为大卡，每天最多这么多章，点进去复盘各知识点。
         </p>
       </div>
-      <Field label="知识图谱（章/天）">
+      <Field label="章节复盘（章/天）">
         <div className="flex items-center gap-2">
           <Input
             type="number"

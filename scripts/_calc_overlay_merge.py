@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""把 /tmp/calc_overlay/*.tsv 并入 math_item_overlay.json，并回写两本目录的 kp_ids/facets。"""
+"""把 tmp/overlays/calc/*.tsv 并入 math_item_overlay.json，并回写两本目录的 kp_ids/facets。"""
 from __future__ import annotations
 
 import json
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path("/Users/makima/program/web/english_web")
+ROOT = Path(__file__).resolve().parents[1]
 OVERLAY_PATH = ROOT / "scripts" / "math_item_overlay.json"
 PUB = ROOT / "frontend" / "public" / "math"
-TSV_DIR = Path("/tmp/calc_overlay")
-BATCH_DIR = Path("/tmp/calc_batches")
+TSV_DIR = ROOT / "tmp/overlays/calc"
+BATCH_DIR = ROOT / "tmp/overlays/calc_batches"
 
 # 与线代 facet id 撞名时改到高数专用
 FACET_ALIAS = {

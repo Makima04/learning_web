@@ -5,7 +5,7 @@ import { findKp } from "@/data/kg";
 import { syncAccountData } from "@/lib/accountSync";
 import { dayKey } from "@/lib/day";
 import { isDueOnOrBefore } from "@/lib/journal";
-import { kgKpPath, kgMapPath, knowledgeReviewPath, knowledgeCheckPath, legacyMathReviewPath } from "@/lib/kg/paths";
+import { cs408HandoutPath, handoutRootPath, knowledgeReviewPath, knowledgeCheckPath, legacyMathReviewPath } from "@/lib/kg/paths";
 import { KNOWLEDGE_REVIEW_TOPICS } from "@/lib/kg/knowledgeReview";
 import { MATH1_KINDS, MATH1_KIND_NAMES, parseMath1Kind, type AnalysisOrder } from "@/lib/kg/math1Analysis";
 import {
@@ -745,7 +745,7 @@ export function ReviewPriorityPage() {
                     <p className="mt-2"><span className="font-semibold text-foreground">排序：</span>个人优先综合分值占比、掌握缺口与补齐成本；未记录的考点采用中性起点，不视为不会。排名不代表下一年命题概率。</p>
                     {subject === "math" && <p className="mt-2"><span className="font-semibold text-foreground">题池：</span>李林 880、张宇 1000 合并推荐；真题仅作依据与性价比参考，不作检验题。题型模板只是辅助归类。</p>}
                     <p className="mt-2"><span className="font-semibold text-foreground">成本：</span>{dataset.costNote}</p>
-                    <Link className="mt-3 inline-block font-semibold text-primary hover:underline" to={kgMapPath(subject)}>查看{subject === "math" ? "数学" : "408"}知识图谱 →</Link>
+                    <Link className="mt-3 inline-block font-semibold text-primary hover:underline" to={handoutRootPath(subject)}>查看{subject === "math" ? "数学" : "408"}手稿 →</Link>
                   </div>
                 </>
               )}
@@ -1388,8 +1388,11 @@ export function ReviewPriorityPage() {
                 )}
               </details>
 
-              <Link className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline" to={kgKpPath(selected.kpId, { subject, src: source, returnTo: location.pathname + location.search + location.hash })}>
-                查看图谱与全部练习 <ArrowRight className="h-3 w-3" />
+              <Link
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                to={subject === "math" ? (handoutByKp.get(selected.kpId) ? handoutHref(handoutByKp.get(selected.kpId)!.slug) : "/math-handouts") : cs408HandoutPath({ kpId: selected.kpId })}
+              >
+                前往{subject === "math" ? "数学" : "408"}手稿精讲 <ArrowRight className="h-3 w-3" />
               </Link>
               </>)}
             </div>

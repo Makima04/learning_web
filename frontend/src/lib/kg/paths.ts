@@ -1,4 +1,5 @@
 // 知识图谱 URL：408 与数学分路径，回上级不会串科目。
+import { findKp } from "@/data/kg";
 import type { SubjectId } from "@/lib/kg/types";
 
 export const KG_SUBJECT_SLUGS = ["cs408", "math"] as const;
@@ -14,8 +15,35 @@ export function kgSubjectSlug(subject: SubjectId | undefined | null): KgSubjectS
   return subject === "math" ? "math" : "cs408";
 }
 
+export function handoutRootPath(subject: SubjectId | undefined | null): string {
+  return subject === "math" ? "/math-handouts" : "/cs408-handouts";
+}
+
+export function cs408HandoutPath(opts?: {
+  chapterId?: string | null;
+  scene?: string | null;
+  bookId?: string | null;
+  kpId?: string | null;
+}): string {
+  if (opts?.kpId) {
+    const found = findKp(opts.kpId);
+    if (found && found.book.subject === "cs408") {
+      return `/cs408-handouts/${found.module.id}?scene=${encodeURIComponent(found.kp.id)}`;
+    }
+    return "/cs408-handouts";
+  }
+  if (opts?.chapterId) {
+    const base = `/cs408-handouts/${opts.chapterId}`;
+    return opts.scene ? `${base}?scene=${encodeURIComponent(opts.scene)}` : base;
+  }
+  if (opts?.bookId) {
+    return `/cs408-handouts?book=${encodeURIComponent(opts.bookId)}`;
+  }
+  return "/cs408-handouts";
+}
+
 export function kgMapPath(subject: SubjectId | undefined | null): string {
-  return `/kg/${kgSubjectSlug(subject)}`;
+  return handoutRootPath(subject);
 }
 
 export const REVIEW_ROOT = "/review-priority";
@@ -31,7 +59,8 @@ export function practiceReturnPath(raw: string | null | undefined): string | nul
   if (url.origin !== "https://english-web.local") return null;
   if (url.pathname !== REVIEW_ROOT && !url.pathname.startsWith(`${REVIEW_ROOT}/knowledge/`)
     && !url.pathname.startsWith(`${REVIEW_ROOT}/routes`)
-    && url.pathname !== "/kg" && !/^\/kg\/(math|cs408)(\/|$)/.test(url.pathname)) return null;
+    && url.pathname !== "/math-handouts" && !url.pathname.startsWith("/math-handouts/")
+    && url.pathname !== "/cs408-handouts" && !url.pathname.startsWith("/cs408-handouts/")) return null;
   return url.pathname + url.search + url.hash;
 }
 
@@ -40,9 +69,9 @@ export function practiceReturnLabel(path: string): string {
   if (pathname.startsWith(`${REVIEW_ROOT}/knowledge/`)) return "返回知识复习";
   if (pathname.startsWith(`${REVIEW_ROOT}/routes`)) return "返回解题路线";
   if (pathname === REVIEW_ROOT) return "返回复习性价比";
-  if (pathname.includes("/kp/") || pathname.endsWith("/book")) return "返回题集";
-  if (pathname.includes("/module/")) return "返回章节";
-  return "返回知识图谱";
+  if (pathname.startsWith("/math-handouts")) return "返回数学手稿";
+  if (pathname.startsWith("/cs408-handouts")) return "返回408手稿";
+  return "返回手稿";
 }
 
 /** 知识复习沿用题型/排序上下文，不把旧考点或其他学科的筛选带进来。 */

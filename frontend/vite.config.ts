@@ -22,7 +22,7 @@ function resolveVersion(): string {
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
   } catch {
-    return process.env.npm_package_version ? `v${process.env.npm_package_version}` : "v0.1.1-rc1";
+    return process.env.npm_package_version ? `v${process.env.npm_package_version}` : "v0.1.2-rc1";
   }
 }
 
@@ -67,7 +67,7 @@ function swPlugin(): Plugin {
   };
 }
 
-// dev: Vite :5173, /api 代理到 FastAPI :8000。public/ 下 data.js/papers.js 由 Vite 直 serve。
+// dev: Vite :5173，/api 代理到 Rust :8000。前端启动前从 web/ 同步英语数据到 public/。
 export default defineConfig({
   plugins: [versionPlugin(), swPlugin(), react()],
   resolve: {

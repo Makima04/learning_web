@@ -22,7 +22,7 @@ import pdfplumber, re, json, csv, sys
 from pathlib import Path
 from collections import defaultdict
 
-PDF = "2027考研英语红宝书（乱序版）A4默写版.pdf"
+PDF = Path(__file__).resolve().parents[1] / "materials/english/2027考研英语红宝书（乱序版）A4默写版.pdf"
 POS_RE = re.compile(r"^[a-z]{1,8}\.$")  # any short lowercase abbr ending in '.' : n. v. vt. vi. adj. adv. prep. conj. det. ord. modal. usage. vlink. abbr. ...
 SPACING = 33.7  # row pitch; half ~16.85, so nearest-match within a page is unambiguous
 HEADER_TOP = 95.0  # header labels (Word/Meaning/扫码听单词/纸上默写) live at top<95; data rows start ~108

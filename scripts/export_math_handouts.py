@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-将 /Users/makima/Downloads/考研数学一手稿 下全部 13 份网页版数学手稿
+将 materials/math/handouts 下全部 46 份网页版数学手稿
 完整解析并导出为 frontend/public/math/handouts.json，供「小祥学习」左侧「数学手稿」使用。
 - 完整保留原手稿的怎么判表格、看式子找第一步（含公式与跳转）、例题串讲、按方法练习、举一反三与 MathML。
 - 自动将历年数一真题关联到 math1Questions.json 的 itemId，将李林 880 例题关联到 lilin880.json 的 id，
@@ -11,9 +11,10 @@ import json
 import os
 import re
 from html import unescape
+from pathlib import Path
 
-HANDOUT_DIR = "/Users/makima/Downloads/考研数学一手稿"
-PROJECT_DIR = "/Users/makima/program/web/english_web"
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+HANDOUT_DIR = PROJECT_DIR / "materials/math/handouts"
 MATH1_Q_PATH = os.path.join(PROJECT_DIR, "frontend/src/data/kg/math1Questions.json")
 LILIN_Q_PATH = os.path.join(PROJECT_DIR, "frontend/public/math/lilin880.json")
 OUT_PATH = os.path.join(PROJECT_DIR, "frontend/public/math/handouts.json")

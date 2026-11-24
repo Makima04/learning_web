@@ -10,8 +10,9 @@ import { syncAccountData } from "@/lib/accountSync";
 import { MATH1_ITEMS } from "@/lib/kg/math1Analysis";
 import { math1PracticePath } from "@/lib/kg/math1Practice";
 import { firstRowForKp, routeChapterPath, routeIndexPath, type RouteChapter, type RouteRow } from "@/lib/kg/mathRoute";
-import { kgKpPath, knowledgeReviewPath } from "@/lib/kg/paths";
+import { knowledgeReviewPath } from "@/lib/kg/paths";
 import { practiceSourceLabel, useDrillCatalog } from "@/lib/kg/mathPractice";
+import { buildHandoutLookup, handoutHref, useMathHandouts } from "@/lib/mathHandouts";
 import type { BookId } from "@/lib/kg/types";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/stores/auth";
@@ -82,6 +83,8 @@ function RedItems({ chapter }: { chapter: RouteChapter }) {
   const marks = useKgProgress((s) => s.itemMarks);
   const load = useKgProgress((s) => s.load);
   const { items: catalog } = useDrillCatalog("math");
+  const mathHandouts = useMathHandouts(true);
+  const handoutLookup = useMemo(() => buildHandoutLookup(mathHandouts), [mathHandouts]);
 
   useEffect(() => {
     load();
@@ -95,7 +98,14 @@ function RedItems({ chapter }: { chapter: RouteChapter }) {
     for (const q of catalog ?? []) {
       const kpId = q.kp_ids?.[0];
       if (!kpId) continue;
-      label.set(q.id, { kpId, label: `${practiceSourceLabel(q)} · ${q.section_name ? `${q.section_name} ` : ""}第 ${q.qno} 题`, href: kgKpPath(kpId, { subject: "math" }) });
+      const itemRef = handoutLookup.byItemId.get(q.id);
+      const kpHandout = handoutLookup.byKp.get(kpId);
+      const href = itemRef
+        ? handoutHref(itemRef.handout.slug, { anchorId: itemRef.example.anchorId })
+        : kpHandout
+        ? handoutHref(kpHandout.slug)
+        : "/math-handouts";
+      label.set(q.id, { kpId, label: `${practiceSourceLabel(q)} · ${q.section_name ? `${q.section_name} ` : ""}第 ${q.qno} 题`, href });
     }
     const kpIds = new Set(chapter.rows.map((row) => row.kpId));
     const out: RedItem[] = [];
@@ -106,7 +116,7 @@ function RedItems({ chapter }: { chapter: RouteChapter }) {
       out.push({ itemId: item.itemId, mark: item.mark, kpId: found.kpId, label: found.label, href: found.href, first: firstRowForKp(chapter, found.kpId)?.first });
     }
     return out.sort((a, b) => (a.mark === b.mark ? 0 : a.mark === "fail" ? -1 : 1));
-  }, [marks, catalog, chapter]);
+  }, [marks, catalog, chapter, handoutLookup]);
 
   return (
     <section aria-labelledby="route-red" className="rounded-2xl border border-border bg-card p-4 sm:p-5">

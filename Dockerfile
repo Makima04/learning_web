@@ -11,9 +11,7 @@ ENV EW_VERSION=$EW_VERSION
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-COPY web/data.js public/data.js
-COPY web/papers.js public/papers.js
-COPY web/wordinfo.js public/wordinfo.js
+COPY web/data.js web/papers.js web/wordinfo.js /app/web/
 RUN npm run build
 
 # ---- rust build ----

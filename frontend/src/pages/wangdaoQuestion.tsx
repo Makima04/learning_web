@@ -21,22 +21,46 @@ const MathExplanationPanel = lazy(() => import("./MathExplanationPanel").then((m
 
 const OPT_KEYS = ["A", "B", "C", "D"] as const;
 
+// 与做题本原图逐行核对的纯文字题面，保留小问、数值及原书定位。
+const REVIEWED_TEXT_STEMS: Readonly<Partial<Record<string, string>>> = {
+  "os-big-4.2-2": [
+    "在实现文件系统时，为加快文件目录的检索速度，可利用“FCB 分解法”。假设目录文件存放在磁盘上，每个盘块 512 B。FCB 占 64 B，其中文件名占 8 B。通常将 FCB 分解成两部分，第一部分占 10 B（包括文件名和文件内部号），第二部分占 56 B（包括文件内部号和文件的其他描述信息）。",
+    "（1）假设某一目录文件共有 254 个 FCB，试分别给出采用分解法前和分解法后，查找该目录文件的某个 FCB 的平均访问磁盘次数（访问每个文件的概率相同）。",
+    "（2）一般地，若目录文件分解前占用 n 个盘块，分解后改用 m 个盘块存放文件名和文件内部号，请给出访问磁盘次数减少的条件（假设 m 和 n 个盘块中都正好装满）。",
+  ].join("\n\n"),
+};
+
 export function WangdaoStem({
   item,
   size = "compact",
+  fitImage = false,
 }: {
   item: WangdaoItem;
   /** large：大屏作答台用，题面与选项整体放大一档 */
   size?: "compact" | "large";
+  /** 手稿单题页限制原图尺寸，细节仍可按原尺寸查看。 */
+  fitImage?: boolean;
 }) {
   const large = size === "large";
-  if (item.img) {
+  const reviewedStem = REVIEWED_TEXT_STEMS[item.id];
+  if (item.img && !reviewedStem) {
     const src = mediaUrl(item.img)!;
+    const alt = item.stem ? item.stem.slice(0, 80) : `第${item.qno}题`;
+    if (fitImage) {
+      return (
+        <figure className="max-w-[36rem] space-y-1.5">
+          <img src={src} alt={alt} className="block h-auto max-h-[min(58vh,32rem)] w-auto max-w-full rounded-md bg-white object-contain" />
+          <a href={src} target="_blank" rel="noreferrer" className="inline-block text-xs" aria-label="查看原尺寸题图（新标签页）">
+            查看原图
+          </a>
+        </figure>
+      );
+    }
     return (
       <div className={cn("overflow-hidden rounded-md bg-white", large ? "" : "-mx-1 sm:mx-0")}>
         <img
           src={src}
-          alt={item.stem ? item.stem.slice(0, 80) : `第${item.qno}题`}
+          alt={alt}
           className="h-auto w-full bg-white"
         />
       </div>
@@ -47,7 +71,7 @@ export function WangdaoStem({
   return (
     <div className={large ? "space-y-4" : "space-y-3"}>
       <p className={cn("whitespace-pre-wrap leading-relaxed", large ? "text-[17px] leading-8" : "text-base")}>
-        {item.stem}
+        {reviewedStem ?? item.stem}
       </p>
       {keys.length > 0 && (
         <ul className={cn("leading-relaxed", large ? "space-y-2.5 text-base" : "space-y-1.5 text-sm")}>

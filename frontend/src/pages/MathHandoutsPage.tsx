@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   BookMarked,
   CheckCircle2,
   ChevronRight,
   Clock,
   FolderOpen,
-  Network,
   RotateCcw,
   Scissors,
-  Search,
   Sparkles,
   Target,
 } from "lucide-react";
@@ -27,14 +25,8 @@ import { dayKey } from "@/lib/day";
 import { findKp, MATH_BOOKS } from "@/data/kg";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { HandoutDirectorySearch, handoutDirectoryStyles, handoutFilterClass } from "@/components/handoutDirectory";
 import type { UserItemMark } from "@/lib/kg/types";
-
-const BOOK_FILTERS: { id: "all" | "calc" | "linear" | "prob"; label: string }[] = [
-  { id: "all", label: "全部" },
-  { id: "calc", label: "高等数学" },
-  { id: "linear", label: "线性代数" },
-  { id: "prob", label: "概率论与数理统计" },
-];
 
 const BOOK_ACCENT: Record<string, { bar: string; badge: string; text: string }> = {
   calc: {
@@ -73,7 +65,8 @@ export function MathHandoutsPage() {
   const [handouts, setHandouts] = useState<MathHandout[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [bookFilter, setBookFilter] = useState<"all" | "calc" | "linear" | "prob">("all");
+  const [searchParams] = useSearchParams();
+  const bookFilter = MATH_BOOKS.find((book) => book.id === searchParams.get("book")) ?? MATH_BOOKS[0];
   const [onlyDue, setOnlyDue] = useState(false);
   const [query, setQuery] = useState("");
   const [showRetiredPanel, setShowRetiredPanel] = useState(false);
@@ -202,7 +195,7 @@ export function MathHandoutsPage() {
       byModule.set(mid, list);
     }
 
-    return MATH_BOOKS.filter((book) => bookFilter === "all" || book.id === bookFilter).map(
+    return MATH_BOOKS.filter((book) => book.id === bookFilter.id).map(
       (book) => {
         const chapters = book.modules.map((mod) => {
           const rawRows = (byModule.get(mod.id) ?? []).sort(
@@ -260,10 +253,12 @@ export function MathHandoutsPage() {
     );
   }, [enriched, bookFilter, query, onlyDue]);
 
-  const totalDueKps = enriched.filter((r) => r.dueCount > 0 || r.reviewedTodayCount > 0).length;
-  const doneDueKps = enriched.filter((r) => r.dueCount === 0 && r.reviewedTodayCount > 0).length;
-  const pendingDueKps = enriched.filter((r) => r.dueCount > 0).length;
-  const totalDueQuestions = enriched.reduce((s, r) => s + r.dueCount, 0);
+  const bookModuleIds = new Set(bookFilter.modules.map((module) => module.id));
+  const bookHandouts = enriched.filter((r) => bookModuleIds.has(r.handout.moduleId));
+  const totalDueKps = bookHandouts.filter((r) => r.dueCount > 0 || r.reviewedTodayCount > 0).length;
+  const doneDueKps = bookHandouts.filter((r) => r.dueCount === 0 && r.reviewedTodayCount > 0).length;
+  const pendingDueKps = bookHandouts.filter((r) => r.dueCount > 0).length;
+  const totalDueQuestions = bookHandouts.reduce((s, r) => s + r.dueCount, 0);
   const totalExamItems = enriched.reduce((s, r) => s + r.examTotal, 0);
   const totalExamPassed = enriched.reduce((s, r) => s + r.examPassed, 0);
   const totalLilinItems = enriched.reduce((s, r) => s + r.lilinTotal, 0);
@@ -279,16 +274,16 @@ export function MathHandoutsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 md:px-8">
+    <div className={handoutDirectoryStyles.page}>
       {/* 头部 + 真题优先 / 李林880优先 切换 */}
-      <div className="rounded-3xl border-2 border-border/80 bg-card p-5 shadow-edge-sm md:p-6">
+      <div className={handoutDirectoryStyles.header}>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 rounded-full bg-app-teal/15 px-3 py-1 text-xs font-bold text-app-teal">
               <BookMarked className="h-3.5 w-3.5" />
               小祥学习 · 考研数学一手稿
             </div>
-            <h1 className="text-2xl font-extrabold tracking-tight">数学手稿</h1>
+            <h1 className={handoutDirectoryStyles.title}>数学手稿</h1>
             <p className="text-sm text-muted-foreground">
               {priority === "exam"
                 ? "按高等数学、线性代数、概率论的章节编排；当前「真题优先」，空格键显隐步骤，支持斩题与全站进度互通。"
@@ -333,9 +328,10 @@ export function MathHandoutsPage() {
         </div>
 
         {/* 同步统计条 */}
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className={cn(handoutDirectoryStyles.stats, "mt-5")}>
           <button
             type="button"
+            aria-pressed={onlyDue}
             onClick={() => setOnlyDue((v) => !v)}
             className={cn(
               "col-span-2 flex flex-col justify-between rounded-2xl border px-3.5 py-2.5 text-left transition-colors sm:col-span-1",
@@ -386,7 +382,7 @@ export function MathHandoutsPage() {
                 : "今日暂无待复习"}
             </div>
           </button>
-          <div className="rounded-2xl bg-secondary/50 px-3.5 py-2.5">
+          <div className={handoutDirectoryStyles.stat}>
             <div className="text-xs font-semibold text-muted-foreground">章节与手稿</div>
             <div className="mt-0.5 text-lg font-extrabold">
               {handouts.length} 份
@@ -395,14 +391,14 @@ export function MathHandoutsPage() {
               </span>
             </div>
           </div>
-          <div className="rounded-2xl bg-secondary/50 px-3.5 py-2.5">
+          <div className={handoutDirectoryStyles.stat}>
             <div className="text-xs font-semibold text-muted-foreground">真题精讲已会</div>
             <div className="mt-0.5 text-lg font-extrabold">
               {totalExamPassed}{" "}
               <span className="text-xs font-semibold text-muted-foreground">/ {totalExamItems}</span>
             </div>
           </div>
-          <div className="rounded-2xl bg-secondary/50 px-3.5 py-2.5">
+          <div className={handoutDirectoryStyles.stat}>
             <div className="text-xs font-semibold text-muted-foreground">李林 880 HTML精讲</div>
             <div className="mt-0.5 text-lg font-extrabold">
               {totalLilinPassed}{" "}
@@ -435,10 +431,6 @@ export function MathHandoutsPage() {
                 已斩题列表（按斩题时间倒序，误点的排最前）
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Link to="/kg/math" className="font-semibold text-app-purple hover:underline">
-                  知识图谱
-                </Link>
-                <span>·</span>
                 <Link to="/review-priority?subject=math" className="font-semibold text-app-orange hover:underline">
                   复习性价比
                 </Link>
@@ -487,23 +479,20 @@ export function MathHandoutsPage() {
       {/* 筛选、待补章节开关与搜索 */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          {BOOK_FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setBookFilter(f.id)}
-              className={cn(
-                "rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
-                bookFilter === f.id
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
-              )}
+          {MATH_BOOKS.map((book) => (
+            <Link
+              key={book.id}
+              to={`?book=${book.id}`}
+              state={{ preserveScroll: true }}
+              aria-current={book.id === bookFilter.id ? "page" : undefined}
+              className={handoutFilterClass(book.id === bookFilter.id)}
             >
-              {f.label}
-            </button>
+              {book.name}
+            </Link>
           ))}
           <button
             type="button"
+            aria-pressed={onlyDue}
             onClick={() => setOnlyDue((v) => !v)}
             className={cn(
               "inline-flex items-center gap-1 rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
@@ -531,16 +520,7 @@ export function MathHandoutsPage() {
           </button>
         </div>
 
-        <div className="relative w-full sm:w-64">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜章节、讲义、考点或方法…"
-            className="h-9 w-full rounded-full border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary"
-          />
-        </div>
+        <HandoutDirectorySearch value={query} onChange={setQuery} placeholder="搜章节、讲义、考点或方法…" />
       </div>
 
       {loading && (
@@ -558,7 +538,7 @@ export function MathHandoutsPage() {
           {onlyDue && groupedBooks.every((b) => b.activeChapters.length === 0) && (
             <div className="rounded-3xl border border-border/80 bg-card px-6 py-10 text-center">
               <p className="text-sm font-bold text-foreground">
-                {totalDueKps > 0
+                {totalDueKps > 0 && pendingDueKps === 0
                   ? "今日待复习的数学手稿已全部完成！"
                   : "当前筛选下暂无今日待复习的数学手稿"}
               </p>
@@ -572,7 +552,7 @@ export function MathHandoutsPage() {
                 className="mt-4 rounded-full"
                 onClick={() => setOnlyDue(false)}
               >
-                查看全部手稿
+                取消待复习筛选
               </Button>
             </div>
           )}
@@ -593,28 +573,31 @@ export function MathHandoutsPage() {
               return (
                 <section key={book.id} className="space-y-4">
                   {/* 学科大标题栏 */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-border/80 pb-2.5">
+                  <div className={handoutDirectoryStyles.sectionHeading}>
                     <div className="flex items-center gap-2.5">
                       <span className={cn("h-5 w-1.5 rounded-full", accent.bar)} />
-                      <h2 className="text-lg font-extrabold tracking-tight">{book.name}</h2>
+                      <h2 className={handoutDirectoryStyles.sectionTitle}>{book.name}</h2>
                       <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-bold", accent.badge)}>
                         已建 {totalHandoutsInBook} 份讲义 · {coveredChaptersCount}/{totalChaptersCount} 章
                       </span>
                     </div>
                     <Link
-                      to={`/kg/math?book=${book.id}`}
+                      to={`/review-priority?subject=math&book=${book.id}`}
                       className="text-xs font-semibold text-muted-foreground hover:text-primary hover:underline"
                     >
-                      查看{book.name}知识图谱 →
+                      查看{book.name}复习性价比 →
                     </Link>
                   </div>
 
                   {/* 已有讲义的章节列表 */}
-                  <div className="space-y-5">
+                  <div className="grid gap-5 md:grid-cols-2">
                     {activeChapters.map(({ module: mod, rows, chapterDueCount, missingKps }) => (
                       <div
                         key={mod.id}
-                        className="rounded-3xl border border-border/80 bg-secondary/25 p-4 md:p-5"
+                        className={cn(
+                          "flex min-w-0 flex-col rounded-3xl border border-border/80 bg-secondary/25 p-4 md:p-5",
+                          rows.length > 1 && "md:col-span-2"
+                        )}
                       >
                         {/* 章节标题条 */}
                         <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
@@ -641,7 +624,7 @@ export function MathHandoutsPage() {
                         </div>
 
                         {/* 本章讲义卡片网格 */}
-                        <div className="grid gap-3.5 md:grid-cols-2">
+                        <div className={cn("grid flex-1 gap-3.5", rows.length > 1 && "md:grid-cols-2")}>
                           {rows.map((row) => {
                             const h = row.handout;
                             const show880Bar = priority === "lilin880" && row.lilinTotal > 0;
@@ -656,7 +639,8 @@ export function MathHandoutsPage() {
                               <div
                                 key={h.slug}
                                 className={cn(
-                                  "group flex flex-col justify-between rounded-2xl border-2 bg-card p-4 shadow-edge-sm transition-all",
+                                  handoutDirectoryStyles.card,
+                                  "group flex min-w-0 flex-col justify-between p-4",
                                   hasDue
                                     ? "border-app-orange/70 bg-app-orange/[0.04] hover:border-app-orange"
                                     : "border-border/80 hover:border-primary/60"
@@ -744,13 +728,6 @@ export function MathHandoutsPage() {
                                 {/* 底部快捷联动 */}
                                 <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
                                   <div className="flex items-center gap-1.5">
-                                    <Link
-                                      to={`/kg/math/kp/${h.primaryKpId}`}
-                                      className="inline-flex items-center gap-1 rounded-full bg-app-purple/10 px-2.5 py-1 text-[11px] font-bold text-app-purple hover:bg-app-purple/20"
-                                    >
-                                      <Network className="h-3 w-3" />
-                                      知识图谱
-                                    </Link>
                                     <Link
                                       to={`/review-priority/knowledge/${h.primaryKpId}`}
                                       className="inline-flex items-center gap-1 rounded-full bg-app-orange/10 px-2.5 py-1 text-[11px] font-bold text-app-orange hover:bg-app-orange/20"

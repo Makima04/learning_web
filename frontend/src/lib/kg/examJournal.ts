@@ -123,13 +123,14 @@ export function archiveExamWrong(itemId: string): boolean {
  * 需要按年份拉试卷拿考点，网络失败只跳过该年，不影响其它年份。
  */
 export async function migrateExamWrongsToJournal(attempts: ExamAttempt[]): Promise<number> {
-  const collected = new Set(
+  // 已归档的旧题也已迁移，不能因历史作答重新入队。
+  const known = new Set(
     useJournal
       .getState()
-      .entries.filter((e) => e.status === "active" && isExamItemId(e.sourceItemId))
+      .entries.filter((e) => isExamItemId(e.sourceItemId))
       .map((e) => e.sourceItemId as string)
   );
-  const pending = wrongItems(attempts).filter((a) => !collected.has(a.itemId));
+  const pending = wrongItems(attempts).filter((a) => !known.has(a.itemId));
   if (!pending.length) return 0;
 
   const years = [...new Set(pending.map((a) => a.year))];

@@ -12,7 +12,6 @@ import {
   EyeOff,
   HelpCircle,
   Lightbulb,
-  Network,
   RotateCcw,
   Scissors,
   Target,
@@ -29,6 +28,8 @@ import {
 import { useKgProgress } from "@/stores/kgProgress";
 import { useJournal } from "@/stores/journal";
 import { findKp } from "@/data/kg";
+import { MATH_TEXTBOOK_KNOWLEDGE } from "@/data/kg/mathTextbookKnowledge";
+import { MathFormula } from "@/components/MathFormula";
 import { wangdaoJournalId } from "@/lib/kg/wangdao408";
 import type { MarkLevel, UserItemMark } from "@/lib/kg/types";
 import { dayKey } from "@/lib/day";
@@ -130,7 +131,7 @@ function MarkStrip({
         type="button"
         onClick={() => handle("pass")}
         className={`mh-mark-btn${currentMark === "pass" ? " is-pass" : ""}`}
-        title="标记为已掌握（同步到题目复习、复习性价比、知识图谱）"
+        title="标记为已掌握（全站进度同步）"
       >
         <Check className="h-3 w-3" />会
       </button>
@@ -480,10 +481,11 @@ export function ExampleCard({
 
 export function MathHandoutDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const [handout, setHandout] = useState<MathHandout | null>(null);
   const [loading, setLoading] = useState(true);
+  const pendingUrlNavRef = useRef<{ group: string | null; q: string | null } | null>(null);
   const [priority, setPriority] = useHandoutPriority();
 
   const [globalStepsOpen, setGlobalStepsOpen] = useState(false);
@@ -535,6 +537,9 @@ export function MathHandoutDetailPage() {
     let alive = true;
     setLoading(true);
     const initialReviewDue = searchParams.get("review") === "due";
+    const urlGroup = searchParams.get("group");
+    const urlQ = searchParams.get("q");
+    pendingUrlNavRef.current = urlGroup || urlQ ? { group: urlGroup, q: urlQ } : null;
     loadMathHandouts()
       .then((hs) => {
         if (!alive) return;
@@ -677,14 +682,18 @@ export function MathHandoutDetailPage() {
   );
 
   const hasAny880 = Boolean(handout && handout.stats.lilin880 > 0);
+  const activeGroups = useMemo(() => handout?.groups ?? [], [handout]);
+
   const currentGroupIndex = useMemo(() => {
-    if (!handout || handout.groups.length === 0) return -1;
-    const idx = handout.groups.findIndex((g) => g.id === activeGroupId);
-    return idx >= 0 ? idx : 0;
-  }, [handout, activeGroupId]);
+    if (activeGroups.length === 0) return -1;
+    const idx = activeGroups.findIndex((g) => g.id === activeGroupId);
+    if (idx >= 0) return idx;
+    const firstNonEmpty = activeGroups.findIndex((g) => g.examples.length > 0);
+    return firstNonEmpty >= 0 ? firstNonEmpty : 0;
+  }, [activeGroups, activeGroupId]);
 
   const currentGroup =
-    handout && currentGroupIndex >= 0 ? handout.groups[currentGroupIndex] : null;
+    currentGroupIndex >= 0 ? activeGroups[currentGroupIndex] ?? null : null;
 
   const guide = currentGroup?.guide;
   const hasGuidePage = Boolean(
@@ -697,11 +706,78 @@ export function MathHandoutDetailPage() {
   }, [currentGroup, orderedExamplesOf, hasAny880]);
 
   const totalSteps = (hasGuidePage ? 1 : 0) + currentQueue.length;
-  const rawStep = currentGroup ? groupStepMap[currentGroup.id] ?? 0 : 0;
+  const defaultStep = hasGuidePage && currentQueue.length > 0 ? 1 : 0;
+  const rawStep = currentGroup ? groupStepMap[currentGroup.id] ?? defaultStep : 0;
   const currentStep = totalSteps === 0 ? 0 : Math.min(Math.max(rawStep, 0), totalSteps - 1);
   const isOnGuidePage = hasGuidePage && currentStep === 0;
   const currentExIndex = isOnGuidePage ? -1 : hasGuidePage ? currentStep - 1 : currentStep;
   const currentEx = currentExIndex >= 0 ? currentQueue[currentExIndex] ?? null : null;
+
+  // 刷新或直链进入时，按 URL 参数（group / q）恢复精确的场景与具体题目
+  useEffect(() => {
+    const pending = pendingUrlNavRef.current;
+    if (!pending || !handout || activeGroups.length === 0) return;
+
+    pendingUrlNavRef.current = null;
+    const matchedGroup = pending.group
+      ? activeGroups.find((g) => g.id === pending.group)
+      : activeGroups[0];
+    if (!matchedGroup) return;
+
+    setActiveGroupId(matchedGroup.id);
+    const gHasGuide = Boolean(
+      matchedGroup.guide &&
+        (matchedGroup.guide.clueHtml ||
+          matchedGroup.guide.coreHtml ||
+          matchedGroup.guide.pitfallHtml ||
+          matchedGroup.guide.roadmapHtml)
+    );
+
+    if (!pending.q) return;
+    if (pending.q === "guide") {
+      setGroupStepMap((prev) => ({ ...prev, [matchedGroup.id]: 0 }));
+      return;
+    }
+    const qList = orderedExamplesOf(matchedGroup.examples, hasAny880);
+    let idx = qList.findIndex((ex) => ex.anchorId === pending.q || ex.id === pending.q);
+    if (idx < 0 && /^\d+$/.test(pending.q)) {
+      const n = Number(pending.q) - 1;
+      if (n >= 0 && n < qList.length) idx = n;
+    }
+    if (idx >= 0) {
+      setGroupStepMap((prev) => ({ ...prev, [matchedGroup.id]: idx + (gHasGuide ? 1 : 0) }));
+    }
+  }, [handout, activeGroups, orderedExamplesOf, hasAny880]);
+
+  // 将当前所处的判别场景与具体题目同步回 URL，刷新不丢失位置
+  useEffect(() => {
+    if (!handout || !currentGroup) return;
+    if (pendingUrlNavRef.current !== null) return;
+
+    const nextGroup = currentGroup.id;
+    const nextQ = isOnGuidePage ? "guide" : currentEx ? currentEx.anchorId : "guide";
+
+    if (
+      !searchParams.has("mode") &&
+      searchParams.get("group") === nextGroup &&
+      searchParams.get("q") === nextQ
+    ) {
+      return;
+    }
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("mode");
+    next.set("group", nextGroup);
+    next.set("q", nextQ);
+    setSearchParams(next, { replace: true });
+  }, [
+    handout,
+    currentGroup,
+    isOnGuidePage,
+    currentEx,
+    searchParams,
+    setSearchParams,
+  ]);
 
   const scrollToStageTop = useCallback(() => {
     window.requestAnimationFrame(() => {
@@ -717,7 +793,11 @@ export function MathHandoutDetailPage() {
   const switchGroup = useCallback((groupId: string, resetStep = false) => {
     setActiveGroupId(groupId);
     if (resetStep) {
-      setGroupStepMap((prev) => ({ ...prev, [groupId]: 0 }));
+      setGroupStepMap((prev) => {
+        const next = { ...prev };
+        delete next[groupId];
+        return next;
+      });
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
@@ -931,6 +1011,7 @@ export function MathHandoutDetailPage() {
   }
 
   const kpInfo = findKp(handout.primaryKpId);
+  const directoryHref = kpInfo ? `/math-handouts?book=${kpInfo.book.id}` : "/math-handouts";
   const kpState = states[handout.primaryKpId];
   const confidence = Math.round((kpState?.confidence ?? 0) * 100);
 
@@ -938,10 +1019,9 @@ export function MathHandoutDetailPage() {
   const passedCount = allExamples.filter((e) => getExampleMark(e) === "pass").length;
   const retiredCount = allExamples.filter((e) => isExampleRetired(e)).length;
   const dueTotalCount = allExamples.filter((e) => isExampleDue(e)).length;
-  const leadHtml = handout.verdictLeadHtml ?? handout.verdictHtml;
   const nextGroup =
-    currentGroupIndex >= 0 && currentGroupIndex < handout.groups.length - 1
-      ? handout.groups[currentGroupIndex + 1]
+    currentGroupIndex >= 0 && currentGroupIndex < activeGroups.length - 1
+      ? activeGroups[currentGroupIndex + 1]
       : null;
 
   const featuredSet = new Set(currentGroup?.guide?.featuredAnchorIds ?? []);
@@ -952,13 +1032,23 @@ export function MathHandoutDetailPage() {
     ? currentGroup.examples.filter((e) => isExampleRetired(e)).length
     : 0;
 
+  const knowledgeSections = Array.from(
+    new Set([handout.primaryKpId, ...handout.secondaryKpIds])
+  )
+    .map((kpId) => ({
+      kpId,
+      name: findKp(kpId)?.kp.name ?? kpId,
+      blocks: MATH_TEXTBOOK_KNOWLEDGE[kpId] ?? [],
+    }))
+    .filter((sec) => sec.blocks.length > 0);
+
   return (
     <div ref={readerRef} className="mh-reader" onClick={handleReaderClick}>
       <div className="mh-layout">
-        {/* 左侧极简控制面板：返回 + 讲义标题与进度 + 判别场景 + 真题/880 优先 + 步骤展开 + 底部轻量同步链 */}
+        {/* 左侧极简控制面板：返回 + 讲义标题与进度 + 判别场景导航 + 真题/880 优先 + 步骤展开 */}
         <aside className="mh-toc">
-          <Link to="/math-handouts" className="mh-toc-back">
-            ← 全部数学手稿
+          <Link to={directoryHref} className="mh-toc-back">
+            ← 返回手稿目录
           </Link>
           <p className="mh-toc-title">{handout.title}</p>
           <p className="mh-toc-meta">
@@ -969,7 +1059,7 @@ export function MathHandoutDetailPage() {
 
           <div className="mh-toc-label">判别场景</div>
           <nav className="mh-scene-nav" aria-label="判别场景导航">
-            {handout.groups.map((g) => {
+            {activeGroups.map((g) => {
               const gPassed = g.examples.filter((e) => getExampleMark(e) === "pass").length;
               const gDue = g.examples.filter((e) => isExampleDue(e)).length;
               const gTotal = g.examples.length;
@@ -1038,13 +1128,9 @@ export function MathHandoutDetailPage() {
           </div>
 
           <div className="mh-toc-group mh-toc-links">
-            <Link to={`/kg/math/kp/${handout.primaryKpId}`}>
-              <Network className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{kpInfo?.kp.name ?? handout.primaryKpId}</span>
-            </Link>
             <Link to={`/review-priority/knowledge/${handout.primaryKpId}`}>
               <Target className="h-3.5 w-3.5 shrink-0" />
-              <span>复习性价比同步</span>
+              <span className="truncate">复习性价比 · {kpInfo?.kp.name ?? handout.primaryKpId}</span>
             </Link>
           </div>
         </aside>
@@ -1054,8 +1140,8 @@ export function MathHandoutDetailPage() {
           {/* 窄屏/移动端专用紧凑顶栏（桌面端隐藏） */}
           <div className="mh-mobile-bar">
             <div className="mh-mobile-head">
-              <Link to="/math-handouts" className="mh-toc-back">
-                ← 全部手稿
+              <Link to={directoryHref} className="mh-toc-back">
+                ← 返回手稿目录
               </Link>
               <span className="mh-mobile-title">{handout.title}</span>
             </div>
@@ -1094,8 +1180,9 @@ export function MathHandoutDetailPage() {
                 {hideRetired ? `显示已斩 (${retiredCount})` : `隐藏已斩 (${retiredCount})`}
               </button>
             )}
+
             <div className="mh-mobile-scenes w-full">
-              {handout.groups.map((g) => {
+              {activeGroups.map((g) => {
                 const gDue = g.examples.filter((e) => isExampleDue(e)).length;
                 return (
                   <button
@@ -1115,8 +1202,30 @@ export function MathHandoutDetailPage() {
           {/* 当前激活小类的单页舞台 */}
           {currentGroup && (
             <section ref={stageTopRef} id={currentGroup.id} className="mh-stage">
-              {/* 顶部极简标题与页码胶囊（讲解页 + 1..N 题平级切换） */}
+              {/* 顶部位置导航 + 标题与页码胶囊（讲解页 + 1..N 题平级切换） */}
               <div className="mh-stage-header">
+                <nav className="mh-breadcrumb" aria-label="当前位置导航">
+                  <span className="mh-crumb-mode is-static">判别场景</span>
+                  <ChevronRight className="mh-crumb-sep h-3.5 w-3.5" />
+                  <button
+                    type="button"
+                    className={`mh-crumb-btn${isOnGuidePage ? " is-current" : ""}`}
+                    onClick={() => hasGuidePage && goToStep(0)}
+                    disabled={!hasGuidePage || isOnGuidePage}
+                    title={hasGuidePage ? "回到本组核心讲解" : undefined}
+                  >
+                    {currentGroup.guide?.shortTitle || currentGroup.title}
+                  </button>
+                  <ChevronRight className="mh-crumb-sep h-3.5 w-3.5" />
+                  <span className="mh-crumb-cur">
+                    {isOnGuidePage
+                      ? "核心讲解"
+                      : currentEx
+                      ? `第 ${currentExIndex + 1} 题 · ${currentEx.source}`
+                      : "暂无题目"}
+                  </span>
+                </nav>
+
                 <div className="mh-stage-title-row">
                   <h2 className="mh-stage-title">{currentGroup.title}</h2>
                   <span className="mh-stage-status">
@@ -1178,10 +1287,7 @@ export function MathHandoutDetailPage() {
               {/* 舞台主体：要么是「核心讲解页」，要么是「单道题页」，绝不同屏拥挤 */}
               <div className="mh-stage-body">
                 {isOnGuidePage && guide ? (
-                  <>
-                    {leadHtml && (
-                      <div className="mb-4" dangerouslySetInnerHTML={{ __html: leadHtml }} />
-                    )}
+                  <div className="space-y-4">
                     <div className="mh-scene-guide mt-0">
                       <div className="mh-sg-grid">
                         {guide.clueHtml && (
@@ -1204,13 +1310,61 @@ export function MathHandoutDetailPage() {
                         )}
                         {guide.roadmapHtml && (
                           <div className="mh-sg-row is-roadmap">
-                            <span className="mh-sg-badge is-roadmap">本组刷题路线</span>
+                            <span className="mh-sg-badge is-roadmap">本组核心思路</span>
                             <span dangerouslySetInnerHTML={{ __html: guide.roadmapHtml }} />
                           </div>
                         )}
                       </div>
                     </div>
-                  </>
+
+                    {knowledgeSections.length > 0 && (
+                      <details className="mh-kp-drawer">
+                        <summary className="mh-kp-drawer-sum">
+                          <span className="mh-kp-drawer-left">
+                            <ChevronDown className="mh-kp-chevron h-4 w-4" />
+                            <span className="mh-kp-drawer-title">本讲通用知识点与公式速查</span>
+                            <span className="mh-kp-drawer-tags">
+                              {knowledgeSections.map((s) => s.name).join(" · ")}
+                            </span>
+                          </span>
+                          <Link
+                            to={`/review-priority/knowledge/${handout.primaryKpId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mh-kp-drawer-link"
+                          >
+                            知识复习
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        </summary>
+                        <div
+                          className={`mh-kp-drawer-body${knowledgeSections.length > 1 ? " is-multi" : ""}`}
+                        >
+                          {knowledgeSections.map((sec) => (
+                            <div key={sec.kpId} className="mh-kp-col">
+                              <Link to={`/review-priority/knowledge/${sec.kpId}`} className="mh-kp-col-title">
+                                {sec.name}
+                              </Link>
+                              <div className="mh-kp-col-blocks">
+                                {sec.blocks.map((block, idx) =>
+                                  block.type === "text" ? (
+                                    <p key={idx} className="mh-kp-text">
+                                      {block.text}
+                                    </p>
+                                  ) : block.type === "math" ? (
+                                    <MathFormula
+                                      key={idx}
+                                      tex={block.tex}
+                                      className="py-0.5 text-[13px] [&_.katex-display]:my-0.5"
+                                    />
+                                  ) : null
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
                 ) : !currentEx ? (
                   <p className="py-10 text-center text-sm text-[var(--mh-muted)]">
                     {currentGroup.examples.length > 0 && hideRetired

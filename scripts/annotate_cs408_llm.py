@@ -65,67 +65,6 @@ BOOK_NAME = {
 }
 
 
-def load_cc_switch_deepseek() -> dict[str, str] | None:
-    """从 cc-switch 当前 Codex/DeepSeek provider 读 url/key/model。
-
-    期望 model 为短名 deepseek-v4-flash（不是 deepseek-ai/... 前缀）。
-    """
-    db = Path.home() / ".cc-switch" / "cc-switch.db"
-    if not db.is_file():
-        return None
-    try:
-        import sqlite3
-
-        conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
-        row = conn.execute(
-            """
-            SELECT settings_config FROM providers
-            WHERE app_type='codex' AND is_current=1
-            """
-        ).fetchone()
-        if not row:
-            row = conn.execute(
-                """
-                SELECT settings_config FROM providers
-                WHERE app_type='codex' AND (name LIKE '%eepSeek%' OR name LIKE '%deepseek%')
-                LIMIT 1
-                """
-            ).fetchone()
-        conn.close()
-        if not row:
-            return None
-        cfg = json.loads(row[0])
-        auth = cfg.get("auth") or {}
-        key = auth.get("OPENAI_API_KEY") or auth.get("api_key") or ""
-        # config 是 TOML 文本
-        toml = cfg.get("config") or ""
-        model = "deepseek-v4-flash"
-        base = "https://api.deepseek.com"
-        for line in toml.splitlines():
-            s = line.strip()
-            if s.startswith("model =") and "model_provider" not in s and "catalog" not in s:
-                # model = "deepseek-v4-flash"
-                m = re.search(r'model\s*=\s*"([^"]+)"', s)
-                if m and "/" not in m.group(1):  # 跳过路径类
-                    # 避免误匹配 model_provider 已过滤；再排除明显非模型
-                    val = m.group(1)
-                    if val not in ("custom", "openai", "azure"):
-                        model = val
-            if s.startswith("base_url"):
-                m = re.search(r'base_url\s*=\s*"([^"]+)"', s)
-                if m:
-                    base = m.group(1).rstrip("/")
-        # modelCatalog 优先
-        mc = (cfg.get("modelCatalog") or {}).get("models") or []
-        if mc and isinstance(mc[0], dict) and mc[0].get("model"):
-            model = mc[0]["model"]
-        if key and base and model:
-            return {"url": base, "key": key, "model": model, "source": "cc-switch"}
-    except Exception:
-        return None
-    return None
-
-
 def load_llm_conf(model_override: str | None = None) -> dict[str, str]:
     # 1) 环境变量优先
     env_url = (os.environ.get("EW_LLM_URL") or "").rstrip("/")
@@ -149,16 +88,8 @@ def load_llm_conf(model_override: str | None = None) -> dict[str, str]:
             if url and key and model:
                 return {"url": url, "key": key, "model": model, "source": str(p)}
 
-    # 3) cc-switch 当前 DeepSeek（短名 deepseek-v4-flash）
-    cc = load_cc_switch_deepseek()
-    if cc:
-        if model_override:
-            cc["model"] = model_override
-        return cc
-
     raise SystemExit(
-        "LLM 未配置：请填写 ew_llm.json，或在 cc-switch 启用 DeepSeek(codex)，"
-        "或设 EW_LLM_URL/KEY/MODEL"
+        "LLM 未配置：请填写项目内的 ew_llm.json，或设 EW_LLM_URL/KEY/MODEL"
     )
 
 

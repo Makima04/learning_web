@@ -27,8 +27,8 @@ from extract_lilin880 import CH_RE, Q_RE, clean_line, page_visual_lines, split_o
 from math_img import render_clips
 from math_kp_map import LILIN_CHAPTER_NAME, apply_overlay, classify_lilin
 
-ROOT = Path("/Users/makima/program/web/english_web")
-DOWNLOADS = Path("/Users/makima/Downloads")
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_DIR = ROOT / "materials/math/lilin880"
 OUT_DIR = ROOT / "papers" / "math" / "lilin880"
 PUBLIC_CATALOG = ROOT / "frontend" / "public" / "math" / "lilin880.json"
 IMG_DIR = ROOT / "frontend" / "public" / "math" / "img" / "ll"
@@ -59,9 +59,9 @@ def book_of(ch: int) -> str:
 
 
 def find_pdfs() -> list[Path]:
-    out = sorted(DOWNLOADS.glob("*880*做题本*.pdf"))
+    out = sorted(SOURCE_DIR.glob("*880*做题本*.pdf"))
     if not out:
-        raise FileNotFoundError("~/Downloads 里没找到 880 做题本 PDF")
+        raise FileNotFoundError(f"{SOURCE_DIR} 里没找到 880 做题本 PDF")
     return out
 
 

@@ -2,7 +2,7 @@
 """从 2027 王道做题本 PDF 抽取题号/页码，并映射到图谱考点。
 
 选择题用【无间隔】版；计组/计网大题用【单题】版。
-PDF 为图片，走 macOS Vision OCR；结果缓存到 /tmp/wd408_ocr。
+PDF 为图片，走 macOS Vision OCR；结果缓存到 tmp/ocr/wd408。
 """
 from __future__ import annotations
 
@@ -18,47 +18,47 @@ import fitz
 from ocrmac import ocrmac
 from wangdao_overlay import apply_reviewed_overlay
 
-ROOT = Path("/Users/makima/program/web/english_web")
-DOWNLOADS = Path("/Users/makima/Downloads")
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_DIR = ROOT / "materials/cs408/wangdao"
 OUT_DIR = ROOT / "papers" / "cs408" / "wangdao2027"
 PUBLIC_CATALOG = ROOT / "frontend" / "public" / "cs408" / "wangdao2027.json"
-CACHE = Path("/tmp/wd408_ocr")
-DS_BIG_JSON = DOWNLOADS / "数据结构大题_按强化打卡表归类.json"
+CACHE = ROOT / "tmp/ocr/wd408"
+DS_BIG_JSON = SOURCE_DIR / "数据结构大题_按强化打卡表归类.json"
 
 SOURCES = [
     {
         "book": "ds",
         "kind": "mcq",
         "label": "数据结构·选择题",
-        "pdf": DOWNLOADS / "27王道【选择题】做题本" / "数据结构" / "【无间隔】.pdf",
+        "pdf": SOURCE_DIR / "27王道【选择题】做题本" / "数据结构" / "【无间隔】.pdf",
         "edition": "无间隔",
     },
     {
         "book": "os",
         "kind": "mcq",
         "label": "操作系统·选择题",
-        "pdf": DOWNLOADS / "27王道【选择题】做题本" / "操作系统" / "【无间隔】.pdf",
+        "pdf": SOURCE_DIR / "27王道【选择题】做题本" / "操作系统" / "【无间隔】.pdf",
         "edition": "无间隔",
     },
     {
         "book": "co",
         "kind": "mcq",
         "label": "组成原理·选择题",
-        "pdf": DOWNLOADS / "27王道【选择题】做题本" / "计组" / "【无间隔】.pdf",
+        "pdf": SOURCE_DIR / "27王道【选择题】做题本" / "计组" / "【无间隔】.pdf",
         "edition": "无间隔",
     },
     {
         "book": "cn",
         "kind": "mcq",
         "label": "计算机网络·选择题",
-        "pdf": DOWNLOADS / "27王道【选择题】做题本" / "计网" / "【无间隔】.pdf",
+        "pdf": SOURCE_DIR / "27王道【选择题】做题本" / "计网" / "【无间隔】.pdf",
         "edition": "无间隔",
     },
     {
         "book": "ds",
         "kind": "big",
         "label": "数据结构·大题",
-        "pdf": DOWNLOADS / "数据结构大题.pdf",
+        "pdf": SOURCE_DIR / "数据结构大题.pdf",
         "edition": "大题",
         "reuse_json": str(DS_BIG_JSON),
         "ocr_stems": True,  # 旧 JSON 题干被截断，改为 OCR 全文再与元数据合并
@@ -67,21 +67,21 @@ SOURCES = [
         "book": "os",
         "kind": "big",
         "label": "操作系统·大题",
-        "pdf": DOWNLOADS / "操作系统大题.pdf",
+        "pdf": SOURCE_DIR / "计算机操作系统大题.pdf",
         "edition": "大题",
     },
     {
         "book": "co",
         "kind": "big",
         "label": "组成原理·大题",
-        "pdf": DOWNLOADS / "计组" / "【单题】.pdf",
+        "pdf": SOURCE_DIR / "计算机组成原理大题.pdf",
         "edition": "单题",
     },
     {
         "book": "cn",
         "kind": "big",
         "label": "计算机网络·大题",
-        "pdf": DOWNLOADS / "计网" / "【单题】.pdf",
+        "pdf": SOURCE_DIR / "计算机网络.pdf",
         "edition": "单题",
     },
 ]

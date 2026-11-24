@@ -24,7 +24,7 @@ import {
   type ExamItem,
   type ExamPaper,
 } from "@/lib/kg/exams408";
-import { kgKpPath } from "@/lib/kg/paths";
+import { cs408HandoutPath } from "@/lib/kg/paths";
 import type { MarkLevel } from "@/lib/kg/types";
 import { useKgProgress } from "@/stores/kgProgress";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ItemNoteField } from "@/pages/itemNoteField";
 import { OsMemTags } from "@/pages/osMemTags";
-import { vizFor } from "@/viz/registry";
 
 const MARKS: { id: MarkLevel; label: string; cls: string }[] = [
   { id: "pass", label: "对", cls: "bg-success text-success-foreground" },
@@ -295,11 +294,7 @@ function SetView({ group }: { group: GroupParam }) {
         >
           只看未标
         </button>
-        {group !== "all" && (
-          <Link to={`/viz/${g?.kpId ?? ""}`} className="rounded-md px-3 py-1 text-xs text-muted-foreground hover:underline">
-            图解
-          </Link>
-        )}
+
       </div>
 
       {topics.length > 0 && (
@@ -372,12 +367,10 @@ function QRow({
 }) {
   const { ref, item } = row;
   const topic = osMemTopic(ref.topic);
-  const group = osMemGroupForTopic(ref.topic);
   const stem = item?.stem ?? ref.hook;
   const preview = stem.replace(/\s+/g, " ").slice(0, 72);
   const kindLabel = ref.kind === "big" ? "大题" : "选择";
   const pk = topic?.kpId;
-  const viz = pk && vizFor(pk);
 
   return (
     <Card id={`q-${osMemExamKey(ref.year, ref.n)}`} className={cn(open && "ring-1 ring-primary/40")}>
@@ -409,14 +402,6 @@ function QRow({
           {topic && (
             <p className="text-xs text-muted-foreground">
               小类「{topic.name}」· {ref.hook}
-              {group && viz ? (
-                <>
-                  {" · "}
-                  <Link to={`/viz/${group.kpId}`} className="text-primary hover:underline">
-                    图解 {topic.vizHint}
-                  </Link>
-                </>
-              ) : null}
             </p>
           )}
           <pre className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">
@@ -459,7 +444,7 @@ function QRow({
             </Button>
             {pk && findKp(pk) && (
               <Button asChild size="sm" variant="ghost">
-                <Link to={kgKpPath(pk, { subject: "cs408" })}>考点</Link>
+                <Link to={cs408HandoutPath({ kpId: pk })}>408手稿</Link>
               </Button>
             )}
           </div>

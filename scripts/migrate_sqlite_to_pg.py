@@ -2,7 +2,7 @@
 """migrate_sqlite_to_pg.py — 把 english_web.db (SQLite) 迁到 PostgreSQL。
 
 用法:
-  export EW_DATABASE_URL=postgres://makima@localhost/english_web
+  项目内数据库已启动时直接运行，或用 EW_DATABASE_URL 指定连接。
   .venv/bin/python3 scripts/migrate_sqlite_to_pg.py
   .venv/bin/python3 scripts/migrate_sqlite_to_pg.py --wipe   # 先清空 PG 业务表
 
@@ -17,6 +17,8 @@ import os
 import sqlite3
 import sys
 from pathlib import Path
+
+from local_database import database_url
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_SQLITE = ROOT / "english_web.db"
@@ -117,9 +119,7 @@ def main():
     )
     ap.add_argument(
         "--pg",
-        default=os.environ.get("EW_DATABASE_URL")
-        or os.environ.get("DATABASE_URL")
-        or "postgres://makima@localhost/english_web",
+        default=database_url(),
         help="PostgreSQL URL",
     )
     ap.add_argument(
