@@ -80,6 +80,39 @@ const DONE_MARK_META: Record<Exclude<MarkLevel, "skip">, { label: string; icon: 
   fail: { label: "不会", icon: <X className="h-3 w-3" /> },
 };
 
+function markHandoutExample(
+  ex: HandoutExample,
+  mark: Exclude<MarkLevel, "skip">,
+  primaryKpId: string,
+  secondaryKpIds: string[]
+) {
+  const markItem = useKgProgress.getState().markItem;
+  const ids = syncIdsOf(ex);
+  const journal = useJournal.getState();
+  for (const itemId of ids) {
+    markItem({ itemId, mark, primaryKpId, secondaryKpIds });
+    const existing = journal.entries.find(
+      (e) => e.sourceItemId === itemId && e.status === "active"
+    );
+    if (mark === "fuzzy" || mark === "fail") {
+      if (existing) {
+        journal.reviewEntry(existing.id, mark === "fuzzy" ? "hard" : "fail");
+      } else {
+        journal.collectWrongItem({
+          id: wangdaoJournalId(itemId),
+          sourceItemId: itemId,
+          kpId: primaryKpId,
+          title: `${ex.title}（${ex.source}）`,
+          body: ex.source,
+          categoryId: "cat-math",
+        });
+      }
+    } else if (mark === "pass" && existing) {
+      journal.reviewEntry(existing.id, "pass");
+    }
+  }
+}
+
 function MarkStrip({
   ex,
   currentMark,
@@ -95,33 +128,8 @@ function MarkStrip({
   onRetire: () => void;
   onMarked: () => void;
 }) {
-  const markItem = useKgProgress((s) => s.markItem);
-
   const handle = (mark: Exclude<MarkLevel, "skip">) => {
-    const ids = syncIdsOf(ex);
-    const journal = useJournal.getState();
-    for (const itemId of ids) {
-      markItem({ itemId, mark, primaryKpId, secondaryKpIds });
-      const existing = journal.entries.find(
-        (e) => e.sourceItemId === itemId && e.status === "active"
-      );
-      if (mark === "fuzzy" || mark === "fail") {
-        if (existing) {
-          journal.reviewEntry(existing.id, mark === "fuzzy" ? "hard" : "fail");
-        } else {
-          journal.collectWrongItem({
-            id: wangdaoJournalId(itemId),
-            sourceItemId: itemId,
-            kpId: primaryKpId,
-            title: `${ex.title}（${ex.source}）`,
-            body: ex.source,
-            categoryId: "cat-math",
-          });
-        }
-      } else if (mark === "pass" && existing) {
-        journal.reviewEntry(existing.id, "pass");
-      }
-    }
+    markHandoutExample(ex, mark, primaryKpId, secondaryKpIds);
     onMarked();
   };
 
@@ -131,33 +139,33 @@ function MarkStrip({
         type="button"
         onClick={() => handle("pass")}
         className={`mh-mark-btn${currentMark === "pass" ? " is-pass" : ""}`}
-        title="标记为已掌握（全站进度同步）"
+        title="标记为已掌握（全站进度同步，快捷键 1）"
       >
-        <Check className="h-3 w-3" />会
+        <Check className="h-3 w-3" />会<kbd className="mh-kbd mh-kbd-pc">1</kbd>
       </button>
       <button
         type="button"
         onClick={() => handle("fuzzy")}
         className={`mh-mark-btn${currentMark === "fuzzy" ? " is-fuzzy" : ""}`}
-        title="标记为模糊（加入 1/3/7/14 复习队列并同步全站）"
+        title="标记为模糊（加入 1/3/7/14 复习队列并同步全站，快捷键 2）"
       >
-        <HelpCircle className="h-3 w-3" />模糊
+        <HelpCircle className="h-3 w-3" />模糊<kbd className="mh-kbd mh-kbd-pc">2</kbd>
       </button>
       <button
         type="button"
         onClick={() => handle("fail")}
         className={`mh-mark-btn${currentMark === "fail" ? " is-fail" : ""}`}
-        title="标记为不会（加入 1/3/7/14 复习队列并同步全站）"
+        title="标记为不会（加入 1/3/7/14 复习队列并同步全站，快捷键 3）"
       >
-        <X className="h-3 w-3" />不会
+        <X className="h-3 w-3" />不会<kbd className="mh-kbd mh-kbd-pc">3</kbd>
       </button>
       <button
         type="button"
         onClick={onRetire}
         className="mh-mark-btn is-retire"
-        title="一次性过关、不再纳入后续复习（随时可一键移回）"
+        title="一次性过关、不再纳入后续复习（随时可一键移回，快捷键 4）"
       >
-        <Scissors className="h-3 w-3" />斩掉
+        <Scissors className="h-3 w-3" />斩掉<kbd className="mh-kbd mh-kbd-pc">4</kbd>
       </button>
     </div>
   );
@@ -904,10 +912,10 @@ export function MathHandoutDetailPage() {
     });
   }, []);
 
-  // 键盘快捷键：Space 显隐当前题步骤，← / → 在当前小类内翻页（含讲解页）
+  // 键盘快捷键：Space 显隐当前题步骤，← / → 在当前小类内翻页（含讲解页），1-4 标记会/模糊/不会/斩掉
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || e.isComposing) return;
       const target = e.target as HTMLElement | null;
       if (target) {
         const tag = target.tagName;
@@ -925,12 +933,27 @@ export function MathHandoutDetailPage() {
       } else if (e.key === "ArrowRight" && currentStep < totalSteps - 1) {
         e.preventDefault();
         goToStep(currentStep + 1);
+      } else if (currentEx && handout && !e.repeat) {
+        if (e.key === "1") {
+          e.preventDefault();
+          markHandoutExample(currentEx, "pass", handout.primaryKpId, handout.secondaryKpIds);
+        } else if (e.key === "2") {
+          e.preventDefault();
+          markHandoutExample(currentEx, "fuzzy", handout.primaryKpId, handout.secondaryKpIds);
+        } else if (e.key === "3") {
+          e.preventDefault();
+          markHandoutExample(currentEx, "fail", handout.primaryKpId, handout.secondaryKpIds);
+        } else if (e.key === "4") {
+          e.preventDefault();
+          if (isExampleRetired(currentEx)) handleUnretireExample(currentEx);
+          else handleRetireExample(currentEx);
+        }
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentEx, currentStep, totalSteps, toggleStepsFor, goToStep]);
+  }, [currentEx, currentStep, totalSteps, handout, toggleStepsFor, goToStep, isExampleRetired, handleRetireExample, handleUnretireExample]);
 
   // 拦截「本组刷题路线」或正文中 #anchor 链接：自动切到目标小类并直接翻到对应题页
   const handleReaderClick = useCallback(
@@ -1423,6 +1446,8 @@ export function MathHandoutDetailPage() {
                       <>
                         {" · "}
                         <kbd className="mh-kbd">Space</kbd> 显隐步骤
+                        {" · "}
+                        <kbd className="mh-kbd">1</kbd>-<kbd className="mh-kbd">4</kbd> 会/模糊/不会/斩掉
                       </>
                     )}
                   </span>

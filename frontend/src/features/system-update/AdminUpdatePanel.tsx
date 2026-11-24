@@ -5,9 +5,9 @@ import { flushPending } from "@/lib/syncQueue";
 import { checkUpdate, installUpdate, updateStatus, type UpdateStatus } from "./api";
 import { checkFreshness } from "./freshness";
 
-/** 将容器/构建语义化版本号格式化为展示形式，如 v0.1.2-rc1 -> v0.1.2(rc1)。 */
+/** 将容器/构建语义化版本号格式化为展示形式，如 v0.1.3-rc1 -> v0.1.3(rc1)。 */
 export function formatDisplayVersion(version: string | undefined): string {
-  if (!version) return "v0.1.2(rc1)";
+  if (!version) return "v0.1.3";
   return version.replace(/-(rc\d+)$/i, "($1)");
 }
 
@@ -161,7 +161,7 @@ export function AdminUpdatePanel() {
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt className="text-muted-foreground">当前版本</dt>
           <dd className="break-all font-mono font-semibold">
-            {formatDisplayVersion(serverVersion || clientVersion || "v0.1.2-rc1")}
+            {formatDisplayVersion(serverVersion || clientVersion || "v0.1.3")}
           </dd>
           {status?.enabled !== false && (
             <>

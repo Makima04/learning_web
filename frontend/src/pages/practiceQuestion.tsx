@@ -11,11 +11,19 @@ import { ItemNoteField } from "@/pages/itemNoteField";
 import { QuestionKpLine, WangdaoAnalysis, WangdaoStem } from "@/pages/wangdaoQuestion";
 import { practiceQuestionLocation } from "@/lib/kg/practiceLocation";
 
-function isTypingTarget(target: EventTarget | null): boolean {
+function isTextInputTarget(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLInputElement ||
     target instanceof HTMLTextAreaElement ||
-    (target instanceof HTMLElement && (target.isContentEditable || Boolean(target.closest("button, a, summary, select, [role='button'], [role='tab']"))))
+    target instanceof HTMLSelectElement ||
+    (target instanceof HTMLElement && (target.isContentEditable || Boolean(target.closest("input, textarea, select")))) 
+  );
+}
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  return (
+    isTextInputTarget(target) ||
+    (target instanceof HTMLElement && Boolean(target.closest("button, a, summary, [role='button'], [role='tab']")))
   );
 }
 
@@ -24,10 +32,10 @@ function isInteractiveClick(e: React.MouseEvent): boolean {
   return el instanceof Element && Boolean(el.closest("button, a, input, textarea, select, label, summary"));
 }
 
-export const PRACTICE_MARKS: { id: MarkLevel; label: string; cls: string }[] = [
-  { id: "pass", label: "会", cls: "bg-success text-success-foreground" },
-  { id: "fuzzy", label: "模糊", cls: "bg-warning text-warning-foreground" },
-  { id: "fail", label: "不会", cls: "bg-destructive text-destructive-foreground" },
+export const PRACTICE_MARKS: { id: MarkLevel; label: string; key: string; cls: string }[] = [
+  { id: "pass", label: "会", key: "1", cls: "bg-success text-success-foreground" },
+  { id: "fuzzy", label: "模糊", key: "2", cls: "bg-warning text-warning-foreground" },
+  { id: "fail", label: "不会", key: "3", cls: "bg-destructive text-destructive-foreground" },
 ];
 
 export function LearnReviewButtons({
@@ -139,16 +147,31 @@ export function PracticeQuestionCard({
   }, [item, nextItem]);
 
   useEffect(() => {
-    if (!canReveal) return;
     const onKey = (event: KeyboardEvent) => {
-      if (isTypingTarget(event.target)) return;
-      if (event.key !== " " && event.code !== "Space") return;
-      event.preventDefault();
-      setRevealedId(item.id);
+      if (event.altKey || event.metaKey || event.ctrlKey || event.defaultPrevented || event.isComposing) return;
+      if (canReveal && (event.key === " " || event.code === "Space") && !isTypingTarget(event.target)) {
+        event.preventDefault();
+        setRevealedId(item.id);
+        return;
+      }
+      if (event.repeat || isTextInputTarget(event.target)) return;
+      if (event.key === "1") {
+        event.preventDefault();
+        onMark("pass");
+      } else if (event.key === "2") {
+        event.preventDefault();
+        onMark("fuzzy");
+      } else if (event.key === "3") {
+        event.preventDefault();
+        onMark("fail");
+      } else if (event.key === "4" && onRetire) {
+        event.preventDefault();
+        onRetire();
+      }
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [canReveal, item.id]);
+  }, [canReveal, item.id, onMark, onRetire]);
 
   const kind = practiceKindLabel(item.kind);
   const source = item.source === "lilin880" || item.source === "zhangyu1000"
@@ -207,8 +230,9 @@ export function PracticeQuestionCard({
             <button
               key={m.id}
               type="button"
+              title={`${m.label}（快捷键 ${m.key}）`}
               className={cn(
-                "rounded-md font-medium",
+                "inline-flex items-center gap-1.5 rounded-md font-medium",
                 large ? "px-4 py-2 text-sm" : "px-3 py-1.5 text-sm",
                 m.cls,
                 mark === m.id && "ring-2 ring-offset-2 ring-primary"
@@ -216,6 +240,7 @@ export function PracticeQuestionCard({
               onClick={() => onMark(m.id)}
             >
               {m.label}
+              <kbd className="hidden rounded border border-current/40 px-1 font-mono text-[10px] leading-tight opacity-80 md:inline-block">{m.key}</kbd>
             </button>
           ))}
           <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -230,10 +255,11 @@ export function PracticeQuestionCard({
                     ? "border-primary/40 bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted"
                 )}
-                title={retired ? "点击移回复习队列" : "永久过关并移出后续复习推荐"}
+                title={retired ? "点击移回复习队列（快捷键 4）" : "永久过关并移出后续复习推荐（快捷键 4）"}
               >
                 <Scissors className="h-4 w-4" />
                 {retired ? "已斩（移回）" : "斩掉"}
+                <kbd className="ml-0.5 hidden rounded border border-current/40 px-1 font-mono text-[10px] leading-tight opacity-75 md:inline-block">4</kbd>
               </button>
             )}
             <button

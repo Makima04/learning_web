@@ -22,7 +22,7 @@ function resolveVersion(): string {
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
   } catch {
-    return process.env.npm_package_version ? `v${process.env.npm_package_version}` : "v0.1.2-rc1";
+    return process.env.npm_package_version ? `v${process.env.npm_package_version}` : "v0.1.3";
   }
 }
 

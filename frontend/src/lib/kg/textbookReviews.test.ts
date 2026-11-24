@@ -26,7 +26,7 @@ describe("教材体系知识复习覆盖与排版",()=>{
   expect(mathPoints).toHaveLength(73); expect(csPoints).toHaveLength(92);
   expect(CS408_TEXTBOOK_REVIEWS).toHaveLength(92);
   expect(Object.keys(CS408_KNOWLEDGE_REVIEWS).sort()).toEqual(csPoints.map(k=>k.id).sort());
-  expect(Object.keys(MATH_TEXTBOOK_KNOWLEDGE).sort()).toEqual(mathPoints.map(k=>k.id).filter(id=>id!=="calc.m.surf2").sort());
+  expect(Object.keys(MATH_TEXTBOOK_KNOWLEDGE).sort()).toEqual(mathPoints.map(k=>k.id).sort());
   expect(Object.keys(KNOWLEDGE_REVIEW_TOPICS).sort()).toEqual([...mathPoints,...csPoints].map(k=>k.id).sort());
  });
  it.each(Object.entries({...MATH_KNOWLEDGE_REVIEWS,...CS408_KNOWLEDGE_REVIEWS}))("%s 的公式／表格／推演均可展示",(id,review)=>{

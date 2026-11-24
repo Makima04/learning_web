@@ -137,7 +137,7 @@ export function useHandoutPriority(): [HandoutPriority, (p: HandoutPriority) => 
   return [priority, setPriority];
 }
 
-const HANDOUTS_DATA_VERSION = "20261124v6";
+const HANDOUTS_DATA_VERSION = "20261124v8";
 
 let handoutsCache: Promise<MathHandout[]> | null = null;
 export function loadMathHandouts(): Promise<MathHandout[]> {

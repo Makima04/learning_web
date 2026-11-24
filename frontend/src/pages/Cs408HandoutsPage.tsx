@@ -451,7 +451,7 @@ function HandoutReader({ chapter, questions, progress, kind, knowledgeSection }:
   useEffect(() => {
     if (knowledgeSection) return;
     function onKey(event: KeyboardEvent) {
-      if (event.altKey || event.metaKey || event.ctrlKey || event.defaultPrevented) return;
+      if (event.altKey || event.metaKey || event.ctrlKey || event.defaultPrevented || event.isComposing) return;
       const target = event.target;
       if (target instanceof HTMLElement && (target.isContentEditable || target.closest("input, textarea, select"))) return;
       if (event.code === "Space" && question && !(target instanceof HTMLElement && target.closest("button, a, summary"))) {
@@ -463,6 +463,21 @@ function HandoutReader({ chapter, questions, progress, kind, knowledgeSection }:
       } else if (event.key === "ArrowRight" && nextPage) {
         event.preventDefault();
         openPage(nextPage);
+      } else if (question && !event.repeat) {
+        const retired = Boolean(progress.marks.get(question.id)?.retired);
+        if (event.key === "1" && !retired) {
+          event.preventDefault();
+          markCs408HandoutQuestion(question, "pass");
+        } else if (event.key === "2" && !retired) {
+          event.preventDefault();
+          markCs408HandoutQuestion(question, "fuzzy");
+        } else if (event.key === "3" && !retired) {
+          event.preventDefault();
+          markCs408HandoutQuestion(question, "fail");
+        } else if (event.key === "4") {
+          event.preventDefault();
+          toggleRetired(question);
+        }
       }
     }
     window.addEventListener("keydown", onKey);
@@ -635,7 +650,7 @@ function HandoutReader({ chapter, questions, progress, kind, knowledgeSection }:
             <button type="button" className="mh-step-nav-btn" disabled={!prevPage} onClick={() => prevPage && openPage(prevPage)}>
               <ChevronLeft className="h-4 w-4" />{questionIndex === 0 ? "核心讲解" : "上一题"}
             </button>
-            <span className="mh-stage-kbd-hint"><kbd className="mh-kbd">←</kbd> <kbd className="mh-kbd">→</kbd> 切页{question && <> · <kbd className="mh-kbd">Space</kbd> 显隐步骤</>}</span>
+            <span className="mh-stage-kbd-hint"><kbd className="mh-kbd">←</kbd> <kbd className="mh-kbd">→</kbd> 切页{question && <> · <kbd className="mh-kbd">Space</kbd> 显隐步骤 · <kbd className="mh-kbd">1</kbd>-<kbd className="mh-kbd">4</kbd> 会/模糊/不会/斩掉</>}</span>
             {nextPage ? (
               <button type="button" className="mh-step-nav-btn is-primary" onClick={() => openPage(nextPage)}>
                 {nextQuestion ? (question ? "下一题" : "开始刷题（第 1 题）") : `下一场景：${nextScene.name}`}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Scissors } from "lucide-react";
+import { FormattedExplanation } from "@/components/FormattedExplanation";
 import { ReviewBlocks } from "@/components/ReviewBlocks";
 import { hydratePracticeItems, mediaUrl } from "@/lib/kg/catalogLoad";
 import type { Cs408HandoutMark, Cs408HandoutQuestion } from "@/lib/kg/cs408Handouts";
@@ -19,9 +20,9 @@ export function handoutQuestionLabel(question: Cs408HandoutQuestion): string {
 }
 
 const MARKS = [
-  { mark: "pass", label: "会", className: "is-pass" },
-  { mark: "fuzzy", label: "模糊", className: "is-fuzzy" },
-  { mark: "fail", label: "不会", className: "is-fail" },
+  { mark: "pass", label: "会", key: "1", className: "is-pass" },
+  { mark: "fuzzy", label: "模糊", key: "2", className: "is-fuzzy" },
+  { mark: "fail", label: "不会", key: "3", className: "is-fail" },
 ] as const;
 
 function QuestionSteps({ question, lesson }: { question: Cs408HandoutQuestion; lesson?: ReviewLesson }) {
@@ -44,7 +45,7 @@ function QuestionSteps({ question, lesson }: { question: Cs408HandoutQuestion; l
           {question.item.explanation && (
             <div>
               <h3 className="text-sm font-bold">题库解析</h3>
-              <p className="whitespace-pre-wrap break-words text-sm">{question.item.explanation}</p>
+              <FormattedExplanation text={question.item.explanation} />
             </div>
           )}
           {question.item.answer_meta?.note && <p className="text-xs text-[var(--mh-muted)]">{question.item.answer_meta.note}</p>}
@@ -62,9 +63,15 @@ function QuestionSteps({ question, lesson }: { question: Cs408HandoutQuestion; l
         </>
       ) : (
         <>
+          {question.item.explanation && (
+            <div>
+              <h3 className="text-sm font-bold">题目解析</h3>
+              <FormattedExplanation text={question.item.explanation} />
+            </div>
+          )}
           {question.item.ans_img && <img src={mediaUrl(question.item.ans_img) ?? undefined} alt="王道原书解析" className="w-full rounded-md bg-white" />}
           {question.item.book_ans_page != null && <p className="text-sm text-[var(--mh-muted)]">原书解析第 {question.item.book_ans_page} 页</p>}
-          {!lesson && !question.item.answer && !question.item.ans_img && question.item.book_ans_page == null && (
+          {!lesson && !question.item.explanation && !question.item.answer && !question.item.ans_img && question.item.book_ans_page == null && (
             <p className="text-sm text-[var(--mh-muted)]">题库暂缺这道王道题的解析。</p>
           )}
         </>
@@ -120,6 +127,14 @@ export function Cs408HandoutQuestionPage({ question, ...props }: QuestionProps) 
 
 function QuestionContent({ question, lesson, record, stepsOpen, onToggleSteps, onMark, onToggleRetired }: QuestionProps) {
   const label = handoutQuestionLabel(question);
+  const [picked, setPicked] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPicked(null);
+  }, [question.id]);
+
+  const answerLetter = question.item.answer?.trim().toUpperCase().match(/^[A-D]$/)?.[0] ?? null;
+
   return (
     <article className="space-y-4" aria-label={label}>
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--mh-line)] pb-2">
@@ -128,22 +143,69 @@ function QuestionContent({ question, lesson, record, stepsOpen, onToggleSteps, o
           <span className="text-xs text-[var(--mh-muted)]">{question.item.kind === "big" ? "大题" : "选择题"}</span>
         )}
       </div>
-      {question.source === "wangdao" ? <WangdaoStem item={question.item} fitImage /> : (
+      {question.source === "wangdao" ? (
+        <WangdaoStem
+          item={question.item}
+          fitImage
+          selectedOption={picked}
+          correctOption={answerLetter}
+          revealCorrect={stepsOpen || Boolean(picked)}
+          onSelectOption={question.item.kind === "mcq" ? setPicked : undefined}
+        />
+      ) : (
         <div className="space-y-3 break-words">
           <p className="whitespace-pre-wrap">{question.item.stem}</p>
           {question.item.stem_images?.map((src, index) => (
             <img key={src} src={src} alt={`第 ${question.item.n} 题附图 ${index + 1}`} className="max-w-full rounded-md bg-white" />
           ))}
           {question.item.options && (
-            <ul className="space-y-1">
-              {Object.entries(question.item.options).map(([key, value]) => (
-                <li key={key} className={cn("flex gap-2 rounded-md px-2 py-1", stepsOpen && question.item.answer === key && "bg-[var(--mh-ok-bg)] text-[var(--mh-ok)]")}>
-                  <span className="w-5 shrink-0 font-semibold">{key}.</span>
-                  <span className="min-w-0 whitespace-pre-wrap break-words">{value}</span>
-                </li>
-              ))}
+            <ul className="space-y-1.5 text-sm">
+              {Object.entries(question.item.options).map(([key, value]) => {
+                const isPicked = picked === key;
+                const isCorrect = Boolean(answerLetter && key === answerLetter);
+                const showCorrect = isCorrect && (stepsOpen || Boolean(picked));
+                const showWrong = isPicked && Boolean(answerLetter) && !isCorrect;
+                const showNeutral = isPicked && !answerLetter;
+                return (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      aria-pressed={isPicked}
+                      onClick={() => setPicked(key)}
+                      className={cn(
+                        "flex w-full items-start gap-2 rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer",
+                        showCorrect
+                          ? "border-[var(--mh-ok)] bg-[var(--mh-ok-bg)] text-[var(--mh-ok)]"
+                          : showWrong
+                            ? "border-[var(--mh-err)] bg-[var(--mh-err-bg)] text-[var(--mh-err)]"
+                            : showNeutral
+                              ? "border-[var(--mh-accent)] bg-[var(--mh-accent-soft)]"
+                              : "border-transparent hover:border-[var(--mh-line-strong)] hover:bg-[var(--mh-surface)]",
+                      )}
+                    >
+                      <span className="w-5 shrink-0 font-semibold">{key}.</span>
+                      <span className="min-w-0 whitespace-pre-wrap break-words">{value}</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
+        </div>
+      )}
+      {picked && (
+        <div
+          role="status"
+          className={cn(
+            "mh-opt-feedback",
+            answerLetter ? (picked === answerLetter ? "ok" : "err") : "text-[var(--mh-muted)]",
+          )}
+        >
+          {answerLetter
+            ? picked === answerLetter
+              ? `选择 ${picked}，回答正确。`
+              : `已选 ${picked}，参考答案是 ${answerLetter}。`
+            : `已选 ${picked}（本题暂缺参考答案）。`}
         </div>
       )}
       <div className="flex flex-wrap gap-2">
@@ -154,15 +216,20 @@ function QuestionContent({ question, lesson, record, stepsOpen, onToggleSteps, o
       </div>
       {stepsOpen && <QuestionSteps question={question} lesson={lesson} />}
       <div className="flex flex-wrap items-center gap-2">
-        {MARKS.map(({ mark, label: markLabel, className }) => (
+        {MARKS.map(({ mark, label: markLabel, key, className }) => (
           <button key={mark} type="button" disabled={record?.retired} aria-pressed={record?.mark === mark}
+            title={`${markLabel}（快捷键 ${key}）`}
             className={cn("mh-mark-btn min-h-9 disabled:opacity-50", record?.mark === mark && className)}
             onClick={() => onMark(question, mark)}>
             {markLabel}
+            <kbd className="mh-kbd mh-kbd-pc">{key}</kbd>
           </button>
         ))}
-        <button type="button" className="mh-btn mh-btn-subtle" onClick={() => onToggleRetired(question)}>
+        <button type="button" className="mh-btn mh-btn-subtle"
+          title={`${record?.retired ? "移回题目" : "斩掉"}（快捷键 4）`}
+          onClick={() => onToggleRetired(question)}>
           <Scissors className="h-4 w-4" />{record?.retired ? "移回题目" : "斩掉"}
+          <kbd className="mh-kbd mh-kbd-pc">4</kbd>
         </button>
       </div>
     </article>

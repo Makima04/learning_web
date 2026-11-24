@@ -34,6 +34,8 @@ export interface WangdaoItem {
   ans_img?: string;
   /** 选择题字母，或解析册【答案】里读到的 A-D */
   answer?: string;
+  /** 逐题文字解析（含逐项分析与考点提示） */
+  explanation?: string;
   /** 题型细类（解析分类，不是图谱考点） */
   facets?: string[];
   /** 经核对的主技巧；未标注的多技巧题不推断主次。 */

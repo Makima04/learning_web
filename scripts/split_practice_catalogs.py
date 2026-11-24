@@ -26,7 +26,7 @@ CATALOGS = [
     PUBLIC / "math" / "zhangyu1000.json",
 ]
 
-SLIM_DROP = frozenset({"stem", "options"})
+SLIM_DROP = frozenset({"stem", "options", "explanation"})
 SAFE_KEY = re.compile(r"^[A-Za-z0-9._-]+$")
 
 
@@ -81,7 +81,7 @@ def split_public_catalog(catalog_path: Path) -> Path:
 
     index = {
         # 与 frontend/src/lib/kg/catalogLoad.ts 的 PRACTICE_CATALOG_VER 保持一致
-        "ver": "split-20261113-kp-dedup-algo",
+        "ver": "split-20261124-wd-explain",
         "count": len(items),
         "shards": shards,
         "items": [slim_item(q) for q in items],

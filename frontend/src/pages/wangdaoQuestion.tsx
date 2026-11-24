@@ -34,35 +34,87 @@ export function WangdaoStem({
   item,
   size = "compact",
   fitImage = false,
+  selectedOption = null,
+  correctOption = null,
+  revealCorrect = false,
+  onSelectOption,
 }: {
   item: WangdaoItem;
   /** large：大屏作答台用，题面与选项整体放大一档 */
   size?: "compact" | "large";
   /** 手稿单题页限制原图尺寸，细节仍可按原尺寸查看。 */
   fitImage?: boolean;
+  /** 选择题当前已选选项（A-D） */
+  selectedOption?: string | null;
+  /** 选择题参考答案（A-D） */
+  correctOption?: string | null;
+  /** 是否高亮参考答案（例如已作答或展开解析后） */
+  revealCorrect?: boolean;
+  /** 传入后选项变为可点击按钮 */
+  onSelectOption?: (key: string) => void;
 }) {
   const large = size === "large";
   const reviewedStem = REVIEWED_TEXT_STEMS[item.id];
+  const optionClass = (k: string) => {
+    const isPicked = selectedOption === k;
+    const isCorrect = Boolean(correctOption && k === correctOption);
+    const showCorrect = isCorrect && (revealCorrect || Boolean(selectedOption));
+    const showWrong = isPicked && Boolean(correctOption) && !isCorrect;
+    const showNeutral = isPicked && !correctOption;
+    return cn(
+      "flex w-full items-start gap-2 rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer",
+      showCorrect
+        ? "border-[var(--mh-ok)] bg-[var(--mh-ok-bg)] text-[var(--mh-ok)]"
+        : showWrong
+          ? "border-[var(--mh-err)] bg-[var(--mh-err-bg)] text-[var(--mh-err)]"
+          : showNeutral
+            ? "border-[var(--mh-accent)] bg-[var(--mh-accent-soft)]"
+            : "border-transparent hover:border-[var(--mh-line-strong)] hover:bg-[var(--mh-surface)]",
+    );
+  };
+
   if (item.img && !reviewedStem) {
     const src = mediaUrl(item.img)!;
     const alt = item.stem ? item.stem.slice(0, 80) : `第${item.qno}题`;
+    const quickKeys = onSelectOption && item.kind === "mcq" ? OPT_KEYS : [];
+    const quickBar = quickKeys.length > 0 && (
+      <div className="flex flex-wrap gap-2 pt-1" role="group" aria-label="选择答案">
+        {quickKeys.map((k) => (
+          <button
+            key={k}
+            type="button"
+            aria-pressed={selectedOption === k}
+            onClick={() => onSelectOption?.(k)}
+            className={cn(optionClass(k), "w-auto min-w-[3.5rem] justify-center border-[var(--mh-line-strong)] font-semibold")}
+          >
+            {k}
+          </button>
+        ))}
+      </div>
+    );
     if (fitImage) {
       return (
-        <figure className="max-w-[36rem] space-y-1.5">
-          <img src={src} alt={alt} className="block h-auto max-h-[min(58vh,32rem)] w-auto max-w-full rounded-md bg-white object-contain" />
-          <a href={src} target="_blank" rel="noreferrer" className="inline-block text-xs" aria-label="查看原尺寸题图（新标签页）">
-            查看原图
-          </a>
-        </figure>
+        <div className="space-y-2">
+          <figure className="max-w-[46rem] space-y-1.5">
+            <img src={src} alt={alt} className="block h-auto max-h-[min(64vh,36rem)] w-auto max-w-full rounded-md bg-white object-contain" />
+            <a href={src} target="_blank" rel="noreferrer" className="inline-block text-xs" aria-label="查看原尺寸题图（新标签页）">
+              查看原图
+            </a>
+          </figure>
+          {quickBar}
+        </div>
       );
     }
     return (
-      <div className={cn("overflow-hidden rounded-md bg-white", large ? "" : "-mx-1 sm:mx-0")}>
-        <img
-          src={src}
-          alt={alt}
-          className="h-auto w-full bg-white"
-        />
+      <div className="space-y-2">
+        <div className={cn("overflow-hidden rounded-md bg-white", large ? "" : "-mx-1 sm:mx-0")}>
+          <img
+            src={src}
+            alt={alt}
+            className="h-auto w-full bg-white"
+          />
+        </div>
+        {quickBar}
       </div>
     );
   }
@@ -74,11 +126,25 @@ export function WangdaoStem({
         {reviewedStem ?? item.stem}
       </p>
       {keys.length > 0 && (
-        <ul className={cn("leading-relaxed", large ? "space-y-2.5 text-base" : "space-y-1.5 text-sm")}>
+        <ul className={cn("leading-relaxed", large ? "space-y-2 text-base" : "space-y-1.5 text-sm")}>
           {keys.map((k) => (
-            <li key={k} className="flex gap-2">
-              <span className="w-5 shrink-0 font-medium text-muted-foreground">{k}.</span>
-              <span className="min-w-0 whitespace-pre-wrap">{opts![k]}</span>
+            <li key={k}>
+              {onSelectOption ? (
+                <button
+                  type="button"
+                  aria-pressed={selectedOption === k}
+                  onClick={() => onSelectOption(k)}
+                  className={optionClass(k)}
+                >
+                  <span className="w-5 shrink-0 font-semibold">{k}.</span>
+                  <span className="min-w-0 whitespace-pre-wrap break-words">{opts![k]}</span>
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <span className="w-5 shrink-0 font-medium text-muted-foreground">{k}.</span>
+                  <span className="min-w-0 whitespace-pre-wrap">{opts![k]}</span>
+                </div>
+              )}
             </li>
           ))}
         </ul>
