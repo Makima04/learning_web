@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WORD_COUNT } from "@/lib/wordCount";
 import * as api from "@/lib/api";
 import { useAuth } from "@/stores/auth";
-import { AdminUpdatePanel } from "@/features/system-update/AdminUpdatePanel";
+import { AdminUpdatePanel, formatDisplayVersion } from "@/features/system-update/AdminUpdatePanel";
 import { useSettings, type Direction } from "@/stores/settings";
 import { useCards } from "@/stores/cards";
 import { useJournal } from "@/stores/journal";
@@ -1021,7 +1021,9 @@ export function SettingsPage() {
       </div>
       <p className="pt-6 text-center text-xs text-muted-foreground">
         小祥学习 · 考研全科 · 版本：
-        {typeof window !== "undefined" && window.EW_VERSION ? window.EW_VERSION : "dev"}
+        {typeof window !== "undefined" && window.EW_VERSION
+          ? formatDisplayVersion(window.EW_VERSION)
+          : "dev"}
       </p>
     </div>
   );
