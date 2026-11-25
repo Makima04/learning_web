@@ -17,7 +17,9 @@ PROJECT_DIR = Path(__file__).resolve().parents[1]
 HANDOUT_DIR = PROJECT_DIR / "materials/math/handouts"
 MATH1_Q_PATH = os.path.join(PROJECT_DIR, "frontend/src/data/kg/math1Questions.json")
 LILIN_Q_PATH = os.path.join(PROJECT_DIR, "frontend/public/math/lilin880.json")
-OUT_PATH = os.path.join(PROJECT_DIR, "frontend/public/math/handouts.json")
+OUT_DIR = os.path.join(PROJECT_DIR, "frontend/public/math/handouts")
+INDEX_OUT_PATH = os.path.join(OUT_DIR, "index.json")
+LEGACY_MONOLITH_PATH = os.path.join(PROJECT_DIR, "frontend/public/math/handouts.json")
 
 LECTURE_MAP = [
     # ================= 高等数学（9 章 · 27 份） =================
@@ -848,6 +850,8 @@ def parse_scenario_guide(gbody):
     attrs, inner = m.group(1), m.group(2)
     st_m = re.search(r'data-short-title="([^"]+)"', attrs)
     short_title = unescape(st_m.group(1)).strip() if st_m else ""
+    sec_m = re.search(r'data-section="([^"]+)"', attrs)
+    section = unescape(sec_m.group(1)).strip() if sec_m else ""
 
     def grab_block(cls):
         bm = re.search(rf'<div class="{cls}"[^>]*>(.*?)</div>', inner, re.S)
@@ -860,6 +864,7 @@ def parse_scenario_guide(gbody):
     featured_ids = list(dict.fromkeys(re.findall(r'href="#([^"]+)"', roadmap_html)))
     return {
         "shortTitle": short_title,
+        "section": section,
         "clueHtml": clue_html,
         "coreHtml": core_html,
         "pitfallHtml": pitfall_html,
@@ -1060,14 +1065,75 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
     }
 
 
+def build_index_entry(h):
+    return {
+        "slug": h["slug"],
+        "order": h["order"],
+        "book": h["book"],
+        "bookName": h["bookName"],
+        "chapterPath": h["chapterPath"],
+        "moduleId": h["moduleId"],
+        "primaryKpId": h["primaryKpId"],
+        "secondaryKpIds": h["secondaryKpIds"],
+        "title": h["title"],
+        "hasStructuredScenarios": h.get("hasStructuredScenarios", False),
+        "methods": [{"id": m["id"], "title": m["title"]} for m in h["methods"]],
+        "groups": [
+            {
+                "id": g["id"],
+                "title": g["title"],
+                "examples": [
+                    {
+                        "id": e["id"],
+                        "anchorId": e["anchorId"],
+                        "matchedMath1": e["matchedMath1"],
+                        "lilin880Id": e["lilin880Id"],
+                        "year": e["year"],
+                        "n": e["n"],
+                        "sourceType": e["sourceType"],
+                        "source": e["source"],
+                        "title": e["title"],
+                        "answerLetter": e["answerLetter"],
+                    }
+                    for e in g["examples"]
+                ],
+            }
+            for g in h["groups"]
+        ],
+        "stats": h["stats"],
+    }
+
+
 def main():
     math1_by_yn = load_math1_lookup()
     lilin_lookup = load_lilin880_lookup()
     handouts = [parse_lecture(m, math1_by_yn, lilin_lookup) for m in LECTURE_MAP]
-    os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
-    with open(OUT_PATH, "w", encoding="utf-8") as f:
-        json.dump({"version": 2, "handouts": handouts}, f, ensure_ascii=False)
-    print(f"Exported {len(handouts)} handouts (v2) to {OUT_PATH}")
+    os.makedirs(OUT_DIR, exist_ok=True)
+
+    index_entries = [build_index_entry(h) for h in handouts]
+    with open(INDEX_OUT_PATH, "w", encoding="utf-8") as f:
+        json.dump({"version": 3, "handouts": index_entries}, f, ensure_ascii=False)
+
+    valid_files = {"index.json"}
+    for h in handouts:
+        fname = f"{h['slug']}.json"
+        valid_files.add(fname)
+        with open(os.path.join(OUT_DIR, fname), "w", encoding="utf-8") as f:
+            json.dump(h, f, ensure_ascii=False)
+
+    # 清理不再存在的旧分片与已废弃的全量大 JSON
+    for name in os.listdir(OUT_DIR):
+        if name.endswith(".json") and name not in valid_files:
+            os.remove(os.path.join(OUT_DIR, name))
+    if os.path.exists(LEGACY_MONOLITH_PATH):
+        os.remove(LEGACY_MONOLITH_PATH)
+
+    idx_kb = os.path.getsize(INDEX_OUT_PATH) / 1024
+    total_kb = sum(os.path.getsize(os.path.join(OUT_DIR, f"{h['slug']}.json")) for h in handouts) / 1024
+    print(
+        f"Exported {len(handouts)} handouts (v3 split) to {OUT_DIR} "
+        f"(index={idx_kb:.1f} KB, avg_shard={total_kb / max(1, len(handouts)):.1f} KB)"
+    )
     for h in handouts:
         m_cnt = sum(1 for g in h["groups"] for e in g["examples"] if e["matchedMath1"])
         ll_cnt = sum(1 for g in h["groups"] for e in g["examples"] if e["lilin880Id"])

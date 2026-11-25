@@ -14,10 +14,11 @@ import {
 import {
   buildJournalEntryMap,
   getExampleReviewState,
-  loadMathHandouts,
+  loadMathHandoutsIndex,
+  prefetchMathHandoutDetail,
   useHandoutPriority,
-  type HandoutExample,
-  type MathHandout,
+  type HandoutExampleIndex,
+  type MathHandoutIndex,
 } from "@/lib/mathHandouts";
 import { useKgProgress } from "@/stores/kgProgress";
 import { useJournal } from "@/stores/journal";
@@ -47,7 +48,7 @@ const BOOK_ACCENT: Record<string, { bar: string; badge: string; text: string }> 
 };
 
 interface EnrichedHandout {
-  handout: MathHandout;
+  handout: MathHandoutIndex;
   kpName: string;
   freq: number;
   confidence: number;
@@ -62,7 +63,7 @@ interface EnrichedHandout {
 }
 
 export function MathHandoutsPage() {
-  const [handouts, setHandouts] = useState<MathHandout[]>([]);
+  const [handouts, setHandouts] = useState<MathHandoutIndex[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
@@ -81,7 +82,7 @@ export function MathHandoutsPage() {
 
   useEffect(() => {
     let alive = true;
-    loadMathHandouts()
+    loadMathHandoutsIndex()
       .then((hs) => {
         if (!alive) return;
         setHandouts(hs);
@@ -119,10 +120,10 @@ export function MathHandoutsPage() {
         (e) => e.sourceType === "lilin880" || Boolean(e.lilin880Id)
       );
 
-      const getMark = (e: HandoutExample) =>
+      const getMark = (e: HandoutExampleIndex) =>
         markRecordMap.get(e.id)?.mark ??
         (e.lilin880Id ? markRecordMap.get(e.lilin880Id)?.mark : undefined);
-      const isRetired = (e: HandoutExample) =>
+      const isRetired = (e: HandoutExampleIndex) =>
         Boolean(
           markRecordMap.get(e.id)?.retired ||
             (e.lilin880Id && markRecordMap.get(e.lilin880Id)?.retired)
@@ -161,7 +162,7 @@ export function MathHandoutsPage() {
     const rows: {
       handoutSlug: string;
       handoutTitle: string;
-      ex: HandoutExample;
+      ex: HandoutExampleIndex;
       retiredAt: number;
     }[] = [];
     for (const h of handouts) {
@@ -266,7 +267,7 @@ export function MathHandoutsPage() {
   const totalChapters = MATH_BOOKS.reduce((s, b) => s + b.modules.length, 0);
   const coveredChapters = new Set(handouts.map((h) => h.moduleId)).size;
 
-  const handleRestore = (ex: HandoutExample) => {
+  const handleRestore = (ex: HandoutExampleIndex) => {
     unretireItem(ex.id);
     if (ex.lilin880Id && ex.lilin880Id !== ex.id) {
       unretireItem(ex.lilin880Id);
@@ -694,6 +695,7 @@ export function MathHandoutsPage() {
 
                                   <Link
                                     to={`/math-handouts/${h.slug}`}
+                                    onMouseEnter={() => prefetchMathHandoutDetail(h.slug)}
                                     className="mt-2 block text-base font-extrabold tracking-tight group-hover:text-primary"
                                   >
                                     {h.title}

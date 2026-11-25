@@ -53,6 +53,13 @@ async fn spa_fallback(State(state): State<AppState>, req: Request<Body>) -> Resp
     };
 
     if file_path.is_file() {
+        let has_version_query = req
+            .uri()
+            .query()
+            .map(|q| q.split('&').any(|kv| kv.starts_with("v=")))
+            .unwrap_or(false);
+        let is_immutable = !NO_CACHE_PATHS.contains(&path.as_str())
+            && (path.starts_with("assets/") || has_version_query);
         // serve via ServeDir for correct content-type
         let svc = ServeDir::new(dir);
         return match svc.oneshot(req).await {
@@ -61,6 +68,11 @@ async fn spa_fallback(State(state): State<AppState>, req: Request<Body>) -> Resp
                     res.headers_mut().insert(
                         header::CACHE_CONTROL,
                         header::HeaderValue::from_static("no-cache"),
+                    );
+                } else if is_immutable {
+                    res.headers_mut().insert(
+                        header::CACHE_CONTROL,
+                        header::HeaderValue::from_static("public, max-age=31536000, immutable"),
                     );
                 }
                 res.into_response()

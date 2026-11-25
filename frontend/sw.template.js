@@ -4,10 +4,10 @@
 // __SW_PRECACHE_LIST__ 会被替换为预缓存 URL 清单（JSON 数组字面量）。
 //
 // 策略：
-//   /api/*            不缓存（离线写操作由前端 syncQueue 入队重试，绝不吞 API 响应）
-//   页面导航 / data.js / papers.js / wordinfo.js / version.js   网络优先，离线回退缓存（词库更新及时可见）
-//   /assets/*（带 hash）                          缓存优先（内容变名字变，天然可长存）
-//   其余同源 GET                                   网络优先回退缓存（图标等小文件顺带离线）
+//   /api/*                                      不缓存（离线写操作由前端 syncQueue 入队重试，绝不吞 API 响应）
+//   /assets/*（带 hash）                         缓存优先（内容变名字变，天然可长存）
+//   带 ?v= 版本号的分片 JSON 与题图               缓存优先（版本变 URL 变，支持离线秒开）
+//   页面导航 / data.js / papers.js / 其余静态资源  网络优先，离线回退缓存
 const CACHE = "ew-static-__SW_CACHE_VERSION__";
 const NETWORK_FIRST = ["/data.js", "/papers.js", "/wordinfo.js", "/version.js"];
 const ASSETS_PREFIX = "/assets/";
@@ -93,8 +93,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 数据文件与其余静态资源：网络优先（更新及时），离线回缓存
-  if (NETWORK_FIRST.includes(url.pathname) || /\.(js|css|png|svg|webmanifest|ico|woff2?)$/.test(url.pathname)) {
+  // 带显式版本号（?v=...）的分片 JSON 与题图：内容变版本号变，走缓存优先并支持离线秒开
+  if (url.searchParams.has("v") && /\.(json|jpe?g|webp|png|svg)$/.test(url.pathname)) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // 数据文件与其余静态资源（含未带版本号的 JSON 与题图）：网络优先，离线回缓存
+  if (
+    NETWORK_FIRST.includes(url.pathname) ||
+    /\.(js|css|json|jpe?g|webp|png|svg|webmanifest|ico|woff2?)$/.test(url.pathname)
+  ) {
     event.respondWith(networkFirst(request));
   }
 });

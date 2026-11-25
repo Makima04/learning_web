@@ -11,8 +11,10 @@ import { useKgProgress } from "@/stores/kgProgress";
 import { useMeta } from "@/stores/meta";
 import { useTodayLog } from "@/stores/todayLog";
 import { useAuth } from "@/stores/auth";
+import { initStoreBridge } from "@/stores/initStoreBridge";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
+initStoreBridge();
 useTheme.getState().init();
 useSettings.getState().load();
 useCards.getState().rehydrate();

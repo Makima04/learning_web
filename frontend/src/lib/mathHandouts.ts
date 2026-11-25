@@ -10,14 +10,17 @@ export type HandoutPriority = "exam" | "lilin880";
 export type HandoutKindFilter = "all" | "big" | "fill" | "mcq";
 export type HandoutGroupMode = "scene" | "template";
 
-export interface HandoutMethod {
+export interface HandoutMethodIndex {
   id: string;
-  titleHtml: string;
   title: string;
+}
+
+export interface HandoutMethod extends HandoutMethodIndex {
+  titleHtml: string;
   descHtml: string;
 }
 
-export interface HandoutExample {
+export interface HandoutExampleIndex {
   id: string;
   anchorId: string;
   matchedMath1: boolean;
@@ -28,6 +31,9 @@ export interface HandoutExample {
   source: string;
   title: string;
   answerLetter: string | null;
+}
+
+export interface HandoutExample extends HandoutExampleIndex {
   questionHtml: string;
   hintHtml: string;
   stepsHtml: string;
@@ -35,6 +41,7 @@ export interface HandoutExample {
 
 export interface HandoutGroupGuide {
   shortTitle: string;
+  section?: string;
   clueHtml: string;
   coreHtml: string;
   pitfallHtml: string;
@@ -43,14 +50,18 @@ export interface HandoutGroupGuide {
   structured: boolean;
 }
 
-export interface HandoutGroup {
+export interface HandoutGroupIndex {
   id: string;
   title: string;
+  examples: HandoutExampleIndex[];
+}
+
+export interface HandoutGroup extends HandoutGroupIndex {
   guide?: HandoutGroupGuide;
   examples: HandoutExample[];
 }
 
-export interface MathHandout {
+export interface MathHandoutIndex {
   slug: string;
   order: number;
   book: "calc" | "linear" | "prob";
@@ -60,11 +71,21 @@ export interface MathHandout {
   primaryKpId: string;
   secondaryKpIds: string[];
   title: string;
+  hasStructuredScenarios?: boolean;
+  methods: HandoutMethodIndex[];
+  groups: HandoutGroupIndex[];
+  stats: {
+    total: number;
+    exam: number;
+    lilin880: number;
+  };
+}
+
+export interface MathHandout extends MathHandoutIndex {
   verdictHeading: string;
   verdictHtml: string;
   verdictLeadHtml?: string;
   verdictTableHtml?: string;
-  hasStructuredScenarios?: boolean;
   topicHeading: string;
   topicIntroHtml: string;
   methods: HandoutMethod[];
@@ -73,11 +94,6 @@ export interface MathHandout {
   practiceHeading: string;
   practiceIntroHtml: string;
   groups: HandoutGroup[];
-  stats: {
-    total: number;
-    exam: number;
-    lilin880: number;
-  };
 }
 
 export interface Lilin880Item {
@@ -137,33 +153,61 @@ export function useHandoutPriority(): [HandoutPriority, (p: HandoutPriority) => 
   return [priority, setPriority];
 }
 
-const HANDOUTS_DATA_VERSION = "20261124v8";
+export const HANDOUTS_DATA_VERSION = "20261125v4";
 
-let handoutsCache: Promise<MathHandout[]> | null = null;
-export function loadMathHandouts(): Promise<MathHandout[]> {
-  if (!handoutsCache) {
-    handoutsCache = fetch(`/math/handouts.json?v=${HANDOUTS_DATA_VERSION}`, {
-      cache: "no-store",
-    })
+let handoutsIndexCache: Promise<MathHandoutIndex[]> | null = null;
+const handoutDetailCache = new Map<string, Promise<MathHandout | null>>();
+
+/** 加载轻量目录与例题索引，供首页、目录、日志、复习性价比等页面复用。 */
+export function loadMathHandoutsIndex(): Promise<MathHandoutIndex[]> {
+  if (!handoutsIndexCache) {
+    handoutsIndexCache = fetch(`/math/handouts/index.json?v=${HANDOUTS_DATA_VERSION}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then((d: { handouts: MathHandout[] }) => d.handouts)
+      .then((d: { handouts: MathHandoutIndex[] }) => d.handouts)
       .catch((err) => {
-        handoutsCache = null;
+        handoutsIndexCache = null;
         throw err;
       });
   }
-  return handoutsCache;
+  return handoutsIndexCache;
+}
+
+/** 兼容旧导入名：默认只拉轻量索引，避免误下全量 HTML。 */
+export const loadMathHandouts = loadMathHandoutsIndex;
+
+/** 按 slug 懒加载单讲完整 HTML 内容，命中内存缓存后零重复请求。 */
+export function loadMathHandoutDetail(slug: string): Promise<MathHandout | null> {
+  const key = slug.trim();
+  if (!key) return Promise.resolve(null);
+  const cached = handoutDetailCache.get(key);
+  if (cached) return cached;
+  const promise = fetch(`/math/handouts/${encodeURIComponent(key)}.json?v=${HANDOUTS_DATA_VERSION}`)
+    .then((r) => {
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json() as Promise<MathHandout>;
+    })
+    .catch((err) => {
+      handoutDetailCache.delete(key);
+      throw err;
+    });
+  handoutDetailCache.set(key, promise);
+  return promise;
+}
+
+/** 列表项 hover 时静默预取单讲分片。 */
+export function prefetchMathHandoutDetail(slug: string): void {
+  if (!slug || handoutDetailCache.has(slug)) return;
+  void loadMathHandoutDetail(slug).catch(() => {});
 }
 
 let lilinCache: Promise<Lilin880Item[]> | null = null;
 export function loadLilin880(): Promise<Lilin880Item[]> {
   if (!lilinCache) {
-    lilinCache = fetch(`/math/lilin880.json?v=${HANDOUTS_DATA_VERSION}`, {
-      cache: "no-store",
-    })
+    lilinCache = fetch(`/math/lilin880.json?v=${HANDOUTS_DATA_VERSION}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -207,7 +251,7 @@ export function buildJournalEntryMap(
 
 /** 判断手稿单题今日是否「待复习」或「今日已复盘」（同时兼容真题·880同题双ID）。 */
 export function getExampleReviewState(
-  ex: HandoutExample,
+  ex: Pick<HandoutExampleIndex, "id" | "lilin880Id">,
   journalByItemId: Map<string, JournalEntry>,
   markRecordMap: Map<string, UserItemMark>,
   today: string = dayKey()
@@ -239,15 +283,15 @@ export function getExampleReviewState(
   return { isDue: false, reviewedToday };
 }
 
-export function useMathHandouts(enabled = true): MathHandout[] {
-  const [list, setList] = useState<MathHandout[]>([]);
+export function useMathHandouts(enabled = true): MathHandoutIndex[] {
+  const [list, setList] = useState<MathHandoutIndex[]>([]);
   useEffect(() => {
     if (!enabled) {
       setList([]);
       return;
     }
     let alive = true;
-    loadMathHandouts()
+    loadMathHandoutsIndex()
       .then((hs) => {
         if (alive) setList(hs);
       })
@@ -260,20 +304,20 @@ export function useMathHandouts(enabled = true): MathHandout[] {
 }
 
 export interface HandoutExampleRef {
-  handout: MathHandout;
-  example: HandoutExample;
+  handout: MathHandoutIndex;
+  example: HandoutExampleIndex;
 }
 
 export interface HandoutLookup {
-  byKp: Map<string, MathHandout>;
-  byModule: Map<string, MathHandout[]>;
+  byKp: Map<string, MathHandoutIndex>;
+  byModule: Map<string, MathHandoutIndex[]>;
   byItemId: Map<string, HandoutExampleRef>;
   byExam: Map<string, HandoutExampleRef>;
 }
 
-export function buildHandoutLookup(handouts: MathHandout[]): HandoutLookup {
-  const byKp = new Map<string, MathHandout>();
-  const byModule = new Map<string, MathHandout[]>();
+export function buildHandoutLookup(handouts: MathHandoutIndex[]): HandoutLookup {
+  const byKp = new Map<string, MathHandoutIndex>();
+  const byModule = new Map<string, MathHandoutIndex[]>();
   const byItemId = new Map<string, HandoutExampleRef>();
   const byExam = new Map<string, HandoutExampleRef>();
 
@@ -306,7 +350,7 @@ export function buildHandoutLookup(handouts: MathHandout[]): HandoutLookup {
 }
 
 export function countHandoutDue(
-  handout: MathHandout,
+  handout: MathHandoutIndex,
   journalByItemId: Map<string, JournalEntry>,
   markRecordMap: Map<string, UserItemMark>,
   today: string = dayKey()
@@ -329,7 +373,7 @@ export function handoutHref(slug: string, opts?: { dueOnly?: boolean; anchorId?:
 }
 
 export function matchLilin880ForHandout(
-  handout: MathHandout,
+  handout: Pick<MathHandoutIndex, "primaryKpId" | "secondaryKpIds">,
   allLilin: Lilin880Item[]
 ): { primary: Lilin880Item[]; secondary: Lilin880Item[] } {
   const primary: Lilin880Item[] = [];
@@ -387,7 +431,9 @@ export function facetsOfHandoutExample(
 }
 
 /** 判断讲义是否关联了复习性价比的「题型模板」。 */
-export function handoutHasTemplates(handout: MathHandout): boolean {
+export function handoutHasTemplates(
+  handout: Pick<MathHandoutIndex, "primaryKpId" | "secondaryKpIds">
+): boolean {
   if (templatesForKp(handout.primaryKpId).length > 0) return true;
   return (handout.secondaryKpIds ?? []).some((kp) => templatesForKp(kp).length > 0);
 }

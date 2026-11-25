@@ -30,6 +30,7 @@ import {
   type WeeklySummary,
 } from "@/lib/journal";
 import { mapReviewToMark } from "@/lib/kg/journalBridge";
+import { emitStoreEvent } from "@/stores/storeEvents";
 import { clearPendingJournal, enqueueJournalRows } from "@/lib/syncQueue";
 import { getScopeEpoch, scopedKey, stillInScope } from "@/lib/storageScope";
 
@@ -1034,17 +1035,15 @@ export const useJournal = create<JournalStore>((set, get) => ({
     };
     commit(set, get, { entries, logs: [log, ...get().logs] });
 
-    // 关联考点：回写图谱熟练度，并用日志下次复盘日对齐 due
+    // 关联考点：经事件总线通知图谱回写熟练度，并用日志下次复盘日对齐 due
     if (entry.kpId) {
       const mark = mapReviewToMark(result);
       const dueMs = dayKeyStartMs(outcome.nextReviewOn);
-      const kpId = entry.kpId;
-      // 动态 import 避免 journal ↔ kgProgress 模块循环
-      void import("@/stores/kgProgress").then(({ useKgProgress }) => {
-        useKgProgress.getState().applyExternalMark(kpId, mark, {
-          dueMs: dueMs > 0 ? dueMs : undefined,
-          ivl: outcome.step,
-        });
+      emitStoreEvent("journal:reviewed", {
+        kpId: entry.kpId,
+        mark,
+        dueMs: dueMs > 0 ? dueMs : undefined,
+        ivl: outcome.step,
       });
     }
   },

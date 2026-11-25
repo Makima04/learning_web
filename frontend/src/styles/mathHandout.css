@@ -1282,6 +1282,21 @@
   gap: 0.24rem;
   margin-bottom: 0.9rem;
 }
+.mh-scene-section {
+  margin: 0.65rem 0 0.22rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed var(--mh-line);
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--mh-muted);
+  opacity: 0.85;
+}
+.mh-scene-section.is-first {
+  margin-top: 0.1rem;
+  padding-top: 0;
+  border-top: 0;
+}
 .mh-scene-item {
   width: 100%;
   display: flex;

@@ -9,6 +9,7 @@ import { nextPracticeMark } from "@/lib/kg/techniqueTraining";
 import { cs408CheckId, type Cs408CheckPart } from "@/lib/kg/cs408Diagnostic";
 import { findKp } from "@/data/kg";
 import { journalCopyForKp } from "@/lib/kg/journalBridge";
+import { emitStoreEvent } from "@/stores/storeEvents";
 import { upsertItemNotes } from "@/lib/kg/itemNote";
 import {
   ATTEMPTS_LIMIT,
@@ -165,27 +166,23 @@ interface KgStore extends KgDoc {
   clearAll: () => void;
 }
 
-/** 图谱已学 → 学习日志入队（动态 import 避免 store 循环） */
+/** 图谱已学 → 经事件总线通知学习日志入队 */
 function enqueueJournalForKp(kpId: string) {
   // 408 / 数学复习只走错题集，不因「已学」再挂一张考点卡
   const subj = findKp(kpId)?.book.subject;
   if (subj === "cs408" || subj === "math") return;
   const copy = journalCopyForKp(kpId);
   if (!copy) return;
-  void import("@/stores/journal").then(({ useJournal }) => {
-    useJournal.getState().addEntryFromKg({
-      kpId,
-      title: copy.title,
-      body: copy.body,
-      categoryId: copy.categoryId,
-    });
+  emitStoreEvent("kg:kpCovered", {
+    kpId,
+    title: copy.title,
+    body: copy.body,
+    categoryId: copy.categoryId,
   });
 }
 
 function archiveJournalForKp(kpId: string) {
-  void import("@/stores/journal").then(({ useJournal }) => {
-    useJournal.getState().archiveEntriesByKpId(kpId);
-  });
+  emitStoreEvent("kg:kpUncovered", { kpId });
 }
 
 export const useKgProgress = create<KgStore>((set, get) => ({
@@ -267,9 +264,7 @@ export const useKgProgress = create<KgStore>((set, get) => ({
     persist(doc);
     set(doc);
     // 同步归档学习日志/错题复习队列里的该题，避免再推送复习
-    void import("@/stores/journal").then(({ useJournal }) => {
-      useJournal.getState().uncollectWrongItem(itemId);
-    });
+    emitStoreEvent("kg:wrongUncollected", { sourceItemId: itemId });
   },
 
   unretireItem: (itemId, restorePrev) => {

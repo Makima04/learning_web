@@ -20,7 +20,7 @@ import {
 import {
   buildJournalEntryMap,
   getExampleReviewState,
-  loadMathHandouts,
+  loadMathHandoutDetail,
   useHandoutPriority,
   type HandoutExample,
   type MathHandout,
@@ -548,10 +548,9 @@ export function MathHandoutDetailPage() {
     const urlGroup = searchParams.get("group");
     const urlQ = searchParams.get("q");
     pendingUrlNavRef.current = urlGroup || urlQ ? { group: urlGroup, q: urlQ } : null;
-    loadMathHandouts()
-      .then((hs) => {
+    (slug ? loadMathHandoutDetail(slug) : Promise.resolve(null))
+      .then((found) => {
         if (!alive) return;
-        const found = hs.find((x) => x.slug === slug) ?? null;
         setHandout(found);
         setStepsOverride({});
         setHintOpenMap({});
@@ -1082,28 +1081,37 @@ export function MathHandoutDetailPage() {
 
           <div className="mh-toc-label">判别场景</div>
           <nav className="mh-scene-nav" aria-label="判别场景导航">
-            {activeGroups.map((g) => {
+            {activeGroups.map((g, idx) => {
               const gPassed = g.examples.filter((e) => getExampleMark(e) === "pass").length;
               const gDue = g.examples.filter((e) => isExampleDue(e)).length;
               const gTotal = g.examples.length;
               const gDone = gTotal > 0 && gPassed === gTotal;
               const shortLabel = g.guide?.shortTitle || g.title;
               const isCurrent = currentGroup?.id === g.id;
+              const sectionLabel = g.guide?.section?.trim() || "";
+              const prevSection = idx > 0 ? activeGroups[idx - 1].guide?.section?.trim() || "" : "";
+              const showSection = Boolean(sectionLabel && sectionLabel !== prevSection);
               return (
-                <button
-                  key={g.id}
-                  type="button"
-                  className={`mh-scene-item${isCurrent ? " is-active" : ""}`}
-                  onClick={() => switchGroup(g.id)}
-                >
-                  <span>{shortLabel}</span>
-                  <span className="inline-flex items-center gap-1.5">
-                    {gDue > 0 && <span className="mh-scene-due-badge">待复习 {gDue}</span>}
-                    <span className={`mh-scene-prog${gDone ? " is-done" : ""}`}>
-                      {gDone ? <Check className="h-3.5 w-3.5" /> : `${gPassed}/${gTotal}`}
+                <div key={g.id}>
+                  {showSection && (
+                    <div className={`mh-scene-section${idx === 0 ? " is-first" : ""}`}>
+                      {sectionLabel}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className={`mh-scene-item${isCurrent ? " is-active" : ""}`}
+                    onClick={() => switchGroup(g.id)}
+                  >
+                    <span>{shortLabel}</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      {gDue > 0 && <span className="mh-scene-due-badge">待复习 {gDue}</span>}
+                      <span className={`mh-scene-prog${gDone ? " is-done" : ""}`}>
+                        {gDone ? <Check className="h-3.5 w-3.5" /> : `${gPassed}/${gTotal}`}
+                      </span>
                     </span>
-                  </span>
-                </button>
+                  </button>
+                </div>
               );
             })}
           </nav>

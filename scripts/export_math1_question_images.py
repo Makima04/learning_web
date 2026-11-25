@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 import re
+import subprocess
+import sys
 
 import fitz
 from PIL import Image, ImageChops
@@ -96,3 +98,7 @@ def export_all(items):
 
 if __name__ == "__main__":
     export_all(json.loads((ROOT / "frontend/src/data/kg/math1Questions.json").read_text())["items"])
+    subprocess.run(
+        [sys.executable, str(ROOT / "scripts/audit_math_images.py"), "--only", "math1", "--strict"],
+        check=True,
+    )
