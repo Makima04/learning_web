@@ -823,12 +823,35 @@ export function MathHandoutDetailPage() {
                             <span dangerouslySetInnerHTML={{ __html: guide.pitfallHtml }} />
                           </div>
                         )}
-                        {guide.roadmapHtml && (
-                          <div className="mh-sg-row is-roadmap">
-                            <span className="mh-sg-badge is-roadmap">本组核心思路</span>
-                            <span dangerouslySetInnerHTML={{ __html: guide.roadmapHtml }} />
-                          </div>
-                        )}
+                        {guide.roadmapHtml && (() => {
+                          const links = Array.from(
+                            guide.roadmapHtml.matchAll(/<a\s+[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)
+                          );
+                          return (
+                            <div className="mh-sg-row is-roadmap">
+                              <span className="mh-sg-badge is-roadmap">本组核心思路</span>
+                              {links.length > 0 ? (
+                                <span className="mh-rm-list">
+                                  {links.map((m, idx) => (
+                                    <span key={`${m[1]}-${idx}`} className="mh-rm-item">
+                                      {idx > 0 && (
+                                        <span className="mh-rm-sep" aria-hidden="true">
+                                          →
+                                        </span>
+                                      )}
+                                      <a
+                                        href={m[1]}
+                                        dangerouslySetInnerHTML={{ __html: m[2] }}
+                                      />
+                                    </span>
+                                  ))}
+                                </span>
+                              ) : (
+                                <span dangerouslySetInnerHTML={{ __html: guide.roadmapHtml }} />
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -861,16 +884,90 @@ export function MathHandoutDetailPage() {
                               </Link>
                               <div className="mh-kp-col-blocks">
                                 {sec.blocks.map((block, idx) =>
-                                  block.type === "text" ? (
-                                    <p key={idx} className="mh-kp-text">
-                                      {block.text}
-                                    </p>
-                                  ) : block.type === "math" ? (
+                                  block.type === "text" ? (() => {
+                                    const lm = block.text.match(/^【([^】]+)】\s*([\s\S]*)$/);
+                                    return (
+                                      <p key={idx} className={`mh-kp-text${lm ? " is-labeled" : ""}`}>
+                                        {lm ? (
+                                          <>
+                                            <strong className="mh-kp-label">{lm[1]}</strong>
+                                            <span>{lm[2]}</span>
+                                          </>
+                                        ) : (
+                                          block.text
+                                        )}
+                                      </p>
+                                    );
+                                  })() : block.type === "math" ? (
                                     <MathFormula
                                       key={idx}
                                       tex={block.tex}
                                       className="py-0.5 text-[13px] [&_.katex-display]:my-0.5"
                                     />
+                                  ) : block.type === "flow" ? (
+                                    <div key={idx} className="mh-kp-flow">
+                                      {block.title && (
+                                        <div className="mh-kp-flow-title">
+                                          <strong className="mh-kp-label">{block.title}</strong>
+                                        </div>
+                                      )}
+                                      <ul className="mh-kp-flow-list">
+                                        {block.items.map((it, i) => (
+                                          <li key={i} className="mh-kp-flow-row">
+                                            <span className="mh-kp-flow-from">{it.from}</span>
+                                            <span
+                                              className={`mh-kp-flow-arrow${
+                                                it.arrow === "↛"
+                                                  ? " is-neg"
+                                                  : it.arrow === "⇔"
+                                                  ? " is-iff"
+                                                  : it.arrow === "⟸"
+                                                  ? " is-suff"
+                                                  : ""
+                                              }`}
+                                              aria-hidden="true"
+                                            >
+                                              {it.arrow ?? "⇒"}
+                                            </span>
+                                            {Array.isArray(it.to) ? (
+                                              <ul className="mh-kp-branch">
+                                                {it.to.map((line, j) => (
+                                                  <li key={j}>{line}</li>
+                                                ))}
+                                              </ul>
+                                            ) : (
+                                              <span className="mh-kp-flow-to">
+                                                {it.to}
+                                                {it.note && (
+                                                  <span className="mh-kp-flow-note">（{it.note}）</span>
+                                                )}
+                                              </span>
+                                            )}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  ) : block.type === "table" ? (
+                                    <div key={idx} className="mh-kp-table-wrap">
+                                      <table className="mh-kp-table">
+                                        <thead>
+                                          <tr>
+                                            {block.headers.map((h, hi) => (
+                                              <th key={hi}>{h}</th>
+                                            ))}
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {block.rows.map((row, ri) => (
+                                            <tr key={ri}>
+                                              {row.map((cell, ci) => (
+                                                <td key={ci}>{cell}</td>
+                                              ))}
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
                                   ) : null
                                 )}
                               </div>

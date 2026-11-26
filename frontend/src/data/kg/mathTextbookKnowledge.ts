@@ -1,84 +1,634 @@
 // 按高校常用教材的概念次序整理，自编公式速查；不冒充教材原文或逐页摘录。
-import { math as m, text as t } from "./mathReviewBuilder";
+import { flow as fl, math as m, text as t } from "./mathReviewBuilder";
 import type { ReviewBlock } from "@/lib/kg/knowledgeReview";
 export const MATH_TEXTBOOK_KNOWLEDGE: Readonly<Record<string, ReviewBlock[]>> = {
-  "calc.limit.fn": [t("先检查定义域；奇偶性要求定义域关于原点对称。T 是非零周期。"), m`f(-x)=\begin{cases}f(x)&\text{偶函数}\\-f(x)&\text{奇函数}\end{cases},\quad f(x+T)=f(x)`, m`x_1<x_2\Rightarrow f(x_1)\le f(x_2)\quad(\text{单调不减})`, m`\exists M>0,\ \forall x\in D:\ |f(x)|\le M\quad(\text{有界})`],
-  "calc.limit.def": [t("δ 可依赖 ε，不能依赖变化中的 x；点值不影响去心极限。"), m`\lim_{x\to a}f(x)=L\iff\forall\varepsilon>0\ \exists\delta>0:\ 0<|x-a|<\delta\Rightarrow|f(x)-L|<\varepsilon`, m`\lim_{x\to a}f(x)=L\iff\lim_{x\to a^-}f(x)=\lim_{x\to a^+}f(x)=L`, m`f\le h\le g,\quad\lim f=\lim g=L\ \Longrightarrow\ \lim h=L`, t("有限极限存在 ⇒ 局部有界；极限运算的分母极限须非零。")],
-  "calc.limit.seq": [t("递推题：先证单调有界，再解极限方程；g 在候选极限处连续。"), m`a_n\le a_{n+1}\le M\quad\Longrightarrow\quad a_n\to L\le M`, m`a_{n+1}=g(a_n),\quad a_n\to L\quad\Longrightarrow\quad L=g(L)`, m`|a_{n+1}-L|\le q|a_n-L|,\ 0<q<1\Rightarrow|a_n-L|\le q^{n-1}|a_1-L|\to0`],
-  "calc.limit.inf": [t("所有比较须在同一趋近过程中进行；等价替换先检查加减抵消。"), m`\alpha=o(\beta)\iff\alpha/\beta\to0,\quad\alpha\sim\beta\iff\alpha/\beta\to1`, m`\sin x\sim\tan x\sim\arcsin x\sim\arctan x\sim x,\quad1-\cos x\sim\frac{x^2}{2}`, m`e^x-1\sim\ln(1+x)\sim x,\quad a^x-1\sim x\ln a,\quad(1+x)^a-1\sim ax\ (a\ne0)`, m`x-\sin x\sim\frac{x^3}{6},\quad\tan x-x\sim\frac{x^3}{3},\quad\arcsin x-x\sim\frac{x^3}{6},\quad x-\arctan x\sim\frac{x^3}{3}`, m`\alpha=\beta+o(\beta)\quad\text{不保证}\quad\alpha-\beta\sim0`],
-  "calc.limit.tech": [t("先识别未定式，再选择通分、有理化、泰勒或洛必达；实数幂取对数前确认底数为正。"), m`\lim_{x\to0}\frac{\sin x}{x}=1,\quad\lim_{u\to0}(1+u)^{1/u}=e`, m`1^\infty\text{型}(u\to1,v\to\infty):\quad\lim u^v=\exp\bigl\{\lim(u-1)v\bigr\}`, m`f(x)^{g(x)}=\exp\{g(x)\ln f(x)\}\ (f>0),\quad\sqrt{a}-\sqrt{b}=\frac{a-b}{\sqrt a+\sqrt b}`, m`f=g+o(x^k)\Rightarrow\frac{f-g}{x^k}\to0`, t("洛必达限于 0/0 或 ∞/∞ 型；去心邻域可导、分母导数非零，且导数商极限存在（可为无穷）。"), m`\lim\frac{f}{g}=\lim\frac{f'}{g'}\quad(\text{满足洛必达条件})`],
-  "calc.limit.cont": [t("先分别求左右极限，再与点值比较；闭区间连续函数有界并取到最大、最小值。"), m`f\text{在}a\text{连续}\iff\lim_{x\to a}f(x)=f(a)`, m`f(a^-)=f(a^+)\ne f(a)\Rightarrow\text{可去间断};\quad f(a^-)\ne f(a^+)\text{且均有限}\Rightarrow\text{跳跃间断}`, m`f(a^-)\text{或}f(a^+)\text{不存在（无穷/振荡）}\Rightarrow\text{第二类间断点}`, m`f\in C[a,b],\ f(a)f(b)<0\Rightarrow\exists\xi\in(a,b):f(\xi)=0\quad(\text{零点/介值定理})`],
-  "calc.limit.asymp": [t("正、负无穷分别检查；有限点只要某侧趋于无穷就有竖直渐近线。"), m`\lim_{x\to a^\pm}|f(x)|=\infty\Rightarrow x=a`, m`\lim_{x\to\pm\infty}f(x)=b\Rightarrow y=b`, m`k=\lim_{x\to\pm\infty}\frac{f(x)}x\ne0,\quad b=\lim_{x\to\pm\infty}[f(x)-kx]\Rightarrow y=kx+b`],
-  "calc.d1.def": [t("分段点用实际点值写差商；导数必须是有限极限。"), m`f'(a)=\lim_{h\to0}\frac{f(a+h)-f(a)}h`, m`f'(a)\text{存在}\iff f'_-(a)=f'_+(a)\in\mathbb R`, m`f'(a)\text{存在}\Rightarrow f\text{在}a\text{连续}`, m`y-f(a)=f'(a)(x-a),\quad\text{法线}:x-a+f'(a)[y-f(a)]=0`],
-  "calc.d1.rules": [t("链式求导逐层相乘；参数方程要求 x′(t)≠0，隐函数局部求导要求 Fᵧ≠0。"), m`(uv)'=u'v+uv',\quad(u/v)'=(u'v-uv')/v^2,\quad(f^{-1})'(y)=\frac{1}{f'(x)}`, m`(f(g(x)))'=f'(g(x))g'(x),\quad y'=-F_x/F_y`, m`\frac{dy}{dx}=\frac{y'}{x'},\qquad\frac{d^2y}{dx^2}=\frac{y''x'-y'x''}{(x')^3}`, m`(uv)^{(n)}=\sum_{k=0}^n C_n^k u^{(k)}v^{(n-k)}`, m`(\sin x)^{(n)}=\sin\left(x+\frac{n\pi}{2}\right),\quad\bigl(\ln(1+x)\bigr)^{(n)}=\frac{(-1)^{n-1}(n-1)!}{(1+x)^n}`],
-  "calc.d1.mvt": [t("以下 f 在 [a,b] 连续、(a,b) 可导；柯西定理还要求 g 满足同样条件。"), m`f(a)=f(b)\Rightarrow\exists\xi\in(a,b):f'(\xi)=0`, m`f(b)-f(a)=f'(\xi)(b-a)`, m`[f(b)-f(a)]g'(\xi)=[g(b)-g(a)]f'(\xi)`, m`f'(x)-pf(x)=e^{px}\bigl(e^{-px}f(x)\bigr)'\quad(p\text{为常数})`, t("证明题从目标倒推辅助函数，再逐条检查定理条件。"), t("不等式证明：作差构造 F，确定区间与基准点；严格不等式另查等号。"), m`F=f-g,\quad F'\ge0\Rightarrow F(x)\ge F(a)\quad(x\ge a)`, m`f''\ge0\Rightarrow f(x)\ge f(a)+f'(a)(x-a)\quad(\text{同一区间})`, m`f'-pf\ge0\Rightarrow(e^{-px}f)'\ge0`],
-  "calc.d1.lhopital": [t("皮亚诺余项用于极限与定阶；拉格朗日余项用于证明与误差估计，ξ 介于展开点与 x 之间。"), m`f(x)=\sum_{k=0}^{n}\frac{f^{(k)}(a)}{k!}(x-a)^k+\frac{f^{(n+1)}(\xi)}{(n+1)!}(x-a)^{n+1}`, m`e^x=1+x+\frac{x^2}{2}+\frac{x^3}{6}+o(x^3),\quad\frac{1}{1-x}=1+x+x^2+x^3+o(x^3)`, m`\sin x=x-\frac{x^3}{6}+o(x^3),\quad\cos x=1-\frac{x^2}{2}+\frac{x^4}{24}+o(x^4)`, m`\tan x=x+\frac{x^3}{3}+o(x^3),\quad\arctan x=x-\frac{x^3}{3}+o(x^3)`, m`\ln(1+x)=x-\frac{x^2}{2}+\frac{x^3}{3}+o(x^3),\quad(1+x)^a=1+ax+\frac{a(a-1)}{2}x^2+o(x^2)`],
-  "calc.d1.sketch": [t("只在同一连通区间内由导数判单调；二阶导为零只是拐点候选。"), m`f'>0\Rightarrow f\text{递增},\quad f'<0\Rightarrow f\text{递减}`, m`f':+\to-\Rightarrow\text{极大},\quad f':-\to+\Rightarrow\text{极小}`, m`f'(a)=0:\quad f''(a)>0\Rightarrow\text{严格极小},\ f''(a)<0\Rightarrow\text{严格极大}`, m`f''>0\Rightarrow\text{图像在切线上方};\quad\text{拐点须两侧凹凸改变}`, m`\text{曲率 }K=\frac{|y''|}{(1+y'^2)^{3/2}},\quad\text{曲率半径 }R=\frac{1}{K}`],
-  "calc.d1.phys": [t("s 是位置，v 是有向速度；速率取绝对值，加速须检查速度与加速度同号。"), m`v=s'(t),\quad a=v'(t),\quad\text{速率}=|v|`, m`va>0\Rightarrow\text{速率增加},\quad va<0\Rightarrow\text{速率减小}`, m`\frac{dV}{dt}=\frac{dV}{dr}\frac{dr}{dt},\quad V_{\text{球}}=\frac43\pi r^3`],
-  "calc.i1.def": [t("连续 f 可用牛顿—莱布尼茨；变上限为复合函数时乘内层导数。"), m`\int_a^b f(x)\,dx=F(b)-F(a),\quad F'=f,\quad\lim_{n\to\infty}\frac{1}{n}\sum_{k=1}^n f\!\left(\frac{k}{n}\right)=\int_0^1 f(x)\,dx`, m`\frac{d}{dx}\int_{u(x)}^{v(x)}f(t)\,dt=f(v)v'-f(u)u'`, m`\int_{-a}^a f(x)\,dx=\begin{cases}0&f\text{奇}\\2\int_0^a f(x)\,dx&f\text{偶}\end{cases},\quad\int_a^b f(x)\,dx=\int_a^b f(a+b-x)\,dx`, m`\int_0^{\pi/2}\sin^n x\,dx=\int_0^{\pi/2}\cos^n x\,dx=\frac{(n-1)!!}{n!!}\cdot\begin{cases}\pi/2&n\text{偶}\\1&n\text{奇}\end{cases}`],
-  "calc.i1.tech": [t("优先凑微分；定积分换元同步换限。有理式先化真分式，再分解分母。原函数只在相应定义区间讨论；保留积分常数，并用求导验算。"), m`u=\varphi(x):\quad\int_a^b f(\varphi(x))\varphi'(x)\,dx=\int_{\varphi(a)}^{\varphi(b)}f(u)\,du`, m`\int_a^b u\,dv=[uv]_a^b-\int_a^b v\,du`, m`\sqrt{a^2-x^2}:x=a\sin t;\quad\sqrt{a^2+x^2}:x=a\tan t\quad(a>0)`, m`t=\tan(x/2):\quad\sin x=\frac{2t}{1+t^2},\ \cos x=\frac{1-t^2}{1+t^2},\ dx=\frac{2\,dt}{1+t^2}`, m`\int x^a\,dx=\frac{x^{a+1}}{a+1}+C\ (a\ne-1),\quad\int\frac{dx}x=\ln|x|+C`, m`\int\frac{dx}{x^2+a^2}=\frac{1}{a}\arctan\frac{x}{a}+C,\quad\int\frac{dx}{\sqrt{a^2-x^2}}=\arcsin\frac{x}{a}+C`, m`\int\frac{dx}{\sqrt{x^2\pm a^2}}=\ln|x+\sqrt{x^2\pm a^2}|+C,\quad\int\sec x\,dx=\ln|\sec x+\tan x|+C`, m`\int\frac{f'(x)}{f(x)}\,dx=\ln|f(x)|+C\quad(f\ne0)`],
-  "calc.i1.improper": [t("每个无穷端点、瑕点分别取极限；所有部分收敛才收敛，不用对称抵消代替。"), m`\int_a^\infty f=\lim_{R\to\infty}\int_a^R f,\qquad\int_a^b f=\lim_{\varepsilon\to0^+}\int_{a+\varepsilon}^b f\quad(a\text{为瑕点})`, m`\int_1^\infty x^{-p}\,dx<\infty\iff p>1,\qquad\int_0^1 x^{-p}\,dx<\infty\iff p<1`, m`0\le f\le g,\ \int g<\infty\Rightarrow\int f<\infty`, m`\Gamma(\alpha)=\int_0^{+\infty}x^{\alpha-1}e^{-x}\,dx,\quad\Gamma(n+1)=n!,\quad\Gamma\!\left(\frac12\right)=\sqrt\pi,\quad\int_0^{+\infty}e^{-x^2}\,dx=\frac{\sqrt\pi}{2}`],
-  "calc.i1.app": [t("面积与半径取非负；绕坐标轴旋转时先选垫片或薄壳。"), m`S=\int_a^b|f-g|\,dx,\quad V=\pi\int_a^b(R^2-r^2)\,dx`, m`V_{\text{壳}}=2\pi\int_a^b r(x)h(x)\,dx`, m`L=\int_a^b\sqrt{1+(y')^2}\,dx,\quad S_{\text{旋转}}=2\pi\int r\,ds`],
-  "calc.i1.ineq": [t("比较积分先检查积分区间方向；积分中值定理要求 f 连续，权函数非负且积分为正。"), m`f\le g\Rightarrow\int_a^b f\le\int_a^b g\quad(a<b)`, m`\left|\int_a^b f\right|\le\int_a^b|f|,\quad\left(\int_a^b fg\right)^2\le\int_a^b f^2\int_a^b g^2`, m`\int_a^b f(x)w(x)\,dx=f(\xi)\int_a^b w(x)\,dx,\quad\xi\in[a,b]`],
-  "calc.i1.phys": [t("功沿位移积分；液体压力按深度取压强，量纲保持一致。"), m`W=\int_a^b F(x)\,dx,\quad F_{\text{液}}=\int\rho g h\,d\sigma`, m`\Delta s=\int_{t_1}^{t_2}v(t)\,dt,\quad\text{路程}=\int_{t_1}^{t_2}|v(t)|\,dt`, m`m=\int_a^b\lambda(x)\,dx,\quad\bar x=\frac1m\int_a^b x\lambda(x)\,dx`],
-  "calc.geom.vec": [t("夹角公式要求向量非零；叉积方向按右手规则。"), m`a\cdot b=|a||b|\cos\theta,\quad|a\times b|=|a||b|\sin\theta`, m`a\perp b\iff a\cdot b=0,\quad a\parallel b\iff a\times b=0`, m`V=|a\cdot(b\times c)|,\quad a,b,c\text{共面}\iff a\cdot(b\times c)=0`],
-  "calc.geom.plane": [t("平面用法向量 n，直线用方向向量 s；分母分量为零时改用参数式。"), m`\Pi:n\cdot(r-r_0)=0,\qquad L:r=r_0+ts`, m`d(P,\Pi)=\frac{|Ax_0+By_0+Cz_0+D|}{\sqrt{A^2+B^2+C^2}}`, m`d(P,L)=\frac{|(P-r_0)\times s|}{|s|},\quad\sin\angle(L,\Pi)=\frac{|s\cdot n|}{|s||n|}`],
-  "calc.geom.quad": [t("先辨符号与中心，再用坐标平面截面判断形状；a、b、c 均为正数。"), m`\frac{x^2}{a^2}+\frac{y^2}{b^2}+\frac{z^2}{c^2}=1\quad(\text{椭球})`, m`z=\frac{x^2}{a^2}+\frac{y^2}{b^2}\quad(\text{椭圆抛物面}),\qquad\frac{x^2}{a^2}+\frac{y^2}{b^2}-\frac{z^2}{c^2}=0\quad(\text{锥面})`, m`\frac{x^2}{a^2}+\frac{y^2}{b^2}-\frac{z^2}{c^2}=1\quad(\text{单叶双曲面})`],
-  "calc.m.partial": [t("全微分是线性近似；偏导存在未必连续或可微，偏导连续是可微的充分条件。"), m`df=f_x\,dx+f_y\,dy,\quad\Delta f=f_x\Delta x+f_y\Delta y+o(\sqrt{\Delta x^2+\Delta y^2})`, m`z=f(u,v):\quad z_x=f_u u_x+f_v v_x`, m`z_{xx}=f_{uu}u_x^2+2f_{uv}u_xv_x+f_{vv}v_x^2+f_u u_{xx}+f_v v_{xx}`, m`f_{xy},f_{yx}\text{连续}\Rightarrow f_{xy}=f_{yx}`],
-  "calc.m.dir": [t("方向向量先单位化；方向导数公式要求 f 在该点可微。"), m`e=\frac{l}{|l|},\quad\nabla f=(f_x,f_y,f_z),\quad D_e f=\nabla f\cdot e`, m`\max_{|e|=1}D_e f=|\nabla f|,\quad\min_{|e|=1}D_e f=-|\nabla f|`, m`\nabla f\ne0:\quad e_{\max}=\nabla f/|\nabla f|`],
-  "calc.m.impl": [t("F 为 C¹ 且 F_z≠0 时局部确定 z(x,y)；隐式曲面梯度非零时可作法向。"), m`F(x,y,z)=0:\quad z_x=-F_x/F_z,\quad z_y=-F_y/F_z`, m`F_x(P)(x-x_0)+F_y(P)(y-y_0)+F_z(P)(z-z_0)=0`, m`r=r(t):\quad\text{切线 }r_0+\lambda r'(t_0),\quad\text{法平面 }r'(t_0)\cdot(r-r_0)=0`],
-  "calc.m.ext": [t("内部极值先找驻点；二阶判别要求邻域内二阶偏导连续。"), m`f_x=f_y=0,\quad A=f_{xx},\ B=f_{xy},\ C=f_{yy},\quad\Delta=AC-B^2`, m`\Delta>0:\ A>0\Rightarrow\text{极小},\ A<0\Rightarrow\text{极大};\quad\Delta<0\Rightarrow\text{鞍点}`, m`\Delta=0\Rightarrow\text{另行判别};\qquad\nabla f=\lambda\nabla g,\ g=0\quad(\nabla g\ne0)`, t("闭有界区域求最值：内部驻点、边界约束点、顶点与特殊点均须比较。")],
-  "calc.m.dbl": [t("先画 D，再定内外限；一般换元要求一一可微且雅可比非零，取绝对值。"), m`\iint_D f(x,y)\,d\sigma=\int_a^b\!dx\int_{\varphi_1(x)}^{\varphi_2(x)}f(x,y)\,dy`, m`x=r\cos\theta,\ y=r\sin\theta:\quad d\sigma=r\,dr\,d\theta`, m`\iint_D f(x,y)\,dx\,dy=\iint_G f(x(u,v),y(u,v))\left|\frac{\partial(x,y)}{\partial(u,v)}\right|\,du\,dv`],
-  "calc.m.tpl": [t("柱坐标适合轴对称区域；球坐标中 φ 为从正 z 轴量起的极角。"), m`x=r\cos\theta,\ y=r\sin\theta:\quad dv=r\,dr\,d\theta\,dz`, m`x=\rho\sin\varphi\cos\theta,\ y=\rho\sin\varphi\sin\theta,\ z=\rho\cos\varphi`, m`dv=\rho^2\sin\varphi\,d\rho\,d\varphi\,d\theta,\quad0\le\varphi\le\pi,\quad0\le\theta\le2\pi`],
-  "calc.m.app": [t("ρ 为密度；质量、形心、转动惯量使用同一积分区域。"), m`M=\iiint_\Omega\rho\,dv,\quad\bar x=\frac{\iiint_\Omega x\rho\,dv}{M}`, m`J_z=\iiint_\Omega(x^2+y^2)\rho\,dv,\quad\bar y=\frac{\iiint_\Omega y\rho\,dv}{M}`, m`\rho=\text{常数且区域关于}x=0\text{对称}\Rightarrow\bar x=0`],
-  "calc.ode.1st": [t("先按方程结构分类；除以 g(y) 前另查 g(y)=0 的常值解。"), m`y'=f(x)g(y)\Rightarrow\int\frac{dy}{g(y)}=\int f(x)\,dx+C`, m`y'+P(x)y=Q(x)\Rightarrow y=e^{-\int P\,dx}\left(C+\int Qe^{\int P\,dx}\,dx\right)`, m`y'=F(y/x):\quad y=ux,\quad xu'=F(u)-u`, m`y'+Py=Qy^n:\quad z=y^{1-n}\Rightarrow z'+(1-n)Pz=(1-n)Q\quad(y\ne0)`],
-  "calc.ode.2nd": [t("先齐次通解 Y 后特解 y*；α、β 对应特征根，β>0。常系数方程才直接用特征方程。"), m`y''+py'+qy=f(x),\quad r^2+pr+q=0,\quad y=Y+y^*`, m`Y=\begin{cases}C_1e^{r_1x}+C_2e^{r_2x}&r_1\ne r_2\in\mathbb R\\(C_1+C_2x)e^{rx}&r\text{二重根}\\e^{\alpha x}(C_1\cos\beta x+C_2\sin\beta x)&r=\alpha\pm i\beta\end{cases}`, m`f(x)=e^{\lambda x}P_m(x):\quad y^*=x^k e^{\lambda x}Q_m(x)`, m`f(x)=e^{\alpha x}[P_l\cos\beta x+Q_m\sin\beta x]:\ y^*=x^k e^{\alpha x}[R_n\cos\beta x+S_n\sin\beta x]`, t("k 是 λ（或 α±iβ）作为特征根的重数；非特征根取 k=0，n=max(l,m)，代回比较系数。")],
-  "calc.ode.euler": [t("在 x>0 或 x<0 的区间分别讨论；缺 y 或缺 x 可降阶。"), m`x^2y''+axy'+by=0,\quad y=x^r\Rightarrow r(r-1)+ar+b=0\quad(x>0)`, m`t=\ln x:\quad xy'=y_t,\quad x^2y''=y_{tt}-y_t`, m`y''=f(x,y'):\ p=y'\Rightarrow p'=f(x,p)`, m`y''=f(y,y'):\ p=p(y)\Rightarrow y''=p\,dp/dy`],
-  "calc.ode.app": [t("把变化率写成方程，注明初值和单位；混合问题先列流入减流出。"), m`m'=c_{\rm in}q_{\rm in}-\frac{m}{V(t)}q_{\rm out},\quad V'=q_{\rm in}-q_{\rm out}`, m`T'=-k(T-T_e)\Rightarrow T=T_e+(T_0-T_e)e^{-kt}`, m`y'=ky\Rightarrow y=y_0e^{k(t-t_0)}`],
-  "calc.series.num": [t("先查通项趋零；正项可比较、比值或根值，变号级数先查绝对收敛。"), m`\sum a_n\text{收敛}\Rightarrow a_n\to0,\quad\sum n^{-p}\text{收敛}\iff p>1,\quad\sum q^n\text{收敛}\iff|q|<1`, m`a_n,b_n>0:\ \lim\frac{a_n}{b_n}=l\in(0,+\infty)\Rightarrow\sum a_n\text{与}\sum b_n\text{同敛散}`, m`a_n>0,\quad\ell=\lim\frac{a_{n+1}}{a_n}\text{ 或 }\lim\sqrt[n]{a_n}:\quad\ell<1\Rightarrow\text{收敛},\ \ell>1\Rightarrow\text{发散}`, m`b_n\downarrow0\Rightarrow\sum(-1)^{n-1}b_n\text{收敛};\qquad\sum|a_n|<\infty\Rightarrow\sum a_n\text{收敛}`],
-  "calc.series.power": [t("x₀ 为中心；比值极限存在时可算半径，端点必须逐个代回。"), m`\sum a_n(x-x_0)^n,\quad R=\lim\left|\frac{a_n}{a_{n+1}}\right|`, m`\frac{1}{1\mp x}=\sum_{n=0}^\infty(\pm1)^n x^n,\quad\ln(1+x)=\sum_{n=1}^\infty\frac{(-1)^{n-1}}n x^n\quad(|x|<1)`, m`e^x=\sum_{n=0}^\infty\frac{x^n}{n!},\quad\sin x=\sum_{n=0}^\infty\frac{(-1)^nx^{2n+1}}{(2n+1)!},\quad\cos x=\sum_{n=0}^\infty\frac{(-1)^nx^{2n}}{(2n)!}`, m`S'(x)=\sum_{n=1}^\infty na_n(x-x_0)^{n-1},\quad\int_{x_0}^x S(t)\,dt=\sum_{n=0}^\infty\frac{a_n}{n+1}(x-x_0)^{n+1}`],
-  "calc.series.fourier": [t("周期 2l，先选奇延拓或偶延拓；分段光滑时在间断点收敛到左右极限均值。"), m`f\sim\frac{a_0}2+\sum_{n=1}^\infty\left(a_n\cos\frac{n\pi x}{l}+b_n\sin\frac{n\pi x}{l}\right)`, m`a_n=\frac1l\int_{-l}^l f(x)\cos\frac{n\pi x}{l}\,dx,\quad b_n=\frac1l\int_{-l}^l f(x)\sin\frac{n\pi x}{l}\,dx`, m`f\text{偶}\Rightarrow b_n=0,\quad f\text{奇}\Rightarrow a_n=0,\qquad S(x)=\frac{f(x^-)+f(x^+)}2`],
-  "calc.m.line": [t("第一类曲线积分无向；参数分段光滑，沿原曲线覆盖一次。"), m`\int_L f\,ds=\int_a^b f(r(t))|r'(t)|\,dt`, m`ds=\sqrt{(x')^2+(y')^2+(z')^2}\,dt,\quad\int_{-L}f\,ds=\int_L f\,ds`, m`y=g(x):\quad ds=\sqrt{1+(g')^2}\,dx\quad(x\text{递增})`],
-  "calc.m.line2": [t("第二类曲线积分有向；P、Q 为 C¹，格林公式取正向闭边界。"), m`\int_L P\,dx+Q\,dy+R\,dz=\int_a^b[P(r)x'+Q(r)y'+R(r)z']\,dt`, m`\oint_{\partial D}P\,dx+Q\,dy=\iint_D(Q_x-P_y)\,dx\,dy`, m`\oint_{\partial S}F\cdot dr=\iint_S(\nabla\times F)\cdot n\,dS`, t("斯托克斯：边界与法向符合右手规则，可换更简单的跨界面，但不得穿过场的奇点。"), m`P=u_x,\ Q=u_y\Rightarrow\int_A^B P\,dx+Q\,dy=u(B)-u(A)`, t("在单连通区域内，Pᵧ=Qₓ 才可据此判断路径无关；有洞时另查。")],
-  "calc.m.surf": [t("第一类曲面积分与面侧无关；图形投影需乘面积伸缩因子。"), m`z=g(x,y):\quad\iint_\Sigma f\,dS=\iint_D f(x,y,g)\sqrt{1+g_x^2+g_y^2}\,dx\,dy`, m`\Sigma:r(u,v):\quad dS=|r_u\times r_v|\,du\,dv`, m`\iint_{-\Sigma}f\,dS=\iint_\Sigma f\,dS`],
-  "calc.m.surf2": [t("第二类曲面积分有向；高斯公式要求封闭曲面取外侧且 P、Q、R 在区域内一阶偏导连续（遇奇点须挖洞补面）。"), m`\iint_\Sigma R(x,y,z)\,dx\,dy=\pm\iint_{D_{xy}}R(x,y,z(x,y))\,dx\,dy\quad(\text{上侧取}+,\text{下侧取}-)`, m`\iint_\Sigma P\,dy\,dz+Q\,dz\,dx+R\,dx\,dy=\iint_\Sigma(P\cos\alpha+Q\cos\beta+R\cos\gamma)\,dS`, m`\oiint_{\partial\Omega}P\,dy\,dz+Q\,dz\,dx+R\,dx\,dy=\iiint_\Omega\left(\frac{\partial P}{\partial x}+\frac{\partial Q}{\partial y}+\frac{\partial R}{\partial z}\right)dv`, m`z=z(x,y)\text{上侧法向}(-z_x,-z_y,1):\quad\iint_\Sigma(-Pz_x-Qz_y+R)\,dx\,dy`],
-  "calc.m.formula": [t("F=(P,Q,R) 在所需区域内为 C¹；散度是标量，旋度是向量。"), m`\operatorname{div}F=P_x+Q_y+R_z`, m`\nabla\times F=(R_y-Q_z,\ P_z-R_x,\ Q_x-P_y)`, m`\nabla\times F=0\ \text{且区域单连通}\iff F\text{ 保守}`, m`F=\nabla u\Rightarrow\int_A^B F\cdot dr=u(B)-u(A)`, t("格林/高斯/斯托克斯公式是曲线/曲面积分的计算方法，见第二类曲线/曲面积分。")],
-  "la.det.def": [t("A、B 为同阶方阵；整体乘 k 等于每一行都乘 k，两行（列）成比例则行列式为零。"), m`|A^T|=|A|,\quad|AB|=|A||B|,\quad|kA|=k^n|A|`, m`R_i\leftrightarrow R_j:\ |A|\mapsto-|A|;\quad R_i\mapsto kR_i:\ |A|\mapsto k|A|`, m`R_i\mapsto R_i+kR_j\ (i\ne j):\quad |A|\text{不变（单行拆分具线性性）}`, m`|A|=0\iff\text{行（列）向量线性相关}`],
-  "la.det.compute": [t("先找零、提公因子、化三角；参数可能为零时分支，不能直接除。"), m`A\text{三角}\Rightarrow|A|=\prod_{i=1}^n a_{ii},\quad\left|\begin{matrix}A&B\\0&D\end{matrix}\right|=|A||D|,\quad\left|\begin{matrix}0&B_m\\C_n&D\end{matrix}\right|=(-1)^{mn}|B_m||C_n|`, m`|(b-a)E+a\mathbf{1}\mathbf{1}^T|=[b+(n-1)a](b-a)^{n-1}\quad(\text{行和相等})`, m`\left|\begin{matrix}1&x_1&\cdots&x_1^{n-1}\\1&x_2&\cdots&x_2^{n-1}\\\vdots&\vdots&&\vdots\\1&x_n&\cdots&x_n^{n-1}\end{matrix}\right|=\prod_{i<j}(x_j-x_i)`],
-  "la.det.cofactor": [t("Mᵢⱼ 删第 i 行、第 j 列；Aᵢⱼ 另带符号，伴随矩阵再转置（n≥2）。"), m`A_{ij}=(-1)^{i+j}M_{ij},\quad|A|=\sum_j a_{ij}A_{ij},\quad\sum_j a_{ij}A_{kj}=\begin{cases}|A|&i=k\\0&i\ne k\end{cases}`, m`A^*=(A_{ji}),\quad AA^*=A^*A=|A|E`, m`|A^*|=|A|^{n-1},\quad(kA)^*=k^{n-1}A^*,\quad(A^*)^*=|A|^{n-2}A`],
-  "la.mat.ops": [t("A 为 m×n，B 为 n×p 时乘积才有定义；乘法通常不可交换。"), m`(AB)_{ij}=\sum_{k=1}^n a_{ik}b_{kj},\quad(AB)^T=B^TA^T`, m`A(B+C)=AB+AC,\quad(A+B)^2=A^2+AB+BA+B^2`, m`A=\alpha\beta^T\ (\text{秩 1 矩阵})\Rightarrow A^k=(\beta^T\alpha)^{k-1}A`, m`AB=AC,\ A\text{可逆}\Rightarrow B=C;\quad AB=0\not\Rightarrow A=0\text{或}B=0`],
-  "la.mat.inv": [t("逆矩阵先证存在；A* 表示伴随矩阵，n≥2。"), m`A^{-1}\text{存在}\iff|A|\ne0\iff r(A)=n`, m`A^{-1}=\frac{A^*}{|A|},\quad(AB)^{-1}=B^{-1}A^{-1},\quad(A^T)^{-1}=(A^{-1})^T,\quad(A^*)^{-1}=\frac{A}{|A|}`, m`(A\mid E)\xrightarrow{\text{初等行变换}}(E\mid A^{-1}),\quad\begin{pmatrix}0&A\\B&0\end{pmatrix}^{-1}=\begin{pmatrix}0&B^{-1}\\A^{-1}&0\end{pmatrix}`, m`r(A^*)=\begin{cases}n&r(A)=n\\1&r(A)=n-1\\0&r(A)<n-1\end{cases}`],
-  "la.mat.rank": [t("A 为 m×n，B 为 n×p；秩是主元数，也是最大非零子式阶数。"), m`r(A)=r(A^T)=r(A^TA)=r(AA^T),\quad r(PAQ)=r(A)\quad(P,Q\text{可逆})`, m`r(A)+r(B)-n\le r(AB)\le\min\{r(A),r(B)\}`, m`AB=0\Rightarrow r(A)+r(B)\le n`, m`r(A+B)\le r(A)+r(B),\quad r(A)+r(B)\le r\begin{pmatrix}A&C\\0&B\end{pmatrix}\le r(A)+r(B)+r(C)`],
-  "la.eq.vector": [t("向量按列组成矩阵；主元列的编号要回到原矩阵取向量。个数大于维数必相关；部分相关⇒整体相关，整体无关⇒部分无关。"), m`A=(\alpha_1,\ldots,\alpha_s),\quad\text{线性无关}\iff r(A)=s`, m`\beta\text{可由}\alpha_1,\ldots,\alpha_s\text{线性表出}\iff r(A)=r(A\mid\beta)`, m`\text{极大无关组含向量个数}=r(A),\quad(\text{I})\text{与}(\text{II})\text{等价}\iff r(A)=r(B)=r(A\mid B)`],
-  "la.sp.basis": [t("基向量按列排列；过渡矩阵的列是新基在旧基中的坐标。"), m`(\beta_1,\ldots,\beta_n)=(\alpha_1,\ldots,\alpha_n)C,\quad x=Cy`, m`y=C^{-1}x,\qquad\text{解空间维数}=n-r(A)`, m`\dim(U+V)=\dim U+\dim V-\dim(U\cap V)`],
-  "la.sp.ortho": [t("施密特正交化要求原向量组线性无关；先正交化再单位化。正交矩阵的列（行）向量组均为标准正交基。"), m`\beta_1=\alpha_1,\quad\beta_k=\alpha_k-\sum_{j<k}\frac{(\alpha_k,\beta_j)}{(\beta_j,\beta_j)}\beta_j,\quad\eta_k=\frac{\beta_k}{\|\beta_k\|}`, m`Q^TQ=E\iff Q^{-1}=Q^T,\quad|Q|=\pm1`, m`\|Qx\|=\|x\|,\qquad(Qx,Qy)=(x,y)`],
-  "la.eq.solvability": [t("A 有 n 列；对增广矩阵消元，含参主元先讨论为零的情形。"), m`Ax=b:\quad\begin{cases}r(A)<r(A\mid b)&\text{无解}\\r(A)=r(A\mid b)=n&\text{唯一解}\\r(A)=r(A\mid b)<n&\text{无穷多解}\end{cases}`, m`Ax=0\text{有非零解}\iff r(A)<n`, m`|A|\ne0:\quad x_i=\frac{|A_i(b)|}{|A|}\quad(\text{克拉默法则})`],
-  "la.eq.structure": [
-    t("基础解系：Ax=0 的 s = n − r(A) 个线性无关解 ξ₁, …, ξₛ；η* 为 Ax=b 的特解（非齐通解 = 特解 + 齐次通解）。"),
-    m`Ax=0:\quad x=k_1\xi_1+k_2\xi_2+\cdots+k_s\xi_s\quad\bigl(s=n-r(A)\bigr)`,
-    m`Ax=b:\quad x=\eta^*+k_1\xi_1+k_2\xi_2+\cdots+k_s\xi_s`,
-    t("已知 η₁, η₂, …, ηₘ 均为 Ax=b 的解（特别地，两解相减 η₁ − η₂ 为 Ax=0 的解）："),
-    m`k_1\eta_1+\cdots+k_m\eta_m\begin{cases}\text{是 }Ax=b\text{ 的解}&\iff k_1+\cdots+k_m=1\\[2pt]\text{是 }Ax=0\text{ 的解}&\iff k_1+\cdots+k_m=0\end{cases}`,
+  "calc.limit.fn": [
+    fl("函数四大性态与高频推论", [
+      { from: "奇偶性（定义域对称）", arrow: "⇒", to: ["奇函数在 0 有定义 ⇒ f(0)=0；奇导变偶、偶导变奇", "原函数：偶函数的变上限积分 ∫₀ˣ f(t)dt 为奇函数；奇函数任意原函数均为偶函数"] },
+      { from: "周期性 f(x+T)=f(x)", arrow: "⇒", to: ["周期函数导数仍以 T 为周期", "∫₀ˣ f(t)dt 以 T 为周期 ⇔ ∫₀ᵀ f(t)dt = 0（极高频！）"] },
+      { from: "有界性判别", arrow: "⇒", to: ["闭区间连续 ⇒ 必有界", "开区间 (a,b) 连续且两端极限均有限 ⇒ 必有界（选填判有界秒杀！）"] },
+    ]),
   ],
-  "la.eq.common": [t("公共解联立方程组求解，同解要求两个齐次方程组解集完全相同；AᵀAx=0 与 Ax=0 恒同解。"), m`Ax=0\text{与}Bx=0\text{的公共解}\iff\begin{pmatrix}A\\B\end{pmatrix}x=0`, m`\text{公共解基础解系维数}=n-r\begin{pmatrix}A\\B\end{pmatrix}`, m`Ax=0\text{与}Bx=0\text{同解}\iff r(A)=r(B)=r\begin{pmatrix}A\\B\end{pmatrix}`],
-  "la.eig.value": [t("特征向量 ξ≠0；n 阶方阵有 n 个特征值（按重数计）。实对称矩阵特征值全为实数，不同特征值对应的特征向量正交。"), m`A\xi=\lambda\xi\iff(\lambda E-A)\xi=0,\qquad|\lambda E-A|=0`, m`\sum_{i=1}^n\lambda_i=\operatorname{tr}(A),\quad\prod_{i=1}^n\lambda_i=|A|`, m`A\xi=\lambda\xi\Rightarrow f(A)\xi=f(\lambda)\xi,\quad A^{-1}\mapsto\lambda^{-1},\quad A^*\mapsto\frac{|A|}{\lambda}`, m`1\le n-r(\lambda_i E-A)\le\lambda_i\text{的代数重数}`],
-  "la.eig.diag": [t("P 的列向量与对角阵 Λ 主对角线上特征值次序一一对应。"), m`P^{-1}AP=\Lambda\iff AP=P\Lambda`, m`A\text{可相似对角化}\iff\text{对每个}k_i\text{重特征值}\lambda_i,\ n-r(\lambda_i E-A)=k_i`, m`A^T=A\text{（实对称）}\Rightarrow Q^TAQ=\Lambda,\quad Q^TQ=E`, m`A^k=P\Lambda^kP^{-1}`],
-  "la.eig.similar": [t("相似保留特征多项式、特征值、秩、迹与行列式；这些相同一般不足以保证相似。"), m`B=P^{-1}AP\Rightarrow|\lambda E-B|=|\lambda E-A|,\quad|B|=|A|,\quad\operatorname{tr}(B)=\operatorname{tr}(A)`, m`r(B-\lambda E)=r(A-\lambda E),\quad f(B)\sim f(A)`, m`A,B\text{均可对角化且特征值及重数相同}\Rightarrow A\sim B`],
-  "la.eig.quad": [t("A 取实对称矩阵；交叉项系数是非对角元的两倍。实对称矩阵相似必合同，合同必等价。"), m`f(x)=x^TAx=\sum_i a_{ii}x_i^2+2\sum_{i<j}a_{ij}x_ix_j`, m`x=Cy\Rightarrow f=y^TC^TACy\quad(C\text{可逆})`, m`Q^TAQ=\operatorname{diag}(\lambda_1,\ldots,\lambda_n)\Rightarrow f=\sum_{i=1}^n\lambda_i y_i^2`, m`A\simeq B\iff\text{正负惯性指数 }(p,q)\text{ 相同},\quad r(A)=p+q`],
-  "la.eig.pd": [t("A 为实对称矩阵；Δₖ 为前 k 行列组成的顺序主子式，半正定须看全部主子式。必要条件：aᵢᵢ>0 且 |A|>0。"), m`A\text{正定}\iff x^TAx>0\ (x\ne0)\iff\lambda_i>0\iff\Delta_k>0\ (k=1,\ldots,n)`, m`A\text{正定}\iff A\simeq E\iff\exists\text{可逆}C\text{使}A=C^TC`, m`A\text{负定}\iff(-1)^k\Delta_k>0;\qquad A\text{半正定}\iff\lambda_i\ge0\iff\text{全部主子式非负}`],
-  "prob.base.axioms": [t("古典概型限于有限等可能结果（k 为有利数、n 为总数）；几何概型用长度、面积或体积比。"), m`P(\Omega)=1,\quad P(A)\ge0,\quad P(\overline A)=1-P(A),\quad\overline{A\cup B}=\overline A\,\overline B`, m`P(A\cup B)=P(A)+P(B)-P(AB),\quad P(A-B)=P(A)-P(AB)`, m`P(A\cup B\cup C)=P(A)+P(B)+P(C)-P(AB)-P(AC)-P(BC)+P(ABC)`, m`P(A)=\frac{k}{n},\quad C_n^k=\frac{n!}{k!(n-k)!},\quad P\left(\bigcup_i A_i\right)=\sum_iP(A_i)\ (A_i\text{两两互斥})`],
-  "prob.base.cond": [t("Aᵢ 两两互斥且构成完备事件组；条件事件概率均须大于 0。"), m`P(A\mid B)=\frac{P(AB)}{P(B)},\quad P(AB)=P(A)P(B\mid A),\quad P(ABC)=P(A)P(B\mid A)P(C\mid AB)`, m`P(B)=\sum_iP(A_i)P(B\mid A_i)`, m`P(A_j\mid B)=\frac{P(A_j)P(B\mid A_j)}{\sum_iP(A_i)P(B\mid A_i)}`],
-  "prob.base.indep": [t("正概率的互斥事件不独立；两两独立不足以推出相互独立。A,B 独立 ⇔ Ā,B 独立 ⇔ Ā,B̄ 独立。"), m`A,B\text{相互独立}\iff P(AB)=P(A)P(B)\iff P(A\mid B)=P(A)\ (P(B)>0)`, m`P\left(\bigcap_{i\in J}A_i\right)=\prod_{i\in J}P(A_i)\quad(\text{相互独立须对任意子集})`, m`B(n,p):P\{X=k\}=C_n^k p^k(1-p)^{n-k};\quad G(p):P\{X=k\}=(1-p)^{k-1}p\ (k\ge1)`],
-  "prob.rv.dist": [t("F 单调不减、右连续，F(−∞)=0、F(+∞)=1；P{X=a}=F(a)−F(a⁻)。λ 按泊松或指数分布区分。"), m`F(x)=P\{X\le x\},\quad P\{a<X\le b\}=F(b)-F(a),\quad F(x)=\int_{-\infty}^x f(t)\,dt`, m`B(n,p):P\{X=k\}=C_n^k p^k(1-p)^{n-k},\quad P(\lambda):P\{X=k\}=\frac{\lambda^k}{k!}e^{-\lambda}`, m`U(a,b):f(x)=\frac{1}{b-a}\ (a<x<b),\quad E(\lambda):f(x)=\lambda e^{-\lambda x},\ F(x)=1-e^{-\lambda x}\ (x>0)`, m`E(\lambda)\text{无记忆性}:P\{X>s+t\mid X>s\}=P\{X>t\}`, m`N(\mu,\sigma^2):\frac{X-\mu}{\sigma}\sim N(0,1),\quad P\{a<X\le b\}=\Phi\!\left(\frac{b-\mu}{\sigma}\right)-\Phi\!\left(\frac{a-\mu}{\sigma}\right),\ \Phi(-x)=1-\Phi(x)`],
-  "prob.rv.func": [t("先定 Y 的取值范围；单调分支中 g 可微且导数非零时用密度变换，非单调/分段优先分布函数法。"), m`Y=g(X):\quad F_Y(y)=P\{g(X)\le y\},\quad f_Y(y)=\sum_{g(x_i)=y}\frac{f_X(x_i)}{|g'(x_i)|}`, m`Y=aX+b\ (a\ne0):\quad f_Y(y)=\frac{1}{|a|}f_X\!\left(\frac{y-b}{a}\right);\quad X\sim N(\mu,\sigma^2)\Rightarrow aX+b\sim N(a\mu+b,a^2\sigma^2)`, m`Y=X^2:\quad f_Y(y)=\frac{f_X(\sqrt y)+f_X(-\sqrt y)}{2\sqrt y}\ (y>0);\quad X\sim N(0,1)\Rightarrow X^2\sim\chi^2(1)`],
-  "prob.mv.joint": [t("先画非零区域 D；边缘积分沿另一坐标全范围，条件密度的分母须为正。"), m`F(x,y)=P\{X\le x,Y\le y\},\quad P\{x_1<X\le x_2,y_1<Y\le y_2\}=F(x_2,y_2)-F(x_1,y_2)-F(x_2,y_1)+F(x_1,y_1)`, m`f_X(x)=\int_{-\infty}^{+\infty}f(x,y)\,dy,\quad f_Y(y)=\int_{-\infty}^{+\infty}f(x,y)\,dx,\quad f_{Y\mid X}(y\mid x)=\frac{f(x,y)}{f_X(x)}`, m`\text{二维正态 }N(\mu_1,\mu_2;\sigma_1^2,\sigma_2^2;\rho):\ Y\mid(X=x)\sim N\!\left(\mu_2+\rho\frac{\sigma_2}{\sigma_1}(x-\mu_1),\ (1-\rho^2)\sigma_2^2\right)`],
-  "prob.mv.indep": [t("离散型要求 pᵢⱼ=pᵢ·p·ⱼ；连续型要求 f(x,y)=f_X(x)f_Y(y) 几乎处处成立。"), m`X,Y\text{相互独立}\iff F(x,y)=F_X(x)F_Y(y)\iff f(x,y)=f_X(x)f_Y(y)`, m`X,Y\text{相互独立}\Rightarrow E[g(X)h(Y)]=E[g(X)]E[h(Y)],\quad\operatorname{Cov}(X,Y)=0`, t("不相关一般不能推出独立；二维正态分布下「不相关 ⇔ 独立」。")],
-  "prob.mv.func": [t("先由原变量范围定新区域；相互独立时才把联合密度换成边缘乘积。"), m`Z=X+Y:\quad f_Z(z)=\int_{-\infty}^{+\infty}f_{X,Y}(x,z-x)\,dx;\qquad Z=\frac{X}{Y}:\ f_Z(z)=\int_{-\infty}^{+\infty}|y|f_{X,Y}(zy,y)\,dy`, m`X,Y\text{相互独立}:\quad F_{\max}(z)=F_X(z)F_Y(z),\quad F_{\min}(z)=1-[1-F_X(z)][1-F_Y(z)]`, m`\text{独立可加性}:N+N\sim N,\quad P(\lambda_1)+P(\lambda_2)\sim P(\lambda_1+\lambda_2),\quad B(n_1,p)+B(n_2,p)\sim B(n_1+n_2,p)`, m`X\sim E(\lambda_1),Y\sim E(\lambda_2)\text{独立}\Rightarrow\min(X,Y)\sim E(\lambda_1+\lambda_2)`],
-  "prob.num.ex": [t("期望存在须绝对可积；方差、协方差公式要求二阶矩有限。"), m`E[g(X)]=\int_{-\infty}^{+\infty}g(x)f_X(x)\,dx,\quad D(X)=E(X^2)-[E(X)]^2`, m`E(aX+bY)=aE(X)+bE(Y),\quad D(aX+bY)=a^2D(X)+b^2D(Y)+2ab\operatorname{Cov}(X,Y)`, m`\operatorname{Cov}(X,Y)=E(XY)-E(X)E(Y),\quad\operatorname{Cov}(aX+b,cY+d)=ac\operatorname{Cov}(X,Y)`, m`\rho_{XY}=\frac{\operatorname{Cov}(X,Y)}{\sqrt{D(X)}\sqrt{D(Y)}}\in[-1,1];\quad U\sim N(0,1)\Rightarrow E|U|=\sqrt{\frac{2}{\pi}}`, m`B(n,p):np,np(1-p);\quad P(\lambda):\lambda,\lambda;\quad G(p):\frac{1}{p},\frac{1-p}{p^2}`, m`U(a,b):\frac{a+b}{2},\frac{(b-a)^2}{12};\quad E(\lambda):\frac{1}{\lambda},\frac{1}{\lambda^2}`],
-  "prob.num.ineq": [t("马尔可夫要求非负随机变量；切比雪夫要求方差有限，ε>0。"), m`X\ge0:\quad P\{X\ge a\}\le\frac{E(X)}{a}\quad(a>0)`, m`P\{|X-E(X)|\ge\varepsilon\}\le\frac{D(X)}{\varepsilon^2}`, m`P\{|X-E(X)|<\varepsilon\}\ge1-\frac{D(X)}{\varepsilon^2}`, t("下界小于零时取零；这类界通常不是精确概率。")],
-  "prob.limit.lln": [t("独立同分布且 E|X|<∞ 时样本均值依概率收敛于 μ（辛钦）；切比雪夫大数定律另要求方差有界。"), m`\overline X_n=\frac{1}{n}\sum_{i=1}^n X_i\xrightarrow{P}\mu=E(X)`, m`P\{|\overline X_n-\mu|\ge\varepsilon\}\le\frac{\sigma^2}{n\varepsilon^2}\to0`, m`\frac{n_A}{n}\xrightarrow{P}P(A)\quad(\text{伯努利大数定律})`],
-  "prob.limit.clt": [t("Xᵢ 独立同分布，均值 μ、方差 σ²>0；Φ(x) 为标准正态分布函数。"), m`\frac{\sum_{i=1}^n X_i-n\mu}{\sigma\sqrt n}=\frac{\overline X-\mu}{\sigma/\sqrt n}\xrightarrow{d}N(0,1)`, m`P\{a\le\sum_{i=1}^n X_i\le b\}\approx\Phi\!\left(\frac{b-n\mu}{\sigma\sqrt n}\right)-\Phi\!\left(\frac{a-n\mu}{\sigma\sqrt n}\right)`, m`X\sim B(n,p):\quad P\{X\le k\}\approx\Phi\!\left(\frac{k-np}{\sqrt{np(1-p)}}\right)`, t("n 充分大时可直接用隶莫弗—拉普拉斯中心极限定理近似计算。")],
-  "prob.stat.sample": [t("一般总体（均值 μ、方差 σ²）的样本矩不要求总体正态；S² 分母为 n−1（n≥2）。"), m`\overline X=\frac{1}{n}\sum_{i=1}^n X_i,\quad S^2=\frac{1}{n-1}\sum_{i=1}^n(X_i-\overline X)^2,\quad E(\overline X)=\mu,\ D(\overline X)=\frac{\sigma^2}{n},\ E(S^2)=\sigma^2`, t("三大抽样分布（χ²、t、F 分布）的一般定义与高频性质："), m`\chi^2(n):\ X_i\stackrel{\text{i.i.d.}}{\sim}N(0,1)\Rightarrow\sum_{i=1}^n X_i^2\sim\chi^2(n),\quad E=n,\ D=2n,\quad\chi^2(n_1)+\chi^2(n_2)\stackrel{\text{独立}}{\sim}\chi^2(n_1+n_2)`, m`t(n):\ X\sim N(0,1),Y\sim\chi^2(n)\text{独立}\Rightarrow T=\frac{X}{\sqrt{Y/n}}\sim t(n),\quad t_{1-\alpha}(n)=-t_\alpha(n)`, m`F(m,n):\ U\sim\chi^2(m),V\sim\chi^2(n)\text{独立}\Rightarrow F=\frac{U/m}{V/n}\sim F(m,n),\quad\frac{1}{F}\sim F(n,m),\quad F_{1-\alpha}(m,n)=\frac{1}{F_\alpha(n,m)}`, m`T\sim t(n)\Rightarrow T^2\sim F(1,n)`, t("正态总体 N(μ,σ²) 抽样分布（区分已知 μ 自由度 n 与未知 μ 用 X̄ 自由度 n−1）："), m`\frac{\overline X-\mu}{\sigma/\sqrt n}\sim N(0,1),\quad\frac{1}{\sigma^2}\sum_{i=1}^n(X_i-\mu)^2\sim\chi^2(n),\quad\frac{(n-1)S^2}{\sigma^2}\sim\chi^2(n-1)`, m`\overline X\text{与}S^2\text{相互独立},\quad\frac{\overline X-\mu}{S/\sqrt n}\sim t(n-1)`],
-  "prob.stat.est": [t("分位数统一用上侧 α 分位数；参数在取值边界时按单调性直接取 min Xᵢ 或 max Xᵢ 作 MLE。"), m`P\{Z>z_\alpha\}=\alpha,\quad P\{T>t_\alpha(n)\}=\alpha,\quad P\{\chi^2>\chi^2_\alpha(n)\}=\alpha`, m`\text{矩估计}:\frac{1}{n}\sum_{i=1}^n X_i^k=E(X^k);\qquad\hat\theta_{\text{MLE}}=\arg\max_\theta\prod_{i=1}^n f(x_i;\theta)`, m`\text{无偏}:E(\hat\theta)=\theta;\quad\text{有效}:D(\hat\theta_1)<D(\hat\theta_2);\quad\text{一致}:\hat\theta_n\xrightarrow{P}\theta\ (\text{无偏且}D\to0\text{充分})`, m`\sigma\text{已知}:\ \mu\in\left[\bar x-z_{\alpha/2}\frac{\sigma}{\sqrt n},\ \bar x+z_{\alpha/2}\frac{\sigma}{\sqrt n}\right];\quad\sigma\text{未知}:\ \mu\in\left[\bar x-t_{\alpha/2}(n-1)\frac{s}{\sqrt n},\ \bar x+t_{\alpha/2}(n-1)\frac{s}{\sqrt n}\right]`, m`\sigma^2\in\left[\frac{(n-1)s^2}{\chi^2_{\alpha/2}(n-1)},\ \frac{(n-1)s^2}{\chi^2_{1-\alpha/2}(n-1)}\right]`],
-  "prob.stat.hyp": [t("分位数采用上侧定义；正态总体检验先由备择假设 H₁ 确定拒绝域方向。"), m`P\{Z>z_\alpha\}=\alpha,\quad Z=\frac{\overline X-\mu_0}{\sigma/\sqrt n},\quad T=\frac{\overline X-\mu_0}{S/\sqrt n}\sim t(n-1)\quad(H_0\text{成立})`, m`H_1:\mu>\mu_0\Rightarrow Z\ge z_\alpha;\quad H_1:\mu<\mu_0\Rightarrow Z\le-z_\alpha;\quad H_1:\mu\ne\mu_0\Rightarrow|Z|\ge z_{\alpha/2}`, m`\text{方差检验}(\mu\text{未知}):\quad\chi^2=\frac{(n-1)S^2}{\sigma_0^2}\sim\chi^2(n-1)\quad(H_0\text{成立})`, m`\alpha=P\{\text{拒绝}H_0\mid H_0\text{为真}\},\quad\beta=P\{\text{接受}H_0\mid H_0\text{为假}\}`, t("σ 未知时均值检验改用 T 统计量与 t 分位数。")]
+  "calc.limit.def": [
+    fl("极限存在性、局部保号与运算法则", [
+      { from: "双侧极限存在", arrow: "⇔", to: "左右极限存在且相等（分段点、|x|、e^(1/x)、arctan(1/x) 必分左右！）" },
+      { from: "极限存在 ⇒ 性质", arrow: "⇒", to: ["局部有界（注意仅去心邻域，且与点值 f(a) 无关）", "局部保号：lim f(x)=A>0 ⇒ 去心邻域内 f(x)>0；反之 f(x)≥0 且极限存在 ⇒ A≥0（等号必补！）"] },
+      { from: "四则与夹逼雷区", arrow: "→", to: ["「存在 ± 不存在」必不存在；「不存在 ± 不存在」可能存在", "分母极限为 0 而整体极限存在 ⇒ 分子极限必为 0（反求未知参数第一步！）"] },
+    ]),
+    m`f\le h\le g,\ \lim f=\lim g=L\Longrightarrow\lim h=L`,
+  ],
+  "calc.limit.seq": [
+    fl("数列极限 3 条实战主线", [
+      { from: "递推数列 x_{n+1}=g(x_n)", arrow: "→", to: ["先证单调有界（作差 / 数学归纳 / f′>0 判单调，均值不等式定界）", "再令两端取极限解方程 L=g(L)，并用有界区间舍伪根"] },
+      { from: "压缩映射 |x_{n+1}−L| ≤ q|x_n−L|", arrow: "⇒", to: "当 0<q<1 时直接得 |x_n−L| ≤ qⁿ⁻¹|x₁−L| → 0（单调不明显时首选！）" },
+      { from: "n 项和 / 乘积极限", arrow: "→", to: ["齐次 1/n·∑f(k/n) ⇒ 定积分定义 ∫₀¹ f(x)dx", "非齐次或含根号/绝对值 ⇒ 放缩夹逼（最大项/最小项夹，或先提最大底数）"] },
+    ]),
+  ],
+  "calc.limit.inf": [
+    fl("等价无穷小替换铁律与高阶泰勒阶数", [
+      { from: "乘除直接替，加减查抵消", arrow: "→", to: "乘除因子可放心等价替换；加减中仅当两项主部不抵消（系数比 ≠ −1）时才可替换，否则上泰勒！" },
+      { from: "变限积分定阶（极高频）", arrow: "⇒", to: "若 f(t)∼atᵐ、φ(x)∼bxⁿ ⇒ ∫₀^{φ(x)} f(t)dt ∼ a/(m+1)·(bxⁿ)ᵐ⁺¹" },
+      { from: "一阶 vs 三阶常用等价", arrow: "→", to: ["x→0：sin x, tan x, arcsin x, arctan x, eˣ−1, ln(1+x) ∼ x；1−cos x ∼ x²/2", "三阶差：x−sin x ∼ x³/6，tan x−x ∼ x³/3，arcsin x−x ∼ x³/6，x−arctan x ∼ x³/3"] },
+    ]),
+    {
+      type: "table",
+      headers: ["无穷小", "1−cos x", "(1+x)^a−1", "x−sin x", "tan x−x", "x−ln(1+x)", "tan x−sin x"],
+      rows: [
+        ["主部 (x→0)", "x²/2", "ax", "x³/6", "x³/3", "x²/2", "x³/2"],
+      ],
+    },
+  ],
+  "calc.limit.tech": [
+    fl("7 种未定式起手动作速查", [
+      { from: "1^∞ 型（u→1, v→∞）", arrow: "⇒", to: "一步三部曲：直接写 exp{ lim (u−1)v }（绝对不要硬取 ln 再洛必达）" },
+      { from: "0⁰ / ∞⁰ 型（幂指函数）", arrow: "⇒", to: "化指数 e^{g(x)ln f(x)}，转为 0·∞ 型再化 0/0 或 ∞/∞" },
+      { from: "∞ − ∞ 型", arrow: "⇒", to: "有分母先通分；有根号先有理化；无分母提最大无穷大因子（或倒代换 t=1/x）" },
+      { from: "0/0 与 ∞/∞ 型", arrow: "→", to: ["先拆非零乘除因子 + 乘除等价替换，再视情况选泰勒展开（首选）或洛必达", "洛必达雷区：仅当导数商极限存在（或为 ∞）才有效，否则反向无效（如 x+sin x）"] },
+    ]),
+    m`1^\infty:\ \lim u^v=\exp\bigl\{\lim(u-1)v\bigr\},\qquad \lim_{x\to0}\frac{\sin x}{x}=1`,
+  ],
+  "calc.limit.cont": [
+    fl("间断点分类与闭区间连续性质", [
+      { from: "找间断点两来源", arrow: "→", to: "无定义点（分母为 0、ln 0、指数 1/x）+ 分段函数分界点" },
+      { from: "第一类（左右极限均有限）", arrow: "→", to: ["f(a⁻) = f(a⁺) ≠ f(a)（或无定义） ⇒ 可去间断点", "f(a⁻) ≠ f(a⁺) ⇒ 跳跃间断点（|x|/x、e^(1/x) 在 0 处常见）"] },
+      { from: "第二类（至少一侧不存在）", arrow: "→", to: "趋于 ∞ ⇒ 无穷间断点；极限振荡（如 sin(1/x)） ⇒ 振荡间断点" },
+      { from: "闭区间 [a,b] 连续隐含信息", arrow: "⇒", to: ["有界、必取到最大最小值 M, m", "介值/零点定理：f(a)f(b)<0 ⇒ ∃ξ∈(a,b) 使 f(ξ)=0；加权平均 ∑cᵢf(xᵢ)/∑cᵢ 必等于某 f(ξ)"] },
+    ]),
+  ],
+  "calc.limit.asymp": [
+    fl("三类渐近线完整排查顺序（先竖直，再水平/斜）", [
+      { from: "铅直渐近线 x = a", arrow: "⇔", to: "lim_{x→a⁻} f(x) = ∞ 或 lim_{x→a⁺} f(x) = ∞（查无定义点，单侧无穷即算）" },
+      { from: "水平渐近线 y = b", arrow: "⇔", to: "lim_{x→+∞} f(x) = b 或 lim_{x→−∞} f(x) = b（+∞ 与 −∞ 必须分开算！）" },
+      { from: "斜渐近线 y = kx + b", arrow: "⇔", to: "某侧无水平渐近线时，算 k = lim f(x)/x（有限非零）与 b = lim [f(x)−kx]（有限）" },
+      { from: "防重防漏铁律", arrow: "→", to: "同一无穷方向上水平与斜渐近线互斥，但 +∞ 与 −∞ 可各自有一条不同的渐近线" },
+    ]),
+  ],
+  "calc.d1.def": [
+    fl("导数定义、可导充要与常见坑点", [
+      { from: "f′(a) 存在", arrow: "⇔", to: "左导数 f′₋(a) = 右导数 f′₊(a) ∈ R（分段点、绝对值点必须用定义算左右导！）" },
+      { from: "「一动一静」定义识别", arrow: "→", to: ["lim [f(a+h)−f(a)]/h = f′(a)（仅当 f′(a) 存在时，双动点 [f(a+h)−f(a−h)]/2h 才等于 f′(a)！）", "反向陷阱：双动点极限存在 ↛ f′(a) 存在（反例：f(x)=|x| 在 0 处）"] },
+      { from: "可导与连续 / 绝对值可导", arrow: "⇒", to: ["可导 ⇒ 连续（反之不成立）；f(x)g(x) 若 g(a)=0 且 f 在 a 连续，则乘积在 a 可导且导数为 f(a)g′(a)", "|f(x)| 在 f(a)=0 处可导 ⇔ f′(a) = 0（极高频选填结论！）"] },
+    ]),
+  ],
+  "calc.d1.rules": [
+    fl("五类求导法则与高阶导数 3 条路线", [
+      { from: "复合 / 隐函数 / 幂指", arrow: "→", to: ["隐函数 F(x,y)=0 两边对 x 直接求导（记 y 是 x 的函数），不必硬套 −Fₓ/Fᵧ", "幂指 u(x)^v(x) 或连乘商 ⇒ 先取对数 ln y 再求导"] },
+      { from: "参数方程二阶导（防漏除 x′！）", arrow: "⇒", to: "dy/dx = y′/x′；d²y/dx² = (y″x′ − y′x″)/(x′)³（求二阶导必须再除以 x′(t)！）" },
+      { from: "反函数二阶导", arrow: "⇒", to: "dx/dy = 1/y′；d²x/dy² = −y″/(y′)³（别忘负号与三次方！）" },
+      { from: "高阶导数 f^(n)(x)", arrow: "→", to: ["乘积多项式×指数/三角 ⇒ 莱布尼茨公式 ∑Cₙᵏ u^(k)v^(n−k)", "有理分式 ⇒ 先裂项拆成 1/(ax+b) 再套公式", "求某点 f^(n)(x₀) ⇒ 直接泰勒展开读 (x−x₀)ⁿ 系数 × n!（最快！）"] },
+    ]),
+    m`\frac{d^2y}{dx^2}=\frac{y''x'-y'x''}{(x')^3},\qquad (uv)^{(n)}=\sum_{k=0}^n C_n^k u^{(k)}v^{(n-k)}`,
+  ],
+  "calc.d1.mvt": [
+    fl("中值定理选型与辅助函数构造（从结论倒推！）", [
+      { from: "结论只含 f′(ξ) 且无端点差", arrow: "⇒", to: "罗尔定理：凑 F′(ξ)=0 积分还原辅助函数 F(x)（f′+pf ⇒ 乘积分因子 e^{px}）" },
+      { from: "结论含 f(b)−f(a) 与单函数", arrow: "⇒", to: "拉格朗日中值定理（单调性、双点不等式、导数有界推 Lipschitz 首选）" },
+      { from: "结论含双函数商 f′(ξ)/g′(ξ)", arrow: "⇒", to: "柯西中值定理：先整理成 [f(b)−f(a)]/[g(b)−g(a)]" },
+      { from: "双中值 ξ, η 问题", arrow: "⇒", to: "同一区间连用两次（拉格朗日+柯西），或找分点 c 把 [a,b] 劈成 [a,c] 与 [c,b]" },
+      { from: "含二阶导 f″(ξ) 证明", arrow: "⇒", to: "优先用带拉格朗日余项的泰勒公式在端点或中点展开，再加减消去 f′(x₀)！" },
+    ]),
+    m`f'(x)+p(x)f(x)\ \xrightarrow{\text{乘积分因子}}\ \bigl(e^{\int p(x)\,dx}f(x)\bigr)'`,
+  ],
+  "calc.d1.lhopital": [
+    fl("泰勒公式两种余项分工与 6 个必背展开", [
+      { from: "皮亚诺余项 o((x−a)ⁿ)", arrow: "→", to: "求 0/0 极限、定阶数、反求参数与某点高阶导 f^(n)(a)（展开原则：上下同阶）" },
+      { from: "拉格朗日余项 f^(n+1)(ξ)/(n+1)!·(x−a)^(n+1)", arrow: "→", to: "证明含高阶导的中值等式/不等式（常在区间中点 (a+b)/2 展开并作差消去一阶导）" },
+      { from: "复合展开技巧", arrow: "→", to: "遇 e^{sin x}、ln(cos x) 直接把内层展开代入外层标准展开，按目标最高次截断" },
+    ]),
+    {
+      type: "table",
+      headers: ["函数 (x→0)", "麦克劳林展开（到 3–4 阶）"],
+      rows: [
+        ["eˣ", "1 + x + x²/2! + x³/3! + o(x³)"],
+        ["sin x / cos x", "x − x³/6 + o(x³)   /   1 − x²/2 + x⁴/24 + o(x⁴)"],
+        ["tan x / arctan x", "x + x³/3 + o(x³)   /   x − x³/3 + o(x³)"],
+        ["ln(1+x) / (1+x)^a", "x − x²/2 + x³/3 + o(x³)   /   1 + ax + a(a−1)x²/2 + o(x²)"],
+      ],
+    },
+  ],
+  "calc.d1.sketch": [
+    fl("极值、拐点、零点个数与曲率判别链", [
+      { from: "极值点候选", arrow: "→", to: "驻点 f′(x)=0 + 不可导点（绝不能漏不可导点！）；两侧 f′ 变号 ⇔ 极值点" },
+      { from: "拐点候选（是坐标 (x₀, f(x₀))！）", arrow: "→", to: "f″(x)=0 + 二阶不可导点；两侧 f″ 变号 ⇔ 拐点" },
+      { from: "高阶导数判别（极高频选填）", arrow: "⇒", to: "若 f′(a)=…=f^(k−1)(a)=0 且 f^(k)(a)≠0：k 偶 ⇒ 极值点（>0 极小，<0 极大）；k 奇（≥3） ⇒ 拐点！" },
+      { from: "方程根个数 & 曲率", arrow: "→", to: ["零点个数：先求导定单调区间，再查各段端点/极限符号用零点定理计数", "曲率 K = |y″|/(1+y′²)^(3/2)，曲率半径 R = 1/K（切线水平 y′=0 时 K=|y″|）"] },
+    ]),
+    m`K=\frac{|y''|}{(1+y'^2)^{3/2}},\qquad R=\frac{1}{K}`,
+  ],
+  "calc.d1.phys": [
+    fl("变化率、运动学与极值建模", [
+      { from: "运动学量", arrow: "→", to: "速度 v = s′(t)，加速度 a = v′(t)，速率 = |v|（va>0 加速、va<0 减速）" },
+      { from: "相关变化率", arrow: "⇒", to: "先写几何关系式 F(x,y)=0，再对时间 t 隐函数求导，最后才代入瞬时数值！" },
+    ]),
+  ],
+  "calc.i1.def": [
+    fl("变限积分、定积分性质与对称点火捷径", [
+      { from: "变限积分求导（必先脱 x！）", arrow: "⇒", to: ["被积函数含外变量 x 时，先提公因子或换元 u=x−t 脱出 x，再求导！", "d/dx ∫_{u(x)}^{v(x)} f(t)dt = f(v)v′ − f(u)u′"] },
+      { from: "变限积分连续与可导性", arrow: "⇒", to: ["f 有界可积 ⇒ F(x)=∫ₐˣ f(t)dt 必连续（即使 f 有跳跃间断！）", "f 在 a 连续 ⇒ F′(a)=f(a)；f 在 a 有跳跃间断 ⇒ F 在 a 不可导；有可去间断 ⇒ 仍可导且导数等于极限值！"] },
+      { from: "对称与区间再现（高频化简）", arrow: "⇒", to: ["对称区间 [−a,a]：奇函数积分为 0，偶函数为 2 倍半区间", "区间再现：∫ₐᵇ f(x)dx = ∫ₐᵇ f(a+b−x)dx（常与原式相加消去 x 或 sin/cos）"] },
+      { from: "点火公式（华里士）", arrow: "→", to: "∫₀^{π/2} sinⁿx dx = ∫₀^{π/2} cosⁿx dx = [(n−1)!!/n!!] × (n 偶乘 π/2，n 奇乘 1)" },
+    ]),
+    m`\frac{d}{dx}\int_{u(x)}^{v(x)}f(t)\,dt=f(v)v'-f(u)u',\qquad \int_a^b f(x)\,dx=\int_a^b f(a+b-x)\,dx`,
+  ],
+  "calc.i1.tech": [
+    fl("不定/定积分选法决策树（4 步优先序）", [
+      { from: "① 凑微分（第一换元）", arrow: "→", to: "先扫被积式里有没有某块导数（f′/f ⇒ ln|f|，eˣdx=deˣ，dx/x=d(ln x)）" },
+      { from: "② 分部积分（反对幂指三）", arrow: "→", to: "反三角 / 对数 / 幂×指数三角 ⇒ 排后者凑进 dv；遇 eˣsin x 循环两次解方程；遇 e^{sin x} 拆项抵消！" },
+      { from: "③ 换元去根号 / 三角万能", arrow: "→", to: ["√(a²−x²) 令 a sin t；√(a²+x²) 令 a tan t；√(x²−a²) 令 a sec t", "定积分换元必同步换上下限，且不回代；无理根式整体令 t 消根号"] },
+      { from: "④ 有理分式裂项", arrow: "→", to: "假分式先多项式除法化真分式，分母分解后待定系数（留心 Ax+B/(x²+px+q) 配方）" },
+    ]),
+    m`\int\frac{dx}{x^2+a^2}=\frac1a\arctan\frac xa+C,\quad\int\frac{dx}{\sqrt{x^2\pm a^2}}=\ln|x+\sqrt{x^2\pm a^2}|+C`,
+  ],
+  "calc.i1.improper": [
+    fl("反常积分敛散性判别（先拆清全部奇点！）", [
+      { from: "多奇点拆分铁律", arrow: "⇒", to: "只要区间含多个无穷端点或瑕点（如 ∫₀^{+∞}），必须拆成单奇点段：全部收敛才收敛，有一段发散即整体发散！" },
+      { from: "两把 p-积分尺子（必背！）", arrow: "⇔", to: ["无穷限：∫ₐ^{+∞} 1/xᵖ dx 收敛 ⇔ p > 1（大收小散）；配对数 ∫₂^{+∞} 1/(x·lnᵖx) 收敛 ⇔ p > 1", "瑕点 a：∫ₐᵇ 1/(x−a)ᵖ dx 收敛 ⇔ p < 1（小收大散）"] },
+      { from: "等价比较与绝对收敛", arrow: "⇒", to: ["非负函数在奇点处找等价无穷小/大，直接对照 p-积分秒判", "变号反常积分（如 sin x/xᵖ）：先查绝对收敛，不行用分部积分降幂判条件收敛"] },
+      { from: "伽马函数与高斯积分", arrow: "→", to: "Γ(α)=∫₀^{+∞} x^{α−1}e⁻ˣ dx，Γ(n+1)=n!，Γ(1/2)=√π；∫₀^{+∞} e^{−x²}dx = √π/2" },
+    ]),
+  ],
+  "calc.i1.app": [
+    fl("定积分几何应用 4 大公式（选准坐标系与微元）", [
+      { from: "平面面积", arrow: "→", to: "直角坐标 ∫ₐᵇ |y₁−y₂|dx；极坐标 (1/2)∫_α^β r²(θ)dθ；参数方程 ∫ y(t)x′(t)dt（注意方向取正）" },
+      { from: "旋转体体积（绕 x / y 轴或任意直线）", arrow: "→", to: ["绕 x 轴：圆盘法 π∫ₐᵇ y²dx（空心 π∫(R²−r²)dx）", "绕 y 轴：柱壳法 2π∫ₐᵇ x|y|dx（绕 x=c 把 x 换成 |x−c|！）", "绕斜直线 Ax+By+C=0：用点到直线距离 r + 弧微元 ds 或古尔丁定理 V=2π·x̄·S"] },
+      { from: "弧长与旋转侧面积", arrow: "→", to: "ds = √(1+y′²)dx = √(x′²+y′²)dt = √(r²+r′²)dθ；侧面积 S = 2π∫ r(x)ds" },
+    ]),
+    m`V_y=2\pi\int_a^b x|y|\,dx,\quad L=\int ds,\quad S_{\text{侧}}=2\pi\int r\,ds`,
+  ],
+  "calc.i1.ineq": [
+    fl("定积分不等式 4 条高频武器", [
+      { from: "保号与估值", arrow: "⇒", to: "a<b 且 f≤g ⇒ ∫ₐᵇ f ≤ ∫ₐᵇ g；|∫ₐᵇ f| ≤ ∫ₐᵇ |f|" },
+      { from: "柯西-施瓦茨不等式", arrow: "⇒", to: "(∫ₐᵇ fg dx)² ≤ (∫ₐᵇ f² dx)(∫ₐᵇ g² dx)（遇乘积积分平方或 1/f 倒数积分首选！）" },
+      { from: "变上限构造单调函数", arrow: "⇒", to: "把区间端点 b 变成变量 x，求导判 F(x) 单调性（最万能的通用解法）" },
+      { from: "泰勒展开 / 积分中值", arrow: "→", to: "f 凸（f″≥0）用切线放缩 f(x)≥f(x₀)+f′(x₀)(x−x₀) 再两边积分；对称区间在中点展开消一次项" },
+    ]),
+    m`\left(\int_a^b fg\,dx\right)^2\le\int_a^b f^2\,dx\cdot\int_a^b g^2\,dx`,
+  ],
+  "calc.i1.phys": [
+    fl("定积分物理应用微元法（量纲一致！）", [
+      { from: "变力做功 / 抽水做功", arrow: "→", to: "dW = F(x)dx；抽水按深度 h 切薄片：dW = ρg·A(h)·dh·(提升高度)" },
+      { from: "液体静压力", arrow: "→", to: "深度 h 处压强 p = ρgh，水平条微元 dF = ρgh·L(h)dh" },
+      { from: "细棒质量与形心", arrow: "→", to: "M = ∫ₐᵇ ρ(x)dx；形心 x̄ = (1/M)∫ₐᵇ xρ(x)dx" },
+    ]),
+  ],
+  "calc.geom.vec": [
+    fl("向量点积、叉积与混合积几何翻译", [
+      { from: "点积 a·b = |a||b|cos θ", arrow: "⇔", to: "a ⊥ b ⇔ a·b = 0；投影 Prj_b(a) = (a·b)/|b|" },
+      { from: "叉积 a×b（模长 = 平行四边形面积）", arrow: "⇔", to: "a ∥ b ⇔ a×b = 0；a×b 同时垂直于 a 与 b（求法向量/公垂线方向首选！）" },
+      { from: "混合积 [a b c] = a·(b×c)", arrow: "⇔", to: "a, b, c 共面 ⇔ [a b c] = 0；|a·(b×c)| = 平行六面体体积" },
+    ]),
+  ],
+  "calc.geom.plane": [
+    fl("空间平面、直线方程与距离夹角速查", [
+      { from: "平面法向 n 与直线方向 s", arrow: "→", to: ["两平面交线方向 s = n₁×n₂；过直线平面束 Π₁ + λΠ₂ = 0（补查 Π₂ 本身）", "一般式直线化对称式：先找一点（令 z=0 解），再算 s = n₁×n₂"] },
+      { from: "夹角公式（注意 sin vs cos！）", arrow: "→", to: ["面面 / 线线夹角用 cos = |n₁·n₂|/(|n₁||n₂|)", "线面夹角用 sin = |s·n|/(|s||n|)（极易记反！）"] },
+      { from: "距离公式", arrow: "→", to: ["点到平面：|Ax₀+By₀+Cz₀+D|/√(A²+B²+C²)", "点到直线：|(P−P₀)×s|/|s|；两异面直线距离：|(P₁−P₂)·(s₁×s₂)|/|s₁×s₂|"] },
+    ]),
+  ],
+  "calc.geom.quad": [
+    fl("二次曲面与旋转曲面构造法则", [
+      { from: "平面曲线绕坐标轴旋转", arrow: "⇒", to: "绕谁转谁不动，另一变量换成 ±√(另两坐标平方和)（如 f(y,z)=0 绕 z 轴 ⇒ f(±√(x²+y²), z)=0）" },
+      { from: "柱面与投影柱面", arrow: "⇒", to: "方程缺哪个变量就平行于哪个轴；求空间曲线在 xOy 面投影：联立两曲面方程消去 z，再配 z=0" },
+      { from: "常见二次曲面辨认", arrow: "→", to: "全正 =1 椭球面；两正一负 =1 单叶双曲面、=−1 双叶双曲面、=0 锥面；z=x²/a²+y²/b² 椭圆抛物面" },
+    ]),
+  ],
+  "calc.m.partial": [
+    fl("连续、偏导存在与可微的关系网络（极高频概念辨析！）", [
+      { from: "偏导数连续（fₓ, fᵧ 连续）", arrow: "⇒", to: "可微 ⇒ 连续 且 偏导数存在 且 沿任意方向导数存在" },
+      { from: "偏导数存在", arrow: "↛", to: "未必连续、未必可微（反例：xy/(x²+y²) 在原点）" },
+      { from: "连续", arrow: "↛", to: "未必偏导存在、未必可微（反例：√(x²+y²) 在原点）" },
+      { from: "用定义判可微（3 步）", arrow: "⇔", to: "① 算 fₓ(x₀,y₀)=A, fᵧ(x₀,y₀)=B；② 算 Δz−AΔx−BΔy；③ 检验 [Δz−AΔx−BΔy]/√(Δx²+Δy²) → 0（沿 y=kx 检验！）" },
+      { from: "混合偏导相等 & 链式法则", arrow: "→", to: ["fₓᵧ, fᵧₓ 连续 ⇒ fₓᵧ = fᵧₓ；抽象复合函数求二阶偏导务必画变量树，先写 f₁′, f₂′ 再逐层求导", "全微分形式不变性：dz = fₓdx + fᵧdy（配全微分反求 f 时查 Pᵧ=Qₓ 再线积分/偏积分）"] },
+    ]),
+  ],
+  "calc.m.dir": [
+    fl("方向导数与梯度核心公式（先单位化方向向量！）", [
+      { from: "方向导数存在 vs 计算公式", arrow: "⇒", to: ["f 在点 P 可微 ⇒ 沿任意单位方向 e = l/|l| 方向导数存在，且 ∂f/∂l = ∇f · e = |∇f|cos θ", "f 不可微时不能套公式，必须回定义 lim (t→0⁺) [f(P+te)−f(P)]/t（注意 t→0⁺ 是单侧极限！）"] },
+      { from: "梯度 ∇f = (fₓ, fᵧ, fz) 隐含信息", arrow: "⇒", to: ["方向导数最大值 = |∇f|（方向沿 ∇f），最小值 = −|∇f|（方向沿 −∇f）", "梯度方向垂直于等值面 f(x,y,z)=C 且指向函数值增大方向"] },
+    ]),
+    m`\frac{\partial f}{\partial l}=\nabla f\cdot\frac{l}{|l|},\qquad \max\frac{\partial f}{\partial l}=|\nabla f|`,
+  ],
+  "calc.m.impl": [
+    fl("隐函数（组）求导与空间曲面切平面 / 曲线切线", [
+      { from: "单个隐函数 F(x,y,z)=0", arrow: "⇒", to: "F 为 C¹ 且 Fz ≠ 0 ⇒ 确定 z=z(x,y)，zₓ=−Fₓ/Fz, zᵧ=−Fᵧ/Fz（直接两边微分 dz 更快！）" },
+      { from: "方程组确定隐函数", arrow: "⇒", to: "对所有方程同时取全微分 dF=0, dG=0，视 du, dv 为未知数直接解二元线性方程组" },
+      { from: "曲面切平面与法线", arrow: "→", to: "F(x,y,z)=0 法向量 n=(Fₓ, Fᵧ, Fz)；显式 z=f(x,y) 法向量 n=(fₓ, fᵧ, −1)" },
+      { from: "空间曲线切线与法平面", arrow: "→", to: ["参数式 r(t)：切向量 τ = r′(t₀)", "两曲面交线 F=0, G=0：切向量 τ = n₁×n₂ = ∇F × ∇G（或两边对 x 求导解 y′, z′）"] },
+    ]),
+  ],
+  "calc.m.ext": [
+    fl("无条件极值、条件极值与闭区域最值决策链", [
+      { from: "无条件极值（内点）", arrow: "→", to: ["先解驻点 fₓ=0, fᵧ=0；再算 A=fₓₓ, B=fₓᵧ, C=fᵧᵧ 与 Δ=AC−B²", "Δ>0：A>0 极小、A<0 极大；Δ<0 鞍点（非极值）；Δ=0 回定义用 Δf 变号判别！"] },
+      { from: "条件极值（约束 φ=0）", arrow: "→", to: ["首选代入消元或参数化（如圆周令 x=r cos t, y=r sin t）降为一元", "消元不便用拉格朗日乘数法 L=f+λφ（双约束 L=f+λφ+μψ），解驻点后利用对称性消 λ"] },
+      { from: "闭有界区域 D 上最值", arrow: "⇒", to: "内部驻点 + 边界条件极值点 + 边界角点/端点，全部代回 f 比较大小！" },
+    ]),
+    m`\Delta=f_{xx}f_{yy}-f_{xy}^2:\quad\Delta>0\Rightarrow\text{极值（}f_{xx}>0\text{极小）},\quad\Delta<0\Rightarrow\text{非极值}`,
+  ],
+  "calc.m.dbl": [
+    fl("二重积分 4 大高频破题动作（先画域 D！）", [
+      { from: "① 先查对称性与轮换对称", arrow: "⇒", to: ["D 关于 y 轴对称：x 的奇函数积分为 0，偶函数取 2 倍半域（x 轴同理）", "D 关于 y=x 对称（轮换对称）：∬ f(x,y)dσ = ∬ f(y,x)dσ = (1/2)∬ [f(x,y)+f(y,x)]dσ"] },
+      { from: "② 选直角坐标 vs 极坐标", arrow: "→", to: ["圆域 / 扇形 / 环域或被积式含 x²+y²、y/x ⇒ 极坐标 dσ = r dr dθ（别漏 r！）", "偏心圆 x²+y²≤2ax：r∈[0, 2a cos θ], θ∈[−π/2, π/2]；或先平移坐标到圆心"] },
+      { from: "③ 交换积分次序", arrow: "⇒", to: "内层积不出（如 exp(y²)、sin y/y）或二重变限求导 ⇒ 画区域 D 重新定限换序" },
+      { from: "④ 含绝对值 / max / min / 变限", arrow: "⇒", to: "按分界线把 D 劈块去绝对值；一般换元别忘乘雅可比绝对值 |∂(x,y)/∂(u,v)|" },
+    ]),
+    m`d\sigma=r\,dr\,d\theta,\qquad \iint_D f(x,y)\,d\sigma=\iint_G f(x(u,v),y(u,v))\left|\frac{\partial(x,y)}{\partial(u,v)}\right|du\,dv`,
+  ],
+  "calc.m.tpl": [
+    fl("三重积分 3 种坐标系选型（先查奇偶与轮换对称！）", [
+      { from: "先一后二（投影法）", arrow: "→", to: "上下顶底面 z₁(x,y)≤z≤z₂(x,y) 清晰 ⇒ 先对 z 积，再在投影域 Dₓᵧ 上算二重积分" },
+      { from: "先二后一（截面法，高频！）", arrow: "⇒", to: "被积函数只含 z 且水平截面面积 S(z) 易算（旋转体/锥体/椭球）⇒ ∫ₐᵇ f(z)S(z)dz" },
+      { from: "柱坐标（圆柱 / 抛物面 / 锥面）", arrow: "→", to: "x=r cos θ, y=r sin θ, z=z，dv = r dr dθ dz（被积式含 x²+y² 首选）" },
+      { from: "球坐标（球体 / 球壳 / 锥面）", arrow: "→", to: "dv = ρ² sin φ dρ dφ dθ（φ∈[0,π] 为与正 z 轴夹角，被积式含 x²+y²+z² 首选！）" },
+    ]),
+    m`\text{柱坐标}:dv=r\,dr\,d\theta\,dz,\qquad\text{球坐标}:dv=\rho^2\sin\varphi\,d\rho\,d\varphi\,d\theta`,
+  ],
+  "calc.m.app": [
+    fl("重积分几何与物理应用（形心与转动惯量）", [
+      { from: "质量与形心", arrow: "→", to: "M = ∭ ρ dv；x̄ = (1/M)∭ xρ dv（常密度且区域关于某坐标面对称 ⇒ 对应形心坐标为 0！）" },
+      { from: "转动惯量（到轴距离平方！）", arrow: "→", to: "绕 z 轴 Jz = ∭ (x²+y²)ρ dv（绕直线 L 则把距离平方换成点到 L 的距离平方）" },
+    ]),
+  ],
+  "calc.ode.1st": [
+    fl("一阶微分方程 5 类结构识别与解法", [
+      { from: "可分离变量 y′=f(x)g(y)", arrow: "⇒", to: "分离 dy/g(y)=f(x)dx 两边积分（另查 g(y)=0 是否为漏解）" },
+      { from: "齐次型 y′=φ(y/x)", arrow: "⇒", to: "令 u=y/x（y=ux, y′=u+xu′），化为可分离变量" },
+      { from: "一阶线性 y′+P(x)y=Q(x)", arrow: "⇒", to: "直接套通解公式（或乘积分因子 exp(∫Pdx) 凑全导数）；对 y 不线性时试把 x 看作 y 的函数 dx/dy！" },
+      { from: "伯努利 y′+Py=Qyⁿ", arrow: "⇒", to: "除以 yⁿ 后令 z = y¹⁻ⁿ，立刻化为一阶线性方程" },
+      { from: "全微分 Pdx+Qdy=0（Pᵧ=Qₓ）", arrow: "⇒", to: "直接偏积分或凑微分找势函数 u(x,y)=C" },
+    ]),
+    m`y'+P(x)y=Q(x)\Longrightarrow y=e^{-\int P\,dx}\!\left(C+\int Qe^{\int P\,dx}\,dx\right)`,
+  ],
+  "calc.ode.2nd": [
+    fl("二阶常系数线性方程：齐次通解 + 特解设定 + 叠加原理", [
+      { from: "特征根 r²+pr+q=0", arrow: "→", to: ["两不等实根 r₁,r₂ ⇒ C₁exp(r₁x)+C₂exp(r₂x)", "二重实根 r ⇒ (C₁+C₂x)eʳˣ", "共轭复根 α±iβ ⇒ exp(αx)(C₁cos βx+C₂sin βx)"] },
+      { from: "特解 y* 设法（核心定 k！）", arrow: "→", to: ["f(x)=exp(λx)Pₘ(x) ⇒ y* = xᵏexp(λx)Qₘ(x)（k = λ 作为特征根的重数：0 / 1 / 2）", "f(x)=exp(αx)[P cos βx+Q sin βx] ⇒ y* = xᵏexp(αx)[Rₙ cos βx+Sₙ sin βx]（n=max(deg P,deg Q)，k 看 α±iβ 是否为特征根）"] },
+      { from: "反求方程与解结构（高频选填）", arrow: "⇒", to: ["非齐次通解 = 齐次通解 + 特解；两非齐次解之差为对应齐次解", "若 y₁,y₂,y₃ 为同一二阶非齐次方程的 3 个特解（y₂−y₁ 与 y₃−y₁ 无关）⇒ 通解 y = y₁ + C₁(y₂−y₁) + C₂(y₃−y₁)"] },
+    ]),
+  ],
+  "calc.ode.euler": [
+    fl("欧拉方程与两类可降阶二阶方程", [
+      { from: "欧拉方程 x²y″+axy′+by=f(x)", arrow: "⇒", to: "x>0 令 x=eᵗ（t=ln x），用算子代换 xy′=Dy、x²y″=D(D−1)y、x³y‴=D(D−1)(D−2)y 化常系数！" },
+      { from: "缺 y 型：y″=f(x, y′)", arrow: "⇒", to: "令 p=y′, y″=p′，降为关于 p(x) 的一阶方程" },
+      { from: "缺 x 型：y″=f(y, y′)", arrow: "⇒", to: "令 p=y′, y″=p·dp/dy，降为关于 p(y) 的一阶方程" },
+    ]),
+    m`x=e^t:\quad xy'=y_t,\quad x^2y''=y_{tt}-y_t,\quad x^3y^{(3)}=y_{ttt}-3y_{tt}+2y_t`,
+  ],
+  "calc.ode.app": [
+    fl("微分方程几何与物理建模", [
+      { from: "几何条件翻译", arrow: "→", to: "切线斜率 y′，法线斜率 −1/y′，截距 x−y/y′ 与 y−xy′，弧长微元 √(1+y′²)dx；变限积分方程先两边求导化 ODE 并补初值！" },
+      { from: "变化率 / 混合 / 冷却模型", arrow: "→", to: "dm/dt = 流入速率 − 流出速率；牛顿冷却 T′ = −k(T−Tₑ)" },
+    ]),
+  ],
+  "calc.series.num": [
+    fl("数项级数敛散性判别决策链（必先查 uₙ→0！）", [
+      { from: "必要条件：uₙ ↛ 0", arrow: "⇒", to: "立刻发散！（uₙ→0 推不出收敛，反例调和级数 ∑1/n）" },
+      { from: "正项级数（uₙ > 0）", arrow: "→", to: ["含 n!、aⁿ、nⁿ ⇒ 优先比值 lim uₙ₊₁/uₙ 或根值 lim ⁿ√uₙ（<1 收，>1 散，=1 失效换法！）", "含分式/根号/三角/对数 ⇒ 泰勒或等价找主部，与 p-级数 ∑1/nᵖ（p>1 收）比较", "加权积分型（如 1/(n·lnᵖn)） ⇒ 积分判别法（p>1 收）"] },
+      { from: "交错 / 一般变号级数", arrow: "→", to: ["先查绝对收敛 ∑|uₙ|（绝对收敛 ⇒ 收敛；条件收敛即原级数收但绝对值发散）", "交错 ∑(−1)ⁿ⁻¹bₙ 用莱布尼茨：bₙ 单调递减且 bₙ→0 ⇒ 收敛（若 bₙ 拆成收+散两项，直接拆项判！）"] },
+      { from: "性质雷区（高频概念选填）", arrow: "↛", to: "「收敛 + 发散」必发散；「发散 + 发散」未必发散；加括号收敛推不出原级数收敛（仅正项级数或 uₙ→0 配有限项分组除外）" },
+    ]),
+  ],
+  "calc.series.power": [
+    fl("幂级数收敛域、展开与求和 3 条核心链", [
+      { from: "收敛半径与收敛域", arrow: "→", to: ["不缺项：R = lim |aₙ/aₙ₊₁|；缺项（如 x²ⁿ、x^(n²)）一律直接对通项套比值/根值绝对收敛不等式！", "必须逐个把两区间端点 x=x₀±R 代回原级数判敛散（绝不能漏端点！）"] },
+      { from: "阿贝尔定理（高频推论）", arrow: "⇒", to: "在 x₁ 处收敛 ⇒ 对一切 |x−x₀|<|x₁−x₀| 绝对收敛；在 x₂ 处发散 ⇒ 对一切 |x−x₀|>|x₂−x₀| 发散（用来由条件收敛点秒锁 R！）" },
+      { from: "和函数 S(x) 求法", arrow: "→", to: ["分子含 n ⇒ 先积分消 n，求和后再求导；分母含 n ⇒ 先求导消 n，求和后再积分（注意首项与收敛域）", "展开为幂级数：先凑 1/(1±u)、ln(1+u)、eᵘ、sin u、cos u，或拆有理分式再逐项求导/积分"] },
+    ]),
+    m`\frac{1}{1-x}=\sum_{n=0}^\infty x^n,\quad \ln(1+x)=\sum_{n=1}^\infty\frac{(-1)^{n-1}}{n}x^n\ (|x|<1),\quad e^x=\sum_{n=0}^\infty\frac{x^n}{n!}`,
+  ],
+  "calc.series.fourier": [
+    fl("傅里叶级数展开与狄利克雷收敛定理", [
+      { from: "奇偶对称省一半积分", arrow: "⇒", to: "偶函数 ⇒ bₙ=0（余弦级数）；奇函数 ⇒ aₙ=0（正弦级数）；半区间 [0, l] 展开按题目要求作奇延拓或偶延拓" },
+      { from: "狄利克雷收敛定理（必考求某点收敛值！）", arrow: "⇒", to: ["连续点 x：S(x) = f(x)", "间断点 x：S(x) = [f(x⁻) + f(x⁺)] / 2（周期延拓的端点 ±l 处为 [f(−l⁺) + f(l⁻)] / 2！）"] },
+    ]),
+    m`f\sim\frac{a_0}2+\sum_{n=1}^\infty\left(a_n\cos\frac{n\pi x}{l}+b_n\sin\frac{n\pi x}{l}\right),\quad S(x)=\frac{f(x^-)+f(x^+)}2`,
+  ],
+  "calc.m.line": [
+    fl("第一类曲线积分（对弧长，无方向、可代入曲线方程！）", [
+      { from: "核心性质", arrow: "⇒", to: ["与积分方向无关；被积函数可直接代入曲线方程化简（如圆周上 x²+y²=R² 直接换常数！）", "轮换对称与奇偶对称直接适用"] },
+      { from: "弧微元 ds 化定积分（下限必小于上限！）", arrow: "→", to: ["参数式 r(t)：ds = √(x′²+y′²+z′²)dt", "直角式 y=g(x)：ds = √(1+g′²)dx；极坐标 r=r(θ)：ds = √(r²+r′²)dθ"] },
+    ]),
+  ],
+  "calc.m.line2": [
+    fl("第二类曲线积分（有方向！4 条核心路线）", [
+      { from: "① 平面闭曲线 ⇒ 格林公式", arrow: "⇒", to: "正向（逆时针，区域在左侧）：∮ Pdx+Qdy = ∬ (Qₓ−Pᵧ)dxdy；不封闭先补线段，内部含奇点则挖小圆（反向！）" },
+      { from: "② 路径无关与原函数（单连通！）", arrow: "⇔", to: ["单连通域内 P, Q 为 C¹：路径无关 ⇔ Qₓ = Pᵧ ⇔ 存在势函数 u 使 du=Pdx+Qdy ⇔ 闭曲线积分为 0", "有洞（非单连通，如原点奇点）时 Qₓ=Pᵧ 推不出闭积分为 0，需改换成同伦小圆计算！"] },
+      { from: "③ 空间闭曲线 ⇒ 斯托克斯公式", arrow: "⇒", to: "∮ F·dr = ∬ (∇×F)·n dS（右手定则定 Σ 法向，可任换最简单平面封口！）" },
+      { from: "④ 直接参数化", arrow: "→", to: "代入 r(t) 与 dr=r′(t)dt，积分限严格从起点参数到终点参数（可大到小！）" },
+    ]),
+    m`\oint_{\partial D}P\,dx+Q\,dy=\iint_D(Q_x-P_y)\,dx\,dy,\qquad \oint_{\partial S}F\cdot dr=\iint_S(\nabla\times F)\cdot n\,dS`,
+  ],
+  "calc.m.surf": [
+    fl("第一类曲面积分（对面积，无侧别、可代曲面方程！）", [
+      { from: "核心性质", arrow: "⇒", to: "与曲面法向侧别无关；被积式可直接代入曲面方程化简（如球面 x²+y²+z²=R²）；善用三变量轮换对称！" },
+      { from: "面积微元 dS 投影公式", arrow: "→", to: "显式 z=g(x,y) 投影到 Dₓᵧ：dS = √(1+gₓ²+gᵧ²)dxdy；球面 x²+y²+z²=R² 上 dS = (R/z)dxdy" },
+    ]),
+    m`\iint_\Sigma f\,dS=\iint_{D_{xy}}f(x,y,g)\sqrt{1+g_x^2+g_y^2}\,dx\,dy`,
+  ],
+  "calc.m.surf2": [
+    fl("第二类曲面积分（有侧别！3 条核心路线）", [
+      { from: "① 封闭曲面 ⇒ 高斯公式（首选！）", arrow: "⇒", to: "外侧：∯ P dydz+Q dzdx+R dxdy = ∭ (Pₓ+Qᵧ+Rz)dv；不封闭先补平面，含奇点先挖小球（取内侧！）" },
+      { from: "② 显式曲面 ⇒ 合一投影法（转换公式）", arrow: "⇒", to: "z=z(x,y) 上侧法向 (−zₓ, −zᵧ, 1) ⇒ ∬ (−Pzₓ−Qzᵧ+R)dxdy（下侧整体加负号！一次投完三项）" },
+      { from: "③ 两类曲面积分互化", arrow: "→", to: "P dydz+Q dzdx+R dxdy = (P cos α + Q cos β + R cos γ)dS（法向量先单位化，再判正负侧）" },
+    ]),
+    m`\oiint_{\partial\Omega}P\,dy\,dz+Q\,dz\,dx+R\,dx\,dy=\iiint_\Omega(P_x+Q_y+R_z)\,dv`,
+  ],
+  "calc.m.formula": [
+    fl("场论三大算子（梯度 / 散度 / 旋度）与无旋保守场", [
+      { from: "散度 div F（标量！）", arrow: "→", to: "div F = ∇·F = Pₓ + Qᵧ + Rz（高斯公式被积函数，刻画源汇通量密度）" },
+      { from: "旋度 rot F（向量！）", arrow: "→", to: "rot F = ∇×F = (Rᵧ−Qz, Pz−Rₓ, Qₓ−Pᵧ)（斯托克斯公式被积向量）" },
+      { from: "保守场 / 势函数（单连通域）", arrow: "⇔", to: "∇×F = 0 ⇔ F = ∇u（存在势函数 u）⇔ 空间曲线积分 ∫ F·dr = u(B)−u(A) 与路径无关" },
+      { from: "向量恒等式（选填常考）", arrow: "⇒", to: "rot(grad u) = ∇×(∇u) ≡ 0；div(rot F) = ∇·(∇×F) ≡ 0" },
+    ]),
+  ],
+  "la.det.def": [
+    fl("行列式核心性质与行变换效应", [
+      { from: "基本运算", arrow: "→", to: ["|Aᵀ| = |A|，|AB| = |A||B|（仅限同阶方阵）", "|kA| = kⁿ|A|（整体提 k 相当于每行各提一次 k）", "单行（列）拆分具线性性：仅变一行其余不变才能拆"] },
+      { from: "初等行（列）变换", arrow: "→", to: ["互换两行 Rᵢ↔Rⱼ ⇒ 变号（−|A|）", "某行乘 k（Rᵢ↦kRᵢ） ⇒ 乘 k（k|A|）", "倍加消元 Rᵢ↦Rᵢ+kRⱼ（i≠j） ⇒ 值不变"] },
+      { from: "|A| = 0", arrow: "⇔", to: ["两行（列）成比例 / 行（列）向量线性相关", "r(A) < n ⇔ A 不可逆 ⇔ Ax=0 有非零解 ⇔ 0 是特征值"] },
+    ]),
+  ],
+  "la.det.compute": [
+    fl("看到结构 → 秒选计算路线", [
+      { from: "行和（列和）相等", arrow: "⇒", to: "其余列全加到第 1 列提公因子，再化上三角", note: "|(b−a)E+a11ᵀ| = [b+(n−1)a](b−a)ⁿ⁻¹" },
+      { from: "爪形 / 箭形行列式", arrow: "⇒", to: "用对角元把第一行（或第一列）消成 0，一步化三角" },
+      { from: "三对角 / 递推型", arrow: "⇒", to: "按第一行展开建二阶递推 Dₙ = pDₙ₋₁ + qDₙ₋₂，配特征根或构造等比" },
+      { from: "分块三角 / 副对角分块", arrow: "⇒", to: ["上/下分块三角 = |A||D|", "副对角分块（A 为 m 阶、B 为 n 阶） = (−1)ᵐⁿ|A||B|"] },
+      { from: "范德蒙德结构", arrow: "⇒", to: "公比幂次递增 ⇒ ∏ᵢ<ⱼ(xⱼ−xᵢ)（缺项时加边补全再读系数）" },
+      { from: "秩 1 修正 / 特征值法", arrow: "⇒", to: "能拆成 aE+αβᵀ 或已知特征值 ⇒ 直接连乘 ∏λᵢ" },
+    ]),
+    m`\left|\begin{matrix}0&A_m\\B_n&D\end{matrix}\right|=(-1)^{mn}|A_m||B_n|,\quad\left|x_i^{j-1}\right|=\prod_{1\le i<j\le n}(x_j-x_i)`,
+  ],
+  "la.det.cofactor": [
+    fl("余子式、代数余子式与伴随核心链", [
+      { from: "符号关系", arrow: "→", to: "Aᵢⱼ = (−1)ⁱ⁺ʲMᵢⱼ（算 Mᵢⱼ 线性组合先补回符号变成 Aᵢⱼ）" },
+      { from: "正交展开（极其高频）", arrow: "⇒", to: ["∑ⱼ aᵢⱼAᵢⱼ = |A|（本行乘本行）", "∑ⱼ aᵢⱼAₖⱼ = 0（i≠k，串行相乘必为 0）", "求 ∑kⱼAᵢⱼ 技巧：把原行列式第 i 行直接替换成 (k₁,…,kₙ) 再算行列式"] },
+      { from: "伴随矩阵 A*=(Aⱼᵢ)", arrow: "⇒", to: ["AA* = A*A = |A|E（注意下标转置！）", "|A*| = |A|ⁿ⁻¹，(kA)* = kⁿ⁻¹A*，(A*)* = |A|ⁿ⁻²A", "aᵢⱼ = Aᵢⱼ（A≠O） ⇒ AAᵀ = |A|E 且 |A|=1（正交阵！）"] },
+    ]),
+    m`AA^*=A^*A=|A|E,\quad |A^*|=|A|^{n-1},\quad (A^*)^*=|A|^{n-2}A\ (n\ge2)`,
+  ],
+  "la.mat.ops": [
+    fl("矩阵乘法规则与高次幂 4 条捷径", [
+      { from: "乘法雷区", arrow: "→", to: ["一般 AB ≠ BA；(AB)ᵀ = BᵀAᵀ（穿脱原则）", "AB = O ↛ A=O 或 B=O（但推出 r(A)+r(B) ≤ n）", "AB = AC 且 A 可逆 ⇒ B = C（不可逆不能消去）"] },
+      { from: "秩 1 矩阵 A = αβᵀ", arrow: "⇒", to: "Aᵏ = (βᵀα)ᵏ⁻¹A = [tr(A)]ᵏ⁻¹A（先拆秩 1，秒算高次幂）" },
+      { from: "拆成 aE + B（B 幂零或秩 1）", arrow: "⇒", to: "因 aE 与 B 可交换，直接二项式展开 (aE+B)ⁿ（高次项截断）" },
+      { from: "可相似对角化 P⁻¹AP=Λ", arrow: "⇒", to: "Aⁿ = PΛⁿP⁻¹；分块对角阵直接逐块求幂" },
+    ]),
+    m`A=\alpha\beta^T\Rightarrow A^k=(\beta^T\alpha)^{k-1}A,\qquad (AB)^T=B^TA^T`,
+  ],
+  "la.mat.inv": [
+    fl("可逆等价链、伴随秩与求逆方法", [
+      { from: "A 可逆", arrow: "⇔", to: ["|A| ≠ 0 ⇔ r(A) = n ⇔ Ax=0 只有零解", "A 的特征值全不为 0 ⇔ A 可表为有限个初等矩阵之积"] },
+      { from: "常用逆公式", arrow: "→", to: ["A⁻¹ = A*/|A|；(AB)⁻¹ = B⁻¹A⁻¹；(Aᵀ)⁻¹ = (A⁻¹)ᵀ", "(A*)⁻¹ = A/|A| = (A⁻¹)*；多项式 f(A)=O 配因式凑 AB=E 读逆"] },
+      { from: "伴随矩阵的秩（必背）", arrow: "⇒", to: ["r(A) = n ⇒ r(A*) = n", "r(A) = n−1 ⇒ r(A*) = 1（且 A* 列向量是 Ax=0 的解）", "r(A) < n−1 ⇒ r(A*) = 0（即 A* = O）"] },
+      { from: "分块求逆口诀", arrow: "→", to: "主对角分块各自求逆；副对角分块先互换位置再各自求逆" },
+    ]),
+    m`\begin{pmatrix}A&0\\0&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&0\\0&B^{-1}\end{pmatrix},\quad\begin{pmatrix}0&A\\B&0\end{pmatrix}^{-1}=\begin{pmatrix}0&B^{-1}\\A^{-1}&0\end{pmatrix}`,
+  ],
+  "la.mat.rank": [
+    fl("矩阵秩的核心恒等式与不等式链", [
+      { from: "保秩变换", arrow: "→", to: ["r(A) = r(Aᵀ) = r(AᵀA) = r(AAᵀ)（实矩阵）", "P, Q 可逆 ⇒ r(PAQ) = r(A)（左行右列初等变换不改秩）"] },
+      { from: "乘积秩夹逼（极高频）", arrow: "⇒", to: ["r(A) + r(B) − n ≤ r(AB) ≤ min{r(A), r(B)}（西尔维斯特）", "AB = O ⇒ r(A) + r(B) ≤ n", "A² = A（幂等） ⇒ r(A) + r(E−A) = n；A²=E ⇒ r(E+A)+r(E−A)=n"] },
+      { from: "和与分块阵秩", arrow: "⇒", to: ["r(A+B) ≤ r(A) + r(B)（拆秩 1 或三角不等式常用）", "r(A)+r(B) ≤ r([A, C; 0, B]) ≤ r(A)+r(B)+r(C)（仅 C=O 时恒等）", "满秩矩阵乘任意阵不改秩；r(A)=1 ⇔ A=αβᵀ（非零列×非零行）"] },
+    ]),
+    m`r(A)+r(B)-n\le r(AB)\le\min\{r(A),r(B)\},\quad AB=0\Rightarrow r(A)+r(B)\le n`,
+  ],
+  "la.eq.vector": [
+    fl("线性相关 / 线性表示 / 向量组等价翻译成秩", [
+      { from: "α₁,…,αₛ 线性无关", arrow: "⇔", to: ["k₁α₁+…+kₛαₛ=0 仅有零解 ⇔ r(α₁,…,αₛ) = s", "反面：线性相关 ⇔ r < s（个数 s > 维数 n 必相关）"] },
+      { from: "部分与整体 / 增维截维", arrow: "⇒", to: ["部分相关 ⇒ 整体相关；整体无关 ⇒ 部分无关", "无关组接长（增维）仍无关；相关组截短（降维）仍相关"] },
+      { from: "β 可由 α₁,…,αₛ 线性表出", arrow: "⇔", to: ["r(A) = r(A | β)（唯一表出 ⇔ r(A)=r(A|β)=s；不唯一 ⇔ <s）", "若 α₁,…,αₛ 无关而 α₁,…,αₛ,β 相关 ⇒ β 可唯一表出"] },
+      { from: "向量组 (I) 与 (II) 等价", arrow: "⇔", to: "r(A) = r(B) = r(A | B)（注意：仅 r(A)=r(B) 推不出等价！）" },
+      { from: "以少表多推论", arrow: "⇒", to: "若 (I) 可由 (II) 线性表出 ⇒ r(I) ≤ r(II)（若 s>t 且 (I) 可由 (II) 表出 ⇒ (I) 必相关）" },
+    ]),
+  ],
+  "la.sp.basis": [
+    fl("基、坐标与过渡矩阵核心公式（向量按列写！）", [
+      { from: "基变换（旧基 → 新基）", arrow: "→", to: "(β₁,…,βₙ) = (α₁,…,αₙ)C（C 的第 j 列 = 新基 βⱼ 在旧基下的坐标）" },
+      { from: "坐标变换（反方向！）", arrow: "⇒", to: "同一向量在旧/新基坐标满足 x = Cy，故 y = C⁻¹x（切记别写反）" },
+      { from: "线性变换矩阵", arrow: "→", to: "若旧基下矩阵为 A、过渡矩阵 C，则新基下矩阵 B = C⁻¹AC（相似！）" },
+      { from: "解空间与子空间维数", arrow: "→", to: "dim(Ax=0 解空间) = n − r(A)；dim(U+V) = dim U + dim V − dim(U∩V)" },
+    ]),
+    m`(\beta_1,\ldots,\beta_n)=(\alpha_1,\ldots,\alpha_n)C\ \Longrightarrow\ x=Cy,\quad y=C^{-1}x`,
+  ],
+  "la.sp.ortho": [
+    fl("施密特正交化与正交矩阵隐含信息", [
+      { from: "施密特正交化", arrow: "→", to: "先验证原向量组线性无关 → 逐个减去投影得正交组 βₖ → 最后统一单位化 ηₖ=βₖ/‖βₖ‖" },
+      { from: "正交矩阵 Q", arrow: "⇔", to: ["QᵀQ = QQᵀ = E ⇔ Q⁻¹ = Qᵀ", "Q 的列（行）向量组均为单位正交基"] },
+      { from: "正交矩阵隐含性质", arrow: "⇒", to: ["|Q| = ±1；实特征值只能为 ±1", "保内积与长度：(Qx, Qy)=(x, y)，‖Qx‖=‖x‖", "正交阵乘积 Q₁Q₂ 与转置 Qᵀ 仍为正交阵"] },
+    ]),
+    m`\beta_k=\alpha_k-\sum_{j<k}\frac{(\alpha_k,\beta_j)}{(\beta_j,\beta_j)}\beta_j,\quad \eta_k=\frac{\beta_k}{\|\beta_k\|},\quad Q^TQ=E`,
+  ],
+  "la.eq.solvability": [
+    fl("线性方程组有解判别（对增广矩阵只做行变换！）", [
+      { from: "Ax = b 无解", arrow: "⇔", to: "r(A) < r(A | b)（行阶梯出现 0 = 非零常数）" },
+      { from: "Ax = b 唯一解", arrow: "⇔", to: "r(A) = r(A | b) = n（方阵时 ⇔ |A|≠0，可用克拉默法则）" },
+      { from: "Ax = b 无穷多解", arrow: "⇔", to: "r(A) = r(A | b) < n（含参方程先算 |A|=0 锁参数，再逐个代回检验 r(A) 与 r(A|b)）" },
+      { from: "齐次 Ax = 0 有非零解", arrow: "⇔", to: "r(A) < n（方阵时 ⇔ |A|=0；m<n 必有非零解）" },
+    ]),
+  ],
+  "la.eq.structure": [
+    fl("解的结构与特解线性组合铁律", [
+      { from: "基础解系", arrow: "→", to: "Ax=0 的 s = n − r(A) 个线性无关解 ξ₁,…,ξₛ；通解 x = k₁ξ₁+…+kₛξₛ" },
+      { from: "非齐次通解", arrow: "→", to: "x = η* + k₁ξ₁ + … + kₛξₛ（特解 + 对应齐次通解；独立解最多有 s+1 个）" },
+      { from: "已知 Ax=b 的解 η₁,…,ηₘ", arrow: "⇒", to: ["∑kᵢηᵢ 仍是 Ax=b 的解 ⇔ ∑kᵢ = 1", "∑kᵢηᵢ 是 Ax=0 的解 ⇔ ∑kᵢ = 0（特别地 ηᵢ−ηⱼ 是齐次解）"] },
+      { from: "反求方程组 Ax=0", arrow: "⇒", to: "把已知基础解系横排成矩阵 B，解 Bx=0 的基础解系即为 A 的行向量" },
+    ]),
+  ],
+  "la.eq.common": [
+    fl("公共解与同解方程组实战路线", [
+      { from: "求 Ax=0 与 Bx=0 公共解", arrow: "→", to: ["两方程均给出：联立 [A; B]x = 0 求解（基础解系维数 = n − r([A; B])）", "一给方程一给通解：把 B 的通解代入 Ax=0 定自由系数关系"] },
+      { from: "Ax=0 与 Bx=0 同解", arrow: "⇔", to: ["r(A) = r(B) = r([A; B])（行向量组等价）", "常考推论：AᵀAx=0 与 Ax=0 恒同解；r(A)=r(B) 且 Ax=0 的解全满足 Bx=0 ⇒ 同解"] },
+      { from: "A²x=0 与 Ax=0 不同解", arrow: "⇒", to: "必有 |A|=0 且 r(A²) < r(A)（可用于反推参数）" },
+    ]),
+  ],
+  "la.eig.value": [
+    fl("定义与求法", [
+      { from: "定义", arrow: "→", to: "Aα = λα（α ≠ 0）；n 阶方阵有 n 个特征值（按重数计）" },
+      { from: "求特征值", arrow: "→", to: ["定义法：Aα=λα / 零化式 f(A)=O ⇒ f(λ)=0", "特征方程：|λE−A|=0 或 |A−λE|=0", "相似转化：找 B 使 A∼B（无关基 AP=PB、循环基化友矩阵）"] },
+      { from: "求特征向量", arrow: "→", to: ["定义法 & 矩阵方程：(A−λE)B=O ⇒ B 非零列为特征向量", "基础解系法：解 (λE−A)x=0（B(Aᵀ−λE)=O 先转置）"] },
+    ]),
+    fl("核心性质与秩 1 捷径", [
+      { from: "基本性质", arrow: "→", to: ["不同特征值的特征向量线性无关（组合绝不是 A 的特征向量）", "k 重特征值至多有 k 个无关特征向量：1 ≤ n−r(λᵢE−A) ≤ k", "|A| = ∏λᵢ，tr(A) = ∑aᵢᵢ = ∑λᵢ"] },
+      { from: "秩 1 阵 A=αβᵀ", arrow: "⇒", to: "唯一非零根 λ₁ = tr(A) = βᵀα（对应 α），其余 n−1 个全为 0", note: "含行和相等拆 aE+b11ᵀ、投影阵 ∑αᵢαᵢᵀ" },
+    ]),
+    {
+      type: "table",
+      headers: ["矩阵", "A", "kA+E", "A+kE", "A⁻¹", "A*", "Aⁿ", "P⁻¹AP", "f(A)"],
+      rows: [
+        ["特征值", "λ", "kλ+1", "λ+k", "1/λ", "|A|/λ", "λⁿ", "λ", "f(λ)"],
+        ["特征向量", "α", "α", "α", "α", "α", "α", "P⁻¹α", "α"],
+      ],
+    },
+  ],
+  "la.eig.diag": [
+    fl("相似定义与必要条件", [
+      { from: "相似定义", arrow: "⇔", to: "∃ 可逆 P 使 P⁻¹AP=B（等价于 AP=PB）" },
+      { from: "A ∼ B（必要条件）", arrow: "⇒", to: ["r(A)=r(B)，|A|=|B|，tr(A)=tr(B)", "|λE−A|=|λE−B|（特征值全同），r(λE−A)=r(λE−B)", "A+kE ∼ B+kE，Aⁿ ∼ Bⁿ（进而 Aⁿ=PBⁿP⁻¹），f(A) ∼ f(B)"] },
+      { from: "特征值全同（含重数）", arrow: "↛", to: "未必相似", note: "除非两者均可对角化" },
+    ]),
+    fl("可对角化（充要 ⇔ / 充分 ⟸ / 推论 ⇒）", [
+      { from: "可对角化", arrow: "⇔", to: ["A 有 n 个线性无关的特征向量", "每个 k 重特征值必有 k 个无关特征向量", "r(λᵢE−A) = n − kᵢ（单根自动满足，只查重根）"] },
+      { from: "可对角化", arrow: "⟸", to: ["A 有 n 个互异特征值", "A 是实对称矩阵（可用正交阵对角化）", "无重根零化式（A²=A / A²+A=O / A²=E）", "秩 1 阵且 tr(A)≠0（反例：A²=O 或 tr=0 秩 1 阵不可）", "AB=BA 且 A 有 n 个互异根 ⇒ 同 P 同时对角化"] },
+      { from: "可对角化", arrow: "⇒", to: ["r(A) = 非零特征值个数（秒算 A²+A=O、f(A) 的秩）", "Aⁿ = PΛⁿP⁻¹（一般相似对角化不需正交化！）", "两均可对角化阵同特征值 ⇒ 相似，桥梁 P = P₁P₂⁻¹"] },
+    ]),
+    fl("实对称矩阵隐含的信息", [
+      { from: "实对称 Aᵀ=A", arrow: "⇒", to: ["必与对角矩阵相似，且可用正交阵对角化 QᵀAQ=Λ（须正交化且单位化，Q⁻¹=Qᵀ）", "不同特征值的特征向量必正交（列 αᵀx=0 直接反求向量）", "特征值必是实数；k 重根必有 k 个无关特征向量", "r(A) = 非零特征值个数；谱分解 A = QΛQᵀ = ∑λᵢηᵢηᵢᵀ", "实对称阵之间：特征值相同 ⇔ 相似 ⇒ 合同 ⇒ 等价"] },
+    ]),
+  ],
+  "la.eig.similar": [
+    fl("相似定义与传递桥梁", [
+      { from: "定义", arrow: "⇔", to: "P⁻¹AP=B ⇔ AP=PB（含无关基作用、循环基化友矩阵、列变换 BA=AP ⇒ B∼P）" },
+      { from: "传递桥梁", arrow: "⇒", to: ["P₁⁻¹AP₁=B 且 P₂⁻¹BP₂=C ⇒ (P₁P₂)⁻¹A(P₁P₂)=C", "P₁⁻¹AP₁=Λ=P₂⁻¹BP₂ ⇒ (P₁P₂⁻¹)⁻¹A(P₁P₂⁻¹)=B"] },
+      { from: "同阶乘积 AB, BA", arrow: "⇒", to: "特征值全同（A 或 B 可逆时进一步有 AB ∼ BA）" },
+    ]),
+    fl("判相似的两条实战路线", [
+      { from: "A ∼ B（必要条件）", arrow: "⇒", to: ["r(A)=r(B)，|A|=|B|，tr(A)=tr(B)，|λE−A|=|λE−B|", "A+kE ∼ B+kE，r(A+kE)=r(B+kE)，Aⁿ ∼ Bⁿ，f(A) ∼ f(B)"] },
+      { from: "均可对角化", arrow: "⇒", to: "特征值相同即相似，桥梁 P = P₁P₂⁻¹（实对称取 Q = Q₁Q₂ᵀ）" },
+      { from: "不可对角化", arrow: "⇒", to: "同特征值时直接比较 r(λ₀E−X) 区分 Jordan 块" },
+    ]),
+  ],
+  "la.eig.quad": [
+    fl("二次型矩阵、标准形、规范形与合同判别", [
+      { from: "写实对称矩阵 A", arrow: "→", to: "平方项系数直接放对角线，交叉项 2aᵢⱼxᵢxⱼ 系数折半放对称位置" },
+      { from: "配方法 vs 正交变换法", arrow: "→", to: ["配方法（一般可逆阵 C）：不保特征值，但快求标准形与正负惯性指数 (p, q)", "正交变换法（x=Qy，QᵀQ=E）：标准形系数必为 A 的特征值（求约束极值必用）"] },
+      { from: "A ≃ B（实对称合同）", arrow: "⇔", to: ["∃ 可逆 C 使 CᵀAC = B", "正负惯性指数 (p, q) 完全相同（即正/负特征值个数分别相同）"] },
+      { from: "实对称三大关系链", arrow: "⇒", to: ["同特征值 ⇔ 相似 ⇒ 合同 ⇒ 等价（同秩 r=p+q）", "一般矩阵注意：合同不要求特征值相同，仅需符号个数一致"] },
+    ]),
+    m`f(x)=x^TAx,\quad x=Cy\Rightarrow f=y^TC^TACy,\quad Q^TAQ=\operatorname{diag}(\lambda_1,\ldots,\lambda_n)`,
+  ],
+  "la.eig.pd": [
+    fl("正定矩阵充要链与高频必要条件（前提：A 实对称！）", [
+      { from: "A 正定", arrow: "⇔", to: ["∀x≠0，xᵀAx > 0", "A 的全部特征值 λᵢ > 0", "正惯性指数 p = n ⇔ A ≃ E（与单位阵合同）", "∃ 可逆阵 C 使 A = CᵀC（列满秩 B 构成 BᵀB 必正定）", "各阶顺序主子式 Δₖ > 0（k = 1,…,n，选填定参最常用）"] },
+      { from: "A 正定（高频必要条件）", arrow: "⇒", to: ["对角元 aᵢᵢ > 0 且 |A| > 0（用来快速排除非正定选项）", "A⁻¹、A*、Aᵐ（m∈Z）、CᵀAC（C 可逆）以及正定阵正系数线性组合均正定"] },
+      { from: "半正定 / 负定辨析", arrow: "→", to: ["半正定 ⇔ λᵢ ≥ 0 ⇔ 全部主子式（非仅顺序主子式！）≥ 0", "负定 ⇔ −A 正定 ⇔ (−1)ᵏΔₖ > 0（奇负偶正）"] },
+    ]),
+  ],
+  "prob.base.axioms": [
+    fl("事件运算、容斥与古典/几何概型", [
+      { from: "对偶与差事件", arrow: "→", to: ["德摩根律：overline(A∪B)=ĀB̄，overline(AB)=Ā∪B̄", "P(A−B) = P(A) − P(AB)（若 B⊂A 则为 P(A)−P(B)）"] },
+      { from: "容斥公式（高频）", arrow: "→", to: ["P(A∪B) = P(A) + P(B) − P(AB)", "P(A∪B∪C) = ∑P(A) − ∑P(AB) + P(ABC)（至少一个发生常取对立事件 1−P(ĀB̄C̄)）"] },
+      { from: "古典 vs 几何概型", arrow: "→", to: "有限等可能用计数比 k/n（分清放回/不放回、有序/无序）；连续均匀区域用长度/面积/体积比" },
+    ]),
+  ],
+  "prob.base.cond": [
+    fl("条件概率、全概率与贝叶斯决策链", [
+      { from: "条件概率与乘法公式", arrow: "→", to: "P(A|B) = P(AB)/P(B)（P(B)>0）；多步抽球/递进事件用 P(ABC)=P(A)P(B|A)P(C|AB)" },
+      { from: "由因求果（全概率）", arrow: "⇒", to: "把第一步结果拆成完备互斥组 A₁,…,Aₙ，再加权 P(B) = ∑P(Aᵢ)P(B|Aᵢ)" },
+      { from: "由果溯因（贝叶斯）", arrow: "⇒", to: "已知结果 B 已发生，反求来自第 j 路的概率：P(Aⱼ|B) = 单路贡献 / 全概率总和" },
+    ]),
+    m`P(B)=\sum_i P(A_i)P(B\mid A_i),\qquad P(A_j\mid B)=\frac{P(A_j)P(B\mid A_j)}{\sum_i P(A_i)P(B\mid A_i)}`,
+  ],
+  "prob.base.indep": [
+    fl("独立性与互斥辨析、伯努利试验", [
+      { from: "A, B 相互独立", arrow: "⇔", to: ["P(AB) = P(A)P(B) ⇔ P(A|B) = P(A)（P(B)>0）", "等价于 Ā,B / A,B̄ / Ā,B̄ 均相互独立"] },
+      { from: "独立 vs 互斥（高频雷区）", arrow: "↛", to: "正概率互斥事件必不独立（AB=∅ ⇒ P(AB)=0 ≠ P(A)P(B)）；两两独立推不出相互独立（三事件还须查 P(ABC)=P(A)P(B)P(C)）" },
+      { from: "独立重复试验", arrow: "→", to: ["n 次成功 k 次：B(n,p)，P{X=k}=Cₙᵏpᵏ(1−p)ⁿ⁻ᵏ", "首次成功所需次数：几何分布 G(p)，P{X=k}=(1−p)ᵏ⁻¹p（k≥1，具无记忆性）"] },
+    ]),
+  ],
+  "prob.rv.dist": [
+    fl("分布函数四性质、跃度与常见分布速查", [
+      { from: "分布函数 F(x)", arrow: "→", to: ["单调不减、右连续、F(−∞)=0、F(+∞)=1；线性组合 ∑aᵢFᵢ 合法 ⇔ aᵢ≥0 且 ∑aᵢ=1", "单点概率读跃度：P{X=a} = F(a) − F(a−0)（连续 ⇔ 处处单点概率为 0）", "对称密度 f(c+x)=f(c−x) ⇒ F(c)=1/2，F(c+t)+F(c−t)=1"] },
+      { from: "指数分布 E(λ) 无记忆性", arrow: "⇒", to: "P{X>s+t | X>s} = P{X>t} = e⁻λᵗ；泊松过程相邻间隔服从 E(λ)" },
+      { from: "正态分布 N(μ, σ²)", arrow: "⇒", to: "第一步统一标准化 Z=(X−μ)/σ ∼ N(0,1)；密度峰值 1/(√(2π)σ) 在 x=μ 处，拐点 (μ, 1/2)" },
+      { from: "二项泊松近似", arrow: "→", to: "n 大 p 小时 B(n,p) ≈ P(λ=np)；泊松相邻项比值 P(k)/P(k−1)=λ/k 秒定 λ" },
+    ]),
+    {
+      type: "table",
+      headers: ["分布", "B(n,p)", "P(λ)", "G(p)", "U(a,b)", "E(λ)", "N(μ,σ²)"],
+      rows: [
+        ["期望 E", "np", "λ", "1/p", "(a+b)/2", "1/λ", "μ"],
+        ["方差 D", "np(1−p)", "λ", "(1−p)/p²", "(b−a)²/12", "1/λ²", "σ²"],
+      ],
+    },
+  ],
+  "prob.rv.func": [
+    fl("一维函数 Y=g(X) 分布的 3 条路线", [
+      { from: "严格单调可微", arrow: "⇒", to: "先定 Y 值域 (α,β)，反解 x=h(y)，代 f_Y(y) = f_X(h(y))|h′(y)|（递减不等号反向）" },
+      { from: "非单调 / 分段常值（如 X²、max）", arrow: "⇒", to: "一律用分布函数法 F_Y(y)=P{g(X)≤y} 画图分段反解；常值平段必产生点质量跃度（混合型）" },
+      { from: "概率积分变换（高频）", arrow: "⇒", to: "X 连续且分布函数为 F(x) ⇒ Y = F(X) ∼ U(0,1)" },
+    ]),
+    m`f_Y(y)=f_X(h(y))|h'(y)|,\qquad Y=X^2\Rightarrow f_Y(y)=\frac{f_X(\sqrt y)+f_X(-\sqrt y)}{2\sqrt y}\ (y>0)`,
+  ],
+  "prob.mv.joint": [
+    fl("二维联合、边缘与条件分布核心动作", [
+      { from: "二维离散", arrow: "→", to: "先画联合分布表，行和/列和读边缘；条件分布 = 该行（列）除以行（列）和；强约束（如 X²=Y²）先置零无关格" },
+      { from: "二维连续", arrow: "→", to: ["第一步先画非零支集 D（非矩形支集必不独立！）", "求 f_X(x) 固定 x 画竖线穿 D 定 y 上下限；条件密度 f_{Y|X}=f(x,y)/f_X(x) 须写明 x 范围"] },
+      { from: "条件构造 / 开关混合", arrow: "⇒", to: ["已知边缘 + 条件：乘法拼联合 f=f_X·f_{Y|X}，求矩直接用重期望 E[E(Y|X)]", "含 0-1 / 符号开关变量：全概率按离散值拆开，检查 0 点跃度"] },
+      { from: "二维分布函数容斥", arrow: "→", to: "P{X>a, Y>b} = 1 − F_X(a) − F_Y(b) + F(a,b)（注意最后是加号！）" },
+    ]),
+    m`N(\mu_1,\mu_2;\sigma_1^2,\sigma_2^2;\rho):\ Y\mid(X=x)\sim N\!\left(\mu_2+\rho\frac{\sigma_2}{\sigma_1}(x-\mu_1),\ (1-\rho^2)\sigma_2^2\right)`,
+  ],
+  "prob.mv.indep": [
+    fl("独立性与不相关辨析链（二维正态特权！）", [
+      { from: "X, Y 相互独立", arrow: "⇔", to: ["F(x,y)=F_X(x)F_Y(y) ⇔ f(x,y)=f_X(x)f_Y(y)（离散 pᵢⱼ=pᵢ·p·ⱼ）", "独立 ⇒ g(X) 与 h(Y) 仍独立；E(XY)=EX·EY；Cov(X,Y)=0"] },
+      { from: "一般分布：不相关（ρ=0）", arrow: "↛", to: "未必独立（经典反例：X∼N(0,1)，Y=X²）" },
+      { from: "联合服从二维正态", arrow: "⇒", to: "不相关（ρ=0） ⇔ 相互独立 ⇔ 条件密度等于边缘密度（必须联合正态，仅边缘正态不行！）" },
+    ]),
+  ],
+  "prob.mv.func": [
+    fl("多维随机变量函数分布 4 大高频模型", [
+      { from: "独立正态线性组合", arrow: "⇒", to: "直接套再生性 aX+bY ∼ N(aμ₁+bμ₂, a²σ₁²+b²σ₂²)，绝不卷积（相减方差仍相加！）" },
+      { from: "最值 max / min（独立）", arrow: "⇒", to: ["F_max(z) = ∏Fᵢ(z)（全 ≤ z）；F_min(z) = 1 − ∏[1−Fᵢ(z)]（全 > z）", "独立指数最小值仍服从参数相加的指数分布 E(∑λᵢ)；无独立假设改用容斥"] },
+      { from: "一离散一连续混合", arrow: "⇒", to: "全概率按离散取值拆开：加法平移密度重叠处相加，乘法在 0 分支产生跃度" },
+      { from: "二维连续和/积/商/距离", arrow: "→", to: "和差用卷积（两支集交集定限）；矩形均匀分布的 XY、|X−Y| 直接画平面区域算面积再求导" },
+    ]),
+    m`f_{X+Y}(z)=\int_{-\infty}^{+\infty}f(x,z-x)\,dx,\qquad f_{X/Y}(z)=\int_{-\infty}^{+\infty}|y|f(yz,y)\,dy`,
+  ],
+  "prob.num.ex": [
+    fl("期望、方差、协方差与相关系数实战捷径", [
+      { from: "混合分布 F=∑pᵢFᵢ", arrow: "⇒", to: "各阶原点矩直接加权 E(Xᵏ)=∑pᵢE(Xᵢᵏ)；方差必用 E(X²)−(EX)²，切勿直接加权方差！" },
+      { from: "绝对值期望与二阶矩最值", arrow: "⇒", to: ["Z∼N(0,σ²) ⇒ E|Z|=√(2/π)σ；同参独立指数 |X−Y| ∼ E(λ)", "E[(X−c)²] = DX + (EX−c)² 在 c=EX 处取唯一最小值 DX"] },
+      { from: "独立乘积与重期望", arrow: "→", to: ["独立时 D(XY)=E(X²)E(Y²)−(EX·EY)²（不是 DX·DY！）；max·min = XY", "两步取数套重期望 E(Y)=E[E(Y|X)]；计数期望直接拆 0-1 示性变量和（不要求独立）"] },
+      { from: "相关系数 ρ = ±1 与线性变换", arrow: "⇔", to: ["|ρ|=1 ⇔ 几乎必然线性关系 Y=aX+b（木棒截两段 X+Y=1 ⇒ ρ=−1）", "ρ(aX+b, cY+d) = sgn(ac)ρ(X,Y)；Cov(X+Y, X−Y) = DX − DY"] },
+    ]),
+    m`D(aX+bY)=a^2DX+b^2DY+2ab\operatorname{Cov}(X,Y),\quad \rho_{XY}=\frac{\operatorname{Cov}(X,Y)}{\sqrt{DX\cdot DY}}`,
+  ],
+  "prob.num.ineq": [
+    fl("切比雪夫不等式估界（只知期望与方差）", [
+      { from: "中心必须对齐 EX", arrow: "→", to: "P{|Z−EZ| ≥ ε} ≤ DZ/ε²；P{|Z−EZ| < ε} ≥ 1 − DZ/ε²（看到 |X−c| 自动核对 c 是否等于 EX）" },
+      { from: "样本平方均值估界", arrow: "⇒", to: "Z = (1/n)∑Xᵢ² 的期望为 μ₂、方差为 (μ₄−μ₂²)/n（先算方差再代公式）" },
+    ]),
+    m`P\{|Z-EZ|\ge\varepsilon\}\le\frac{DZ}{\varepsilon^2},\qquad P\{|Z-EZ|<\varepsilon\}\ge1-\frac{DZ}{\varepsilon^2}`,
+  ],
+  "prob.limit.lln": [
+    fl("大数定律与依概率收敛判别", [
+      { from: "辛钦大数定律（i.i.d.）", arrow: "⇒", to: "独立同分布且 E|g(X₁)| < ∞ ⇒ (1/n)∑g(Xᵢ) 依概率收敛于 E[g(X₁)]（连续函数保依概率收敛）" },
+      { from: "切比雪夫（独立不同分布）", arrow: "⇒", to: "只要 (1/n²)∑D(Xᵢ) → 0 即服从大数定律（方差一致有界只是充分条件，非必要！）" },
+    ]),
+    m`\frac{1}{n}\sum_{i=1}^n g(X_i)\xrightarrow{P}E[g(X_1)],\qquad \frac{1}{n^2}\sum_{i=1}^n DX_i\to0\Rightarrow\text{服从大数定律}`,
+  ],
+  "prob.limit.clt": [
+    fl("中心极限定理与正态样本均值标准化", [
+      { from: "大样本求和 / 均值近似", arrow: "⇒", to: "独立同分布（均值 μ、方差 σ²>0）：和减 nμ 除 √n·σ，均值减 μ 除 σ/√n，统一转成 Φ" },
+      { from: "成对作差 / 平方均值", arrow: "⇒", to: "先确认每块 Yᵢ 独立同分布，再算单块 EYᵢ、DYᵢ（如 D(X₂ᵢ₋₁−X₂ᵢ)=2σ²）定缩放系数" },
+      { from: "反求最小样本量", arrow: "→", to: "解出 n 的小数必须向上取整；分母切勿把 σ² 当成 σ 或漏掉 √n" },
+    ]),
+    m`\frac{\sum_{i=1}^n X_i-n\mu}{\sigma\sqrt n}=\frac{\overline X-\mu}{\sigma/\sqrt n}\xrightarrow{d}N(0,1)`,
+  ],
+  "prob.stat.sample": [
+    fl("样本数字特征与三大抽样分布构造铁律", [
+      { from: "一般总体（不要求正态）", arrow: "→", to: "E(X̄)=μ，D(X̄)=σ²/n，E(S²)=σ²（S² 分母为 n−1）；D(Xᵢ−X̄) = (n−1)σ²/n" },
+      { from: "正态总体专属三大结论", arrow: "⇒", to: ["X̄ 与 S² 相互独立；D(S²) = 2σ⁴/(n−1)", "减总体 μ ⇒ ∑(Xᵢ−μ)²/σ² ∼ χ²(n)；减样本 X̄ ⇒ (n−1)S²/σ² ∼ χ²(n−1)", "(X̄−μ)/(S/√n) ∼ t(n−1)（未知 σ 用 S 换 σ 立刻变 t）"] },
+      { from: "三大分布高频恒等与雷区", arrow: "⇒", to: ["χ²(n)：E=n, D=2n，独立可加（未说明独立不可套！）", "t(n)：分子标准正态与分母卡方必独立；T∼t(n) ⇒ T²∼F(1,n)，且 F_{2α}(1,n)=t_α²(n)", "F(m,n)：1/F ∼ F(n,m)，F_{1−α}(m,n)=1/F_α(n,m)；m=n 时 P{F>1}=1/2"] },
+    ]),
+    m`\frac{(n-1)S^2}{\sigma^2}\sim\chi^2(n-1),\quad T=\frac{U}{\sqrt{V/n}}\sim t(n),\quad F=\frac{U/m}{V/n}\sim F(m,n)`,
+  ],
+  "prob.stat.est": [
+    fl("点估计（常规求导 vs 边界单调）与评价标准", [
+      { from: "矩估计", arrow: "→", to: "令总体矩 E(X)=X̄ 解出 θ̂（一阶不含 θ 则补二阶 E(X²)=A₂）" },
+      { from: "支撑不含参数 ⇒ 求导 MLE", arrow: "⇒", to: "写 L(θ)=∏f(xᵢ;θ) → 取 ln L → 求导置零（双样本直接连乘；离散按频数合并指数）" },
+      { from: "支撑含参数 ⇒ 边界 MLE", arrow: "⇒", to: ["严禁盲目求导！先写示性约束锁 x_(1) 或 x_(n)，再按单调性取端点", "U(0,θ) ⇒ X_(n)；平移指数 x>θ ⇒ X_(1)；拉普拉斯 |x−μ| ⇒ 样本中位数"] },
+      { from: "无偏性 / 有效性 / MSE", arrow: "→", to: ["无偏：E(θ̂)=θ；有效：比较方差大小；反方差加权得两独立无偏估计最小方差", "MSE = D(θ̂) + (偏差)²（允许微偏换更小方差）"] },
+      { from: "正态均值置信区间", arrow: "→", to: "已知 σ 用 z_{α/2}，未知 σ 用 t_{α/2}(n−1)；双侧区间恒关于 x̄ 对称；对数正态先取 ln xᵢ" },
+    ]),
+    m`\sigma\text{已知}:\bar x\pm z_{\alpha/2}\frac{\sigma}{\sqrt n};\quad\sigma\text{未知}:\bar x\pm t_{\alpha/2}(n-1)\frac{s}{\sqrt n};\quad\sigma^2\in\left[\frac{(n-1)s^2}{\chi^2_{\alpha/2}},\frac{(n-1)s^2}{\chi^2_{1-\alpha/2}}\right]`,
+  ],
+  "prob.stat.hyp": [
+    fl("单正态假设检验与两类错误逻辑链", [
+      { from: "两类错误精确定义", arrow: "→", to: ["α = P(拒绝 H₀ | H₀ 为真)（弃真，代 H₀ 边界参数算拒绝域）", "β = P(接受 H₀ | H₁ 为真)（取伪，代 H₁ 真值 μ₁ 算接受域！）"] },
+      { from: "样本量 n 固定时 α↓", arrow: "⇒", to: "临界值 z_{α/2}↑ ⇒ 拒绝域变窄 ⇒ 更难拒绝 H₀ ⇒ β↑（仅增大 n 能双降）" },
+      { from: "拒绝域方向跟 H₁ 走", arrow: "⇒", to: ["H₁: μ>μ₀ ⇒ 右尾 ≥ z_α（单侧别错用 α/2！）", "H₁: μ<μ₀ ⇒ 左尾 ≤ −z_α；H₁: μ≠μ₀ ⇒ 双尾 |U| ≥ z_{α/2}"] },
+      { from: "三大统计量速选", arrow: "→", to: "均值 σ 已知用 U ∼ N(0,1)；均值 σ 未知用 T ∼ t(n−1)；方差 μ 未知用 (n−1)S²/σ₀² ∼ χ²(n−1)" },
+    ]),
+  ],
 };

@@ -2,9 +2,17 @@ import { CS408_BOOKS } from "@/data/kg/cs408";
 import { MATH_BOOKS } from "@/data/kg/math";
 
 // 知识模板只保存教学内容与原题引用；作答记录仍复用图谱/错题集的账号同步。
+export interface ReviewFlowItem {
+  from: string;
+  arrow?: "⇒" | "⇔" | "⟸" | "↛" | "→";
+  to: string | string[];
+  note?: string;
+}
+
 export type ReviewBlock =
   | { type: "text"; text: string }
   | { type: "math"; tex: string }
+  | { type: "flow"; title?: string; items: ReviewFlowItem[] }
   | { type: "code"; code: string }
   | { type: "table"; headers: string[]; rows: string[][] };
 

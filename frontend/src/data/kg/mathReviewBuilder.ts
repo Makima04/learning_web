@@ -1,9 +1,10 @@
 import { MATH_BOOKS } from "./math";
-import type { KnowledgeReview, ReviewBlock, ReviewStep } from "@/lib/kg/knowledgeReview";
+import type { KnowledgeReview, ReviewBlock, ReviewFlowItem, ReviewStep } from "@/lib/kg/knowledgeReview";
 
 export const text = (value: string): ReviewBlock => ({ type: "text", text: value });
 /** 原样保存 TeX，避免手写教案时把反斜杠转成 JS 转义字符。 */
 export const math = (value: TemplateStringsArray): ReviewBlock => ({ type: "math", tex: value.raw.join("") });
+export const flow = (title: string, items: ReviewFlowItem[]): ReviewBlock => ({ type: "flow", title, items });
 export const step = (title: string, action: string, ...working: ReviewBlock[]): ReviewStep => ({ title, action, working });
 const names = new Map(MATH_BOOKS.flatMap((book) => book.modules.flatMap((module) => module.kps.map((kp) => [kp.id, kp.name] as const))));
 
