@@ -1409,6 +1409,70 @@
 .mh-sg-row:last-child {
   border-bottom: 0;
 }
+.mh-sg-body {
+  display: inline;
+}
+.mh-sg-row.is-structured .mh-sg-body {
+  display: block;
+  margin-top: 0.55rem;
+}
+.mh-sg-cases {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: mhsgcase;
+  display: grid;
+  gap: 0.55rem;
+}
+.mh-sg-cases > li {
+  position: relative;
+  margin: 0;
+  padding: 0.58rem 0.85rem 0.58rem 2.25rem;
+  border-radius: 8px;
+  background: var(--mh-paper);
+  border: 1px solid var(--mh-line);
+  line-height: 1.75;
+  counter-increment: mhsgcase;
+}
+.mh-sg-cases > li::before {
+  content: counter(mhsgcase);
+  position: absolute;
+  left: 0.65rem;
+  top: 0.72rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 99px;
+  background: var(--mh-accent-soft);
+  color: var(--mh-accent);
+  font-size: 0.72rem;
+  font-weight: 750;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.mh-sg-case-head {
+  font-weight: 700;
+  color: var(--mh-ink);
+}
+.mh-sg-case-note {
+  color: var(--mh-muted);
+  font-size: 0.86rem;
+}
+.mh-sg-case-formula {
+  display: block;
+  margin: 0.32rem 0 0.2rem;
+  padding: 0.34rem 0.65rem;
+  border-radius: 6px;
+  background: var(--mh-surface);
+  border: 1px solid var(--mh-line);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.mh-sg-case-formula math {
+  font-size: 1.08em;
+  math-style: normal;
+}
 .mh-tpl-math {
   font-family: "STIX Two Math", "Cambria Math", "Times New Roman", Georgia, serif;
   font-size: 1.05em;
@@ -1528,6 +1592,79 @@
 }
 .mh-sg-row.is-pitfall {
   background: color-mix(in srgb, var(--mh-accent-2-bg) 42%, var(--mh-paper));
+}
+.mh-sg-row.is-principle {
+  padding: 0;
+  background: color-mix(in srgb, var(--mh-surface) 70%, var(--mh-paper));
+}
+.mh-sg-principle {
+  width: 100%;
+}
+.mh-sg-principle-sum {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.68rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background 0.15s;
+}
+.mh-sg-principle-sum::-webkit-details-marker {
+  display: none;
+}
+.mh-sg-principle-sum:hover {
+  background: color-mix(in srgb, var(--mh-accent-soft) 55%, transparent);
+}
+.mh-sg-principle-hint {
+  font-size: 0.8rem;
+  color: var(--mh-muted);
+}
+.mh-sg-principle-chevron {
+  margin-left: auto;
+  color: var(--mh-muted);
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+}
+.mh-sg-principle[open] > .mh-sg-principle-sum {
+  border-bottom: 1px dashed var(--mh-line-strong);
+}
+.mh-sg-principle[open] .mh-sg-principle-chevron {
+  transform: rotate(180deg);
+  color: var(--mh-accent);
+}
+.mh-sg-principle-body {
+  padding: 0.78rem 1rem 0.9rem;
+  background: var(--mh-paper);
+  font-size: 0.9rem;
+  line-height: 1.85;
+  color: var(--mh-ink);
+}
+.mh-sg-principle-body > :first-child {
+  margin-top: 0;
+}
+.mh-sg-principle-body > :last-child {
+  margin-bottom: 0;
+}
+.mh-sg-principle-body p {
+  margin: 0.45rem 0;
+}
+.mh-sg-principle-body ul,
+.mh-sg-principle-body ol:not(.mh-sg-cases) {
+  margin: 0.4rem 0;
+  padding-inline-start: 1.35rem;
+}
+.mh-sg-principle-body ul {
+  list-style: disc;
+}
+.mh-sg-principle-body ol:not(.mh-sg-cases) {
+  list-style: decimal;
+}
+.mh-sg-badge.is-principle {
+  margin-right: 0;
+  background: var(--mh-accent-soft);
+  color: var(--mh-accent);
+  border: 1px solid color-mix(in srgb, var(--mh-accent) 42%, transparent);
 }
 .mh-sg-row.is-roadmap {
   background: var(--mh-surface);

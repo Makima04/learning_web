@@ -843,22 +843,54 @@ def clean_short_title(title):
     return s or title.strip()
 
 
-def parse_scenario_guide(gbody):
-    m = re.search(r'<div class="scenario-guide"([^>]*)>(.*?)</div>\s*(?=<article|$)', gbody, re.S)
+def extract_div_by_class(html, cls):
+    """按 <div> 嵌套深度提取指定 class 的完整 <div>...</div>，避免内部嵌套 div 截断。"""
+    open_re = re.compile(rf'<div\b([^>]*\bclass="[^"]*\b{re.escape(cls)}\b[^"]*"[^>]*)>', re.S)
+    m = open_re.search(html)
     if not m:
         return None
-    attrs, inner = m.group(1), m.group(2)
+    attrs = m.group(1)
+    body_start = m.end()
+    tag_re = re.compile(r'<div\b|</div>', re.S)
+    depth = 1
+    for tm in tag_re.finditer(html, body_start):
+        if tm.group(0).startswith("</"):
+            depth -= 1
+            if depth == 0:
+                return attrs, html[body_start:tm.start()]
+        else:
+            depth += 1
+    return attrs, html[body_start:]
+
+
+def parse_scenario_guide(gbody):
+    extracted = extract_div_by_class(gbody, "scenario-guide")
+    if not extracted:
+        return None
+    attrs, inner = extracted
     st_m = re.search(r'data-short-title="([^"]+)"', attrs)
     short_title = unescape(st_m.group(1)).strip() if st_m else ""
     sec_m = re.search(r'data-section="([^"]+)"', attrs)
     section = unescape(sec_m.group(1)).strip() if sec_m else ""
 
     def grab_block(cls):
-        bm = re.search(rf'<div class="{cls}"[^>]*>(.*?)</div>', inner, re.S)
-        return bm.group(1).strip() if bm else ""
+        # 1) 优先匹配标准独立块 <div class="sg-xxx">...</div>（支持内部嵌套 div）
+        blk = extract_div_by_class(inner, cls)
+        if blk:
+            return blk[1].strip()
+        # 2) 兼容 <div class="sg-row"><span class="sg-badge sg-xxx">...</span><span class="sg-text">...</span></div>
+        rm = re.search(
+            rf'<div\b[^>]*class="[^"]*\bsg-row\b[^"]*"[^>]*>\s*'
+            rf'<span\b[^>]*class="[^"]*\b{re.escape(cls)}\b[^"]*"[^>]*>.*?</span>\s*'
+            rf'<span\b[^>]*class="[^"]*\bsg-text\b[^"]*"[^>]*>(.*?)</span>\s*</div>',
+            inner,
+            re.S,
+        )
+        return rm.group(1).strip() if rm else ""
 
     clue_html = grab_block("sg-clues")
     core_html = grab_block("sg-core")
+    principle_html = grab_block("sg-principle")
     pitfall_html = grab_block("sg-pitfall")
     roadmap_html = grab_block("sg-roadmap")
     featured_ids = list(dict.fromkeys(re.findall(r'href="#([^"]+)"', roadmap_html)))
@@ -867,6 +899,7 @@ def parse_scenario_guide(gbody):
         "section": section,
         "clueHtml": clue_html,
         "coreHtml": core_html,
+        "principleHtml": principle_html,
         "pitfallHtml": pitfall_html,
         "roadmapHtml": roadmap_html,
         "featuredAnchorIds": featured_ids,
@@ -1023,6 +1056,7 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
             "shortTitle": short_title,
             "clueHtml": "",
             "coreHtml": core_html,
+            "principleHtml": "",
             "pitfallHtml": "",
             "roadmapHtml": "",
             "featuredAnchorIds": featured,

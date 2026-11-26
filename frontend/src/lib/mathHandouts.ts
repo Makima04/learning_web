@@ -44,6 +44,7 @@ export interface HandoutGroupGuide {
   section?: string;
   clueHtml: string;
   coreHtml: string;
+  principleHtml?: string;
   pitfallHtml: string;
   roadmapHtml: string;
   featuredAnchorIds: string[];
@@ -153,7 +154,7 @@ export function useHandoutPriority(): [HandoutPriority, (p: HandoutPriority) => 
   return [priority, setPriority];
 }
 
-export const HANDOUTS_DATA_VERSION = "20261125v4";
+export const HANDOUTS_DATA_VERSION = "20261126v3";
 
 let handoutsIndexCache: Promise<MathHandoutIndex[]> | null = null;
 const handoutDetailCache = new Map<string, Promise<MathHandout | null>>();
