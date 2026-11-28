@@ -70,7 +70,7 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- validate
 5. **文档与仓库清洁约定**：
    - 不保留旧版排版样页、各章静态 `目录.md`、一次性评审 HTML/Demo 目录或过时报告；文档与代码/数据必须时刻同步。
 
-### 数学手稿全量补齐与分类重构进度表（`HANDOUTS_DATA_VERSION = "20261127v3"`）
+### 数学手稿全量补齐与分类重构进度表（`HANDOUTS_DATA_VERSION = "20261127v4"`）
 
 > 全站 **46/46 份手稿（206 个判别场景、1,677 道例题、0 空组、0 坏图、0 失效路线图锚点、0 `$` 残留）** 已全部完成场景化 UI 升级、**1,120/1,120（100%）李林 880** 与 **408/408（100%）历年数一真题** 全量覆盖，并对照《李林 880 数一题库》完成了全部 23 章的原生 MathML 题干/真实选项升级与高清原书解析图（1,120/1,120 齐备，`<details class="mh-orig-ans">`）挂载；其中**高数第 9 章多元函数积分学 3 讲**（第一类曲线曲面 7 组 / 曲线积分 6 组 / 曲面积分 7 组）已率先完成「左侧大类小眉标 + 按破题动作/几何图形细拆 + 泛化标题全量精修」示范升级：
 
@@ -91,7 +91,7 @@ cargo run --manifest-path backend/Cargo.toml --bin ew_pipeline -- validate
 ### 前端（frontend/）与后端（backend/）
 
 - 前端：Vite + React 18 + TS + Tailwind + Zustand，生产构建产物在 `frontend/dist`。
-- 后端：Rust Axum + PostgreSQL，优先使用数据库连接环境变量，其次使用项目内 `.local/database-url`，兼容原来的本机连接。鉴权 PBKDF2-HMAC-SHA256 + Bearer session。LLM 配置使用项目根的 `ew_llm.json` 或 `EW_LLM_*`。
+- 后端：Rust Axum + PostgreSQL，优先使用数据库连接环境变量，其次使用项目内 `.local/database-url`，兼容原来的本机连接。鉴权 PBKDF2-HMAC-SHA256 + Bearer session。LLM 配置使用项目根的 `ew_llm.json` 或 `EW_LLM_*`。只读学习快照 `GET /api/coach/snapshot` 由 `EW_COACH_TOKEN` / `EW_COACH_USERNAME` 控制（Token 留空则 404 禁用，限流 30 次/分），本地用 `scripts/analyze_study_snapshot.py` 交叉聚合补弱。
 - 本地目录：`materials/` 放原始资料，`papers/` 放处理中的试卷与题库数据，`tmp/` 放 OCR 与中间文件，`.local/` 放开发数据库和备份。目录分工见 `README.md`。
 
 ### Docker / CI / 部署（multi-arch 全部在 CI 构建）

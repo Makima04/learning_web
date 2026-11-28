@@ -25,6 +25,10 @@ pub struct Config {
     pub mail_from: String,
     /// 开发模式：不真正发信，把验证码打日志并在响应里返回 dev_code
     pub mail_dev: bool,
+    /// 只读学习状态快照接口的 Bearer Token（为空则禁用 /api/coach/snapshot）
+    pub coach_token: String,
+    /// 只读学习状态快照对应的用户名（为空则默认读取首个管理员账号）
+    pub coach_username: String,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -103,6 +107,9 @@ impl Config {
             .map(|v| v != "0")
             .unwrap_or(resend_api_key.is_empty());
 
+        let coach_token = env_nonempty("EW_COACH_TOKEN").unwrap_or_default();
+        let coach_username = env_nonempty("EW_COACH_USERNAME").unwrap_or_default();
+
         Self {
             database_url,
             session_ttl_days,
@@ -122,6 +129,8 @@ impl Config {
             resend_api_key,
             mail_from,
             mail_dev,
+            coach_token,
+            coach_username,
         }
     }
 

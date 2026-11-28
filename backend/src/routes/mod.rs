@@ -1,5 +1,6 @@
 mod auth;
 pub(crate) mod cards;
+mod coach;
 mod journal;
 mod kg;
 pub mod llm_cfg;
@@ -26,6 +27,7 @@ pub fn api_router() -> Router<AppState> {
     Router::new()
         .merge(auth::router())
         .merge(cards::router())
+        .merge(coach::router())
         .merge(study::router())
         .merge(system_update::router())
         .merge(meta::router())

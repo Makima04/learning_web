@@ -12,7 +12,8 @@ import os
 import re
 import shutil
 import subprocess
-from html import unescape
+from html import escape as html_escape, unescape
+from html.parser import HTMLParser
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
@@ -510,6 +511,261 @@ def load_lilin880_lookup():
 
 def strip_tags(s):
     return unescape(re.sub(r"<[^>]+>", "", s)).strip()
+
+
+# ---------------------------------------------------------------------------
+# MathML 括号/绝对值防拉伸规范化 + 题干内联小问自动分行
+# ---------------------------------------------------------------------------
+_MML_TALL_TAGS = {"mfrac", "munder", "munderover", "msubsup", "msqrt", "mroot", "mtable", "mover"}
+_MML_OPEN_TO_CLOSE = {"(": ")", "[": "]", "{": "}", "⟨": "⟩", "⌊": "⌋", "⌈": "⌉"}
+_MML_CLOSE_SET = set(_MML_OPEN_TO_CLOSE.values())
+_MML_SYM_FENCES = {"|", "‖"}
+_MML_ALL_DELIMS = set(_MML_OPEN_TO_CLOSE.keys()) | _MML_CLOSE_SET | _MML_SYM_FENCES
+_MML_VOID_TAGS = {"mspace", "mprescripts", "none", "mglyph"}
+
+
+class _MmlNode:
+    __slots__ = ("tag", "attrs", "children", "text", "void")
+
+    def __init__(self, tag=None, attrs=None, text=None, void=False):
+        self.tag = tag
+        self.attrs = dict(attrs) if attrs else {}
+        self.children = []
+        self.text = text
+        self.void = void
+
+
+class _MmlParser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self.root = _MmlNode("__root__")
+        self.stack = [self.root]
+
+    def handle_starttag(self, tag, attrs):
+        is_void = tag in _MML_VOID_TAGS
+        n = _MmlNode(tag=tag, attrs=attrs, void=is_void)
+        self.stack[-1].children.append(n)
+        if not is_void:
+            self.stack.append(n)
+
+    def handle_startendtag(self, tag, attrs):
+        n = _MmlNode(tag=tag, attrs=attrs, void=True)
+        self.stack[-1].children.append(n)
+
+    def handle_endtag(self, tag):
+        for i in range(len(self.stack) - 1, 0, -1):
+            if self.stack[i].tag == tag:
+                del self.stack[i:]
+                break
+
+    def handle_data(self, data):
+        self.stack[-1].children.append(_MmlNode(text=data))
+
+    def handle_entityref(self, name):
+        self.stack[-1].children.append(_MmlNode(text=f"&{name};"))
+
+    def handle_charref(self, name):
+        self.stack[-1].children.append(_MmlNode(text=f"&#{name};"))
+
+
+def _mml_text(n):
+    if n.tag is None:
+        return n.text or ""
+    return "".join(_mml_text(c) for c in n.children)
+
+
+def _mml_has_tall(n):
+    if n.tag in _MML_TALL_TAGS:
+        return True
+    return any(_mml_has_tall(c) for c in n.children if c.tag is not None)
+
+
+def _mml_render(n):
+    if n.tag is None:
+        return n.text or ""
+    if n.tag == "__root__":
+        return "".join(_mml_render(c) for c in n.children)
+    attr_str = "".join(f' {k}="{html_escape(str(v), quote=True)}"' for k, v in n.attrs.items())
+    if n.void and not n.children:
+        return f"<{n.tag}{attr_str}/>"
+    inner = "".join(_mml_render(c) for c in n.children)
+    return f"<{n.tag}{attr_str}>{inner}</{n.tag}>"
+
+
+def _mml_fix_container(container):
+    for c in container.children:
+        if c.tag is not None:
+            _mml_fix_container(c)
+    if container.tag not in ("math", "mrow"):
+        return
+
+    def _mo_delim(n):
+        if n.tag == "mo":
+            t = _mml_text(n).strip()
+            if t in _MML_ALL_DELIMS:
+                return t
+        return None
+
+    if not any(_mo_delim(c) is not None for c in container.children):
+        return
+    # 保留矩阵/分段函数 mtable 旁的大括号与定界符拉伸
+    if any(c.tag == "mtable" for c in container.children):
+        return
+
+    def _group_symmetric(nodes):
+        for sym in ("|", "‖"):
+            positions = [i for i, n in enumerate(nodes) if _mo_delim(n) == sym]
+            if len(positions) >= 2 and len(positions) % 2 == 0:
+                new_nodes = []
+                idx = 0
+                for p_idx in range(0, len(positions), 2):
+                    s_pos = positions[p_idx]
+                    e_pos = positions[p_idx + 1]
+                    new_nodes.extend(nodes[idx:s_pos])
+                    open_n = nodes[s_pos]
+                    inner = nodes[s_pos + 1:e_pos]
+                    close_n = nodes[e_pos]
+                    if not any(_mml_has_tall(x) for x in inner if x.tag is not None):
+                        open_n.attrs["stretchy"] = "false"
+                        close_n.attrs["stretchy"] = "false"
+                    open_n.attrs["form"] = "prefix"
+                    open_n.attrs["lspace"] = "0.12em"
+                    open_n.attrs["rspace"] = "0.02em"
+                    close_n.attrs["form"] = "postfix"
+                    close_n.attrs["lspace"] = "0.02em"
+                    close_n.attrs["rspace"] = "0.12em"
+                    mrow = _MmlNode("mrow")
+                    mrow.children = [open_n] + inner + [close_n]
+                    new_nodes.append(mrow)
+                    idx = e_pos + 1
+                new_nodes.extend(nodes[idx:])
+                nodes = new_nodes
+            elif positions:
+                for p in positions:
+                    nodes[p].attrs["stretchy"] = "false"
+        return nodes
+
+    def _group_brackets(nodes):
+        out = []
+        stack = []
+        for n in nodes:
+            d = _mo_delim(n)
+            if d in _MML_OPEN_TO_CLOSE:
+                stack.append((d, n, []))
+            elif d in _MML_CLOSE_SET and stack and _MML_OPEN_TO_CLOSE[stack[-1][0]] == d:
+                _open_d, open_n, inner = stack.pop()
+                inner = _group_symmetric(inner)
+                if not any(_mml_has_tall(x) for x in inner if x.tag is not None):
+                    open_n.attrs["stretchy"] = "false"
+                    n.attrs["stretchy"] = "false"
+                mrow = _MmlNode("mrow")
+                mrow.children = [open_n] + inner + [n]
+                if stack:
+                    stack[-1][2].append(mrow)
+                else:
+                    out.append(mrow)
+            else:
+                if stack:
+                    stack[-1][2].append(n)
+                else:
+                    out.append(n)
+        for _open_d, open_n, inner in stack:
+            open_n.attrs["stretchy"] = "false"
+            out.append(open_n)
+            out.extend(inner)
+        for x in out:
+            d = _mo_delim(x)
+            if d in _MML_CLOSE_SET or d in _MML_OPEN_TO_CLOSE:
+                x.attrs["stretchy"] = "false"
+        return _group_symmetric(out)
+
+    container.children = _group_brackets(container.children)
+
+
+def fix_mathml_in_html(html_str):
+    """修复行内/块级原生 MathML 中平铺括号与绝对值被兄弟分式/max/积分过度拉伸的问题。"""
+    if not html_str or "<math" not in html_str:
+        return html_str
+
+    def _repl(m):
+        raw = m.group(0)
+        try:
+            parser = _MmlParser()
+            parser.feed(raw)
+            parser.close()
+            for c in parser.root.children:
+                if c.tag is not None:
+                    _mml_fix_container(c)
+            return _mml_render(parser.root)
+        except Exception:
+            return raw
+
+    return re.sub(r"<math\b[^>]*>.*?</math>", _repl, html_str, flags=re.S)
+
+
+_SUBQ_ROMAN_SEQ = (
+    r"[（(]\s*(?:Ⅰ|I)\s*[）)]",
+    r"[（(]\s*(?:Ⅱ|II)\s*[）)]",
+    r"[（(]\s*(?:Ⅲ|III)\s*[）)]",
+    r"[（(]\s*(?:Ⅳ|IV)\s*[）)]",
+)
+_SUBQ_NUM_SEQ = (
+    r"[（(]\s*1\s*[）)]",
+    r"[（(]\s*2\s*[）)]",
+    r"[（(]\s*3\s*[）)]",
+    r"[（(]\s*4\s*[）)]",
+)
+_SUBQ_ROMAN_LABELS = ("（Ⅰ）", "（Ⅱ）", "（Ⅲ）", "（Ⅳ）")
+_SUBQ_NUM_LABELS = ("（1）", "（2）", "（3）", "（4）")
+
+
+def format_question_html(q_html):
+    """规范化题干 HTML：修复 MathML 括号拉伸，并将挤在同一段内的多小问（Ⅰ）（Ⅱ）等自动拆为清晰独立行。"""
+    if not q_html:
+        return q_html
+    q_html = fix_mathml_in_html(q_html)
+
+    def _split_p(m):
+        p_attrs = m.group(1)
+        p_inner = m.group(2)
+        tokens = []
+
+        def _save(tm):
+            tokens.append(tm.group(0))
+            return f"@@M{len(tokens) - 1}@@"
+
+        masked = re.sub(r"<math\b[^>]*>.*?</math>|<[^>]+>", _save, p_inner, flags=re.S)
+
+        def _restore(s):
+            return re.sub(r"@@M(\d+)@@", lambda tm: tokens[int(tm.group(1))], s)
+
+        for seq, labels in ((_SUBQ_ROMAN_SEQ, _SUBQ_ROMAN_LABELS), (_SUBQ_NUM_SEQ, _SUBQ_NUM_LABELS)):
+            hits = []
+            search_from = 0
+            for idx, pat in enumerate(seq):
+                full_pat = re.compile(rf"(?:^|(?<=[：:。；;，,\s]))({pat})(?![中的式问知得处])")
+                hm = full_pat.search(masked, search_from)
+                if not hm:
+                    break
+                hits.append((hm.start(1), hm.end(1), labels[idx]))
+                search_from = hm.end(1)
+            if len(hits) >= 2:
+                lead = _restore(masked[:hits[0][0]].strip())
+                li_parts = []
+                for i, (_st, en, lbl) in enumerate(hits):
+                    nxt = hits[i + 1][0] if i + 1 < len(hits) else len(masked)
+                    body = _restore(masked[en:nxt].strip())
+                    li_parts.append(
+                        f'<li class="mh-subq-item">'
+                        f'<span class="mh-subq-label">{lbl}</span>'
+                        f'<span class="mh-subq-body">{body}</span>'
+                        f"</li>"
+                    )
+                lead_html = f"<p{p_attrs}>{lead}</p>" if lead else ""
+                return f'{lead_html}<ol class="mh-subq-list">{"".join(li_parts)}</ol>'
+        return m.group(0)
+
+    return re.sub(r"<p([^>]*)>(.*?)</p>", _split_p, q_html, flags=re.S)
 
 
 def classify_source(src, book, math1_by_yn, lilin_lookup):
@@ -1129,9 +1385,9 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
                 "source": ex_source,
                 "title": ex_title,
                 "answerLetter": answer_letter,
-                "questionHtml": q_html,
-                "hintHtml": hint_html,
-                "stepsHtml": enhance_steps_html(steps_html, item_id),
+                "questionHtml": format_question_html(q_html),
+                "hintHtml": fix_mathml_in_html(hint_html),
+                "stepsHtml": fix_mathml_in_html(enhance_steps_html(steps_html, item_id)),
             })
 
         groups.append({
@@ -1183,18 +1439,40 @@ def parse_lecture(meta, math1_by_yn, lilin_lookup):
         "secondaryKpIds": meta["secondaryKpIds"],
         "title": title,
         "verdictHeading": verdict_heading or "怎么判",
-        "verdictHtml": verdict_html,
-        "verdictLeadHtml": verdict_lead_html,
-        "verdictTableHtml": verdict_table_html,
+        "verdictHtml": fix_mathml_in_html(verdict_html),
+        "verdictLeadHtml": fix_mathml_in_html(verdict_lead_html),
+        "verdictTableHtml": fix_mathml_in_html(verdict_table_html),
         "hasStructuredScenarios": has_structured_scenarios,
         "topicHeading": topic_heading or "看式子找第一步",
-        "topicIntroHtml": topic_intro_html,
-        "methods": methods,
+        "topicIntroHtml": fix_mathml_in_html(topic_intro_html),
+        "methods": [
+            {
+                **m,
+                "titleHtml": fix_mathml_in_html(m.get("titleHtml", "")),
+                "descHtml": fix_mathml_in_html(m.get("descHtml", "")),
+            }
+            for m in methods
+        ],
         "workedHeading": worked_heading,
-        "workedHtml": worked_html,
+        "workedHtml": fix_mathml_in_html(worked_html),
         "practiceHeading": practice_heading or "按方法练习",
-        "practiceIntroHtml": practice_intro_html,
-        "groups": groups,
+        "practiceIntroHtml": fix_mathml_in_html(practice_intro_html),
+        "groups": [
+            {
+                **g,
+                "guide": {
+                    **g["guide"],
+                    "clueHtml": fix_mathml_in_html(g["guide"].get("clueHtml", "")),
+                    "coreHtml": fix_mathml_in_html(g["guide"].get("coreHtml", "")),
+                    "principleHtml": fix_mathml_in_html(g["guide"].get("principleHtml", "")),
+                    "pitfallHtml": fix_mathml_in_html(g["guide"].get("pitfallHtml", "")),
+                    "roadmapHtml": fix_mathml_in_html(g["guide"].get("roadmapHtml", "")),
+                }
+                if g.get("guide")
+                else g.get("guide"),
+            }
+            for g in groups
+        ],
         "stats": {
             "total": ex_counter,
             "exam": exam_count,

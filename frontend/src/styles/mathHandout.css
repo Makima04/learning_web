@@ -752,6 +752,30 @@
 .mh-question ol:not(.options) > li > p:last-child {
   margin-bottom: 0;
 }
+.mh-question .mh-subq-list {
+  list-style: none;
+  margin: 0.42rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.48rem;
+}
+.mh-question .mh-subq-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 0.25rem;
+}
+.mh-question .mh-subq-label {
+  font-weight: 650;
+  color: var(--mh-ink);
+  white-space: nowrap;
+}
+.mh-question .mh-subq-body {
+  min-width: 0;
+}
+.mh-question math {
+  margin-inline: 0.08em;
+}
 .mh-question ul {
   margin: 0.5rem 0;
   padding-inline-start: 1.45rem;

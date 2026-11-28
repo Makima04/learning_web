@@ -34,6 +34,8 @@ services:
       EW_RESEND_API_KEY: ${EW_RESEND_API_KEY:-}
       EW_MAIL_FROM: ${EW_MAIL_FROM:-}
       EW_MAIL_DEV: ${EW_MAIL_DEV:-}
+      EW_COACH_TOKEN: ${EW_COACH_TOKEN:-}
+      EW_COACH_USERNAME: ${EW_COACH_USERNAME:-}
       RUST_LOG: english_web_server=info
     depends_on:
       db:
