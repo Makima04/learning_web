@@ -4,6 +4,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowRight, Bookmark, Check, Clock3, X } from "lucide-react";
+import { CS408_EXAM_BIG_IMAGES } from "@/data/kg/cs408ExamBigImages";
+import { mediaUrl } from "@/lib/kg/catalogLoad";
 import {
   examItemId,
   loadCs408ExamPaper,
@@ -470,20 +472,37 @@ export function Cs408PracticePage() {
             {state.submitted && <span className="rounded-full bg-muted px-2 py-0.5">已提交</span>}
           </div>
 
-          <pre className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">{item.stem}</pre>
-
-          {item.stem_images && item.stem_images.length > 0 && (
+          {CS408_EXAM_BIG_IMAGES[itemId] ? (
             <div className="space-y-2">
-              {item.stem_images.map((src, i) => (
-                <img
-                  key={src}
-                  src={src}
-                  alt={`第 ${item.n} 题附图 ${i + 1}/${item.stem_images!.length}`}
-                  loading="lazy"
-                  className="w-full rounded border bg-white"
-                />
-              ))}
+              <img
+                src={mediaUrl(CS408_EXAM_BIG_IMAGES[itemId]) ?? CS408_EXAM_BIG_IMAGES[itemId]}
+                alt={`${year} 年第 ${item.n} 题原题图`}
+                className="w-full rounded border bg-white"
+              />
+              {item.stem && (
+                <details className="text-xs text-muted-foreground">
+                  <summary className="cursor-pointer hover:text-foreground">查看纯文本题干</summary>
+                  <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed text-foreground">{item.stem}</pre>
+                </details>
+              )}
             </div>
+          ) : (
+            <>
+              <pre className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">{item.stem}</pre>
+              {item.stem_images && item.stem_images.length > 0 && (
+                <div className="space-y-2">
+                  {item.stem_images.map((src, i) => (
+                    <img
+                      key={src}
+                      src={src}
+                      alt={`第 ${item.n} 题附图 ${i + 1}/${item.stem_images!.length}`}
+                      loading="lazy"
+                      className="w-full rounded border bg-white"
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {item.options && (

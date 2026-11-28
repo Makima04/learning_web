@@ -236,10 +236,10 @@
       "excluded_from_stats": false,
       "source_url": null,
       "source_note": "neville-studio/408-exam-paper 重构版；考点为规则自动标注，供组卷/复习参考",
-      "warning": "答案解析来自扫描件 OCR，公式/图表可能失真，已附原版答案页供校对；逐题解析覆盖 42/47，缺口以原版答案页为准",
+      "warning": "答案解析来自扫描件 OCR，公式/图表可能失真，已附原版答案页供校对",
       "verification": null,
       "answer_keys": 40,
-      "explanations": 42,
+      "explanations": 45,
       "page_images": 12
     },
     {
@@ -393,6 +393,6 @@
       "page_images": 0
     }
   ],
-  "data_ver": "20261117b",
+  "data_ver": "20261127a",
   "notes": "由 scripts/gen_cs408_frontend.py 从 papers/cs408 生成；meta 记录每套卷的版本（回忆版/早期合订本/重构版）、质量、答案与解析覆盖；考频校准只采信 2012-2026 的 LLM 多标签，2009-2011 规则草稿不参与"
 }

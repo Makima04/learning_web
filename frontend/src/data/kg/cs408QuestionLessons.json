@@ -2042,17 +2042,17 @@
     "co.io.channel": "当前题库尚未核对到可独立讲解 I/O 通道方式的原题。保留教材基础例题；存储器的多通道带宽题不属于 I/O 通道题，不能替代。"
   },
   "sources": {
-    "frontend/public/cs408/2012.json": "c1884107cfd48f2bc9328d44e25f9e1403006081c84a136c8b118b9002935c4a",
-    "frontend/public/cs408/2013.json": "e4a6d27eda83aad9381801c2a4668a31c186fe64eebd9c707e83d7767fc697c3",
-    "frontend/public/cs408/2014.json": "eac145811655e73564450f6021af13197731e40e74281059d38b27d785696c99",
-    "frontend/public/cs408/2015.json": "4962967134e50b7db2532db048645897b7dd334956416cfdaaa034f1bf65ca1f",
-    "frontend/public/cs408/2016.json": "13702c573494538597328c83ec487f80d80998347e6b9cd26a3a5f0feabbfed8",
-    "frontend/public/cs408/2017.json": "ea7981bef1f1bc60d481b7301b617a3ea2d6a910e6e3a5477d625e5dfd8aef68",
-    "frontend/public/cs408/2018.json": "51079b4f3c4218cec8a57b8c5b5a5e5a8a82499cd99b1c41e3fc517d5ab18c5a",
-    "frontend/public/cs408/2020.json": "3aa1eb3bc78c090fdf33f3e848b48d0493782014ce6886544420fb6b2fb31549",
-    "frontend/public/cs408/2022.json": "e090f63e9e0eba67d061680c79b276df364390f386a90722efd7baaea44ef0f1",
-    "frontend/public/cs408/2023.json": "88a6363bef0b0d7223591f30f970b1c1531d334c909aa7bcf80951ab5daac4c3",
-    "frontend/public/cs408/2025.json": "5649dc4859875f63ef4c4a301d038aae9d346ddce4cf9fc0be49db4fd0d4848f",
+    "frontend/public/cs408/2012.json": "995a21934051b858f163ab58cc74998e45ae8e1022097685d7dbbe6d7df61bca",
+    "frontend/public/cs408/2013.json": "17dd43d38de2d72ffadbc7894d473a928c12bd87e4806043df0b138ed76f5147",
+    "frontend/public/cs408/2014.json": "769a0c49d9e528846e84512e46bd0ad8f398ebd207cc4bb9343027225aaa5b24",
+    "frontend/public/cs408/2015.json": "8d6d506b28eff886022608177847450543255fd0bb281d177ce7a51755c5dfba",
+    "frontend/public/cs408/2016.json": "b36e413ced8107601229b026137df5ed27c38c436d1cb85e2b6d0c4573cbf545",
+    "frontend/public/cs408/2017.json": "ae97ef77b03ff9d97d937ebb9f6608fe391493c98b25e42b7ed60d9fc69ef689",
+    "frontend/public/cs408/2018.json": "a7e4849fc97dca6d16674385254e27204c5ae8af7baf219f67cb12b1152df912",
+    "frontend/public/cs408/2020.json": "41055510a6625af9ec7c63401de9e67c2363ce9d5826e3c8c3f7487f9126710f",
+    "frontend/public/cs408/2022.json": "a47f591fc3c4db342830da48e1571485a830006c5d8b69f984ad60034b24a9fd",
+    "frontend/public/cs408/2023.json": "db0b3941c3882c205d7dbd967be0e241d18fdf05e46261e3390fc064d4e66777",
+    "frontend/public/cs408/2025.json": "e78e4ec97df4414ac579893ee625c9d2acb879acd97dadf40c4addb0ebacd37c",
     "frontend/public/cs408/wangdao2027.json": "f83282c258126648773c4a0583752e5f1811dee7669d8dedcce8f92a114fd356"
   }
 }

@@ -91,7 +91,7 @@ const paperPromises = new Map<number, Promise<ExamPaper>>();
 
 // 题库结构或内容变更后需同步 gen_cs408_frontend.py 的 DATA_VER，
 // 查询串用于绕过浏览器对 /cs408/*.json 的旧缓存。
-export const CS408_DATA_VER = "20261117b";
+export const CS408_DATA_VER = "20261127a";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const r = await fetch(`${url}?v=${CS408_DATA_VER}`);

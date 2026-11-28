@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { ReviewBlocks } from "@/components/ReviewBlocks";
+import { DS_BIG_SCENE_GUIDES } from "@/data/kg/cs408DsBigTaxonomy";
 import { CS408_HANDOUT_METHODS } from "@/data/kg/cs408HandoutMethods";
 import { CS408_KNOWLEDGE_REVIEWS } from "@/data/kg/cs408TextbookReview";
 import { loadCs408BigGuide, type BigGuide } from "@/lib/kg/cs408BigGuide";
@@ -171,15 +172,16 @@ function BigMethodReferences({ questions, onOpenQuestion }: Pick<GuideProps, "qu
 }
 
 export function Cs408HandoutGuide({ kpId, kind, questions, onOpenQuestion }: GuideProps) {
+  const dsBigGuide = DS_BIG_SCENE_GUIDES[kpId];
   const review = CS408_KNOWLEDGE_REVIEWS[kpId];
-  if (!review) return <p className={muted}>本场景暂无讲解。</p>;
-  const foundation = review.routes.find(route => route.id === "method")?.lessons[0];
-  const curated = review.routes.find(route => route.id === "question")?.lessons[0];
+  if (!dsBigGuide && !review) return <p className={muted}>本场景暂无讲解。</p>;
+  const foundation = review?.routes.find(route => route.id === "method")?.lessons[0];
+  const curated = review?.routes.find(route => route.id === "question")?.lessons[0];
   const example = questions.find(question => question.id === curated?.sourceQuestion?.questionId);
-  const opening = foundation?.recognition ?? review.opening;
-  const method = CS408_HANDOUT_METHODS[kpId];
+  const opening = dsBigGuide?.opening ?? foundation?.recognition ?? review?.opening ?? "";
+  const method = dsBigGuide ?? CS408_HANDOUT_METHODS[kpId];
   const hasExam = questions.some(q => q.source === "exam");
-  const knowledge: ReviewBlock[] = review.knowledge?.filter(block => block.type !== "text" || block.text !== opening) ?? [];
+  const knowledge: ReviewBlock[] = review?.knowledge?.filter(block => block.type !== "text" || block.text !== opening) ?? [];
 
   return (
     <div className="space-y-4">

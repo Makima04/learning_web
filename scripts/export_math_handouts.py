@@ -10,10 +10,14 @@
 import json
 import os
 import re
+import shutil
+import subprocess
 from html import unescape
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
+RENDER_NATIVE_SCRIPT = PROJECT_DIR / "scripts/render_native_solutions.mjs"
+NATIVE_SOLUTIONS_HTML = {}
 HANDOUT_DIR = PROJECT_DIR / "materials/math/handouts"
 MATH1_Q_PATH = os.path.join(PROJECT_DIR, "frontend/src/data/kg/math1Questions.json")
 LILIN_Q_PATH = os.path.join(PROJECT_DIR, "frontend/public/math/lilin880.json")
@@ -670,6 +674,17 @@ def format_derivation_explanation(body_html):
         orig_ans_blocks.append(blk)
         return ""
     s = re.sub(r'<details\s+class="mh-orig-ans"[^>]*>.*?</details>', _save_orig_ans, s, flags=re.S).strip()
+    # 同样抽离独立的 <p><img class="mh-ans-img" ...></p>（真题解析图），避免被拆进 <ol class="mh-steps"><li>
+    def _save_bare_ans_img(m):
+        blk = m.group(0).strip()
+        img_m = re.search(r'src="([^"]+)"', blk)
+        if img_m:
+            disk = os.path.join(PROJECT_DIR, "frontend/public", img_m.group(1).lstrip("/"))
+            if not os.path.exists(disk):
+                return ""
+        orig_ans_blocks.append(blk)
+        return ""
+    s = re.sub(r'<p>\s*<img\b[^>]*class="mh-ans-img"[^>]*>\s*</p>', _save_bare_ans_img, s, flags=re.S).strip()
     orig_tail = ("\n" + "\n".join(orig_ans_blocks)) if orig_ans_blocks else ""
     if not s:
         return "\n".join(orig_ans_blocks)
@@ -717,7 +732,10 @@ def format_derivation_explanation(body_html):
             idx += 2
             if not seg:
                 continue
-            full_seg = restore(seg) + (punct if punct else "。")
+            if "<img" in seg and not punct:
+                full_seg = restore(seg)
+            else:
+                full_seg = restore(seg) + (punct if punct else "。")
             plain = strip_tags(full_seg)
             # 过滤纯空白或纯标点的无效碎片，杜绝「4 。」空步骤
             if "<img" not in full_seg and (not plain or re.fullmatch(r"[\s。！？；，、.!?：:]+", plain)):
@@ -777,6 +795,91 @@ def strip_missing_orig_ans(html):
     return re.sub(r'\s*<details\s+class="mh-orig-ans"[^>]*>.*?</details>', _filter, html, flags=re.S)
 
 
+def load_native_solutions_html():
+    """调用 scripts/render_native_solutions.mjs 批量编译原生解析 HTML。"""
+    if not RENDER_NATIVE_SCRIPT.exists():
+        return {}
+    node_bin = shutil.which("node")
+    if not node_bin:
+        for cand in ("/usr/local/bin/node", "/opt/homebrew/bin/node"):
+            if os.path.exists(cand):
+                node_bin = cand
+                break
+    if not node_bin:
+        print("[warn] node not found; skipping native solutions compilation")
+        return {}
+    res = subprocess.run(
+        [node_bin, str(RENDER_NATIVE_SCRIPT), "--emit-json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if res.returncode != 0:
+        print(f"[warn] render_native_solutions failed: {res.stderr.strip()}")
+        return {}
+    if res.stderr.strip():
+        print(res.stderr.strip())
+    return json.loads(res.stdout or "{}")
+
+
+def _build_native_detail_block(img_src, img_tag_html, native_html):
+    is_exam = "/exams/" in img_src
+    src_label = "真题参考解析" if is_exam else "李林 880 原书解析"
+    toggle_label = "查看真题解析图" if is_exam else "查看原书扫描图"
+    if 'loading=' not in img_tag_html:
+        img_tag_html = img_tag_html.replace("<img ", '<img loading="lazy" ', 1)
+    return (
+        '<div class="mh-detail-proc">'
+        f'<div class="mh-detail-head"><span class="mh-detail-title">具体过程</span><span class="mh-detail-src">{src_label}</span></div>'
+        f'<div class="mh-detail-body">{native_html}</div>'
+        f'<details class="mh-orig-ans is-secondary"><summary>{toggle_label}</summary><p>{img_tag_html}</p></details>'
+        '</div>'
+    )
+
+
+def upgrade_answer_images_to_native(steps_html):
+    """将已具备原生解析的 880 / 真题解析图升级为默认展开的「具体过程」+ 次级折叠原图入口。"""
+    if not steps_html or not NATIVE_SOLUTIONS_HTML:
+        return steps_html
+
+    def _repl_details(m):
+        blk = m.group(0)
+        img_m = re.search(r'<img\b[^>]*class="mh-ans-img"[^>]*>|<img\b[^>]*src="[^"]+"[^>]*class="mh-ans-img"[^>]*>', blk)
+        if not img_m:
+            return blk
+        img_tag = img_m.group(0)
+        src_m = re.search(r'src="([^"]+)"', img_tag)
+        if not src_m:
+            return blk
+        src = src_m.group(1)
+        native_html = NATIVE_SOLUTIONS_HTML.get(src)
+        if not native_html:
+            return blk
+        return _build_native_detail_block(src, img_tag, native_html)
+
+    out = re.sub(r'<details\s+class="mh-orig-ans"[^>]*>.*?</details>', _repl_details, steps_html, flags=re.S)
+
+    def _repl_bare_img(m):
+        img_tag = m.group(1)
+        src_m = re.search(r'src="([^"]+)"', img_tag)
+        if not src_m:
+            return m.group(0)
+        src = src_m.group(1)
+        native_html = NATIVE_SOLUTIONS_HTML.get(src)
+        if not native_html:
+            return m.group(0)
+        return _build_native_detail_block(src, img_tag, native_html)
+
+    # 匹配未包裹在 <details class="mh-orig-ans"> 中的独立真题解析图 <p><img class="mh-ans-img" ...></p>
+    out = re.sub(
+        r'(?<!<summary>查看真题解析图</summary>)(?<!<summary>查看原书扫描图</summary>)<p>\s*(<img\b[^>]*class="mh-ans-img"[^>]*>)\s*。?\s*</p>',
+        _repl_bare_img,
+        out,
+        flags=re.S,
+    )
+    return out
+
+
 def enhance_steps_html(steps_html, item_id):
     if item_id in CUSTOM_STEPS_OVERRIDES:
         return CUSTOM_STEPS_OVERRIDES[item_id]
@@ -784,7 +887,7 @@ def enhance_steps_html(steps_html, item_id):
         return steps_html
     steps_html = strip_missing_orig_ans(steps_html)
     if 'class="mh-steps"' in steps_html:
-        return steps_html
+        return upgrade_answer_images_to_native(steps_html)
 
     def repl_exp(m):
         h4 = m.group(1)
@@ -794,12 +897,13 @@ def enhance_steps_html(steps_html, item_id):
             return f'<div class="explanation"><h4>{h4}</h4>{format_derivation_explanation(body)}</div>'
         return m.group(0)
 
-    return re.sub(
+    res = re.sub(
         r'<div class="explanation"[^>]*>\s*<h4[^>]*>(.*?)</h4>(.*?)</div>',
         repl_exp,
         steps_html,
         flags=re.S,
     )
+    return upgrade_answer_images_to_native(res)
 
 
 def parse_methods(topic_html):
@@ -1139,6 +1243,9 @@ def build_index_entry(h):
 
 
 def main():
+    global NATIVE_SOLUTIONS_HTML
+    NATIVE_SOLUTIONS_HTML = load_native_solutions_html()
+    print(f"Loaded {len(NATIVE_SOLUTIONS_HTML)} compiled native solutions")
     math1_by_yn = load_math1_lookup()
     lilin_lookup = load_lilin880_lookup()
     handouts = [parse_lecture(m, math1_by_yn, lilin_lookup) for m in LECTURE_MAP]

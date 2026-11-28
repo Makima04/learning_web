@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * 将纯文本解析中的常见数学表达式（分数、科学计数法、次方、显式 $...$）
- * 转换为 KaTeX 行内渲染，同时避开协议名（CSMA/CD、TCP/IP、I/O）与单位（Mb/s、m/μs）。
+ * 转换为 KaTeX 行内渲染，同时避开协议名（CSMA/CD、TCP/IP、I/O）与单位（Mb/s、m/μs）；
+ * 自动识别 C/C++/伪代码块并以等宽代码块独立展示，避免代码被公式规则误改。
  */
 
 const SKIP_SLASH_PAIRS = new Set([
@@ -183,7 +184,103 @@ export function parseExplanationSegments(text: string): Segment[] {
   return out;
 }
 
-export function FormattedExplanation({ text, className }: { text: string; className?: string }) {
+export type ExplanationBlock =
+  | { kind: "prose"; text: string }
+  | { kind: "code"; code: string };
+
+const CODE_START_RE =
+  /^\s*(?:#include\b|typedef\b|struct\b|enum\b|const\s+\w+|(?:static\s+)?(?:int|void|bool|char|float|double|unsigned|long|short|ElemType|Status|LNode|LinkList|BiTree|BiTNode|MGraph|ALGraph|SqList|SqBiTree|NODE|semaphore)\s+\*?\w+\s*[(=;[]|(?:int|void|bool|char)\s+\w+\s*\()/;
+const CODE_LINE_RE =
+  /^\s*(?:[{}()[\]]|\/\/|\/\*|\*\/|for\s*\(|while\s*\(|if\s*\(|else\b|return\b|break;|continue;|switch\s*\(|case\s+|default:|do\s*\{|P\s*\(|V\s*\(|wait\s*\(|signal\s*\(|printf\s*\(|scanf\s*\(|free\s*\(|malloc\s*\(|swap\s*\(|[A-Za-z_]\w*(?:\[[^\]]*\]|->\w+|\.\w+)*\s*(?:[+\-*/]?=|\+\+|--)\s*|[A-Za-z_]\w*\s*\([^)]*\)\s*;)/;
+const PROSE_HEADER_RE = /^\s*(?:[（(]\s*\d+\s*[）)]|第[一二三四五六七八九十]+步|时间复杂度|空间复杂度|复杂度分析|算法思想|基本设计思想|【)/;
+
+function isLikelyCodeLine(line: string, inCode: boolean): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  if (PROSE_HEADER_RE.test(trimmed)) return false;
+  if (CODE_START_RE.test(trimmed)) return true;
+  if (!inCode) return false;
+  if (/^\s{2,}/.test(line)) return true;
+  if (CODE_LINE_RE.test(trimmed)) return true;
+  if (/[;{}]$/.test(trimmed)) return true;
+  return false;
+}
+
+export function splitExplanationBlocks(text: string): ExplanationBlock[] {
+  const normalized = text.replace(/\r\n?/g, "\n");
+  const lines = normalized.split("\n");
+  const blocks: ExplanationBlock[] = [];
+  let proseBuf: string[] = [];
+  let codeBuf: string[] = [];
+  let inFence = false;
+  let inCode = false;
+
+  const flushProse = () => {
+    const joined = proseBuf.join("\n").trim();
+    if (joined) blocks.push({ kind: "prose", text: joined });
+    proseBuf = [];
+  };
+  const flushCode = () => {
+    while (codeBuf.length && !codeBuf[0].trim()) codeBuf.shift();
+    while (codeBuf.length && !codeBuf[codeBuf.length - 1].trim()) codeBuf.pop();
+    if (codeBuf.length) blocks.push({ kind: "code", code: codeBuf.join("\n") });
+    codeBuf = [];
+    inCode = false;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (/^```/.test(trimmed)) {
+      if (inFence) {
+        inFence = false;
+        flushCode();
+      } else {
+        if (inCode) flushCode();
+        flushProse();
+        inFence = true;
+      }
+      continue;
+    }
+
+    if (inFence) {
+      codeBuf.push(line);
+      continue;
+    }
+
+    if (!inCode) {
+      if (isLikelyCodeLine(line, false)) {
+        flushProse();
+        inCode = true;
+        codeBuf.push(line);
+      } else {
+        proseBuf.push(line);
+      }
+    } else {
+      if (!trimmed) {
+        let nextIdx = i + 1;
+        while (nextIdx < lines.length && !lines[nextIdx].trim()) nextIdx++;
+        if (nextIdx < lines.length && isLikelyCodeLine(lines[nextIdx], true)) {
+          codeBuf.push("");
+        } else {
+          flushCode();
+        }
+      } else if (isLikelyCodeLine(line, true)) {
+        codeBuf.push(line);
+      } else {
+        flushCode();
+        proseBuf.push(line);
+      }
+    }
+  }
+
+  if (inFence || inCode) flushCode();
+  flushProse();
+  return blocks;
+}
+
+function ProseParagraph({ text }: { text: string }) {
   const rendered = useMemo(() => {
     return parseExplanationSegments(text).map((seg, idx) => {
       if (seg.type === "text") return { key: idx, text: seg.value };
@@ -198,7 +295,7 @@ export function FormattedExplanation({ text, className }: { text: string; classN
   }, [text]);
 
   return (
-    <div className={cn("whitespace-pre-wrap break-words text-sm leading-7 [&_.katex]:text-[1.02em]", className)}>
+    <div className="whitespace-pre-wrap break-words text-sm leading-7 [&_.katex]:text-[1.02em]">
       {rendered.map((node) =>
         "html" in node ? (
           node.display ? (
@@ -212,6 +309,26 @@ export function FormattedExplanation({ text, className }: { text: string; classN
           )
         ) : (
           <span key={node.key}>{node.text}</span>
+        )
+      )}
+    </div>
+  );
+}
+
+export function FormattedExplanation({ text, className }: { text: string; className?: string }) {
+  const blocks = useMemo(() => splitExplanationBlocks(text), [text]);
+  return (
+    <div className={cn("space-y-2.5", className)}>
+      {blocks.map((block, index) =>
+        block.kind === "code" ? (
+          <pre
+            key={index}
+            className="overflow-x-auto rounded-lg border border-border/70 bg-muted/60 px-3.5 py-2.5 font-mono text-[13px] leading-6 text-foreground"
+          >
+            <code>{block.code}</code>
+          </pre>
+        ) : (
+          <ProseParagraph key={index} text={block.text} />
         )
       )}
     </div>

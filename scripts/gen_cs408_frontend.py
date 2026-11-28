@@ -76,7 +76,7 @@ def to_big_weight(as_big_primary: int, count: int) -> float:
 
 
 # 每次改题库结构都要 +1，前端用它给 /cs408/*.json 加查询串避免浏览器缓存旧数据
-DATA_VER = "20261117b"
+DATA_VER = "20261127a"
 
 EARLY_YEARS = {2009, 2010, 2011}          # 早期合订本，考点为规则草稿标注
 SCANNED_YEARS = {2019, 2021, 2024, 2025}  # 答案 PDF 为纯扫描件，解析走 OCR

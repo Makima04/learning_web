@@ -13,6 +13,8 @@ import { isDueOnOrBefore } from "@/lib/journal";
 import { isExamItemId } from "@/lib/kg/examJournal";
 import { useJournal } from "@/stores/journal";
 import { findKp } from "@/data/kg";
+import { CS408_EXAM_BIG_IMAGES } from "@/data/kg/cs408ExamBigImages";
+import { mediaUrl } from "@/lib/kg/catalogLoad";
 import { cs408HandoutPath } from "@/lib/kg/paths";
 import {
   examItemId,
@@ -1020,19 +1022,38 @@ function PaperView({ year }: { year: number }) {
                   </div>
 
                   {/* ④ 题干 */}
-                  <pre className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">{it.stem}</pre>
-                  {it.stem_images && it.stem_images.length > 0 && (
+                  {CS408_EXAM_BIG_IMAGES[id] ? (
                     <div className="space-y-2">
-                      {it.stem_images.map((src, i) => (
-                        <img
-                          key={src}
-                          src={src}
-                          alt={`第 ${it.n} 题附图 ${i + 1}/${it.stem_images!.length}`}
-                          loading="lazy"
-                          className="w-full rounded border bg-white"
-                        />
-                      ))}
+                      <img
+                        src={mediaUrl(CS408_EXAM_BIG_IMAGES[id]) ?? CS408_EXAM_BIG_IMAGES[id]}
+                        alt={`${year} 年第 ${it.n} 题原题图`}
+                        loading="lazy"
+                        className="w-full rounded border bg-white"
+                      />
+                      {it.stem && (
+                        <details className="text-xs text-muted-foreground">
+                          <summary className="cursor-pointer hover:text-foreground">查看纯文本题干</summary>
+                          <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed text-foreground">{it.stem}</pre>
+                        </details>
+                      )}
                     </div>
+                  ) : (
+                    <>
+                      <pre className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">{it.stem}</pre>
+                      {it.stem_images && it.stem_images.length > 0 && (
+                        <div className="space-y-2">
+                          {it.stem_images.map((src, i) => (
+                            <img
+                              key={src}
+                              src={src}
+                              alt={`第 ${it.n} 题附图 ${i + 1}/${it.stem_images!.length}`}
+                              loading="lazy"
+                              className="w-full rounded border bg-white"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                   {/* ⑤ 选项 */}
                   {it.options && (

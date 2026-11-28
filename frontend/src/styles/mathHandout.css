@@ -2124,6 +2124,128 @@
   margin-bottom: 0.45rem;
 }
 
+/* 原生排版「具体过程」区块（默认直接展开在推导与结论下方，保留次级原图折叠入口） */
+.mh-detail-proc {
+  margin-top: 0.85rem;
+  padding: 0.85rem 1.05rem;
+  border-radius: 10px;
+  border: 1px solid var(--mh-line-strong);
+  background: var(--mh-paper);
+}
+.mh-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+  padding-bottom: 0.48rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 1px solid var(--mh-line);
+}
+.mh-detail-title {
+  font-size: 0.92rem;
+  font-weight: 740;
+  color: var(--mh-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.mh-detail-title::before {
+  content: "";
+  width: 3.5px;
+  height: 0.95em;
+  border-radius: 99px;
+  background: var(--mh-accent);
+}
+.mh-detail-src {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mh-muted);
+  padding: 0.06rem 0.5rem;
+  border-radius: 99px;
+  background: var(--mh-surface);
+  border: 1px solid var(--mh-line);
+}
+.mh-detail-body {
+  font-size: 0.95rem;
+  line-height: 1.95;
+  color: var(--mh-ink);
+}
+.mh-detail-body > :first-child {
+  margin-top: 0;
+}
+.mh-detail-body > :last-child {
+  margin-bottom: 0;
+}
+.mh-detail-body p {
+  margin: 0.48rem 0;
+}
+.mh-detail-eq {
+  margin: 0.58rem 0;
+  padding: 0.48rem 0.78rem;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--mh-surface) 78%, var(--mh-paper));
+  border: 1px solid var(--mh-line);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.mh-detail-eq .katex-display {
+  margin: 0.15rem 0;
+}
+.mh-detail-eq .katex {
+  font-size: 1.08em;
+  color: var(--mh-ink);
+}
+.mh-detail-katex .katex {
+  font-size: 1.03em;
+  color: var(--mh-ink);
+}
+.mh-detail-lead {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.02rem 0.45rem;
+  border-radius: 4px;
+  background: var(--mh-accent-soft);
+  color: var(--mh-accent);
+  font-size: 0.8rem;
+  font-weight: 720;
+  vertical-align: 1px;
+}
+.mh-detail-note {
+  margin: 0.65rem 0 0.2rem;
+  padding: 0.58rem 0.85rem;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--mh-accent-2-bg) 38%, var(--mh-surface));
+  border: 1px solid color-mix(in srgb, var(--mh-accent-2) 28%, var(--mh-line));
+  font-size: 0.89rem;
+  line-height: 1.8;
+}
+.mh-detail-note-tag {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.02rem 0.42rem;
+  border-radius: 4px;
+  background: var(--mh-accent-2);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 720;
+  vertical-align: 1px;
+}
+.mh-orig-ans.is-secondary {
+  margin-top: 0.72rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed var(--mh-line);
+}
+.mh-orig-ans.is-secondary > summary {
+  font-size: 0.75rem;
+  padding: 0.18rem 0.55rem;
+  opacity: 0.88;
+}
+.mh-orig-ans.is-secondary > summary:hover {
+  opacity: 1;
+}
+
 /* 讲解页底部：本讲通用知识点与公式速查（默认折叠、单层无套娃、宽屏双列） */
 .mh-kp-drawer {
   border: 1px solid var(--mh-line-strong);
@@ -2275,4 +2397,24 @@
     border-left: 0;
     border-top: 1px solid var(--mh-line);
   }
+}
+
+.mh-detail-table-wrap {
+  overflow-x: auto;
+  margin: 0.65rem 0;
+}
+.mh-detail-table {
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-size: 0.94em;
+}
+.mh-detail-table th,
+.mh-detail-table td {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  padding: 0.35rem 0.7rem;
+  text-align: center;
+}
+.mh-detail-table th {
+  background: rgba(148, 163, 184, 0.12);
+  font-weight: 600;
 }

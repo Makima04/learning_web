@@ -1,5 +1,5 @@
 {
-  "version": "20261117b",
+  "version": "20261127a",
   "years": [
     2012,
     2013,
@@ -12596,77 +12596,77 @@
     {
       "year": 2012,
       "file": "papers/cs408/2012.json",
-      "sha256": "50b9c6bc1c19a25a7c73d83b6afc108b581fb97584fed159b2c013af9092b857"
+      "sha256": "11649f3a2c9052830424eece07db839f15fdfb7953b97ed78d6707b240615584"
     },
     {
       "year": 2013,
       "file": "papers/cs408/2013.json",
-      "sha256": "b25b8e1de8a77affaf6972de72b24ef7e3b4cc0b8523f39ccb4a2b198bef6fc5"
+      "sha256": "f9ad6210e4b464536e5b11157774ec103ef05b7e440ac8ebc4c3a83fc21ad113"
     },
     {
       "year": 2014,
       "file": "papers/cs408/2014.json",
-      "sha256": "6c30d343f979a7e15711cdb1e7f35b23778ae4479f79b27c237cfef2aebc6018"
+      "sha256": "515a8f7b5210df0eb9ada7d16809b275824e7508038ae9c7fcb568469971cc13"
     },
     {
       "year": 2015,
       "file": "papers/cs408/2015.json",
-      "sha256": "f217cbb1d12845622aa077c34e355c7c008b61fef2fb29d5fe8fa657b49a6b19"
+      "sha256": "52117e51f005415f699ed2b3187d37c6c25ca2494140f7a86b147b082696bbb6"
     },
     {
       "year": 2016,
       "file": "papers/cs408/2016.json",
-      "sha256": "55e0822c6e4c384d054834a6d9a2f3a4a052c0a9f65548f672d08fb11e4be428"
+      "sha256": "580ffe5a6f603637ededf57dd44ef135c66aeb5977f0f1cf4b525f41f3125494"
     },
     {
       "year": 2017,
       "file": "papers/cs408/2017.json",
-      "sha256": "5a9f760171a58a6757a263e1d7e18fbaed053162a0814fa942b63fd72c5155ed"
+      "sha256": "e099da03a030bbc4ff54c7601f513483fca1d46e2f065dbf18aae367cc9924e2"
     },
     {
       "year": 2018,
       "file": "papers/cs408/2018.json",
-      "sha256": "0526ea8f8a54271f1c614fd5fc35270123fcf3e77e933d028246c92f046918be"
+      "sha256": "094002058f7224f4db16aa8a4f586e18f41588360f1df9f658c88e9e27bf86d3"
     },
     {
       "year": 2019,
       "file": "papers/cs408/2019.json",
-      "sha256": "c0631949b52cdb2815b68b0cdf7244851305dfe97950100bc3dc291cdcfe31d7"
+      "sha256": "00eb6e93ece8c6773d89ad2911a6257d2ebd9968d494bcc6dc92f30f987fe209"
     },
     {
       "year": 2020,
       "file": "papers/cs408/2020.json",
-      "sha256": "7eeac290f5f4ad31d955d07d27b85d6e3e31576bf538a61c0d970364d02dc981"
+      "sha256": "85fb1366ab54299ad255400ed89517c81f473038173ceaab251abea3957f9dc4"
     },
     {
       "year": 2021,
       "file": "papers/cs408/2021.json",
-      "sha256": "c694ac067cc343fd23443235caf8fa60e2f2559a5fe83100a432d2ba6b72cc4a"
+      "sha256": "659d701f3a2b2407432dd122ecd267f080366286601b164be720a50d3fc268ce"
     },
     {
       "year": 2022,
       "file": "papers/cs408/2022.json",
-      "sha256": "9bb989f850043db3f66b58aeda42acbc4729f4a3059aeec9d314ef1963318219"
+      "sha256": "7742824faa1e94753de95e2a8de1aa5acdedc1e057d174fda3a323d50c760bd2"
     },
     {
       "year": 2023,
       "file": "papers/cs408/2023.json",
-      "sha256": "7b743b5e88e9b0f3ef69d232ecfe9345a091afd09a40e4d4105e1d25d6e01a0b"
+      "sha256": "30bed4f1d0713d2ce584eec4eec8a806cbaf16f424a44efea15c336270b605f2"
     },
     {
       "year": 2024,
       "file": "papers/cs408/2024.json",
-      "sha256": "16f179ed9b764ba2e558421936e2ef910c66cfe12a25288b398675d8de93e014"
+      "sha256": "56be4d92905766ea761e8a2c098ca56c94799c2febd49cafda014e26dd19947c"
     },
     {
       "year": 2025,
       "file": "papers/cs408/2025.json",
-      "sha256": "bac6208da0b8ac1078775361cd9453cd3ffbde8e228b375e0e8ed103e07a5bc3"
+      "sha256": "9e46266e4b259f0713e7453e68525eb94a0e2173d206bee721b067999894a8b7"
     },
     {
       "year": 2026,
       "file": "papers/cs408/2026.json",
-      "sha256": "28ab299c8811f8bcb33e9ad1bb729dfcbe3f74c087d78cd164cc0787927fe8c1"
+      "sha256": "4f3692041ff327c6ee1de5b0e19fdbadc04b3a5ed8d752cc7ebb9b563aa180e4"
     }
   ]
 }

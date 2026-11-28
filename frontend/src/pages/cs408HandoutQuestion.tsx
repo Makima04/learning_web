@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Scissors } from "lucide-react";
 import { FormattedExplanation } from "@/components/FormattedExplanation";
 import { ReviewBlocks } from "@/components/ReviewBlocks";
+import { DS_BIG_TIER_LABEL, dsBigWangdaoMeta } from "@/data/kg/cs408DsBigTaxonomy";
+import { CS408_EXAM_BIG_IMAGES } from "@/data/kg/cs408ExamBigImages";
 import { hydratePracticeItems, mediaUrl } from "@/lib/kg/catalogLoad";
 import type { Cs408HandoutMark, Cs408HandoutQuestion } from "@/lib/kg/cs408Handouts";
 import type { ReviewLesson } from "@/lib/kg/knowledgeReview";
@@ -134,13 +136,23 @@ function QuestionContent({ question, lesson, record, stepsOpen, onToggleSteps, o
   }, [question.id]);
 
   const answerLetter = question.item.answer?.trim().toUpperCase().match(/^[A-D]$/)?.[0] ?? null;
+  const wangdaoTier = question.source === "wangdao" ? dsBigWangdaoMeta(question.id)?.tier : undefined;
 
   return (
     <article className="space-y-4" aria-label={label}>
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--mh-line)] pb-2">
         <h3 className="text-base font-bold">{label}</h3>
-        {question.source === "exam" && (
+        {question.source === "exam" ? (
           <span className="text-xs text-[var(--mh-muted)]">{question.item.kind === "big" ? "大题" : "选择题"}</span>
+        ) : wangdaoTier && (
+          <span className={cn(
+            "rounded-full px-2 py-0.5 text-xs font-semibold",
+            wangdaoTier === "high"
+              ? "border border-[var(--mh-accent)]/30 bg-[var(--mh-accent-soft)] text-[var(--mh-accent)]"
+              : "bg-[var(--mh-surface)] text-[var(--mh-muted)]",
+          )}>
+            {DS_BIG_TIER_LABEL[wangdaoTier]}
+          </span>
         )}
       </div>
       {question.source === "wangdao" ? (
@@ -154,10 +166,28 @@ function QuestionContent({ question, lesson, record, stepsOpen, onToggleSteps, o
         />
       ) : (
         <div className="space-y-3 break-words">
-          <p className="whitespace-pre-wrap">{question.item.stem}</p>
-          {question.item.stem_images?.map((src, index) => (
-            <img key={src} src={src} alt={`第 ${question.item.n} 题附图 ${index + 1}`} className="max-w-full rounded-md bg-white" />
-          ))}
+          {CS408_EXAM_BIG_IMAGES[question.id] ? (
+            <>
+              <img
+                src={mediaUrl(CS408_EXAM_BIG_IMAGES[question.id]) ?? CS408_EXAM_BIG_IMAGES[question.id]}
+                alt={`${question.year} 年真题第 ${question.item.n} 题原题图`}
+                className="w-full max-w-full rounded-md border border-[var(--mh-line)] bg-white"
+              />
+              {question.item.stem && (
+                <details className="text-xs text-[var(--mh-muted)]">
+                  <summary className="cursor-pointer select-none hover:text-[var(--mh-ink)]">查看纯文本题干</summary>
+                  <p className="mt-2 whitespace-pre-wrap rounded-lg bg-[var(--mh-surface)] p-3 text-sm text-[var(--mh-ink)]">{question.item.stem}</p>
+                </details>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="whitespace-pre-wrap">{question.item.stem}</p>
+              {question.item.stem_images?.map((src, index) => (
+                <img key={src} src={src} alt={`第 ${question.item.n} 题附图 ${index + 1}`} className="max-w-full rounded-md bg-white" />
+              ))}
+            </>
+          )}
           {question.item.options && (
             <ul className="space-y-1.5 text-sm">
               {Object.entries(question.item.options).map(([key, value]) => {

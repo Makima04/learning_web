@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { BookOpen, Check, ChevronLeft, ChevronRight, Clock, FolderOpen, Scissors } from "lucide-react";
 import { HandoutDirectorySearch, handoutDirectoryStyles, handoutFilterClass } from "@/components/handoutDirectory";
 import { Button } from "@/components/ui/button";
+import { DS_BIG_CHAPTERS, isDsBigChapterId, LEGACY_DS_CHAPTER_TO_BIG_CHAPTER } from "@/data/kg/cs408DsBigTaxonomy";
 import { findFileKnowledgeSection, type FileKnowledgeId, type FileKnowledgeSection } from "@/data/kg/cs408FileKnowledge";
 import { CS408_KNOWLEDGE_REVIEWS } from "@/data/kg/cs408TextbookReview";
 import { syncAccountData } from "@/lib/accountSync";
@@ -10,10 +11,14 @@ import { dayKey } from "@/lib/day";
 import { isDueOnOrBefore } from "@/lib/journal";
 import { cs408Evidence } from "@/lib/kg/cs408Diagnostic";
 import {
+  buildCs408KindQuestions,
+  chaptersForBookKind,
   CS408_HANDOUT_CHAPTERS,
   cs408HandoutProgressTarget,
+  findCs408HandoutChapter,
   loadCs408HandoutQuestions,
   markCs408HandoutQuestion,
+  resolveCs408QuestionLocation,
   type Cs408HandoutChapter,
   type Cs408HandoutPriority,
   type Cs408HandoutQuestion,
@@ -125,7 +130,8 @@ export function Cs408HandoutsPage() {
     return () => { live = false; };
   }, [retry]);
 
-  const chapter = CS408_HANDOUT_CHAPTERS.find(item => item.id === chapterId);
+  const chapter = findCs408HandoutChapter(chapterId);
+  const isDsBigChapter = isDsBigChapterId(chapterId);
   const knowledgeSection = chapter?.id === FILE_CHAPTER_ID ? findFileKnowledgeSection(search.get("knowledge")) : undefined;
   const requestedKind = readKind(search.get("kind"));
   const linkedId = search.get("q");
@@ -137,11 +143,28 @@ export function Cs408HandoutsPage() {
   const linkedSceneQuestions = !requestedKind && linkedScene
     ? questions?.get(linkedScene) ?? EMPTY
     : EMPTY;
-  const guideKind = linkedSceneQuestions.length > 0 && linkedSceneQuestions.every(q => q.item.kind === "big") ? "big" : "mcq";
+  const guideKind = isDsBigChapter || (linkedSceneQuestions.length > 0 && linkedSceneQuestions.every(q => q.item.kind === "big")) ? "big" : "mcq";
   const kind = requestedKind ?? readKind(linkedQuestion?.item.kind) ?? guideKind;
-  const kindQuestions = useMemo(() => questions
-    ? new Map([...questions].map(([id, items]) => [id, items.filter(q => q.item.kind === kind)]))
-    : null, [questions, kind]);
+  const kindQuestions = useMemo(() => questions ? buildCs408KindQuestions(questions, kind) : null, [questions, kind]);
+
+  if (isDsBigChapter && kind === "mcq") {
+    return <Navigate to={bookIndexHref("ds", "mcq")} replace />;
+  }
+
+  if (chapter && chapter.bookId === "ds" && !isDsBigChapter && kind === "big") {
+    if (linkedId) {
+      if (questions) {
+        const matched = [...questions.values()].flat().find(q => q.id === linkedId);
+        if (matched) {
+          const loc = resolveCs408QuestionLocation(matched, chapter, linkedScene ?? chapter.kps[0]?.id ?? "");
+          return <Navigate to={`${ROOT}/${loc.chapterId}?kind=big&scene=${loc.sceneId}&q=${linkedId}`} replace />;
+        }
+      }
+    } else {
+      const targetChapter = LEGACY_DS_CHAPTER_TO_BIG_CHAPTER[chapter.id] ?? DS_BIG_CHAPTERS[0].id;
+      return <Navigate to={`${ROOT}/${targetChapter}?kind=big`} replace />;
+    }
+  }
 
   if (chapterId && !chapter) {
     return <div className="mh-reader space-y-3 p-8"><p>找不到该章节。</p><Link to={ROOT}>← 返回408手稿</Link></div>;
@@ -189,11 +212,12 @@ function HandoutStats({ questions, progress }: { questions: Questions; progress:
           if (progress.due.has(question.id)) due += 1;
           else if (progress.reviewedToday.has(question.id)) reviewed += 1;
           if (mark?.retired) {
-            const params = new URLSearchParams({ kind: question.item.kind, scene: scene.id, q: question.id });
+            const loc = resolveCs408QuestionLocation(question, chapter, scene.id);
+            const params = new URLSearchParams({ kind: question.item.kind, scene: loc.sceneId, q: question.id });
             retired.push({
               question,
-              href: `${ROOT}/${chapter.id}?${params}`,
-              chapterName: chapter.name,
+              href: `${ROOT}/${loc.chapterId}?${params}`,
+              chapterName: loc.chapterName,
               retiredAt: mark.retiredAt ?? mark.ts,
             });
           }
@@ -282,10 +306,20 @@ function HandoutIndex({ questions, allQuestions, progress, kind }: {
   const [book, bookName] = BOOKS.find(([id]) => id === search.get("book")) ?? BOOKS[0];
   const [query, setQuery] = useState("");
   const term = query.trim().toLowerCase();
-  const filtered = CS408_HANDOUT_CHAPTERS.filter(chapter => chapter.bookId === book)
+  const filtered = chaptersForBookKind(book, kind)
     .map(chapter => ({ chapter, scenes: chapter.kps.filter(kp => questions === null || questions.get(kp.id)?.length) }))
     .filter(({ chapter, scenes }) => scenes.length > 0 &&
-      [chapter.name, ...scenes.map(kp => kp.name)].some(label => label.toLowerCase().includes(term)));
+      [chapter.group ?? "", chapter.name, ...scenes.map(kp => kp.name)].some(label => label.toLowerCase().includes(term)));
+  const sections = useMemo(() => {
+    const grouped = new Map<string, typeof filtered>();
+    for (const entry of filtered) {
+      const title = entry.chapter.group ?? bookName;
+      const list = grouped.get(title) ?? [];
+      list.push(entry);
+      grouped.set(title, list);
+    }
+    return [...grouped.entries()];
+  }, [filtered, bookName]);
 
   return (
     <section className={handoutDirectoryStyles.page}>
@@ -317,62 +351,74 @@ function HandoutIndex({ questions, allQuestions, progress, kind }: {
           <HandoutDirectorySearch value={query} onChange={setQuery} placeholder="搜索章节或考点" className="min-w-0 flex-1 sm:flex-none" />
         </div>
       </div>
-      {filtered.length > 0 && (
-        <section className="space-y-4" aria-label={bookName}>
-          <div className={handoutDirectoryStyles.sectionHeading}>
-            <div className="flex items-center gap-2.5">
-              <span aria-hidden="true" className="h-5 w-1.5 rounded-full bg-app-blue" />
-              <h2 className={handoutDirectoryStyles.sectionTitle}>{bookName}</h2>
+      {sections.map(([sectionTitle, entries]) => {
+        const sectionItems = questions
+          ? [...new Map(entries.flatMap(({ chapter }) => chapterQuestions(chapter, questions)).map(q => [q.id, q])).values()]
+          : null;
+        const sectionExams = sectionItems?.filter(q => q.source === "exam").length ?? 0;
+        const isSubGroup = sectionTitle !== bookName;
+        return (
+          <section key={sectionTitle} className="space-y-4" aria-label={sectionTitle}>
+            <div className={handoutDirectoryStyles.sectionHeading}>
+              <div className="flex items-center gap-2.5">
+                <span aria-hidden="true" className={cn("h-5 w-1.5 rounded-full", sectionTitle === "应用题" ? "bg-app-orange" : "bg-app-blue")} />
+                <h2 className={handoutDirectoryStyles.sectionTitle}>{sectionTitle}</h2>
+              </div>
+              {isSubGroup && sectionItems && (
+                <span className="text-xs font-semibold text-muted-foreground">
+                  真题 {sectionExams} · 王道 {sectionItems.length - sectionExams}
+                </span>
+              )}
             </div>
-          </div>
-          <div className="grid gap-3.5 md:grid-cols-2">
-            {filtered.map(({ chapter, scenes }) => {
-              const items = questions ? chapterQuestions(chapter, questions) : null;
-              const examCount = items?.filter(q => q.source === "exam").length ?? 0;
-              const nextDue = questions && scenes.find(kp => questions.get(kp.id)?.some(q => progress.due.has(q.id)));
-              const dueQuestion = nextDue && questions?.get(nextDue.id)?.find(q => progress.due.has(q.id));
-              const dueCount = items?.filter(q => progress.due.has(q.id)).length ?? 0;
-              const passed = items ? progress.passed(items) : 0;
-              const percent = items?.length ? Math.round(passed / items.length * 100) : 0;
-              const href = `${ROOT}/${chapter.id}?kind=${kind}`;
-              return (
-                <article key={chapter.id} className={cn(
-                  handoutDirectoryStyles.card,
-                  "group flex min-w-0 flex-col",
-                  dueCount ? "border-app-orange/70 hover:border-app-orange" : "border-border/80 hover:border-primary/60",
-                )}>
-                  <Link to={href} className="block flex-1 rounded-2xl p-4">
-                    <h3 className="flex items-center gap-2 text-base font-extrabold group-hover:text-primary">
-                      <FolderOpen aria-hidden="true" className="h-4 w-4 shrink-0 text-app-blue" />
-                      {chapter.name}
-                      <ChevronRight aria-hidden="true" className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
-                    </h3>
-                    <span className="mt-1 block text-xs font-semibold text-muted-foreground">
-                      {chapter.kps.length} 场景{items && ` · 真题 ${examCount} · 王道 ${items.length - examCount}`}
-                    </span>
-                    {items && (
-                      <div className="mt-3 space-y-1">
-                        <div className="flex justify-between gap-2 text-xs font-semibold text-muted-foreground">
-                          <span>已会 {passed}/{items.length}</span><span>{percent}%</span>
+            <div className="grid gap-3.5 md:grid-cols-2">
+              {entries.map(({ chapter, scenes }) => {
+                const items = questions ? chapterQuestions(chapter, questions) : null;
+                const examCount = items?.filter(q => q.source === "exam").length ?? 0;
+                const nextDue = questions && scenes.find(kp => questions.get(kp.id)?.some(q => progress.due.has(q.id)));
+                const dueQuestion = nextDue && questions?.get(nextDue.id)?.find(q => progress.due.has(q.id));
+                const dueCount = items?.filter(q => progress.due.has(q.id)).length ?? 0;
+                const passed = items ? progress.passed(items) : 0;
+                const percent = items?.length ? Math.round(passed / items.length * 100) : 0;
+                const href = `${ROOT}/${chapter.id}?kind=${kind}`;
+                return (
+                  <article key={chapter.id} className={cn(
+                    handoutDirectoryStyles.card,
+                    "group flex min-w-0 flex-col",
+                    dueCount ? "border-app-orange/70 hover:border-app-orange" : "border-border/80 hover:border-primary/60",
+                  )}>
+                    <Link to={href} className="block flex-1 rounded-2xl p-4">
+                      <h3 className="flex items-center gap-2 text-base font-extrabold group-hover:text-primary">
+                        <FolderOpen aria-hidden="true" className="h-4 w-4 shrink-0 text-app-blue" />
+                        {chapter.name}
+                        <ChevronRight aria-hidden="true" className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+                      </h3>
+                      <span className="mt-1 block text-xs font-semibold text-muted-foreground">
+                        {chapter.kps.length} 场景{items && ` · 真题 ${examCount} · 王道 ${items.length - examCount}`}
+                      </span>
+                      {items && (
+                        <div className="mt-3 space-y-1">
+                          <div className="flex justify-between gap-2 text-xs font-semibold text-muted-foreground">
+                            <span>已会 {passed}/{items.length}</span><span>{percent}%</span>
+                          </div>
+                          <div aria-hidden="true" className="h-1.5 overflow-hidden rounded-full bg-secondary">
+                            <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+                          </div>
                         </div>
-                        <div aria-hidden="true" className="h-1.5 overflow-hidden rounded-full bg-secondary">
-                          <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
-                        </div>
-                      </div>
-                    )}
-                  </Link>
-                  {dueQuestion && (
-                    <Link className="mx-4 mb-4 inline-flex items-center gap-1 self-start rounded-full bg-app-orange/10 px-2.5 py-1 text-xs font-bold text-app-orange hover:bg-app-orange/20"
-                      to={`${href}&scene=${nextDue.id}&q=${dueQuestion.id}`}>
-                      <Clock aria-hidden="true" className="h-3.5 w-3.5" /> 待复习 {dueCount} 题
+                      )}
                     </Link>
-                  )}
-                </article>
-              );
-            })}
-          </div>
-        </section>
-      )}
+                    {dueQuestion && (
+                      <Link className="mx-4 mb-4 inline-flex items-center gap-1 self-start rounded-full bg-app-orange/10 px-2.5 py-1 text-xs font-bold text-app-orange hover:bg-app-orange/20"
+                        to={`${href}&scene=${nextDue.id}&q=${dueQuestion.id}`}>
+                        <Clock aria-hidden="true" className="h-3.5 w-3.5" /> 待复习 {dueCount} 题
+                      </Link>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
       {!filtered.length && (
         <p role="status" className="py-4 text-sm text-muted-foreground">{term ? "没有匹配的章节或考点。" : "本科目暂无该题型的题目。"}</p>
       )}
@@ -522,9 +568,15 @@ function HandoutReader({ chapter, questions, progress, kind, knowledgeSection }:
     setHideRetired(value => !value);
   }
 
-  const kindNav = <QuestionKindNav kind={kind} replace hrefFor={id =>
-    id === kind ? `?${search}` : `?kind=${id}&scene=${scene.id}`
-  } />;
+  const kindNav = <QuestionKindNav kind={kind} replace hrefFor={id => {
+    if (id === kind) return `?${search}`;
+    if (chapter.bookId === "ds") {
+      if (id === "mcq") return bookIndexHref("ds", "mcq");
+      const target = LEGACY_DS_CHAPTER_TO_BIG_CHAPTER[chapter.id] ?? DS_BIG_CHAPTERS[0].id;
+      return `${ROOT}/${target}?kind=big`;
+    }
+    return `?kind=${id}&scene=${scene.id}`;
+  }} />;
 
   const controls = (
     <>

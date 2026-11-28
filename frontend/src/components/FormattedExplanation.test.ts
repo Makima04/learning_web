@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseExplanationSegments } from "@/components/FormattedExplanation";
+import { parseExplanationSegments, splitExplanationBlocks } from "@/components/FormattedExplanation";
 
 describe("FormattedExplanation 公式解析", () => {
   it("将常见分数与科学计数法次方转为 KaTeX 片段", () => {
@@ -20,5 +20,22 @@ describe("FormattedExplanation 公式解析", () => {
     const sample = "CSMA/CD 和 CSMA/CA、TCP/IP、I/O 设备、速率 100Mb/s、传播速率 200m/μs、选项 A/B/C/D、0/1 编号。";
     const segs = parseExplanationSegments(sample);
     expect(segs.filter((s) => s.type === "math")).toHaveLength(0);
+  });
+
+  it("自动识别 C/C++ 代码块并与中文解析分段", () => {
+    const sample = [
+      "（1）基本设计思想：出现次数超过 n/2。",
+      "",
+      "（2）C 语言描述：",
+      "int Majority(int A[], int n){",
+      "    int cand = A[0], count = 1;",
+      "    return count > n / 2 ? cand : -1;",
+      "}",
+      "",
+      "（3）时间复杂度 O(n)，空间复杂度 O(1)。",
+    ].join("\n");
+    const blocks = splitExplanationBlocks(sample);
+    expect(blocks.map((b) => b.kind)).toEqual(["prose", "code", "prose"]);
+    expect(blocks[1].kind === "code" ? blocks[1].code : "").toContain("return count > n / 2 ? cand : -1;");
   });
 });
